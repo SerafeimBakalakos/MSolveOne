@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MGroup.LinearAlgebra" Version="0.1.0-unstable.46" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MGroup.Constitutive.Structural\MGroup.Constitutive.Structural.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.Constitutive.Thermal\MGroup.Constitutive.Thermal.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.FEM.Structural\MGroup.FEM.Structural.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.FEM.Thermal\MGroup.FEM.Thermal.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.FEM\src\MGroup.FEM\MGroup.FEM.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.MSolve.DataStructures\MGroup.MSolve.DataStructures.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.MSolve.Discretization\MGroup.MSolve.Discretization.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.MSolve.Meshes\MGroup.MSolve.Meshes.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.NumericalAnalyzers\MGroup.NumericalAnalyzers.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.Solvers.DDM.Prototypes\MGroup.Solvers.DDM.Prototypes.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.Solvers\MGroup.Solvers.csproj" />
+  </ItemGroup>
+
+</Project>
