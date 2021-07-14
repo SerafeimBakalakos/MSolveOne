@@ -29,41 +29,56 @@ namespace MGroup.FEM.Structural.Elements
 		private double[][] lastStresses;
 
 		#region Fortran imports
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH8GAUSSMATRICES",
-			CallingConvention = CallingConvention.Cdecl)]
-		protected static extern void CalcH8GaussMatrices(ref int iInt, [MarshalAs(UnmanagedType.LPArray)]double[,] faXYZ,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[,] faS,
-			[MarshalAs(UnmanagedType.LPArray)]double[,] faDS, [MarshalAs(UnmanagedType.LPArray)]double[,,] faJ,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faDetJ, [MarshalAs(UnmanagedType.LPArray)]double[,,] faB);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH8GAUSSMATRICES",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//protected static extern void CalcH8GaussMatrices(ref int iInt, [MarshalAs(UnmanagedType.LPArray)]double[,] faXYZ,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[,] faS,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,] faDS, [MarshalAs(UnmanagedType.LPArray)]double[,,] faJ,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faDetJ, [MarshalAs(UnmanagedType.LPArray)]double[,,] faB);
 
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH8STRAINS",
-			CallingConvention = CallingConvention.Cdecl)]
-		protected static extern void CalcH8Strains(ref int iInt,
-			[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[] fau,
-			[MarshalAs(UnmanagedType.LPArray)]double[,] faStrains);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH8STRAINS",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//protected static extern void CalcH8Strains(ref int iInt,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[] fau,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,] faStrains);
 
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH8FORCES",
-			CallingConvention = CallingConvention.Cdecl)]
-		protected static extern void CalcH8Forces(ref int iInt,
-			[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[] faWeight,
-			[MarshalAs(UnmanagedType.LPArray)]double[,] faStresses,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faForces);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH8FORCES",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//protected static extern void CalcH8Forces(ref int iInt,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[] faWeight,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,] faStresses,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faForces);
 
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH8K",
-			CallingConvention = CallingConvention.Cdecl)]
-		protected static extern void CalcH8K(ref int iInt, [MarshalAs(UnmanagedType.LPArray)]double[,,] faE,
-			[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[] faWeight,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faK);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH8K",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//protected static extern void CalcH8K(ref int iInt, [MarshalAs(UnmanagedType.LPArray)]double[,,] faE,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[] faWeight,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faK);
 
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH8MLUMPED",
-			CallingConvention = CallingConvention.Cdecl)]
-		protected static extern void CalcH8MLumped(ref int iInt, ref double fDensity,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[] faM);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH8MLUMPED",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//protected static extern void CalcH8MLumped(ref int iInt, ref double fDensity,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[] faM);
+
+		private void CalcH8Forces(ref int iInt, double[,,] faB, double[] faWeight, double[,] faStresses, double[] faForces)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void CalcH8Strains(ref int iInt, double[,,] faB, double[] localDisplacements, double[,] faStrains)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void CalcH8GaussMatrices(ref int iInt, double[,] faXYZ, double[] faWeight, double[,] faS, double[,] faDS, double[,,] faJ, double[] faDetJ, double[,,] faB)
+		{
+			throw new NotImplementedException();
+		}
 		#endregion
 
 		protected Hexa8()

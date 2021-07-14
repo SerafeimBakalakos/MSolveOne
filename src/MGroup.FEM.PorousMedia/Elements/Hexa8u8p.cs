@@ -28,77 +28,121 @@ namespace MGroup.FEM.Structural.Elements
 		private double youngModulus, poissonRatio;
 
 		#region Fortran imports
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH8GAUSSMATRICES",
-			CallingConvention = CallingConvention.Cdecl)]
-		protected static extern void CalcH8GaussMatrices(ref int iInt, [MarshalAs(UnmanagedType.LPArray)]double[,] faXYZ,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[,] faS,
-			[MarshalAs(UnmanagedType.LPArray)]double[,] faDS, [MarshalAs(UnmanagedType.LPArray)]double[,,] faJ,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faDetJ, [MarshalAs(UnmanagedType.LPArray)]double[,,] faB);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH8GAUSSMATRICES",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//protected static extern void CalcH8GaussMatrices(ref int iInt, [MarshalAs(UnmanagedType.LPArray)]double[,] faXYZ,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[,] faS,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,] faDS, [MarshalAs(UnmanagedType.LPArray)]double[,,] faJ,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faDetJ, [MarshalAs(UnmanagedType.LPArray)]double[,,] faB);
 
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH8STRAINS",
-			CallingConvention = CallingConvention.Cdecl)]
-		private static extern void CalcH8Strains(ref int iInt,
-			[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[] fau,
-			[MarshalAs(UnmanagedType.LPArray)]double[,] faStrains);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH8STRAINS",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//private static extern void CalcH8Strains(ref int iInt,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[] fau,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,] faStrains);
 
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH8FORCES",
-			CallingConvention = CallingConvention.Cdecl)]
-		private static extern void CalcH8Forces(ref int iInt,
-			[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[] faWeight,
-			[MarshalAs(UnmanagedType.LPArray)]double[,] faStresses,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faForces);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH8FORCES",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//private static extern void CalcH8Forces(ref int iInt,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[] faWeight,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,] faStresses,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faForces);
 
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH20U8PFORCESWATERACC",
-			CallingConvention = CallingConvention.Cdecl)]
-		private static extern void CalcH20u8pForcesWaterAcc(ref int iInt,
-			[MarshalAs(UnmanagedType.LPArray)]bool[] alImpermeable, ref double ffDensity,
-			[MarshalAs(UnmanagedType.LPArray)]double[] afPermeability,
-			[MarshalAs(UnmanagedType.LPArray)]double[] afXw,
-			[MarshalAs(UnmanagedType.LPArray)]double[] afSw,
-			[MarshalAs(UnmanagedType.LPArray)]double[] afAcc,
-			[MarshalAs(UnmanagedType.LPArray)]double[,] afS,
-			[MarshalAs(UnmanagedType.LPArray)]double[,,] afB, [MarshalAs(UnmanagedType.LPArray)]double[] afWeights,
-			[MarshalAs(UnmanagedType.LPArray)]double[] afLocalForces);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH20U8PFORCESWATERACC",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//private static extern void CalcH20u8pForcesWaterAcc(ref int iInt,
+		//	[MarshalAs(UnmanagedType.LPArray)]bool[] alImpermeable, ref double ffDensity,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] afPermeability,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] afXw,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] afSw,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] afAcc,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,] afS,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,,] afB, [MarshalAs(UnmanagedType.LPArray)]double[] afWeights,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] afLocalForces);
 
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH8K",
-			CallingConvention = CallingConvention.Cdecl)]
-		protected static extern void CalcH8K(ref int iInt, [MarshalAs(UnmanagedType.LPArray)]double[,,] faE,
-			[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[] faWeight,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faK);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH8K",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//protected static extern void CalcH8K(ref int iInt, [MarshalAs(UnmanagedType.LPArray)]double[,,] faE,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[] faWeight,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faK);
 
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH8MLUMPED",
-			CallingConvention = CallingConvention.Cdecl)]
-		private static extern void CalcH8MLumped(ref int iInt, ref double fDensity,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[] faM);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH8MLUMPED",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//private static extern void CalcH8MLumped(ref int iInt, ref double fDensity,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[] faM);
 
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH20U8PH",
-			CallingConvention = CallingConvention.Cdecl)]
-		private static extern void CalcH20u8pH(ref int iInt, [MarshalAs(UnmanagedType.LPArray)]double[] faPermeability,
-			[MarshalAs(UnmanagedType.LPArray)]double[,] faS, [MarshalAs(UnmanagedType.LPArray)]double[,,] faB,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[] faH);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH20U8PH",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//private static extern void CalcH20u8pH(ref int iInt, [MarshalAs(UnmanagedType.LPArray)]double[] faPermeability,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,] faS, [MarshalAs(UnmanagedType.LPArray)]double[,,] faB,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[] faH);
 
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH20U8PS",
-			CallingConvention = CallingConvention.Cdecl)]
-		private static extern void CalcH20u8pS(ref int iInt, [MarshalAs(UnmanagedType.LPArray)]double[] faXwDivQ,
-			[MarshalAs(UnmanagedType.LPArray)]double[,] faS,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[] faM);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH20U8PS",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//private static extern void CalcH20u8pS(ref int iInt, [MarshalAs(UnmanagedType.LPArray)]double[] faXwDivQ,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,] faS,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[] faM);
 
-		[DllImport("femelements.dll",
-			EntryPoint = "CALCH8U8PQMINUS",
-			CallingConvention = CallingConvention.Cdecl)]
-		private static extern void CalcH8u8pQMinus(ref int iInt, ref double fPoreA,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faXw,
-			[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[,] faS,
-			[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[,] faQ);
+		//[DllImport("femelements.dll",
+		//	EntryPoint = "CALCH8U8PQMINUS",
+		//	CallingConvention = CallingConvention.Cdecl)]
+		//private static extern void CalcH8u8pQMinus(ref int iInt, ref double fPoreA,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faXw,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[,,] faB, [MarshalAs(UnmanagedType.LPArray)]double[,] faS,
+		//	[MarshalAs(UnmanagedType.LPArray)]double[] faWeight, [MarshalAs(UnmanagedType.LPArray)]double[,] faQ);
 
+		private void CalcH8K(ref int iInt, double[,,] afE, double[,,] faB, double[] faWeight, double[] faK)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void CalcH8GaussMatrices(ref int iInt, double[,] faXYZ, double[] faWeight, double[,] faS, double[,] faDS, double[,,] faJ, double[] faDetJ, double[,,] faB)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void CalcH20u8pForcesWaterAcc(ref int iInt, bool[] impermeableDOFs, ref double fD, double[] faPermeability, double[] faXw, double[] faSw, double[] waterAcc, double[,] faS, double[,,] faB, double[] faWeight, double[] fluidDrags)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void CalcH20u8pH(ref int iInt, double[] faPermeability, double[,] faS, double[,,] faB, double[] faWeight, double[] faH)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void CalcH8Forces(ref int iInt, double[,,] faB, double[] faWeight, double[,] faStresses, double[] solidForces)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void CalcH8Strains(ref int iInt, double[,,] faB, double[] solidDisplacements, double[,] faStrains)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void CalcH8MLumped(ref int iInt, ref double fDensity, double[] faWeight, double[] faM)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void CalcH20u8pS(ref int iInt, double[] faXwDivQ, double[,] faS, double[] faWeight, double[] faSaturation)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void CalcH8u8pQMinus(ref int iInt, ref double fPoreA, double[] faXw, double[,,] faB, double[,] faS, double[] faWeight, double[,] faQ)
+		{
+			throw new NotImplementedException();
+		}
 		#endregion
 
 		protected Hexa8u8p()
@@ -200,6 +244,8 @@ namespace MGroup.FEM.Structural.Elements
 			return dofEnumerator.GetTransformedMatrix(SymmetricMatrix.CreateFromPackedRowMajorArray(faK));
 		}
 
+		
+
 		public IMatrix MassMatrix(IElement element)
 		{
 			double[,] faXYZ = GetCoordinates(element);
@@ -215,6 +261,8 @@ namespace MGroup.FEM.Structural.Elements
 			CalcH8MLumped(ref iInt, ref fDensity, faWeight, faM);
 			return SymmetricMatrix.CreateFromPackedRowMajorArray(faM);
 		}
+
+		
 
 		public IMatrix DampingMatrix(IElement element)
 		{
@@ -396,7 +444,6 @@ namespace MGroup.FEM.Structural.Elements
 			ScatterFromSolidVector(solidForces, totalForces);
 			return totalForces;
 		}
-
 		public double[] CalculateAccelerationForces(IElement element, IList<MassAccelerationLoad> loads)
 		{
 			var accelerations = new double[24];
@@ -463,6 +510,7 @@ namespace MGroup.FEM.Structural.Elements
 			ScatterFromSolidVector(solidForces, totalForces);
 			return totalForces;
 		}
+
 
 		public double[] CalculateSolidForcesFromPorePressures(Element element, double[] porePressures)
 		{

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <Authors>George Stavroulakis, Serafeim Bakalakos</Authors>
     <Product>MSolve</Product>
     <Description>A series of classes for logging the various values generated during the solution of a computational mechanics problem</Description>
