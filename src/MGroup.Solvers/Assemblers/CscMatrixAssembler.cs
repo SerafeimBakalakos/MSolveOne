@@ -5,22 +5,23 @@ using MGroup.LinearAlgebra.Matrices.Builders;
 using MGroup.MSolve.Discretization;
 using MGroup.Solvers.DofOrdering;
 
-//TODO: Instead of storing the raw CSC arrays, use a reusable DOK or SymmCscIndexer class. That class should provide methods to 
+//TODO: Instead of storing the raw CSC arrays, use a reusable DOK or CscIndexer class. That class should provide methods to 
 //      assemble the values part of the global matrix more efficiently than the general purpose DOK. The general purpose DOK 
 //      should only be used to assemble the first global matrix and whenever the dof ordering changes. Now it is used everytime 
 //      and the indexing arrays are discarded.
-//TODO: I could also cache the symbolic factorization of SuiteSparse and reuse it. That would really speed up things.
 namespace MGroup.Solvers.Assemblers
 {
 	/// <summary>
-	/// Builds the global matrix of the linear system that will be solved. This matrix is in symmetric CSC format, namely only 
-	/// the upper triangle is explicitly stored. This format is suitable for the SuiteSparse library and solvers that use it.
+	/// Builds the global matrix of the linear system that will be solved. This matrix is square and stored in CSC format, but
+	/// both triangles are explicitly stored. This format is suitable for matrix/vector multiplications, therefore it can be 
+	/// combined with many iterative solvers. 
 	/// Authors: Serafeim Bakalakos
 	/// </summary>
-	public class SymmetricCscMatrixAssembler : ISubdomainMatrixAssembler<SymmetricCscMatrix>
+	public class CscMatrixAssembler : ISubdomainMatrixAssembler<CscMatrix>
 	{
-		private const string name = "SymmetricCscMatrixAssembler"; // for error messages
-		private readonly bool sortColsOfEachRow;
+		private const string name = "CscMatrixAssembler"; // for error messages
+		private readonly bool isSymmetric;
+		private readonly bool sortRowsOfEachCol;
 		//private ConstrainedMatricesAssembler constrainedAssembler = new ConstrainedMatricesAssembler();
 
 		bool isIndexerCached = false;
@@ -29,30 +30,38 @@ namespace MGroup.Solvers.Assemblers
 		/// <summary>
 		/// 
 		/// </summary>
-		/// <param name="sortColsOfEachRow">
-		/// Sorting the columns of each row in the CSC storage format may increase performance of the factorization and 
-		/// back/forward substitutions. It is recommended to set it to true.
+		/// <param name="sortRowsOfEachCol">
+		/// Sorting the rows of each column in the CSC storage format may increase performance of the matrix vector 
+		/// multiplications. It is recommended to set it to true, especially for iterative linear system solvers.
 		/// </param>
-		public SymmetricCscMatrixAssembler(bool sortColsOfEachRow = true)
+		public CscMatrixAssembler(bool isSymmetric, bool sortRowsOfEachCol = true)
 		{
-			this.sortColsOfEachRow = sortColsOfEachRow;
+			this.isSymmetric = isSymmetric;
+			this.sortRowsOfEachCol = sortRowsOfEachCol;
 		}
 
-		public SymmetricCscMatrix BuildGlobalMatrix(ISubdomainFreeDofOrdering dofOrdering, IEnumerable<IElement> elements,
+		public CscMatrix BuildGlobalMatrix(ISubdomainFreeDofOrdering dofOrdering, IEnumerable<IElement> elements, 
 			IElementMatrixProvider matrixProvider)
 		{
 			int numFreeDofs = dofOrdering.NumFreeDofs;
-			var subdomainMatrix = DokSymmetric.CreateEmpty(numFreeDofs);
+			var subdomainMatrix = DokColMajor.CreateEmpty(numFreeDofs, numFreeDofs);
 
 			foreach (IElement element in elements)
 			{
-				// TODO: perhaps that could be done and cached during the dof enumeration to avoid iterating over the dofs twice
 				(int[] elementDofIndices, int[] subdomainDofIndices) = dofOrdering.MapFreeDofsElementToSubdomain(element);
 				IMatrix elementMatrix = matrixProvider.Matrix(element);
-				subdomainMatrix.AddSubmatrixSymmetric(elementMatrix, elementDofIndices, subdomainDofIndices);
+				if (isSymmetric)
+				{
+					subdomainMatrix.AddSubmatrixSymmetric(elementMatrix, elementDofIndices, subdomainDofIndices);
+				}
+				else
+				{
+					subdomainMatrix.AddSubmatrix(
+						elementMatrix, elementDofIndices, subdomainDofIndices, elementDofIndices, subdomainDofIndices);
+				}
 			}
 
-			(double[] values, int[] rowIndices, int[] colOffsets) = subdomainMatrix.BuildSymmetricCscArrays(sortColsOfEachRow);
+			(double[] values, int[] rowIndices, int[] colOffsets) = subdomainMatrix.BuildCscArrays(sortRowsOfEachCol);
 			if (!isIndexerCached)
 			{
 				cachedRowIndices = rowIndices;
@@ -64,18 +73,16 @@ namespace MGroup.Solvers.Assemblers
 				Debug.Assert(Utilities.AreEqual(cachedRowIndices, rowIndices));
 				Debug.Assert(Utilities.AreEqual(cachedColOffsets, colOffsets));
 			}
-
-
-			return SymmetricCscMatrix.CreateFromArrays(numFreeDofs, values, cachedRowIndices, cachedColOffsets, false);
+			return CscMatrix.CreateFromArrays(numFreeDofs, numFreeDofs, values, cachedRowIndices, cachedColOffsets, false);
 		}
 
-		//public (SymmetricCscMatrix matrixFreeFree, IMatrixView matrixFreeConstr, IMatrixView matrixConstrFree,
+		//public (CscMatrix matrixFreeFree, IMatrixView matrixFreeConstr, IMatrixView matrixConstrFree,
 		//    IMatrixView matrixConstrConstr) BuildGlobalSubmatrices(
 		//    ISubdomainFreeDofOrdering freeDofOrdering, ISubdomainConstrainedDofOrdering constrainedDofOrdering,
 		//    IEnumerable<IElement> elements, IElementMatrixProvider matrixProvider)
 		//{
 		//    int numFreeDofs = freeDofOrdering.NumFreeDofs;
-		//    var subdomainMatrix = DokSymmetric.CreateEmpty(numFreeDofs);
+		//    var subdomainMatrix = DokColMajor.CreateEmpty(numFreeDofs, numFreeDofs);
 
 		//    //TODO: also reuse the indexers of the constrained matrices.
 		//    constrainedAssembler.InitializeNewMatrices(freeDofOrdering.NumFreeDofs, constrainedDofOrdering.NumConstrainedDofs);
@@ -83,7 +90,6 @@ namespace MGroup.Solvers.Assemblers
 		//    // Process the stiffness of each element
 		//    foreach (IElement element in elements)
 		//    {
-		//        // TODO: perhaps that could be done and cached during the dof enumeration to avoid iterating over the dofs twice
 		//        (int[] elementDofsFree, int[] subdomainDofsFree) = freeDofOrdering.MapFreeDofsElementToSubdomain(element);
 		//        (int[] elementDofsConstrained, int[] subdomainDofsConstrained) =
 		//            constrainedDofOrdering.MapConstrainedDofsElementToSubdomain(element);
@@ -95,7 +101,7 @@ namespace MGroup.Solvers.Assemblers
 		//    }
 
 		//    // Create and cache the CSC arrays for the free dofs.
-		//    (double[] values, int[] rowIndices, int[] colOffsets) = subdomainMatrix.BuildSymmetricCscArrays(sortColsOfEachRow);
+		//    (double[] values, int[] rowIndices, int[] colOffsets) = subdomainMatrix.BuildCscArrays(sortRowsOfEachCol);
 		//    if (!isIndexerCached)
 		//    {
 		//        cachedRowIndices = rowIndices;
@@ -110,13 +116,13 @@ namespace MGroup.Solvers.Assemblers
 
 		//    // Create the free and constrained matrices. 
 		//    subdomainMatrix = null; // Let the DOK be garbaged collected early, in case there isn't sufficient memory.
-		//    var matrixFreeFree =
-		//        SymmetricCscMatrix.CreateFromArrays(numFreeDofs, values, cachedRowIndices, cachedColOffsets, false);
+		//    var matrixFreeFree = 
+		//        CscMatrix.CreateFromArrays(numFreeDofs, numFreeDofs, values, cachedRowIndices, cachedColOffsets, false);
 		//    (CsrMatrix matrixConstrFree, CsrMatrix matrixConstrConstr) = constrainedAssembler.BuildMatrices();
-		//    return (matrixFreeFree, matrixConstrFree.TransposeToCSC(false), matrixConstrFree, matrixConstrConstr);
+		//    return (matrixFreeFree, matrixConstrFree, matrixConstrFree.TransposeToCSC(false), matrixConstrConstr);
 		//}
 
-		public ISubdomainMatrixAssembler<SymmetricCscMatrix> Clone() => new SymmetricCscMatrixAssembler(sortColsOfEachRow);
+		public ISubdomainMatrixAssembler<CscMatrix> Clone() => new CscMatrixAssembler(isSymmetric, sortRowsOfEachCol);
 
 		public void HandleDofOrderingWasModified()
 		{

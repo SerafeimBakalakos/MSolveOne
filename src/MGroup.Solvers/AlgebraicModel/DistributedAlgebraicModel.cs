@@ -146,21 +146,13 @@ namespace MGroup.Solvers.AlgebraicModel
 
 		public void DoPerElement(Func<int, IEnumerable<IElement>> accessElements, Action<IElement> elementAction)
 		{
-			//foreach (ISubdomain subdomain in subdomains)
-			//{
-			//	foreach (IElement element in accessElements(subdomain.ID))
-			//	{
-			//		elementAction(element);
-			//	}
-			//}
-
-			environment.DoPerNode(subdomainID =>
+			foreach (ISubdomain subdomain in subdomains)
 			{
-				foreach (IElement element in accessElements(subdomainID))
+				foreach (IElement element in accessElements(subdomain.ID))
 				{
 					elementAction(element);
 				}
-			});
+			}
 		}
 
 		public double[] ExtractElementVector(IGlobalVector vector, IElement element)
