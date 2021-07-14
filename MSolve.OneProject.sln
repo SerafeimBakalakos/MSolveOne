@@ -51,6 +51,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGroup.Solvers.DDM.Prototyp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGroup.MSolve.Meshes", "src\MGroup.MSolve.Meshes\MGroup.MSolve.Meshes.csproj", "{AF4E78B8-B373-4711-9E01-714089F8AB7E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGroup.MSolve.Meshes.Tests", "tests\MGroup.MSolve.Meshes.Tests\MGroup.MSolve.Meshes.Tests.csproj", "{C13DDABA-7F8C-4300-A55F-0E051ECB43B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -145,6 +147,10 @@ Global
 		{AF4E78B8-B373-4711-9E01-714089F8AB7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF4E78B8-B373-4711-9E01-714089F8AB7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF4E78B8-B373-4711-9E01-714089F8AB7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C13DDABA-7F8C-4300-A55F-0E051ECB43B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C13DDABA-7F8C-4300-A55F-0E051ECB43B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C13DDABA-7F8C-4300-A55F-0E051ECB43B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C13DDABA-7F8C-4300-A55F-0E051ECB43B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -172,6 +178,7 @@ Global
 		{8B4990C3-050F-4450-BFC2-57473104A3A8} = {08DA1471-EAC0-4C41-BCDA-AC3544C04EC9}
 		{CC4A9A67-EFA4-438B-B0D5-BD8F11A092DA} = {08DA1471-EAC0-4C41-BCDA-AC3544C04EC9}
 		{AF4E78B8-B373-4711-9E01-714089F8AB7E} = {08DA1471-EAC0-4C41-BCDA-AC3544C04EC9}
+		{C13DDABA-7F8C-4300-A55F-0E051ECB43B0} = {F91A8D7B-C681-45EC-98EB-C1293FF62521}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {65770E5A-E644-45FE-B065-54C0E3D6EBB4}
