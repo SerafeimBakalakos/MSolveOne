@@ -26,15 +26,15 @@ namespace MGroup.Solvers.AlgebraicModel
 		private readonly IModel model;
 		private readonly IDofOrderer dofOrderer;
 		private readonly Dictionary<int, ISubdomainMatrixAssembler<TMatrix>> subdomainMatrixAssemblers;
-		private readonly IDdmSolver solver;
+		//private readonly IDdmSolver solver;
 		private readonly SubdomainVectorAssembler subdomainVectorAssembler = new SubdomainVectorAssembler();
 
 		public DistributedAlgebraicModel(IModel model, IDofOrderer dofOrderer,
-			ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler, IDdmSolver solver)
+			ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler/*, IDdmSolver solver*/)
 		{
 			this.model = model;
 			this.dofOrderer = dofOrderer;
-			this.solver = solver;
+			//this.solver = solver;
 			subdomains = model.EnumerateSubdomains();
 			numSubdomains = model.NumSubdomains;
 			this.subdomainMatrixAssemblers = new Dictionary<int, ISubdomainMatrixAssembler<TMatrix>>();
@@ -99,7 +99,7 @@ namespace MGroup.Solvers.AlgebraicModel
 				var subdomainVector = distributedVector.LocalVectors[subdomain.ID];
 				subdomainVectorAssembler.AddToSubdomainVector(loads, subdomainVector, subdomainDofs);
 				throw new NotImplementedException("This should probably be done privately by the solver without affecting global vectors used by other components");
-				solver.DistributeNodalLoads(loads, subdomainVector, subdomainDofs);
+				//solver.DistributeNodalLoads(loads, subdomainVector, subdomainDofs);
 			}
 			// Nodal loads at the same boundary dof are the same across all relevant subdomains, so we do not need to sum overlapping entries
 		}
@@ -113,7 +113,7 @@ namespace MGroup.Solvers.AlgebraicModel
 				var subdomainVector = distributedVector.LocalVectors[subdomain.ID];
 				subdomainVectorAssembler.AddToSubdomainVector(loads, subdomainVector, subdomainDofs);
 				throw new NotImplementedException("This should probably be done privately by the solver without affecting global vectors used by other components");
-				solver.DistributeAllNodalLoads(subdomainVector, subdomainDofs);
+				//solver.DistributeAllNodalLoads(subdomainVector, subdomainDofs);
 			}
 			// Nodal loads at the same boundary dof are the same across all relevant subdomains, so we do not need to sum overlapping entries
 		}

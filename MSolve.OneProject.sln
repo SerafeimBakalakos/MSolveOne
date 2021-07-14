@@ -47,6 +47,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGroup.MSolve.DataStructure
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGroup.MSolve.Numerics", "src\MGroup.MSolve.Numerics\MGroup.MSolve.Numerics.csproj", "{8B4990C3-050F-4450-BFC2-57473104A3A8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGroup.Solvers.DDM.Prototypes", "src\MGroup.Solvers.DDM.Prototypes\MGroup.Solvers.DDM.Prototypes.csproj", "{CC4A9A67-EFA4-438B-B0D5-BD8F11A092DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -133,6 +135,10 @@ Global
 		{8B4990C3-050F-4450-BFC2-57473104A3A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B4990C3-050F-4450-BFC2-57473104A3A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B4990C3-050F-4450-BFC2-57473104A3A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC4A9A67-EFA4-438B-B0D5-BD8F11A092DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC4A9A67-EFA4-438B-B0D5-BD8F11A092DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC4A9A67-EFA4-438B-B0D5-BD8F11A092DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC4A9A67-EFA4-438B-B0D5-BD8F11A092DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -158,6 +164,7 @@ Global
 		{6107B4DB-F0DB-4F7C-89FC-D19AE905BBF0} = {08DA1471-EAC0-4C41-BCDA-AC3544C04EC9}
 		{CF976517-698A-4829-B9D1-2D2ACB1B0E61} = {08DA1471-EAC0-4C41-BCDA-AC3544C04EC9}
 		{8B4990C3-050F-4450-BFC2-57473104A3A8} = {08DA1471-EAC0-4C41-BCDA-AC3544C04EC9}
+		{CC4A9A67-EFA4-438B-B0D5-BD8F11A092DA} = {08DA1471-EAC0-4C41-BCDA-AC3544C04EC9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {65770E5A-E644-45FE-B065-54C0E3D6EBB4}

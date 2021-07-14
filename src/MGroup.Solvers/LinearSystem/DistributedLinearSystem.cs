@@ -33,7 +33,7 @@ namespace MGroup.Solvers.LinearSystem
 			}
 		}
 
-		internal DistributedMatrix<TMatrix> Matrix { get; set; }
+		public DistributedMatrix<TMatrix> Matrix { get; set; }
 
 		public HashSet<ILinearSystemObserver> Observers { get; }
 
@@ -47,10 +47,10 @@ namespace MGroup.Solvers.LinearSystem
 			}
 		}
 
-		internal DistributedVector RhsVector { get; set; }
+		public DistributedVector RhsVector { get; set; }
 
 		IGlobalVector IGlobalLinearSystem.Solution => Solution;
 
-		internal DistributedVector Solution { get; set; }
+		public DistributedVector Solution { get; set; }
 	}
 }
