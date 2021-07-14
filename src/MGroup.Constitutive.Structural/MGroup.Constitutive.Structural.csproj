@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Product>MSolve</Product>
+    <Authors>George Stavroulakis, Gerasimos Sotiropoulos, Serafeim Bakalakos</Authors>
+    <Description>A series of constitutive laws and corresponding AnalysisWorkflow providers, pertaining to the solution of structural mechanics problems</Description>
+    <PackageProjectUrl>http://mgroup.ntua.gr/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mgroupntua/Constitutive</RepositoryUrl>
+    <PackageIconUrl>https://github.com/mgroupntua/Constitutive/raw/develop/MGroupConstitutiveStructural.png</PackageIconUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MGroup.LinearAlgebra" Version="0.1.0-unstable.40" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MGroup.MSolve.AnalysisWorkflow\MGroup.MSolve.AnalysisWorkflow.csproj" />
+    <ProjectReference Include="..\MGroup.MSolve.Constitutive\MGroup.MSolve.Constitutive.csproj" />
+    <ProjectReference Include="..\MGroup.MSolve.Discretization\MGroup.MSolve.Discretization.csproj" />
+    <ProjectReference Include="..\MGroup.MSolve.Solution\MGroup.MSolve.Solution.csproj" />
+    <ProjectReference Include="..\MGroup.FEM\src\MGroup.FEM\MGroup.FEM.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MGroup.MSolve.DataStructures\MGroup.MSolve.DataStructures.csproj" />
+    <ProjectReference Include="..\MGroup.MSolve.Geometry\MGroup.MSolve.Geometry.csproj" />
+    <ProjectReference Include="..\MGroup.MSolve.Discretization\MGroup.MSolve.Discretization.csproj" />
+  </ItemGroup>
+</Project>

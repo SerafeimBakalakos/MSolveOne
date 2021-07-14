@@ -1,0 +1,104 @@
+# .NET Desktop
+# Build and run tests for .NET Desktop or Windows classic desktop solutions.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
+
+trigger:
+- develop
+
+pr:
+  branches:
+    include:
+    - develop
+
+pool:
+  vmImage: 'VS2017-Win2016'
+
+variables:
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  Version: '1.0.$(Build.BuildId)'
+  Major: '1'
+  Minor: '0'
+  Patch: '$(Build.BuildId)'
+
+steps:
+- task: DotNetCoreCLI@2
+  name: dotnetRestore
+  displayName: "Restore nugets"
+  inputs:
+    command: 'restore'
+    verbosityRestore: 'Normal'
+    feedsToUse: 'config'
+    nugetConfigPath: 'NuGet.config'
+
+- task: SonarCloudPrepare@1
+  displayName: "Prepares SonarCloud analysis"
+  inputs:
+    SonarCloud: 'SonarCloud'
+    organization: 'mgroupntua'
+    scannerMode: 'MSBuild'
+    projectKey: 'MSolve.Core'
+
+- task: UseGitVersion@5
+  inputs:
+    versionSpec: '5.x'
+    includePrerelease: true
+    useConfigFile: true
+    configFilePath: 'GitVersion.yml'
+
+- task: DotNetCoreCLI@2
+  name: dotnetBuild
+  displayName: "Build projects"
+  inputs:
+    command: 'build'
+    arguments: '/p:AssemblyVersion=$(GitVersion.AssemblySemVer)'
+    versioningScheme: 'byEnvVar'
+    versionEnvVar: 'GitVersion.SemVer'
+    verbosityPack: 'Minimal'
+    configuration: '$(buildConfiguration)'
+
+- task: SonarCloudAnalyze@1
+  displayName: "Performs SonarCloud Analysis"
+
+- task: SonarCloudPublish@1
+  displayName: 'Publish Quality Gate Results'
+  inputs:
+    pollingTimeoutSec: '300'
+
+- task: DotNetCoreCLI@2
+  name: dotnetPack
+  condition: ne(variables['Build.Reason'], 'PullRequest')
+  displayName: "Packages new nugets"
+  inputs:
+    command: 'pack'
+    versioningScheme: 'byEnvVar'
+    versionEnvVar: 'GitVersion.SemVer'
+    verbosityPack: 'Minimal'
+
+- task: PublishBuildArtifacts@1
+  name: publishToFeed
+  condition: ne(variables['Build.Reason'], 'PullRequest')
+  displayName: "Publishes to pipeline artifacts"
+  inputs:
+    ArtifactName: 'drop'
+
+- task: DotNetCoreCLI@2
+  name: dotnetPushNugetPublic
+  condition: ne(variables['Build.Reason'], 'PullRequest')
+  displayName: "Push nugets to public feed"
+  inputs:
+    command: 'push'
+    packagesToPush: '$(build.artifactStagingDirectory)/*.nupkg'
+    verbosityPack: 'Minimal'
+    feedPublish: 'MSolve/MGroup'
+
+- task: DotNetCoreCLI@2
+  enabled: false
+  condition: ne(variables['Build.Reason'], 'PullRequest')
+  name: dotnetPushSymbolPublic
+  displayName: "Publishes symbol nugets"
+  inputs:
+    command: 'push'
+    searchPatternPush: '$(Build.ArtifactStagingDirectory)/*.snupkg'
+    feedPublish: 'MSolve/MGroup'
