@@ -98,7 +98,7 @@ namespace MGroup.Solvers.AlgebraicModel
 				IEnumerable<INodalLoad> loads = accessLoads(subdomain.ID);
 				var subdomainVector = distributedVector.LocalVectors[subdomain.ID];
 				subdomainVectorAssembler.AddToSubdomainVector(loads, subdomainVector, subdomainDofs);
-				throw new NotImplementedException("This should probably be done privately by the solver without affecting global vectors used by other components");
+				//throw new NotImplementedException("This should probably be done privately by the solver without affecting global vectors used by other components");
 				//solver.DistributeNodalLoads(loads, subdomainVector, subdomainDofs);
 			}
 			// Nodal loads at the same boundary dof are the same across all relevant subdomains, so we do not need to sum overlapping entries
@@ -112,7 +112,7 @@ namespace MGroup.Solvers.AlgebraicModel
 				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
 				var subdomainVector = distributedVector.LocalVectors[subdomain.ID];
 				subdomainVectorAssembler.AddToSubdomainVector(loads, subdomainVector, subdomainDofs);
-				throw new NotImplementedException("This should probably be done privately by the solver without affecting global vectors used by other components");
+				//throw new NotImplementedException("This should probably be done privately by the solver without affecting global vectors used by other components");
 				//solver.DistributeAllNodalLoads(subdomainVector, subdomainDofs);
 			}
 			// Nodal loads at the same boundary dof are the same across all relevant subdomains, so we do not need to sum overlapping entries

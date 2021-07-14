@@ -3,6 +3,7 @@ using System.Linq;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.DataStructures;
 using System;
+using System.Runtime.InteropServices;
 
 //TODO: benchmark this against simple ordering + node major reordering
 namespace MGroup.Solvers.DofOrdering
@@ -17,7 +18,12 @@ namespace MGroup.Solvers.DofOrdering
 		{
 			if (model.NumSubdomains != 1)
 			{
-				throw new NotImplementedException();
+				var allElements = new HashSet<IElement>();
+				foreach (ISubdomain subdomain in model.EnumerateSubdomains())
+				{
+					allElements.UnionWith(subdomain.Elements);
+				}
+				return OrderFreeDofsOfElementSet(allElements, model.EnumerateNodes());
 			}
 			else
 			{

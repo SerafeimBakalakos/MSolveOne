@@ -26,7 +26,7 @@ namespace MGroup.Solvers.LinearSystem
 
 		internal Guid Format { get; }
 
-		public Dictionary<int, Vector> LocalVectors { get; } = new Dictionary<int, Vector>(); //TODO: use concrete Vector
+		public Dictionary<int, Vector> LocalVectors { get; } = new Dictionary<int, Vector>();
 
 		public void AxpyIntoThis(IGlobalVector otherVector, double otherCoefficient)
 		{

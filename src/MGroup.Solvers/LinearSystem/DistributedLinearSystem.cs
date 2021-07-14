@@ -17,6 +17,7 @@ namespace MGroup.Solvers.LinearSystem
 		{
 			this.checkCompatibleVector = checkCompatibleVector;
 			this.checkCompatibleMatrix = checkCompatibleMatrix;
+			Observers = new HashSet<ILinearSystemObserver>();
 		}
 
 		IGlobalMatrix IGlobalLinearSystem.Matrix

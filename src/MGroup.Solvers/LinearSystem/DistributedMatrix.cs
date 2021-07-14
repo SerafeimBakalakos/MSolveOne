@@ -25,7 +25,7 @@ namespace MGroup.Solvers.LinearSystem
 
 		internal Guid Format { get; }
 
-		public Dictionary<int, TMatrix> LocalMatrices { get; }
+		public Dictionary<int, TMatrix> LocalMatrices { get; } = new Dictionary<int, TMatrix>();
 
 		public void AxpyIntoThis(IGlobalMatrix otherMatrix, double otherCoefficient)
 		{
