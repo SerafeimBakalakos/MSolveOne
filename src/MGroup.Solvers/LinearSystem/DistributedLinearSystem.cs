@@ -6,7 +6,7 @@ using MGroup.MSolve.Solution.LinearSystem;
 
 namespace MGroup.Solvers.LinearSystem
 {
-	public class DistributedLinearSystem<TMatrix> : IGlobalLinearSystem
+	public class DistributedLinearSystem<TMatrix> : IGlobalLinearSystem, IDistributedLinearSystem
 		where TMatrix : class, IMatrix
 	{
 		private readonly Func<IGlobalVector, DistributedVector> checkCompatibleVector;

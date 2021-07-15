@@ -12,8 +12,6 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 
 		void ClearSubMatrices();
 
-		void ExtractKiiKbbKib();
-
 		void HandleDofsWereModified();
 
 		void InvertKii();
@@ -39,7 +37,5 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 			temp = MultiplyKbi(temp);
 			output.SubtractIntoThis(temp);
 		}
-
-		void ReorderInternalDofs();
 	}
 }

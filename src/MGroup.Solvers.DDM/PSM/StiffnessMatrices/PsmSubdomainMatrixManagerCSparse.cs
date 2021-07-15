@@ -2,18 +2,16 @@ using System.Collections.Generic;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Triangulation;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.Discretization;
+using MGroup.Solvers.Assemblers;
 using MGroup.Solvers.DDM.Commons;
 using MGroup.Solvers.DDM.LinearAlgebraExtensions;
 using MGroup.Solvers.DDM.PSM.Dofs;
-using MGroup.Solvers.DDM.StiffnessMatrices;
 
 namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 {
-	public class PsmSubdomainMatrixManagerCSparse : IPsmSubdomainMatrixManager
+	public class PsmSubdomainMatrixManagerCSparse : IPsmSubdomainMatrixManagerGeneric<CsrMatrix>
 	{
 		private readonly PsmSubdomainDofs subdomainDofs;
-		private readonly SubdomainMatrixManagerCsr managerBasic;
 		private readonly SubmatrixExtractorCsrCsc submatrixExtractor = new SubmatrixExtractorCsrCsc();
 
 		private CsrMatrix Kbb;
@@ -22,10 +20,9 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 		private CscMatrix Kii;
 		private LUCSparseNet inverseKii;
 
-		public PsmSubdomainMatrixManagerCSparse(PsmSubdomainDofs subdomainDofs, SubdomainMatrixManagerCsr managerBasic)
+		public PsmSubdomainMatrixManagerCSparse(PsmSubdomainDofs subdomainDofs)
 		{
 			this.subdomainDofs = subdomainDofs;
-			this.managerBasic = managerBasic;
 		}
 
 		public IMatrixView CalcSchurComplement()
@@ -45,12 +42,11 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 		}
 
 		//TODO: Optimize this method. It is too slow.
-		public void ExtractKiiKbbKib()
+		public void ExtractKiiKbbKib(CsrMatrix Kff)
 		{
 			int[] boundaryDofs = subdomainDofs.DofsBoundaryToFree;
 			int[] internalDofs = subdomainDofs.DofsInternalToFree;
 
-			CsrMatrix Kff = managerBasic.MatrixKff;
 			submatrixExtractor.ExtractSubmatrices(Kff, boundaryDofs, internalDofs);
 			Kbb = submatrixExtractor.Submatrix00;
 			Kbi = submatrixExtractor.Submatrix01;
@@ -78,17 +74,14 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 
 		public Vector MultiplyKib(Vector vector) => Kib.Multiply(vector, false);
 
-		public void ReorderInternalDofs() => subdomainDofs.ReorderInternalDofs(DofPermutation.CreateNoPermutation());
+		public void ReorderInternalDofs(CsrMatrix Kff) => subdomainDofs.ReorderInternalDofs(DofPermutation.CreateNoPermutation());
 
-		public class Factory : IPsmSubdomainMatrixManagerFactory
+		public class Factory : IPsmSubdomainMatrixManagerFactory<CsrMatrix>
 		{
-			public (ISubdomainMatrixManager, IPsmSubdomainMatrixManager) CreateMatrixManagers(
-				ISubdomain subdomain, PsmSubdomainDofs subdomainDofs)
-			{
-				var basicMatrixManager = new SubdomainMatrixManagerCsr(subdomain, false);
-				var psmMatrixManager = new PsmSubdomainMatrixManagerCSparse(subdomainDofs, basicMatrixManager);
-				return (basicMatrixManager, psmMatrixManager);
-			}
+			public ISubdomainMatrixAssembler<CsrMatrix> CreateAssembler() => new CsrMatrixAssembler(false);
+
+			public IPsmSubdomainMatrixManagerGeneric<CsrMatrix> CreateMatrixManager(PsmSubdomainDofs subdomainDofs)
+				=> new PsmSubdomainMatrixManagerCSparse(subdomainDofs);
 		}
 	}
 }

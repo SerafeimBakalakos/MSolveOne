@@ -1,16 +1,14 @@
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.Discretization;
+using MGroup.Solvers.Assemblers;
 using MGroup.Solvers.DDM.Commons;
 using MGroup.Solvers.DDM.PSM.Dofs;
-using MGroup.Solvers.DDM.StiffnessMatrices;
 
 namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 {
-	public class PsmSubdomainMatrixManagerDense : IPsmSubdomainMatrixManager
+	public class PsmSubdomainMatrixManagerDense : IPsmSubdomainMatrixManagerGeneric<Matrix>
 	{
 		private readonly PsmSubdomainDofs subdomainDofs;
-		private readonly SubdomainMatrixManagerDense managerBasic;
 
 		private Matrix Kbb;
 		private Matrix Kbi;
@@ -18,10 +16,9 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 		private Matrix Kii;
 		private Matrix inverseKii;
 
-		public PsmSubdomainMatrixManagerDense(PsmSubdomainDofs subdomainDofs, SubdomainMatrixManagerDense managerBasic)
+		public PsmSubdomainMatrixManagerDense(PsmSubdomainDofs subdomainDofs)
 		{
 			this.subdomainDofs = subdomainDofs;
-			this.managerBasic = managerBasic;
 		}
 
 		public IMatrixView CalcSchurComplement() => Kbb - Kbi * (inverseKii * Kib);
@@ -35,9 +32,8 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 			inverseKii = null;
 		}
 
-		public void ExtractKiiKbbKib()
+		public void ExtractKiiKbbKib(Matrix Kff)
 		{
-			Matrix Kff = managerBasic.MatrixKff;
 			int[] boundaryDofs = subdomainDofs.DofsBoundaryToFree;
 			int[] internalDofs = subdomainDofs.DofsInternalToFree;
 			Kbb = Kff.GetSubmatrix(boundaryDofs, boundaryDofs);
@@ -62,17 +58,14 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 
 		public Vector MultiplyKib(Vector vector) => Kib * vector;
 
-		public void ReorderInternalDofs() => subdomainDofs.ReorderInternalDofs(DofPermutation.CreateNoPermutation());
+		public void ReorderInternalDofs(Matrix Kff) => subdomainDofs.ReorderInternalDofs(DofPermutation.CreateNoPermutation());
 
-		public class Factory : IPsmSubdomainMatrixManagerFactory
+		public class Factory : IPsmSubdomainMatrixManagerFactory<Matrix>
 		{
-			public (ISubdomainMatrixManager, IPsmSubdomainMatrixManager) CreateMatrixManagers(
-				ISubdomain subdomain, PsmSubdomainDofs subdomainDofs)
-			{
-				var basicMatrixManager = new SubdomainMatrixManagerDense(subdomain);
-				var psmMatrixManager = new PsmSubdomainMatrixManagerDense(subdomainDofs, basicMatrixManager);
-				return (basicMatrixManager, psmMatrixManager);
-			}
+			public ISubdomainMatrixAssembler<Matrix> CreateAssembler() => new DenseMatrixAssembler();
+
+			public IPsmSubdomainMatrixManagerGeneric<Matrix> CreateMatrixManager(PsmSubdomainDofs subdomainDofs)
+				=> new PsmSubdomainMatrixManagerDense(subdomainDofs);
 		}
 	}
 }
