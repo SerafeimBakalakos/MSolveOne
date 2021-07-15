@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Solvers.Commons;
+using MGroup.Solvers.DofOrdering;
 
 //TODOMPI: Instead of asking ComputeNode for its neighbors, ISubdomain should contain this info. 
 //TODOMPI: I should decouple the code, such that there are classes that define operations on data, classes that define transfer of data,
@@ -19,6 +21,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 		private readonly IComputeEnvironment environment;
 		private readonly IModel model;
 		private readonly SubdomainTopology subdomainTopology;
+		private readonly Func<int, ISubdomainFreeDofOrdering> getSubdomainFreeDofs;
 		private readonly Dictionary<int, PsmSubdomainDofs> subdomainDofs;
 
 		//TODOMPI: should this be stored in each PsmSubdomainDofs object instead? Or maybe not stored at all, since it is only used when creating the indexer.
@@ -28,14 +31,15 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 		private readonly ConcurrentDictionary<int, Dictionary<int, DofSet>> commonDofsBetweenSubdomains
 			= new ConcurrentDictionary<int, Dictionary<int, DofSet>>();
 
-		public PsmDofManager(IComputeEnvironment environment, IModel model, SubdomainTopology subdomainTopology, 
-			bool sortDofsWhenPossible = false)
+		public PsmDofManager(IComputeEnvironment environment, IModel model, SubdomainTopology subdomainTopology,
+			Func<int, ISubdomainFreeDofOrdering> getSubdomainFreeDofs, bool sortDofsWhenPossible = false)
 		{
 			this.environment = environment;
 			this.model = model;
 			this.subdomainTopology = subdomainTopology;
+			this.getSubdomainFreeDofs = getSubdomainFreeDofs;
 			this.subdomainDofs = environment.CreateDictionaryPerNode(
-				s => new PsmSubdomainDofs(model.GetSubdomain(s), sortDofsWhenPossible));
+				s => new PsmSubdomainDofs(() => getSubdomainFreeDofs(s), sortDofsWhenPossible));
 		}
 
 		public DistributedOverlappingIndexer CreateDistributedVectorIndexer()
@@ -122,8 +126,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 		{
 			var commonDofsOfSubdomain = new Dictionary<int, DofSet>();
 			ISubdomain subdomain = model.GetSubdomain(subdomainID);
-			throw new NotImplementedException();
-			DofTable freeDofs = null;/*subdomain.FreeDofOrdering.FreeDofs;*/
+			DofTable freeDofs = getSubdomainFreeDofs(subdomainID).FreeDofs;
 			foreach (int neighborID in subdomainTopology.GetNeighborsOfSubdomain(subdomainID))
 			{
 				var dofSet = new DofSet();

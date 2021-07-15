@@ -49,65 +49,6 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			return nodeTopology;
 		}
 
-		public static IModel/*DistributedModel*/ CreateSingleSubdomainDistributedModel(IComputeEnvironment environment)
-		{
-			throw new NotImplementedException();
-			//AllDofs.AddDof(StructuralDof.TranslationX);
-   //         AllDofs.AddDof(StructuralDof.TranslationY);
-   //         AllDofs.AddDof(StructuralDof.TranslationZ);
-   //         var model = new DistributedModel(environment);
-   //         model.SubdomainsDictionary[0] = new Subdomain(0);
-
-   //         var mesh = new UniformMesh3D.Builder(MinCoords, MaxCoords, NumElements).SetMajorMinorAxis(0, 2).BuildMesh();
-
-   //         // Nodes
-   //         foreach ((int id, double[] coords) in mesh.EnumerateNodes())
-   //         {
-   //             model.NodesDictionary[id] = new Node(id, coords[0], coords[1], coords[2]);
-   //         }
-
-   //         // Materials
-   //         var material = new ElasticMaterial3D() { YoungModulus = E, PoissonRatio = v };
-   //         var dynamicProperties = new DynamicMaterial(1.0, 1.0, 1.0);
-
-   //         // Elements
-   //         var elemFactory = new ContinuumElement3DFactory(material, dynamicProperties);
-   //         foreach ((int elementID, int[] nodeIDs) in mesh.EnumerateElements())
-   //         {
-   //             Node[] nodes = nodeIDs.Select(n => model.NodesDictionary[n]).ToArray();
-   //             var elementType = elemFactory.CreateElement(mesh.CellType, nodes);
-   //             var element = new Element() { ID = elementID, ElementType = elementType };
-   //             foreach (var node in nodes) element.AddNode(node);
-   //             model.ElementsDictionary[element.ID] = element;
-   //             model.SubdomainsDictionary[0].Elements.Add(element);
-   //         }
-
-   //         // Boundary conditions
-   //         //TODO: hardcode the node IDs
-   //         var constrainedNodes = new List<int>();
-   //         constrainedNodes.Add(/*mesh.GetNodeID(new int[] { 0, 0, 0 })*/0 );
-   //         constrainedNodes.Add(/*mesh.GetNodeID(new int[] { mesh.NumNodes[0] - 1, 0, 0 })/*6*/4);
-   //         constrainedNodes.Add(/*mesh.GetNodeID(new int[] { 0, mesh.NumNodes[1] - 1, 0 })*//*63*/30);
-   //         foreach (int nodeID in constrainedNodes)
-   //         {
-   //             Node node = model.NodesDictionary[nodeID];
-   //             node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-   //             node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
-   //             node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationZ, Amount = 0 });
-   //         }
-
-   //         var loadedNodes = new List<int>();
-   //         loadedNodes.Add(/*mesh.GetNodeID(new int[] { mesh.NumNodes[0] - 1, mesh.NumNodes[1] - 1, mesh.NumNodes[2] - 1 })*//*909*/314);
-   //         foreach (int nodeID in loadedNodes)
-   //         {
-   //             Node node = model.NodesDictionary[nodeID];
-   //             model.Loads.Add(new Load() { Node = node, DOF = StructuralDof.TranslationZ, Amount = load });
-   //         }
-
-   //         return model;
-		}
-
-		//TODOMPI: Remove this
 		public static Model CreateSingleSubdomainModel()
 		{
 			AllDofs.AddDof(StructuralDof.TranslationX);
@@ -165,13 +106,12 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			return model;
 		}
 
-		public static IModel CreateMultiSubdomainModel(IComputeEnvironment environment)
+		public static IModel CreateMultiSubdomainModel()
 		{
-			throw new NotImplementedException();
-			//Dictionary<int, int> elementsToSubdomains = GetSubdomainsOfElements();
-			//DistributedModel model = CreateSingleSubdomainDistributedModel(environment);
-			//model.DecomposeIntoSubdomains(NumSubdomains[0] * NumSubdomains[1] * NumSubdomains[2], e => elementsToSubdomains[e]);
-			//return model;
+			Dictionary<int, int> elementsToSubdomains = GetSubdomainsOfElements();
+			Model model = CreateSingleSubdomainModel();
+			model.DecomposeIntoSubdomains(NumSubdomains[0] * NumSubdomains[1] * NumSubdomains[2], e => elementsToSubdomains[e]);
+			return model;
 		}
 
 		public static Table<int, int, double> GetExpectedNodalValues()

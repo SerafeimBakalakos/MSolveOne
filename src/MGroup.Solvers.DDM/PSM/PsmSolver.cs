@@ -62,7 +62,8 @@ namespace MGroup.Solvers.DDM.Psm
 			this.preconditioner = preconditioner;
 			this.interfaceProblemSolver = interfaceProblemSolver;
 
-			this.dofManagerPsm = new PsmDofManager(environment, model, subdomainTopology, false);
+			this.dofManagerPsm = new PsmDofManager(environment, model, subdomainTopology, 
+				s => algebraicModel.DofOrdering.SubdomainDofOrderings[s], false);
 
 			matrixManagersPsmGeneric = new ConcurrentDictionary<int, IPsmSubdomainMatrixManagerGeneric<TMatrix>>();
 			var matrixManagersPsm = new ConcurrentDictionary<int, IPsmSubdomainMatrixManager>();
@@ -127,8 +128,11 @@ namespace MGroup.Solvers.DDM.Psm
 		public virtual void Initialize()
 		{
 			// Reordering the internal dofs is not done here, since subdomain Kff must be built first. 
-			environment.DoPerNode(subdomainID => 
-				dofManagerPsm.GetSubdomainDofs(subdomainID).SeparateFreeDofsIntoBoundaryAndInternal()); 
+			environment.DoPerNode(subdomainID =>
+			{
+				ISubdomainFreeDofOrdering dofOrdering = algebraicModel.DofOrdering.SubdomainDofOrderings[subdomainID];
+				dofManagerPsm.GetSubdomainDofs(subdomainID).SeparateFreeDofsIntoBoundaryAndInternal();
+			}); 
 			dofManagerPsm.FindCommonDofsBetweenSubdomains();
 			this.indexer = dofManagerPsm.CreateDistributedVectorIndexer();
 

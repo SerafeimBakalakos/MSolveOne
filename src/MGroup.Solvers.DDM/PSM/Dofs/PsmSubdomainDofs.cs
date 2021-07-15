@@ -5,6 +5,7 @@ using System.Linq;
 using MGroup.MSolve.Discretization;
 using MGroup.Solvers.Commons;
 using MGroup.Solvers.DDM.Commons;
+using MGroup.Solvers.DofOrdering;
 
 //TODOMPI: DofTable should be replaced with an IntTable that stores ids, instead of actual references to nodes and dofs. 
 //		This will make transfering it via MPI much faster.
@@ -15,14 +16,14 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 {
 	public class PsmSubdomainDofs
 	{
-		private readonly ISubdomain subdomain;
+		private readonly Func<ISubdomainFreeDofOrdering> getSubdomainFreeDofs;
 
 		//TODO: This is essential for testing and very useful for debugging, but not production code. Should I remove it?
 		private readonly bool sortDofsWhenPossible;
 
-		public PsmSubdomainDofs(ISubdomain subdomain, bool sortDofsWhenPossible = false)
+		public PsmSubdomainDofs(Func<ISubdomainFreeDofOrdering> getSubdomainFreeDofs, bool sortDofsWhenPossible = false)
 		{
-			this.subdomain = subdomain;
+			this.getSubdomainFreeDofs = getSubdomainFreeDofs;
 			this.sortDofsWhenPossible = sortDofsWhenPossible;
 		}
 
@@ -53,8 +54,8 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 			var internalToFree = new HashSet<int>();
 			int subdomainBoundaryIdx = 0;
 
-			throw new NotImplementedException();
-			DofTable freeDofs = null;/*subdomain.FreeDofOrdering.FreeDofs;*/
+			ISubdomainFreeDofOrdering dofOrdering = getSubdomainFreeDofs();
+			DofTable freeDofs = dofOrdering.FreeDofs;
 			IEnumerable<INode> nodes = freeDofs.GetRows();
 			if (sortDofsWhenPossible)
 			{
@@ -91,8 +92,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 				}
 			}
 
-			throw new NotImplementedException();
-			this.NumFreeDofs = -1; /*subdomain.FreeDofOrdering.NumFreeDofs;*/
+			this.NumFreeDofs = dofOrdering.NumFreeDofs;
 			this.DofOrderingBoundary = boundaryDofOrdering;
 			this.DofsBoundaryToFree = boundaryToFree.ToArray();
 			this.DofsInternalToFree = internalToFree.ToArray();

@@ -124,42 +124,6 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			return nodeTopology;
 		}
 
-		public static IModel/*DistributedModel*/ CreateSingleSubdomainDistributedModel(IComputeEnvironment environment)
-		{
-			throw new NotImplementedException();
-			//AllDofs.Clear();
-			//AllDofs.AddDof(ThermalDof.Temperature);
-			//var model = new DistributedModel(environment);
-			//model.SubdomainsDictionary[0] = new Subdomain(0);
-
-			//// Nodes
-			//for (int n = 0; n <= 16; ++n)
-			//{
-			//    model.NodesDictionary[n] = new Node(n, n * length, 0.0, 0.0);
-			//}
-
-			//// Materials
-			//var material = new ThermalMaterial(density, specialHeat, conductivity);
-
-			//// Elements
-			//for (int e = 0; e < 16; ++e)
-			//{
-			//    Node[] nodes = { model.Nodes[e], model.Nodes[e + 1] };
-			//    var elementType = new ThermalRod(nodes, sectionArea, material);
-			//    var element = new Element() { ID = e, ElementType = elementType };
-			//    foreach (var node in nodes) element.AddNode(node);
-			//    model.ElementsDictionary[element.ID] = element;
-			//    model.SubdomainsDictionary[0].Elements.Add(element);
-			//}
-
-			//// Boundary conditions
-			//model.NodesDictionary[16].Constraints.Add(new Constraint() { DOF = ThermalDof.Temperature, Amount = 0 });
-			//model.Loads.Add(new Load() { Node = model.NodesDictionary[0], DOF = ThermalDof.Temperature, Amount = 1 });
-
-			//return model;
-		}
-
-		//TODOMPI: Remove this
 		public static Model CreateSingleSubdomainModel()
 		{
 			AllDofs.Clear();
@@ -194,31 +158,30 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			return model;
 		}
 
-		public static IModel CreateMultiSubdomainModel(IComputeEnvironment environment)
+		public static IModel CreateMultiSubdomainModel()
 		{
-			throw new NotImplementedException();
-			//// Partition
-			//DistributedModel model = CreateSingleSubdomainDistributedModel(environment);
-			//var elementsToSubdomains = new Dictionary<int, int>();
-			//elementsToSubdomains[0] = 0;
-			//elementsToSubdomains[1] = 0;
-			//elementsToSubdomains[2] = 1;
-			//elementsToSubdomains[3] = 1;
-			//elementsToSubdomains[4] = 2;
-			//elementsToSubdomains[5] = 2;
-			//elementsToSubdomains[6] = 3;
-			//elementsToSubdomains[7] = 3;
-			//elementsToSubdomains[8] = 4;
-			//elementsToSubdomains[9] = 4;
-			//elementsToSubdomains[10] = 5;
-			//elementsToSubdomains[11] = 5;
-			//elementsToSubdomains[12] = 6;
-			//elementsToSubdomains[13] = 6;
-			//elementsToSubdomains[14] = 7;
-			//elementsToSubdomains[15] = 7;
-			//model.DecomposeIntoSubdomains(8, e => elementsToSubdomains[e]);
+			// Partition
+			Model model = CreateSingleSubdomainModel();
+			var elementsToSubdomains = new Dictionary<int, int>();
+			elementsToSubdomains[0] = 0;
+			elementsToSubdomains[1] = 0;
+			elementsToSubdomains[2] = 1;
+			elementsToSubdomains[3] = 1;
+			elementsToSubdomains[4] = 2;
+			elementsToSubdomains[5] = 2;
+			elementsToSubdomains[6] = 3;
+			elementsToSubdomains[7] = 3;
+			elementsToSubdomains[8] = 4;
+			elementsToSubdomains[9] = 4;
+			elementsToSubdomains[10] = 5;
+			elementsToSubdomains[11] = 5;
+			elementsToSubdomains[12] = 6;
+			elementsToSubdomains[13] = 6;
+			elementsToSubdomains[14] = 7;
+			elementsToSubdomains[15] = 7;
+			model.DecomposeIntoSubdomains(8, e => elementsToSubdomains[e]);
 
-			//return model;
+			return model;
 		}
 
 		public static Table<int, int, double> GetExpectedNodalValues()

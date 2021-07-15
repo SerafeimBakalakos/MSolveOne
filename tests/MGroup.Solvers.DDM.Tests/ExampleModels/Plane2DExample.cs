@@ -324,49 +324,6 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			return nodeTopology;
 		}
 
-		public static IModel/*DistributedModel*/ CreateSingleSubdomainDistributedModel(IComputeEnvironment environment)
-		{
-			throw new NotImplementedException();
-			//AllDofs.Clear();
-			//AllDofs.AddDof(StructuralDof.TranslationX);
-			//AllDofs.AddDof(StructuralDof.TranslationY);
-			//var model = new DistributedModel(environment);
-			//model.SubdomainsDictionary[0] = new Subdomain(0);
-
-			//var mesh = new UniformMesh2D.Builder(MinCoords, MaxCoords, NumElements).SetMajorAxis(0).BuildMesh();
-
-			//// Nodes
-			//foreach ((int id, double[] coords) in mesh.EnumerateNodes())
-			//{
-			//    model.NodesDictionary[id] = new Node(id, coords[0], coords[1]);
-			//}
-
-			//// Materials
-			//var material = new ElasticMaterial2D(StressState2D.PlaneStress) { YoungModulus = E, PoissonRatio = v };
-			//var dynamicProperties = new DynamicMaterial(1.0, 1.0, 1.0);
-
-			//// Elements
-			//var elemFactory = new ContinuumElement2DFactory(thickness, material, dynamicProperties);
-			//foreach ((int elementID, int[] nodeIDs) in mesh.EnumerateElements())
-			//{
-			//    Node[] nodes = nodeIDs.Select(n => model.NodesDictionary[n]).ToArray();
-			//    var elementType = elemFactory.CreateElement(mesh.CellType, nodes);
-			//    var element = new Element() { ID = elementID, ElementType = elementType };
-			//    foreach (var node in nodes) element.AddNode(node);
-			//    model.ElementsDictionary[element.ID] = element;
-			//    model.SubdomainsDictionary[0].Elements.Add(element);
-			//}
-
-			//// Boundary conditions
-			//model.NodesDictionary[0].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-			//model.NodesDictionary[0].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
-			//model.NodesDictionary[8].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
-			//model.Loads.Add(new Load() { Node = model.NodesDictionary[80], DOF = StructuralDof.TranslationX, Amount = load });
-
-			//return model;
-		}
-
-		//TODOMPI: Remove this
 		public static Model CreateSingleSubdomainModel()
 		{
 			AllDofs.Clear();
@@ -408,13 +365,12 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			return model;
 		}
 
-		public static IModel CreateMultiSubdomainModel(IComputeEnvironment environment)
+		public static IModel CreateMultiSubdomainModel()
 		{
-			throw new NotImplementedException();
-			//Dictionary<int, int> elementsToSubdomains = GetSubdomainsOfElements();
-			//DistributedModel model = CreateSingleSubdomainDistributedModel(environment);
-			//model.DecomposeIntoSubdomains(NumSubdomains[0] * NumSubdomains[1], e => elementsToSubdomains[e]);
-			//return model;
+			Dictionary<int, int> elementsToSubdomains = GetSubdomainsOfElements();
+			Model model = CreateSingleSubdomainModel();
+			model.DecomposeIntoSubdomains(NumSubdomains[0] * NumSubdomains[1], e => elementsToSubdomains[e]);
+			return model;
 		}
 
 		public static Table<int, int, double> GetExpectedNodalValues()
