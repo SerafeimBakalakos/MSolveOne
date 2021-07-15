@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <StartupObject>MGroup.Solvers.DDM.Tests.Program</StartupObject>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MGroup.Constitutive.Structural\MGroup.Constitutive.Structural.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.Constitutive.Thermal\MGroup.Constitutive.Thermal.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.FEM.Structural\MGroup.FEM.Structural.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.FEM.Thermal\MGroup.FEM.Thermal.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.NumericalAnalyzers\MGroup.NumericalAnalyzers.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.Solvers.DDM\MGroup.Solvers.DDM.csproj" />
+  </ItemGroup>
+
+</Project>

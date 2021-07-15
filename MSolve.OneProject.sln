@@ -63,6 +63,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGroup.LinearAlgebra.Distri
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGroup.Solvers.DDM", "src\MGroup.Solvers.DDM\MGroup.Solvers.DDM.csproj", "{BF3E776E-9E10-41AD-A367-82E9A858B1E8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MGroup.Solvers.DDM.Tests", "tests\MGroup.Solvers.DDM.Tests\MGroup.Solvers.DDM.Tests.csproj", "{771EF712-209F-486C-8D53-A87029DCEE4A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -181,6 +183,10 @@ Global
 		{BF3E776E-9E10-41AD-A367-82E9A858B1E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF3E776E-9E10-41AD-A367-82E9A858B1E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF3E776E-9E10-41AD-A367-82E9A858B1E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{771EF712-209F-486C-8D53-A87029DCEE4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{771EF712-209F-486C-8D53-A87029DCEE4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{771EF712-209F-486C-8D53-A87029DCEE4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{771EF712-209F-486C-8D53-A87029DCEE4A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -214,6 +220,7 @@ Global
 		{7933DB65-3765-4A6F-9709-4013207F710D} = {08DA1471-EAC0-4C41-BCDA-AC3544C04EC9}
 		{9CEC3610-D40A-4D16-AACB-1DCC3932703F} = {F91A8D7B-C681-45EC-98EB-C1293FF62521}
 		{BF3E776E-9E10-41AD-A367-82E9A858B1E8} = {08DA1471-EAC0-4C41-BCDA-AC3544C04EC9}
+		{771EF712-209F-486C-8D53-A87029DCEE4A} = {F91A8D7B-C681-45EC-98EB-C1293FF62521}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {65770E5A-E644-45FE-B065-54C0E3D6EBB4}
