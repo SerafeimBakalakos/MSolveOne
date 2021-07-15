@@ -6,12 +6,16 @@ using MGroup.Constitutive.Thermal;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods;
 using MGroup.LinearAlgebra.Iterative.Termination;
+using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.NumericalAnalyzers;
+using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.DDM.Psm;
 using MGroup.Solvers.DDM.PSM.Dofs;
+using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.DDM.Tests.ExampleModels;
+using MGroup.Solvers.DofOrdering;
 using TriangleNet;
 using Xunit;
 
@@ -27,43 +31,45 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 
 		internal static void TestForBrick3DInternal(IComputeEnvironment environment)
 		{
-			throw new NotImplementedException();
-			//// Environment
-			//ComputeNodeTopology nodeTopology = Brick3DExample.CreateNodeTopology();
-   //         environment.Initialize(nodeTopology);
+			// Environment
+			ComputeNodeTopology nodeTopology = Brick3DExample.CreateNodeTopology();
+			environment.Initialize(nodeTopology);
 
-   //         // Model
-   //         IModel model = Brick3DExample.CreateMultiSubdomainModel(environment);
-   //         model.ConnectDataStructures(); //TODOMPI: this is also done in the analyzer
-   //         var subdomainTopology = new SubdomainTopology(environment, model);
+			// Model
+			IModel model = Brick3DExample.CreateMultiSubdomainModel();
+			model.ConnectDataStructures(); //TODOMPI: this is also done in the analyzer
+			var subdomainTopology = new SubdomainTopology(environment, model);
 
-   //         // Solver
-   //         var pcgBuilder = new PcgAlgorithm.Builder();
-   //         pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-   //         pcgBuilder.ResidualTolerance = 1E-10;
-   //         var solverBuilder = new PsmSolver.Builder(environment);
-   //         solverBuilder.InterfaceProblemSolver = pcgBuilder.Build();
-   //         PsmSolver solver = solverBuilder.BuildSolver(model, subdomainTopology);
+			// Solver
+			var pcgBuilder = new PcgAlgorithm.Builder();
+			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+			pcgBuilder.ResidualTolerance = 1E-10;
+			var solverFactory = new PsmSolver<SymmetricCscMatrix>.Factory(
+				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory());
+			solverFactory.InterfaceProblemSolver = pcgBuilder.Build();
+			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel, subdomainTopology);
 
-   //         // Linear static analysis
-   //         var problem = new ProblemThermal(environment, model, solver);
-   //         var childAnalyzer = new LinearAnalyzer(environment, model, solver, problem);
-   //         var parentAnalyzer = new StaticAnalyzer(environment, model, solver, problem, childAnalyzer);
+			// Linear static analysis
+			var problem = new ProblemThermal(model, algebraicModel, solver);
+			var childAnalyzer = new LinearAnalyzer(model, algebraicModel, solver, problem);
+			var parentAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, problem, childAnalyzer);
 
-   //         // Run the analysis
-   //         parentAnalyzer.Initialize();
-   //         parentAnalyzer.Solve();
+			// Run the analysis
+			parentAnalyzer.Initialize();
+			parentAnalyzer.Solve();
 
-   //         // Check results
-   //         Table<int, int, double> expectedResults = Brick3DExample.GetExpectedNodalValues();
-   //         double tolerance = 1E-7;
-   //         environment.DoPerNode(subdomainID =>
-   //         {
-   //             ISubdomain subdomain = model.GetSubdomain(subdomainID);
-   //             Table<int, int, double> computedResults =
-   //                 Utilities.FindNodalFieldValues(subdomain, solver.LinearSystems[subdomainID].Solution);
-   //             Utilities.AssertEqual(expectedResults, computedResults, tolerance);
-   //         });
+			// Check results
+			Table<int, int, double> expectedResults = Brick3DExample.GetExpectedNodalValues();
+			double tolerance = 1E-7;
+			environment.DoPerNode(subdomainID =>
+			{
+				ISubdomain subdomain = model.GetSubdomain(subdomainID);
+				ISubdomainFreeDofOrdering freeDofs = algebraicModel.DofOrdering.SubdomainDofOrderings[subdomain.ID];
+				Table<int, int, double> computedResults =
+					Utilities.FindNodalFieldValues(subdomain, freeDofs, algebraicModel, solver.LinearSystem.Solution);
+				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
+			});
 		}
 
 		[Theory]
@@ -74,39 +80,41 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 
 		internal static void TestForLine1DInternal(IComputeEnvironment environment)
 		{
-			throw new NotImplementedException();
-			//// Environment
-			//ComputeNodeTopology nodeTopology = Line1DExample.CreateNodeTopology();
-   //         environment.Initialize(nodeTopology);
+			// Environment
+			ComputeNodeTopology nodeTopology = Line1DExample.CreateNodeTopology();
+			environment.Initialize(nodeTopology);
 
-   //         // Model
-   //         IModel model = Line1DExample.CreateMultiSubdomainModel(environment);
-   //         model.ConnectDataStructures(); //TODOMPI: this is also done in the analyzer
-   //         var subdomainTopology = new SubdomainTopology(environment, model);
+			// Model
+			IModel model = Line1DExample.CreateMultiSubdomainModel();
+			model.ConnectDataStructures(); //TODOMPI: this is also done in the analyzer
+			var subdomainTopology = new SubdomainTopology(environment, model);
 
-   //         // Solver
-   //         var solverBuilder = new PsmSolver.Builder(environment);
-   //         PsmSolver solver = solverBuilder.BuildSolver(model, subdomainTopology);
+			// Solver
+			var solverFactory = new PsmSolver<SymmetricCscMatrix>.Factory(
+				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory());
+			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel, subdomainTopology);
 
-   //         // Linear static analysis
-   //         var problem = new ProblemThermal(environment, model, solver);
-   //         var childAnalyzer = new LinearAnalyzer(environment, model, solver, problem);
-   //         var parentAnalyzer = new StaticAnalyzer(environment, model, solver, problem, childAnalyzer);
+			// Linear static analysis
+			var problem = new ProblemThermal(model, algebraicModel, solver);
+			var childAnalyzer = new LinearAnalyzer(model, algebraicModel, solver, problem);
+			var parentAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, problem, childAnalyzer);
 
-   //         // Run the analysis
-   //         parentAnalyzer.Initialize();
-   //         parentAnalyzer.Solve();
+			// Run the analysis
+			parentAnalyzer.Initialize();
+			parentAnalyzer.Solve();
 
-   //         // Check results
-   //         Table<int, int, double> expectedResults = Line1DExample.GetExpectedNodalValues();
-   //         double tolerance = 1E-7;
-   //         environment.DoPerNode(subdomainID =>
-   //         {
-   //             ISubdomain subdomain = model.GetSubdomain(subdomainID);
-   //             Table<int, int, double> computedResults = 
-   //                 Utilities.FindNodalFieldValues(subdomain, solver.LinearSystems[subdomainID].Solution);
-   //             Utilities.AssertEqual(expectedResults, computedResults, tolerance);
-   //         });
+			// Check results
+			Table<int, int, double> expectedResults = Line1DExample.GetExpectedNodalValues();
+			double tolerance = 1E-7;
+			environment.DoPerNode(subdomainID =>
+			{
+				ISubdomain subdomain = model.GetSubdomain(subdomainID);
+				ISubdomainFreeDofOrdering freeDofs = algebraicModel.DofOrdering.SubdomainDofOrderings[subdomain.ID];
+				Table<int, int, double> computedResults =
+					Utilities.FindNodalFieldValues(subdomain, freeDofs, algebraicModel, solver.LinearSystem.Solution);
+				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
+			});
 		}
 
 		[Theory]
@@ -117,43 +125,45 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 
 		internal static void TestForPlane2DInternal(IComputeEnvironment environment)
 		{
-			throw new NotImplementedException();
-			//// Environment
-			//ComputeNodeTopology nodeTopology = Plane2DExample.CreateNodeTopology();
-			//environment.Initialize(nodeTopology);
+			// Environment
+			ComputeNodeTopology nodeTopology = Plane2DExample.CreateNodeTopology();
+			environment.Initialize(nodeTopology);
 
-			//// Model
-			//IModel model = Plane2DExample.CreateMultiSubdomainModel(environment);
-			//model.ConnectDataStructures(); //TODOMPI: this is also done in the analyzer
-			//var subdomainTopology = new SubdomainTopology(environment, model);
+			// Model
+			IModel model = Plane2DExample.CreateMultiSubdomainModel();
+			model.ConnectDataStructures(); //TODOMPI: this is also done in the analyzer
+			var subdomainTopology = new SubdomainTopology(environment, model);
 
-			//// Solver
-			//var pcgBuilder = new PcgAlgorithm.Builder();
-			//pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(100);
-			//pcgBuilder.ResidualTolerance = 1E-10;
-			//var solverBuilder = new PsmSolver.Builder(environment);
-			//solverBuilder.InterfaceProblemSolver = pcgBuilder.Build();
-			//PsmSolver solver = solverBuilder.BuildSolver(model, subdomainTopology);
+			// Solver
+			var pcgBuilder = new PcgAlgorithm.Builder();
+			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+			pcgBuilder.ResidualTolerance = 1E-10;
+			var solverFactory = new PsmSolver<SymmetricCscMatrix>.Factory(
+				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory());
+			solverFactory.InterfaceProblemSolver = pcgBuilder.Build();
+			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel, subdomainTopology);
 
-			//// Linear static analysis
-			//var problem = new ProblemThermal(environment, model, solver);
-			//var childAnalyzer = new LinearAnalyzer(environment, model, solver, problem);
-			//var parentAnalyzer = new StaticAnalyzer(environment, model, solver, problem, childAnalyzer);
+			// Linear static analysis
+			var problem = new ProblemThermal(model, algebraicModel, solver);
+			var childAnalyzer = new LinearAnalyzer(model, algebraicModel, solver, problem);
+			var parentAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, problem, childAnalyzer);
 
-			//// Run the analysis
-			//parentAnalyzer.Initialize();
-			//parentAnalyzer.Solve();
+			// Run the analysis
+			parentAnalyzer.Initialize();
+			parentAnalyzer.Solve();
 
-			//// Check results
-			//Table<int, int, double> expectedResults = Plane2DExample.GetExpectedNodalValues();
-			//double tolerance = 1E-7;
-			//environment.DoPerNode(subdomainID =>
-			//{
-			//    ISubdomain subdomain = model.GetSubdomain(subdomainID);
-			//    Table<int, int, double> computedResults =
-			//        Utilities.FindNodalFieldValues(subdomain, solver.LinearSystems[subdomainID].Solution);
-			//    Utilities.AssertEqual(expectedResults, computedResults, tolerance);
-			//});
+			// Check results
+			Table<int, int, double> expectedResults = Plane2DExample.GetExpectedNodalValues();
+			double tolerance = 1E-7;
+			environment.DoPerNode(subdomainID =>
+			{
+				ISubdomain subdomain = model.GetSubdomain(subdomainID);
+				ISubdomainFreeDofOrdering freeDofs = algebraicModel.DofOrdering.SubdomainDofOrderings[subdomain.ID];
+				Table<int, int, double> computedResults =
+					Utilities.FindNodalFieldValues(subdomain, freeDofs, algebraicModel, solver.LinearSystem.Solution);
+				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
+			});
 		}
 	}
 }

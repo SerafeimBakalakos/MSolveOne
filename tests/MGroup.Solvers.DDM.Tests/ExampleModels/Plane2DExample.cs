@@ -15,8 +15,7 @@ using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Loads;
-using MGroup.Solvers.DDM.Mesh;
-using MGroup.Solvers.DDM.Partitioning;
+using MGroup.MSolve.Meshes.Structured;
 using Xunit;
 
 // Global
@@ -332,7 +331,7 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			var model = new Model();
 			model.SubdomainsDictionary[0] = new Subdomain(0);
 
-			var mesh = new UniformMesh2D.Builder(MinCoords, MaxCoords, NumElements).SetMajorAxis(0).BuildMesh();
+			var mesh = new UniformCartesianMesh2D.Builder(MinCoords, MaxCoords, NumElements).SetMajorAxis(0).BuildMesh();
 
 			// Nodes
 			foreach ((int id, double[] coords) in mesh.EnumerateNodes())

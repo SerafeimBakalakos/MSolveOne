@@ -96,9 +96,7 @@ namespace MGroup.Solvers.DDM.Psm
 					environment, model, dofManagerPsm, matrixManagersBasic);
 			}
 
-			LinearSystem = null;
-			//LinearSystems = environment.CreateDictionaryPerNode(
-			//	subdomainID => matrixManagersBasic[subdomainID].LinearSystem);
+			LinearSystem = algebraicModel.LinearSystem;
 
 			this.subdomainVectors = environment.CreateDictionaryPerNode(subdomainID => new PsmSubdomainVectors(
 					dofManagerPsm.GetSubdomainDofs(subdomainID), matrixManagersPsm[subdomainID]));
@@ -109,7 +107,6 @@ namespace MGroup.Solvers.DDM.Psm
 			Logger = new SolverLogger(name);
 		}
 
-		//public IReadOnlyDictionary<int, ILinearSystem> LinearSystems { get; }
 		public IGlobalLinearSystem LinearSystem { get; }
 
 		public ISolverLogger Logger { get; }
@@ -125,7 +122,7 @@ namespace MGroup.Solvers.DDM.Psm
 		{
 		}
 
-		public virtual void Initialize()
+		public virtual void Initialize() //TODOMPI: Restructure this. The analyzers now call only solver.Solve()
 		{
 			// Reordering the internal dofs is not done here, since subdomain Kff must be built first. 
 			environment.DoPerNode(subdomainID =>
@@ -142,8 +139,9 @@ namespace MGroup.Solvers.DDM.Psm
 
 		public virtual void PreventFromOverwrittingSystemMatrices() {}
 
-		public virtual void Solve()
+		public virtual void Solve() 
 		{
+			Initialize();
 			Action<int> calcSubdomainMatrices = subdomainID =>
 			{
 				TMatrix Kff = algebraicModel.LinearSystem.Matrix.LocalMatrices[subdomainID];

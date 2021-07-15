@@ -13,8 +13,7 @@ using MGroup.FEM.Structural.Elements;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Loads;
-using MGroup.Solvers.DDM.Mesh;
-using MGroup.Solvers.DDM.Partitioning;
+using MGroup.MSolve.Meshes.Structured;
 
 //TODO: different number of clusters, subdomains, elements per axis. Try to make this as nonsymmetric as possible, 
 //      but keep subdomain-elements ratio constant to have the same stiffnesses.
@@ -57,7 +56,8 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			var model = new Model();
 			model.SubdomainsDictionary[0] = new Subdomain(0);
 
-			var mesh = new UniformMesh3D.Builder(MinCoords, MaxCoords, NumElements).SetMajorMinorAxis(0, 2).BuildMesh();
+			var mesh = new UniformCartesianMesh3D.Builder(MinCoords, MaxCoords, NumElements).
+				SetMajorMinorAxis(0, 2).SetElementNodeOrderBathe().BuildMesh();
 
 			// Nodes
 			foreach ((int id, double[] coords) in mesh.EnumerateNodes())

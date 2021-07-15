@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using MGroup.MSolve.Discretization;
-using MGroup.Solvers.DDM.Mesh;
+using MGroup.MSolve.Meshes.Structured;
 
 namespace MGroup.Solvers.DDM.Partitioning
 {
@@ -12,14 +12,14 @@ namespace MGroup.Solvers.DDM.Partitioning
         private const int dim = 3;
         private const int invalidID = int.MinValue;
 
-        private readonly UniformMesh3D mesh;
+        private readonly UniformCartesianMesh3D mesh;
         private readonly int[] numClusters;
         private readonly int[] numSubdomains;
         private Dictionary<int, int> clustersOfSubdomains;
         private Dictionary<int, HashSet<int>> neighborsOfSubdomains;
         private Dictionary<int, int> subdomainsOfElements;
 
-        public UniformMeshPartitioner3D(UniformMesh3D mesh, int[] numSubdomains, int[] numClusters)
+        public UniformMeshPartitioner3D(UniformCartesianMesh3D mesh, int[] numSubdomains, int[] numClusters)
         {
             this.mesh = mesh;
             this.numSubdomains = numSubdomains;

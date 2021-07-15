@@ -4,8 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using MGroup.MSolve.Discretization;
-using MGroup.Solvers.DDM.Mesh;
-using MGroup.Solvers.DDM.Output.VTK;
+using MGroup.MSolve.Meshes.Output.VTK;
 using MGroup.Solvers.DDM.Partitioning;
 
 namespace MGroup.Solvers.DDM.Output
