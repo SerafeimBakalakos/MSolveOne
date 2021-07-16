@@ -32,7 +32,6 @@ namespace MGroup.Solvers.DDM.Psm
 	{
 		protected readonly DistributedAlgebraicModel<TMatrix> algebraicModel;
 		protected readonly IComputeEnvironment environment;
-		protected readonly PsmInterfaceProblemDofs interfaceProblemDofs;
 		protected readonly IPsmInterfaceProblemMatrix interfaceProblemMatrix;
 		protected readonly IDistributedIterativeMethod interfaceProblemSolver;
 		protected readonly PsmInterfaceProblemVectors interfaceProblemVectors;
@@ -86,8 +85,6 @@ namespace MGroup.Solvers.DDM.Psm
 					environment, s => algebraicModel.SubdomainLinearSystems[s], s => subdomainDofsPsm[s]);
 			}
 
-			this.interfaceProblemDofs = new PsmInterfaceProblemDofs(environment, model, subdomainTopology, 
-				s => subdomainDofsPsm[s]);
 			this.interfaceProblemVectors = new PsmInterfaceProblemVectors(environment, subdomainVectors);
 			if (explicitSubdomainMatrices)
 			{
@@ -126,7 +123,7 @@ namespace MGroup.Solvers.DDM.Psm
 			{
 				subdomainDofsPsm[subdomainID].SeparateFreeDofsIntoBoundaryAndInternal();
 			}); 
-			this.indexer = interfaceProblemDofs.CreateDistributedVectorIndexer();
+			this.indexer = subdomainTopology.CreateDistributedVectorIndexer(s => subdomainDofsPsm[s].DofOrderingBoundary);
 
 			//TODOMPI: What should I log here? And where? There is not a central place for logs.
 			//Logger.LogNumDofs("Global boundary dofs", dofSeparatorPsm.GetNumBoundaryDofsCluster(clusterID));

@@ -67,12 +67,11 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 				s => new MockSubdomainLinearSystem(dofOrdering.SubdomainDofOrderings[s]));
 			Dictionary<int, PsmSubdomainDofs> subdomainDofs = environment.CreateDictionaryPerNode(
 				s => new PsmSubdomainDofs(linearSystems[s], true));
-			var interfaceProblemDofs = new PsmInterfaceProblemDofs(environment, model, subdomainTopology, s => subdomainDofs[s]);
 
 			subdomainTopology.FindCommonNodesBetweenSubdomains();
 			subdomainTopology.FindCommonDofsBetweenSubdomains();
 			environment.DoPerNode(s => subdomainDofs[s].SeparateFreeDofsIntoBoundaryAndInternal());
-			return interfaceProblemDofs.CreateDistributedVectorIndexer();
+			return subdomainTopology.CreateDistributedVectorIndexer(s => subdomainDofs[s].DofOrderingBoundary);
 		}
 
 		private class MockSubdomainLinearSystem : ISubdomainLinearSystem

@@ -4,12 +4,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using MGroup.Environments;
+using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.MSolve.Discretization;
 using MGroup.Solvers.Commons;
 using MGroup.Solvers.DofOrdering;
 
-//TODO: Perhaps the common nodes and common dofs must be calculated and handled by different classes. Common dofs must be created
+//TODO: Perhaps the common nodes and common dofs should be calculated and handled by different classes. Common dofs must be created
 //		immediately after ordering subdomain free dofs. Common nodes, immediately after partitioning/repartitioning.
+//TODO: Another way to make this class smaller is to delegate local subdomain operations to a dedicated class, while this one 
+//		handles the communications.
 //TODO: There is some duplication between processing nodes and processing dofs.
 namespace MGroup.Solvers.DDM
 {
@@ -51,6 +54,36 @@ namespace MGroup.Solvers.DDM
 				return neighbors;
 			};
 			this.neighborsPerSubdomain = environment.CreateDictionaryPerNode(findSubdomainNeighbors);
+		}
+
+		public DistributedOverlappingIndexer CreateDistributedVectorIndexer(Func<int, DofTable> getSubdomainDofs)
+		{
+			var indexer = new DistributedOverlappingIndexer(environment);
+			Action<int> initializeIndexer = subdomainID =>
+			{
+				DofTable subdomainDofs = getSubdomainDofs(subdomainID);
+
+				var allCommonDofIndices = new Dictionary<int, int[]>();
+				foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
+				{
+					DofSet commonDofs = GetCommonDofsOfSubdomains(subdomainID, neighborID);
+					var commonDofIndices = new int[commonDofs.Count()];
+					int idx = 0;
+					foreach ((int nodeID, int dofID) in commonDofs.EnumerateNodesDofs())
+					{
+						//TODO: It would be faster to iterate each node and then its dofs. Same for DofTable. 
+						//		Even better let DofTable take DofSet as argument and return the indices.
+						INode node = model.GetNode(nodeID);
+						IDofType dof = AllDofs.GetDofWithId(dofID);
+						commonDofIndices[idx++] = subdomainDofs[node, dof];
+					}
+					allCommonDofIndices[neighborID] = commonDofIndices;
+				}
+
+				indexer.GetLocalComponent(subdomainID).Initialize(subdomainDofs.EntryCount, allCommonDofIndices);
+			};
+			environment.DoPerNode(initializeIndexer);
+			return indexer;
 		}
 
 		//TODOMPI: this is not very safe. It is easy to mix up the two subdomains, which will lead to NullReferenceException if
@@ -133,7 +166,7 @@ namespace MGroup.Solvers.DDM
 
 					foreach (int otherSubdomainID in node.SubdomainsDictionary.Keys)
 					{
-						if (otherSubdomainID == subdomainID) continue; // one of all will the current subdomain
+						if (otherSubdomainID == subdomainID) continue; // one of all will be the current subdomain
 
 						Debug.Assert(neighborsPerSubdomain[subdomainID].Contains(otherSubdomainID),
 							$"Subdomain {otherSubdomainID} is not listed as a neighbor of subdomain {subdomainID}," +
