@@ -18,10 +18,10 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 		private Matrix Kii;
 		private Matrix inverseKii;
 
-		public PsmSubdomainMatrixManagerDense(PsmSubdomainDofs subdomainDofs, SubdomainLinearSystem<Matrix> linearSystem)
+		public PsmSubdomainMatrixManagerDense(SubdomainLinearSystem<Matrix> linearSystem, PsmSubdomainDofs subdomainDofs)
 		{
-			this.subdomainDofs = subdomainDofs;
 			this.linearSystem = linearSystem;
+			this.subdomainDofs = subdomainDofs;
 		}
 
 		public IMatrixView CalcSchurComplement() => Kbb - Kbi * (inverseKii * Kib);
@@ -69,8 +69,8 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 			public ISubdomainMatrixAssembler<Matrix> CreateAssembler() => new DenseMatrixAssembler();
 
 			public IPsmSubdomainMatrixManager CreateMatrixManager(
-				PsmSubdomainDofs subdomainDofs, SubdomainLinearSystem<Matrix> linearSystem)
-				=> new PsmSubdomainMatrixManagerDense(subdomainDofs, linearSystem);
+				SubdomainLinearSystem<Matrix> linearSystem, PsmSubdomainDofs subdomainDofs)
+				=> new PsmSubdomainMatrixManagerDense(linearSystem, subdomainDofs);
 		}
 	}
 }

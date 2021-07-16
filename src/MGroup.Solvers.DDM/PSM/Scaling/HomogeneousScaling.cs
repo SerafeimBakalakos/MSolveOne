@@ -6,7 +6,6 @@ using MGroup.LinearAlgebra.Vectors;
 using System.Collections.Concurrent;
 using MGroup.Environments;
 using MGroup.Solvers.DDM.PSM.Dofs;
-using MGroup.Solvers.DDM.Mappings;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.DataStructures;
@@ -16,26 +15,22 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 	public class HomogeneousScaling : IBoundaryDofScaling
 	{
 		private readonly IComputeEnvironment environment;
-		private readonly IModel model;
-		private readonly PsmDofManager dofManager;
+		private readonly Func<int, PsmSubdomainDofs> getSubdomainDofs;
 		private readonly ConcurrentDictionary<int, double[]> inverseMultiplicities = new ConcurrentDictionary<int, double[]>();
 		//private readonly ConcurrentDictionary<int, IMappingMatrix> dofMappingBoundaryClusterToSubdomain = 
 		//	new ConcurrentDictionary<int, IMappingMatrix>();
 
-		public HomogeneousScaling(IComputeEnvironment environment, IModel model,
-			PsmDofManager dofManager)
+		public HomogeneousScaling(IComputeEnvironment environment, Func<int, PsmSubdomainDofs> getSubdomainDofs)
 		{
 			this.environment = environment;
-			this.model = model;
-			this.dofManager = dofManager;
+			this.getSubdomainDofs = getSubdomainDofs;
 		}
 
 		public void CalcSubdomainScaling(DistributedOverlappingIndexer indexer)
 		{
 			Action<int> calcSubdomainScaling = subdomainID =>
 			{
-				ISubdomain subdomain = model.GetSubdomain(subdomainID);
-				int numBoundaryDofs = dofManager.GetSubdomainDofs(subdomainID).DofsBoundaryToFree.Length;
+				int numBoundaryDofs = getSubdomainDofs(subdomainID).DofsBoundaryToFree.Length;
 
 				var subdomainW = new double[numBoundaryDofs];
 				int[] multiplicites = indexer.GetLocalComponent(subdomainID).Multiplicities;
@@ -50,7 +45,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 				//	subdomainW[idx] = 1.0 / node.SubdomainsDictionary.Count;
 				//}
 
-				inverseMultiplicities[subdomain.ID] = subdomainW;
+				inverseMultiplicities[subdomainID] = subdomainW;
 
 				//BooleanMatrixRowsToColumns Lb = dofSeparator.GetDofMappingBoundaryClusterToSubdomain(subdomain.ID);
 				//var Lpb = new ScalingMatrixRowMajor(Lb.NumRows, Lb.NumColumns, Lb.RowsToColumns, subdomainW);
@@ -92,7 +87,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 
 		public void ScaleForceVector(int subdomainID, Vector subdomainForces)
 		{
-			int[] boundaryDofs = dofManager.GetSubdomainDofs(subdomainID).DofsBoundaryToFree;
+			int[] boundaryDofs = getSubdomainDofs(subdomainID).DofsBoundaryToFree;
 			double[] coefficients = inverseMultiplicities[subdomainID];
 			for (int i = 0; i < boundaryDofs.Length; i++)
 			{

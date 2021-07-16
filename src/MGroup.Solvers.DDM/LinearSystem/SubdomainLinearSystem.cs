@@ -21,6 +21,8 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public ISubdomainFreeDofOrdering DofOrdering => algebraicModel.DofOrdering.SubdomainDofOrderings[subdomainID];
 
+		IMatrix ISubdomainLinearSystem.Matrix => this.Matrix;
+
 		public TMatrix Matrix
 		{
 			get => algebraicModel.LinearSystem.Matrix.LocalMatrices[subdomainID];

@@ -18,15 +18,15 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 	public class PsmInterfaceProblemMatrixImplicit : IPsmInterfaceProblemMatrix
 	{
 		private readonly IComputeEnvironment environment;
-		private readonly PsmDofManager dofManager;
-		private readonly IDictionary<int, IPsmSubdomainMatrixManager> matrixManagers;
+		private readonly Func<int, PsmSubdomainDofs> getSubdomainDofs;
+		private readonly Func<int, IPsmSubdomainMatrixManager> getSubdomainMatrices;
 
-		public PsmInterfaceProblemMatrixImplicit(IComputeEnvironment environment, PsmDofManager dofManager,
-			IDictionary<int, IPsmSubdomainMatrixManager> matrixManagers)
+		public PsmInterfaceProblemMatrixImplicit(IComputeEnvironment environment, Func<int, PsmSubdomainDofs> getSubdomainDofs, 
+			Func<int, IPsmSubdomainMatrixManager> getSubdomainMatrices)
 		{
 			this.environment = environment;
-			this.dofManager = dofManager;
-			this.matrixManagers = matrixManagers;
+			this.getSubdomainDofs = getSubdomainDofs;
+			this.getSubdomainMatrices = getSubdomainMatrices;
 		}
 
 		public DistributedOverlappingMatrix Matrix { get; private set; }
@@ -45,7 +45,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 		public double[] ExtractDiagonal(int subdomainID) 
 		{
 			// Multiply with the columns of identity matrix and keep the corresponding entries.
-			int numBoundaryDofs = dofManager.GetSubdomainDofs(subdomainID).DofsBoundaryToFree.Length; 
+			int numBoundaryDofs = getSubdomainDofs(subdomainID).DofsBoundaryToFree.Length; 
 			var lhs = Vector.CreateZero(numBoundaryDofs);
 			var rhs = Vector.CreateZero(numBoundaryDofs);
 			var diagonal = new double[numBoundaryDofs];
@@ -75,6 +75,6 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 		/// <param name="input">The displacements that correspond to boundary dofs of this subdomain.</param>
 		/// <param name="output">The forces that correspond to boundary dofs of this subdomain.</param>
 		private void MultiplySubdomainSchurComplement(int subdomainID, Vector input, Vector output)
-			=> matrixManagers[subdomainID].MultiplySchurComplementImplicitly(input, output);
+			=> getSubdomainMatrices(subdomainID).MultiplySchurComplementImplicitly(input, output);
 	}
 }

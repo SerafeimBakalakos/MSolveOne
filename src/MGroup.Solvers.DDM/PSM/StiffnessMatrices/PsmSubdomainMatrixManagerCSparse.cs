@@ -22,10 +22,10 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 		private CscMatrix Kii;
 		private LUCSparseNet inverseKii;
 
-		public PsmSubdomainMatrixManagerCSparse(PsmSubdomainDofs subdomainDofs, SubdomainLinearSystem<CsrMatrix> linearSystem)
+		public PsmSubdomainMatrixManagerCSparse(SubdomainLinearSystem<CsrMatrix> linearSystem, PsmSubdomainDofs subdomainDofs)
 		{
-			this.subdomainDofs = subdomainDofs;
 			this.linearSystem = linearSystem;
+			this.subdomainDofs = subdomainDofs;
 		}
 
 		public IMatrixView CalcSchurComplement()
@@ -85,8 +85,8 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 			public ISubdomainMatrixAssembler<CsrMatrix> CreateAssembler() => new CsrMatrixAssembler(false);
 
 			public IPsmSubdomainMatrixManager CreateMatrixManager(
-				PsmSubdomainDofs subdomainDofs, SubdomainLinearSystem<CsrMatrix> linearSystem)
-				=> new PsmSubdomainMatrixManagerCSparse(subdomainDofs, linearSystem);
+				SubdomainLinearSystem<CsrMatrix> linearSystem, PsmSubdomainDofs subdomainDofs)
+				=> new PsmSubdomainMatrixManagerCSparse(linearSystem, subdomainDofs);
 		}
 	}
 }

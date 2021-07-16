@@ -4,10 +4,9 @@ using System.Collections.Generic;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Solvers.Commons;
 using MGroup.Solvers.DDM.LinearSystem;
-using MGroup.Solvers.DofOrdering;
+using MGroup.Solvers.DDM.PSM.Dofs;
 
 //TODOMPI: Instead of asking ComputeNode for its neighbors, ISubdomain should contain this info. 
 //TODOMPI: I should decouple the code, such that there are classes that define operations on data, classes that define transfer of data,
@@ -15,15 +14,15 @@ using MGroup.Solvers.DofOrdering;
 //		and any synchronization (e.g. locks in IDofSeparator classes). This should probably be done for each component 
 //		(e.g. IDofSeparator, IMatrixManager, etc.). However if I can find common code (boilerplate), I could probably avoid some 
 //		duplication.
-namespace MGroup.Solvers.DDM.PSM.Dofs
+namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 {
-	public class PsmDofManager
+	public class PsmInterfaceProblemDofs
 	{
 		private readonly IComputeEnvironment environment;
 		private readonly IModel model;
 		private readonly SubdomainTopology subdomainTopology;
+		private readonly Func<int, PsmSubdomainDofs> getPsmSubdomainDofs;
 		private readonly Func<int, ISubdomainLinearSystem> getSubdomainLinearSystem;
-		private readonly Dictionary<int, PsmSubdomainDofs> subdomainDofs;
 
 		//TODOMPI: should this be stored in each PsmSubdomainDofs object instead? Or maybe not stored at all, since it is only used when creating the indexer.
 		/// <summary>
@@ -32,15 +31,14 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 		private readonly ConcurrentDictionary<int, Dictionary<int, DofSet>> commonDofsBetweenSubdomains
 			= new ConcurrentDictionary<int, Dictionary<int, DofSet>>();
 
-		public PsmDofManager(IComputeEnvironment environment, IModel model, SubdomainTopology subdomainTopology,
-			Func<int, ISubdomainLinearSystem> getSubdomainLinearSystem, bool sortDofsWhenPossible = false)
+		public PsmInterfaceProblemDofs(IComputeEnvironment environment, IModel model, SubdomainTopology subdomainTopology,
+			Func<int, ISubdomainLinearSystem> getSubdomainLinearSystem, Func<int, PsmSubdomainDofs> getPsmSubdomainDofs)
 		{
 			this.environment = environment;
 			this.model = model;
 			this.subdomainTopology = subdomainTopology;
 			this.getSubdomainLinearSystem = getSubdomainLinearSystem;
-			this.subdomainDofs = environment.CreateDictionaryPerNode(
-				s => new PsmSubdomainDofs(getSubdomainLinearSystem(s), sortDofsWhenPossible));
+			this.getPsmSubdomainDofs = getPsmSubdomainDofs;
 		}
 
 		public DistributedOverlappingIndexer CreateDistributedVectorIndexer()
@@ -48,9 +46,9 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 			var indexer = new DistributedOverlappingIndexer(environment);
 			Action<int> initializeIndexer = subdomainID =>
 			{
-				ISubdomain subdomain = model.GetSubdomain(subdomainID);
-				int numBoundaryDofs = subdomainDofs[subdomainID].DofsBoundaryToFree.Length;
-				DofTable boundaryDofs = subdomainDofs[subdomainID].DofOrderingBoundary;
+				PsmSubdomainDofs subdomainDofs = getPsmSubdomainDofs(subdomainID);
+				int numBoundaryDofs = subdomainDofs.DofsBoundaryToFree.Length;
+				DofTable boundaryDofs = subdomainDofs.DofOrderingBoundary;
 
 				var allCommonDofIndices = new Dictionary<int, int[]>();
 				foreach (int neighborID in subdomainTopology.GetNeighborsOfSubdomain(subdomainID))
@@ -121,12 +119,11 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 			environment.DoPerNode(processReceivedDofs);
 		}
 
-		public PsmSubdomainDofs GetSubdomainDofs(int subdomainID) => subdomainDofs[subdomainID];
+		public PsmSubdomainDofs GetSubdomainDofs(int subdomainID) => getPsmSubdomainDofs(subdomainID);
 
 		private Dictionary<int, DofSet> FindSubdomainDofsAtCommonNodes(int subdomainID)
 		{
 			var commonDofsOfSubdomain = new Dictionary<int, DofSet>();
-			ISubdomain subdomain = model.GetSubdomain(subdomainID);
 			DofTable freeDofs = getSubdomainLinearSystem(subdomainID).DofOrdering.FreeDofs;
 			foreach (int neighborID in subdomainTopology.GetNeighborsOfSubdomain(subdomainID))
 			{
@@ -140,7 +137,5 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 			}
 			return commonDofsOfSubdomain;
 		}
-
-		
 	}
 }

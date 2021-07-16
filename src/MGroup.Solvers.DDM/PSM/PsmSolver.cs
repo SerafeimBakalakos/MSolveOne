@@ -32,76 +32,73 @@ namespace MGroup.Solvers.DDM.Psm
 		where TMatrix : class, IMatrix
 	{
 		protected readonly DistributedAlgebraicModel<TMatrix> algebraicModel;
-		protected readonly IDofOrderer dofOrderer;
-		protected readonly PsmDofManager dofManagerPsm;
 		protected readonly IComputeEnvironment environment;
+		protected readonly PsmInterfaceProblemDofs interfaceProblemDofs;
 		protected readonly IPsmInterfaceProblemMatrix interfaceProblemMatrix;
 		protected readonly IDistributedIterativeMethod interfaceProblemSolver;
 		protected readonly PsmInterfaceProblemVectors interfaceProblemVectors;
-		protected readonly ConcurrentDictionary<int, ISubdomainMatrixManager> matrixManagersBasic;
-		protected readonly ConcurrentDictionary<int, IPsmSubdomainMatrixManager> matrixManagersPsm;
 		protected readonly IModel model;
 		protected readonly string name;
 		protected readonly IPsmPreconditioner preconditioner;
 		protected readonly IBoundaryDofScaling stiffnessDistribution;
+		protected readonly ConcurrentDictionary<int, PsmSubdomainDofs> subdomainDofsPsm;
+		protected readonly ConcurrentDictionary<int, IPsmSubdomainMatrixManager> subdomainMatricesPsm;
 		protected readonly SubdomainTopology subdomainTopology;
-		protected readonly Dictionary<int, PsmSubdomainVectors> subdomainVectors;
+		protected readonly ConcurrentDictionary<int, PsmSubdomainVectors> subdomainVectors;
 
 		private DistributedOverlappingIndexer indexer; //TODOMPI: Perhaps this should be accessed from DofSeparator
 
 		protected PsmSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel, 
-			SubdomainTopology subdomainTopology, IDofOrderer dofOrderer, IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory, 
+			SubdomainTopology subdomainTopology, IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory, 
 			bool explicitSubdomainMatrices, IPsmPreconditioner preconditioner,
 			IDistributedIterativeMethod interfaceProblemSolver, bool isHomogeneous, string name = "PSM Solver")
 		{
 			this.name = name;
 			this.environment = environment;
 			this.model = model;
-			this.algebraicModel = algebraicModel;
 			this.subdomainTopology = subdomainTopology;
-			this.dofOrderer = dofOrderer;
+			this.algebraicModel = algebraicModel;
+			this.LinearSystem = algebraicModel.LinearSystem;
 			this.preconditioner = preconditioner;
 			this.interfaceProblemSolver = interfaceProblemSolver;
 
-			this.dofManagerPsm = new PsmDofManager(environment, model, subdomainTopology, 
-				s => algebraicModel.SubdomainLinearSystems[s], false);
-
-			this.matrixManagersPsm = new ConcurrentDictionary<int, IPsmSubdomainMatrixManager>();
+			this.subdomainDofsPsm = new ConcurrentDictionary<int, PsmSubdomainDofs>();
+			this.subdomainMatricesPsm = new ConcurrentDictionary<int, IPsmSubdomainMatrixManager>();
+			this.subdomainVectors = new ConcurrentDictionary<int, PsmSubdomainVectors>();
 			environment.DoPerNode(subdomainID =>
 			{
-				ISubdomain subdomain = model.GetSubdomain(subdomainID);
-				PsmSubdomainDofs subdomainDofs = dofManagerPsm.GetSubdomainDofs(subdomainID);
-				IPsmSubdomainMatrixManager matrixManagerPsm = matrixManagerFactory.CreateMatrixManager(
-					subdomainDofs, algebraicModel.SubdomainLinearSystems[subdomainID]);
-				matrixManagersPsm[subdomainID] = matrixManagerPsm;
-			});
+				SubdomainLinearSystem<TMatrix> linearSystem = algebraicModel.SubdomainLinearSystems[subdomainID];
+				var dofs = new PsmSubdomainDofs(linearSystem, false);
+				IPsmSubdomainMatrixManager matrices = matrixManagerFactory.CreateMatrixManager(linearSystem, dofs);
+				var vectors = new PsmSubdomainVectors(linearSystem, dofs, matrices);
 
-			if (explicitSubdomainMatrices)
-			{
-				this.interfaceProblemMatrix = new PsmInterfaceProblemMatrixExplicit(environment, matrixManagersPsm);
-			}
-			else
-			{
-				this.interfaceProblemMatrix = new PsmInterfaceProblemMatrixImplicit(environment, dofManagerPsm, matrixManagersPsm);
-			}
+				subdomainDofsPsm[subdomainID] = dofs;
+				subdomainMatricesPsm[subdomainID] = matrices;
+				subdomainVectors[subdomainID] = vectors;
+			});
 
 			if (isHomogeneous)
 			{
-				this.stiffnessDistribution = new HomogeneousScaling(environment, model, dofManagerPsm);
+				this.stiffnessDistribution = new HomogeneousScaling(environment, s => subdomainDofsPsm[s]);
 			}
 			else
 			{
 				this.stiffnessDistribution = new HeterogeneousScaling(
-					environment, model, dofManagerPsm, matrixManagersBasic);
+					environment, s => algebraicModel.SubdomainLinearSystems[s], s => subdomainDofsPsm[s]);
 			}
 
-			LinearSystem = algebraicModel.LinearSystem;
-
-			this.subdomainVectors = environment.CreateDictionaryPerNode(
-				subdomainID => new PsmSubdomainVectors(dofManagerPsm.GetSubdomainDofs(subdomainID), 
-				algebraicModel.SubdomainLinearSystems[subdomainID], matrixManagersPsm[subdomainID]));
-
+			this.interfaceProblemDofs = new PsmInterfaceProblemDofs(environment, model, subdomainTopology, 
+				s => algebraicModel.SubdomainLinearSystems[s], s => subdomainDofsPsm[s]);
 			this.interfaceProblemVectors = new PsmInterfaceProblemVectors(environment, subdomainVectors);
+			if (explicitSubdomainMatrices)
+			{
+				this.interfaceProblemMatrix = new PsmInterfaceProblemMatrixExplicit(environment, s => subdomainMatricesPsm[s]);
+			}
+			else
+			{
+				this.interfaceProblemMatrix = new PsmInterfaceProblemMatrixImplicit(environment, 
+					s => subdomainDofsPsm[s], s => subdomainMatricesPsm[s]);
+			}
 
 			Logger = new SolverLogger(name);
 		}
@@ -126,11 +123,10 @@ namespace MGroup.Solvers.DDM.Psm
 			// Reordering the internal dofs is not done here, since subdomain Kff must be built first. 
 			environment.DoPerNode(subdomainID =>
 			{
-				ISubdomainFreeDofOrdering dofOrdering = algebraicModel.DofOrdering.SubdomainDofOrderings[subdomainID];
-				dofManagerPsm.GetSubdomainDofs(subdomainID).SeparateFreeDofsIntoBoundaryAndInternal();
+				subdomainDofsPsm[subdomainID].SeparateFreeDofsIntoBoundaryAndInternal();
 			}); 
-			dofManagerPsm.FindCommonDofsBetweenSubdomains();
-			this.indexer = dofManagerPsm.CreateDistributedVectorIndexer();
+			interfaceProblemDofs.FindCommonDofsBetweenSubdomains();
+			this.indexer = interfaceProblemDofs.CreateDistributedVectorIndexer();
 
 			//TODOMPI: What should I log here? And where? There is not a central place for logs.
 			//Logger.LogNumDofs("Global boundary dofs", dofSeparatorPsm.GetNumBoundaryDofsCluster(clusterID));
@@ -144,11 +140,11 @@ namespace MGroup.Solvers.DDM.Psm
 			Action<int> calcSubdomainMatrices = subdomainID =>
 			{
 				//TODO: This should only happen if the connectivity of the subdomain changes. 
-				matrixManagersPsm[subdomainID].ReorderInternalDofs();
+				subdomainMatricesPsm[subdomainID].ReorderInternalDofs();
 
 				//TODO: These should happen if the connectivity or stiffness of the subdomain changes
-				matrixManagersPsm[subdomainID].ExtractKiiKbbKib();
-				matrixManagersPsm[subdomainID].InvertKii();
+				subdomainMatricesPsm[subdomainID].ExtractKiiKbbKib();
+				subdomainMatricesPsm[subdomainID].InvertKii();
 
 				subdomainVectors[subdomainID].Clear();
 				subdomainVectors[subdomainID].ExtractInternalRhsVector();
@@ -224,7 +220,7 @@ namespace MGroup.Solvers.DDM.Psm
 			public PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel, 
 				SubdomainTopology subdomainTopology)
 			{
-				return new PsmSolver<TMatrix>(environment, model, algebraicModel, subdomainTopology, DofOrderer, 
+				return new PsmSolver<TMatrix>(environment, model, algebraicModel, subdomainTopology, 
 					MatrixManagerFactory, ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolver, IsHomogeneousProblem);
 			}
 		}

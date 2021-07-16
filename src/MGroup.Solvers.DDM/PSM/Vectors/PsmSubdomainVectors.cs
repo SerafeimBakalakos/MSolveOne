@@ -16,11 +16,11 @@ namespace MGroup.Solvers.DDM.PSM.Vectors
 		private readonly ISubdomainLinearSystem linearSystem;
 		private Vector vectorFi;
 
-		public PsmSubdomainVectors(PsmSubdomainDofs subdomainDofs, ISubdomainLinearSystem linearSystem, 
+		public PsmSubdomainVectors(ISubdomainLinearSystem linearSystem, PsmSubdomainDofs subdomainDofs, 
 			IPsmSubdomainMatrixManager matrixManagerPsm)
 		{
-			this.subdomainDofs = subdomainDofs;
 			this.linearSystem = linearSystem;
+			this.subdomainDofs = subdomainDofs;
 			this.matrixManagerPsm = matrixManagerPsm;
 		}
 
@@ -54,7 +54,7 @@ namespace MGroup.Solvers.DDM.PSM.Vectors
 		public void CalcSubdomainFreeSolution(Vector subdomainBoundarySolution)
 		{
 			// Extract internal and boundary parts of rhs vector 
-			int numFreeDofs = subdomainDofs.NumFreeDofs;
+			int numFreeDofs = linearSystem.DofOrdering.NumFreeDofs;
 			int[] boundaryDofs = subdomainDofs.DofsBoundaryToFree;
 			int[] internalDofs = subdomainDofs.DofsInternalToFree;
 

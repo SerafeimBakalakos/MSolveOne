@@ -35,7 +35,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 		public int[] DofsInternalToFree { get; private set; }
 
 		public int NumFreeDofs { get; private set; }
-
+		
 		public void ReorderInternalDofs(DofPermutation permutation)
 		{
 			if (permutation.IsBetter)
@@ -55,8 +55,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 			var internalToFree = new HashSet<int>();
 			int subdomainBoundaryIdx = 0;
 
-			ISubdomainFreeDofOrdering dofOrdering = linearSystem.DofOrdering;
-			DofTable freeDofs = dofOrdering.FreeDofs;
+			DofTable freeDofs = linearSystem.DofOrdering.FreeDofs;
 			IEnumerable<INode> nodes = freeDofs.GetRows();
 			if (sortDofsWhenPossible)
 			{
@@ -93,7 +92,6 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 				}
 			}
 
-			this.NumFreeDofs = dofOrdering.NumFreeDofs;
 			this.DofOrderingBoundary = boundaryDofOrdering;
 			this.DofsBoundaryToFree = boundaryToFree.ToArray();
 			this.DofsInternalToFree = internalToFree.ToArray();

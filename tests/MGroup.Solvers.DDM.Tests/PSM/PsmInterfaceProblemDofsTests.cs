@@ -5,18 +5,19 @@ using System.Text;
 using MGroup.Environments;
 using MGroup.Environments.Mpi;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
+using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PSM.Dofs;
+using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.Tests.ExampleModels;
 using MGroup.Solvers.DofOrdering;
-using MGroup.Solvers.DofOrdering.Reordering;
 using Xunit;
 
 namespace MGroup.Solvers.DDM.Tests.PSM
 {
-	public class PsmDofManagerTests
+	public class PsmInterfaceProblemDofsTests
 	{
 		[Theory]
 		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
@@ -30,15 +31,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			environment.Initialize(nodeTopology);
 
 			IModel model = Line1DExample.CreateMultiSubdomainModel();
-			model.ConnectDataStructures();
-			var subdomainTopology = new SubdomainTopology(environment, model);
-
-			IGlobalFreeDofOrdering dofOrdering = ModelUtilities.OrderDofs(model);
-			var dofManager = new PsmDofManager(environment, model, subdomainTopology, 
-				s => new MockSubdomainLinearSystem(dofOrdering.SubdomainDofOrderings[s]), true);
-			environment.DoPerNode(s => dofManager.GetSubdomainDofs(s).SeparateFreeDofsIntoBoundaryAndInternal());
-			dofManager.FindCommonDofsBetweenSubdomains();
-			DistributedOverlappingIndexer indexer = dofManager.CreateDistributedVectorIndexer();
+			DistributedOverlappingIndexer indexer = CreateDistributedOverlappingIndexer(environment, model);
 
 			// Check
 			Line1DExample.CheckDistributedIndexer(environment, nodeTopology, indexer);
@@ -56,18 +49,29 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			environment.Initialize(nodeTopology);
 
 			IModel model = Plane2DExample.CreateMultiSubdomainModel();
+			DistributedOverlappingIndexer indexer = CreateDistributedOverlappingIndexer(environment, model);
+
+			// Check
+			Plane2DExample.CheckDistributedIndexer(environment, nodeTopology, indexer);
+		}
+
+		private static DistributedOverlappingIndexer CreateDistributedOverlappingIndexer(
+			IComputeEnvironment environment, IModel model)
+		{
 			model.ConnectDataStructures();
 			var subdomainTopology = new SubdomainTopology(environment, model);
 
 			IGlobalFreeDofOrdering dofOrdering = ModelUtilities.OrderDofs(model);
-			var dofManager = new PsmDofManager(environment, model, subdomainTopology,
-				s => new MockSubdomainLinearSystem(dofOrdering.SubdomainDofOrderings[s]), true);
-			environment.DoPerNode(s => dofManager.GetSubdomainDofs(s).SeparateFreeDofsIntoBoundaryAndInternal());
-			dofManager.FindCommonDofsBetweenSubdomains();
-			DistributedOverlappingIndexer indexer = dofManager.CreateDistributedVectorIndexer();
 
-			// Check
-			Plane2DExample.CheckDistributedIndexer(environment, nodeTopology, indexer);
+			Dictionary<int, MockSubdomainLinearSystem> linearSystems = environment.CreateDictionaryPerNode(
+				s => new MockSubdomainLinearSystem(dofOrdering.SubdomainDofOrderings[s]));
+			Dictionary<int, PsmSubdomainDofs> subdomainDofs = environment.CreateDictionaryPerNode(
+				s => new PsmSubdomainDofs(linearSystems[s], true));
+			var interfaceProblemDofs = new PsmInterfaceProblemDofs(environment, model, subdomainTopology,
+				s => linearSystems[s], s => subdomainDofs[s]);
+			environment.DoPerNode(s => subdomainDofs[s].SeparateFreeDofsIntoBoundaryAndInternal());
+			interfaceProblemDofs.FindCommonDofsBetweenSubdomains();
+			return interfaceProblemDofs.CreateDistributedVectorIndexer();
 		}
 
 		private class MockSubdomainLinearSystem : ISubdomainLinearSystem
@@ -78,6 +82,8 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			}
 
 			public ISubdomainFreeDofOrdering DofOrdering { get; }
+
+			public IMatrix Matrix => throw new NotImplementedException();
 
 			public Vector RhsVector => throw new NotImplementedException();
 
