@@ -6,6 +6,7 @@ using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Solvers.Commons;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DofOrdering;
 
 //TODOMPI: Instead of asking ComputeNode for its neighbors, ISubdomain should contain this info. 
@@ -21,7 +22,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 		private readonly IComputeEnvironment environment;
 		private readonly IModel model;
 		private readonly SubdomainTopology subdomainTopology;
-		private readonly Func<int, ISubdomainFreeDofOrdering> getSubdomainFreeDofs;
+		private readonly Func<int, ISubdomainLinearSystem> getSubdomainLinearSystem;
 		private readonly Dictionary<int, PsmSubdomainDofs> subdomainDofs;
 
 		//TODOMPI: should this be stored in each PsmSubdomainDofs object instead? Or maybe not stored at all, since it is only used when creating the indexer.
@@ -32,14 +33,14 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 			= new ConcurrentDictionary<int, Dictionary<int, DofSet>>();
 
 		public PsmDofManager(IComputeEnvironment environment, IModel model, SubdomainTopology subdomainTopology,
-			Func<int, ISubdomainFreeDofOrdering> getSubdomainFreeDofs, bool sortDofsWhenPossible = false)
+			Func<int, ISubdomainLinearSystem> getSubdomainLinearSystem, bool sortDofsWhenPossible = false)
 		{
 			this.environment = environment;
 			this.model = model;
 			this.subdomainTopology = subdomainTopology;
-			this.getSubdomainFreeDofs = getSubdomainFreeDofs;
+			this.getSubdomainLinearSystem = getSubdomainLinearSystem;
 			this.subdomainDofs = environment.CreateDictionaryPerNode(
-				s => new PsmSubdomainDofs(() => getSubdomainFreeDofs(s), sortDofsWhenPossible));
+				s => new PsmSubdomainDofs(getSubdomainLinearSystem(s), sortDofsWhenPossible));
 		}
 
 		public DistributedOverlappingIndexer CreateDistributedVectorIndexer()
@@ -126,7 +127,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 		{
 			var commonDofsOfSubdomain = new Dictionary<int, DofSet>();
 			ISubdomain subdomain = model.GetSubdomain(subdomainID);
-			DofTable freeDofs = getSubdomainFreeDofs(subdomainID).FreeDofs;
+			DofTable freeDofs = getSubdomainLinearSystem(subdomainID).DofOrdering.FreeDofs;
 			foreach (int neighborID in subdomainTopology.GetNeighborsOfSubdomain(subdomainID))
 			{
 				var dofSet = new DofSet();

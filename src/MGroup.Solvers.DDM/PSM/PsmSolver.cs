@@ -2,13 +2,19 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+
+using MGroup.Environments;
+using MGroup.LinearAlgebra.Distributed.IterativeMethods;
+using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Iterative;
 using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.Environments;
-using MGroup.LinearAlgebra.Distributed.IterativeMethods;
-using MGroup.LinearAlgebra.Distributed.Overlapping;
+using MGroup.MSolve.DataStructures;
+using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Solution;
+using MGroup.MSolve.Solution.LinearSystem;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PSM.Dofs;
 using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.Preconditioning;
@@ -16,14 +22,9 @@ using MGroup.Solvers.DDM.PSM.Scaling;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.DDM.PSM.Vectors;
 using MGroup.Solvers.DDM.StiffnessMatrices;
-using MGroup.MSolve.Solution;
-using MGroup.MSolve.Discretization;
 using MGroup.Solvers.DofOrdering;
-using MGroup.Solvers.Logging;
-using MGroup.MSolve.Solution.LinearSystem;
-using MGroup.MSolve.DataStructures;
 using MGroup.Solvers.DofOrdering.Reordering;
-using MGroup.Solvers.AlgebraicModel;
+using MGroup.Solvers.Logging;
 
 namespace MGroup.Solvers.DDM.Psm
 {
@@ -38,7 +39,7 @@ namespace MGroup.Solvers.DDM.Psm
 		protected readonly IDistributedIterativeMethod interfaceProblemSolver;
 		protected readonly PsmInterfaceProblemVectors interfaceProblemVectors;
 		protected readonly ConcurrentDictionary<int, ISubdomainMatrixManager> matrixManagersBasic;
-		protected readonly ConcurrentDictionary<int, IPsmSubdomainMatrixManagerGeneric<TMatrix>> matrixManagersPsmGeneric; //TODO: refactor this
+		protected readonly ConcurrentDictionary<int, IPsmSubdomainMatrixManager> matrixManagersPsm;
 		protected readonly IModel model;
 		protected readonly string name;
 		protected readonly IPsmPreconditioner preconditioner;
@@ -63,17 +64,15 @@ namespace MGroup.Solvers.DDM.Psm
 			this.interfaceProblemSolver = interfaceProblemSolver;
 
 			this.dofManagerPsm = new PsmDofManager(environment, model, subdomainTopology, 
-				s => algebraicModel.DofOrdering.SubdomainDofOrderings[s], false);
+				s => algebraicModel.SubdomainLinearSystems[s], false);
 
-			matrixManagersPsmGeneric = new ConcurrentDictionary<int, IPsmSubdomainMatrixManagerGeneric<TMatrix>>();
-			var matrixManagersPsm = new ConcurrentDictionary<int, IPsmSubdomainMatrixManager>();
+			this.matrixManagersPsm = new ConcurrentDictionary<int, IPsmSubdomainMatrixManager>();
 			environment.DoPerNode(subdomainID =>
 			{
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
 				PsmSubdomainDofs subdomainDofs = dofManagerPsm.GetSubdomainDofs(subdomainID);
-				IPsmSubdomainMatrixManagerGeneric<TMatrix> matrixManagerPsm = 
-					matrixManagerFactory.CreateMatrixManager(subdomainDofs);
-				matrixManagersPsmGeneric[subdomainID] = matrixManagerPsm;
+				IPsmSubdomainMatrixManager matrixManagerPsm = matrixManagerFactory.CreateMatrixManager(
+					subdomainDofs, algebraicModel.SubdomainLinearSystems[subdomainID]);
 				matrixManagersPsm[subdomainID] = matrixManagerPsm;
 			});
 
@@ -98,11 +97,11 @@ namespace MGroup.Solvers.DDM.Psm
 
 			LinearSystem = algebraicModel.LinearSystem;
 
-			this.subdomainVectors = environment.CreateDictionaryPerNode(subdomainID => new PsmSubdomainVectors(
-					dofManagerPsm.GetSubdomainDofs(subdomainID), matrixManagersPsm[subdomainID]));
+			this.subdomainVectors = environment.CreateDictionaryPerNode(
+				subdomainID => new PsmSubdomainVectors(dofManagerPsm.GetSubdomainDofs(subdomainID), 
+				algebraicModel.SubdomainLinearSystems[subdomainID], matrixManagersPsm[subdomainID]));
 
-			this.interfaceProblemVectors = new PsmInterfaceProblemVectors(
-				environment, algebraicModel.LinearSystem, subdomainVectors);
+			this.interfaceProblemVectors = new PsmInterfaceProblemVectors(environment, subdomainVectors);
 
 			Logger = new SolverLogger(name);
 		}
@@ -144,18 +143,15 @@ namespace MGroup.Solvers.DDM.Psm
 			Initialize();
 			Action<int> calcSubdomainMatrices = subdomainID =>
 			{
-				TMatrix Kff = algebraicModel.LinearSystem.Matrix.LocalMatrices[subdomainID];
-				Vector Ff = algebraicModel.LinearSystem.RhsVector.LocalVectors[subdomainID];
-
 				//TODO: This should only happen if the connectivity of the subdomain changes. 
-				matrixManagersPsmGeneric[subdomainID].ReorderInternalDofs(Kff);
+				matrixManagersPsm[subdomainID].ReorderInternalDofs();
 
 				//TODO: These should happen if the connectivity or stiffness of the subdomain changes
-				matrixManagersPsmGeneric[subdomainID].ExtractKiiKbbKib(Kff);
-				matrixManagersPsmGeneric[subdomainID].InvertKii();
+				matrixManagersPsm[subdomainID].ExtractKiiKbbKib();
+				matrixManagersPsm[subdomainID].InvertKii();
 
 				subdomainVectors[subdomainID].Clear();
-				subdomainVectors[subdomainID].ExtractInternalRhsVector(Ff);
+				subdomainVectors[subdomainID].ExtractInternalRhsVector();
 			};
 			environment.DoPerNode(calcSubdomainMatrices);
 
@@ -167,8 +163,7 @@ namespace MGroup.Solvers.DDM.Psm
 			environment.DoPerNode(subdomainID =>
 			{
 				Vector subdomainBoundarySolution = interfaceProblemVectors.InterfaceProblemSolution.LocalVectors[subdomainID];
-				Vector uf = subdomainVectors[subdomainID].CalcSubdomainFreeSolution(subdomainBoundarySolution);
-				algebraicModel.LinearSystem.Solution.LocalVectors[subdomainID] = uf;
+				subdomainVectors[subdomainID].CalcSubdomainFreeSolution(subdomainBoundarySolution);
 			});
 
 			Logger.IncrementAnalysisStep();

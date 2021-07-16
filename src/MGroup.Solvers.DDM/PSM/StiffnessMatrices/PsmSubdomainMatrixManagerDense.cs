@@ -2,12 +2,14 @@ using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.Solvers.Assemblers;
 using MGroup.Solvers.DDM.Commons;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PSM.Dofs;
 
 namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 {
-	public class PsmSubdomainMatrixManagerDense : IPsmSubdomainMatrixManagerGeneric<Matrix>
+	public class PsmSubdomainMatrixManagerDense : IPsmSubdomainMatrixManager
 	{
+		private readonly SubdomainLinearSystem<Matrix> linearSystem;
 		private readonly PsmSubdomainDofs subdomainDofs;
 
 		private Matrix Kbb;
@@ -16,9 +18,10 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 		private Matrix Kii;
 		private Matrix inverseKii;
 
-		public PsmSubdomainMatrixManagerDense(PsmSubdomainDofs subdomainDofs)
+		public PsmSubdomainMatrixManagerDense(PsmSubdomainDofs subdomainDofs, SubdomainLinearSystem<Matrix> linearSystem)
 		{
 			this.subdomainDofs = subdomainDofs;
+			this.linearSystem = linearSystem;
 		}
 
 		public IMatrixView CalcSchurComplement() => Kbb - Kbi * (inverseKii * Kib);
@@ -32,10 +35,11 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 			inverseKii = null;
 		}
 
-		public void ExtractKiiKbbKib(Matrix Kff)
+		public void ExtractKiiKbbKib()
 		{
 			int[] boundaryDofs = subdomainDofs.DofsBoundaryToFree;
 			int[] internalDofs = subdomainDofs.DofsInternalToFree;
+			Matrix Kff = linearSystem.Matrix;
 			Kbb = Kff.GetSubmatrix(boundaryDofs, boundaryDofs);
 			Kbi = Kff.GetSubmatrix(boundaryDofs, internalDofs);
 			Kib = Kff.GetSubmatrix(internalDofs, boundaryDofs);
@@ -58,14 +62,15 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 
 		public Vector MultiplyKib(Vector vector) => Kib * vector;
 
-		public void ReorderInternalDofs(Matrix Kff) => subdomainDofs.ReorderInternalDofs(DofPermutation.CreateNoPermutation());
+		public void ReorderInternalDofs() => subdomainDofs.ReorderInternalDofs(DofPermutation.CreateNoPermutation());
 
 		public class Factory : IPsmSubdomainMatrixManagerFactory<Matrix>
 		{
 			public ISubdomainMatrixAssembler<Matrix> CreateAssembler() => new DenseMatrixAssembler();
 
-			public IPsmSubdomainMatrixManagerGeneric<Matrix> CreateMatrixManager(PsmSubdomainDofs subdomainDofs)
-				=> new PsmSubdomainMatrixManagerDense(subdomainDofs);
+			public IPsmSubdomainMatrixManager CreateMatrixManager(
+				PsmSubdomainDofs subdomainDofs, SubdomainLinearSystem<Matrix> linearSystem)
+				=> new PsmSubdomainMatrixManagerDense(subdomainDofs, linearSystem);
 		}
 	}
 }

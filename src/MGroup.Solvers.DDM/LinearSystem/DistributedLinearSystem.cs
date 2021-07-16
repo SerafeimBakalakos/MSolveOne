@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Solution.LinearSystem;
 
-namespace MGroup.Solvers.LinearSystem
+namespace MGroup.Solvers.DDM.LinearSystem
 {
-	public class DistributedLinearSystem<TMatrix> : IGlobalLinearSystem
+	public class DistributedLinearSystem<TMatrix> : IGlobalLinearSystem, IDistributedLinearSystem
 		where TMatrix : class, IMatrix
 	{
 		private readonly Func<IGlobalVector, DistributedVector> checkCompatibleVector;

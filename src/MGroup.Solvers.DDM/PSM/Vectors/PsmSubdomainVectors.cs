@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Solution.LinearSystem;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PSM.Dofs;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 
@@ -12,19 +13,22 @@ namespace MGroup.Solvers.DDM.PSM.Vectors
 	{
 		private readonly IPsmSubdomainMatrixManager matrixManagerPsm;
 		private readonly PsmSubdomainDofs subdomainDofs;
-
+		private readonly ISubdomainLinearSystem linearSystem;
 		private Vector vectorFi;
 
-		public PsmSubdomainVectors(PsmSubdomainDofs subdomainDofs, IPsmSubdomainMatrixManager matrixManagerPsm)
+		public PsmSubdomainVectors(PsmSubdomainDofs subdomainDofs, ISubdomainLinearSystem linearSystem, 
+			IPsmSubdomainMatrixManager matrixManagerPsm)
 		{
 			this.subdomainDofs = subdomainDofs;
+			this.linearSystem = linearSystem;
 			this.matrixManagerPsm = matrixManagerPsm;
 		}
 
-		public Vector CalcCondensedRhsVector(Vector ff)
+		public Vector CalcCondensedRhsVector()
 		{
 			// Extract boundary part of rhs vector 
 			int[] boundaryDofs = subdomainDofs.DofsBoundaryToFree;
+			Vector ff = linearSystem.RhsVector;
 			Vector fb = ff.GetSubvector(boundaryDofs);
 
 			// Static condensation: fbCondensed[s] = fb[s] - Kbi[s] * inv(Kii[s]) * fi[s]
@@ -40,13 +44,14 @@ namespace MGroup.Solvers.DDM.PSM.Vectors
 			vectorFi = null;
 		}
 
-		public void ExtractInternalRhsVector(Vector ff)
+		public void ExtractInternalRhsVector()
 		{
 			int[] internalDofs = subdomainDofs.DofsInternalToFree;
+			Vector ff = linearSystem.RhsVector;
 			this.vectorFi = ff.GetSubvector(internalDofs);
 		}
 
-		public Vector CalcSubdomainFreeSolution(Vector subdomainBoundarySolution)
+		public void CalcSubdomainFreeSolution(Vector subdomainBoundarySolution)
 		{
 			// Extract internal and boundary parts of rhs vector 
 			int numFreeDofs = subdomainDofs.NumFreeDofs;
@@ -64,7 +69,7 @@ namespace MGroup.Solvers.DDM.PSM.Vectors
 			uf.CopyNonContiguouslyFrom(boundaryDofs, subdomainBoundarySolution);
 			uf.CopyNonContiguouslyFrom(internalDofs, ui);
 
-			return uf;
+			linearSystem.Solution = uf;
 		}
 	}
 }

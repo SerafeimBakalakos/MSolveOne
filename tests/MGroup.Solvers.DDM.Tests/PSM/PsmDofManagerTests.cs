@@ -5,7 +5,9 @@ using System.Text;
 using MGroup.Environments;
 using MGroup.Environments.Mpi;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
+using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PSM.Dofs;
 using MGroup.Solvers.DDM.Tests.ExampleModels;
 using MGroup.Solvers.DofOrdering;
@@ -33,7 +35,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 
 			IGlobalFreeDofOrdering dofOrdering = ModelUtilities.OrderDofs(model);
 			var dofManager = new PsmDofManager(environment, model, subdomainTopology, 
-				s => dofOrdering.SubdomainDofOrderings[s], true);
+				s => new MockSubdomainLinearSystem(dofOrdering.SubdomainDofOrderings[s]), true);
 			environment.DoPerNode(s => dofManager.GetSubdomainDofs(s).SeparateFreeDofsIntoBoundaryAndInternal());
 			dofManager.FindCommonDofsBetweenSubdomains();
 			DistributedOverlappingIndexer indexer = dofManager.CreateDistributedVectorIndexer();
@@ -59,13 +61,27 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 
 			IGlobalFreeDofOrdering dofOrdering = ModelUtilities.OrderDofs(model);
 			var dofManager = new PsmDofManager(environment, model, subdomainTopology,
-				s => dofOrdering.SubdomainDofOrderings[s], true);
+				s => new MockSubdomainLinearSystem(dofOrdering.SubdomainDofOrderings[s]), true);
 			environment.DoPerNode(s => dofManager.GetSubdomainDofs(s).SeparateFreeDofsIntoBoundaryAndInternal());
 			dofManager.FindCommonDofsBetweenSubdomains();
 			DistributedOverlappingIndexer indexer = dofManager.CreateDistributedVectorIndexer();
 
 			// Check
 			Plane2DExample.CheckDistributedIndexer(environment, nodeTopology, indexer);
+		}
+
+		private class MockSubdomainLinearSystem : ISubdomainLinearSystem
+		{
+			public MockSubdomainLinearSystem(ISubdomainFreeDofOrdering dofOrdering)
+			{
+				this.DofOrdering = dofOrdering;
+			}
+
+			public ISubdomainFreeDofOrdering DofOrdering { get; }
+
+			public Vector RhsVector => throw new NotImplementedException();
+
+			public Vector Solution { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 		}
 	}
 }

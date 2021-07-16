@@ -5,6 +5,7 @@ using System.Linq;
 using MGroup.MSolve.Discretization;
 using MGroup.Solvers.Commons;
 using MGroup.Solvers.DDM.Commons;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DofOrdering;
 
 //TODOMPI: DofTable should be replaced with an IntTable that stores ids, instead of actual references to nodes and dofs. 
@@ -16,14 +17,14 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 {
 	public class PsmSubdomainDofs
 	{
-		private readonly Func<ISubdomainFreeDofOrdering> getSubdomainFreeDofs;
+		private readonly ISubdomainLinearSystem linearSystem;
 
 		//TODO: This is essential for testing and very useful for debugging, but not production code. Should I remove it?
 		private readonly bool sortDofsWhenPossible;
 
-		public PsmSubdomainDofs(Func<ISubdomainFreeDofOrdering> getSubdomainFreeDofs, bool sortDofsWhenPossible = false)
+		public PsmSubdomainDofs(ISubdomainLinearSystem linearSystem, bool sortDofsWhenPossible = false)
 		{
-			this.getSubdomainFreeDofs = getSubdomainFreeDofs;
+			this.linearSystem = linearSystem;
 			this.sortDofsWhenPossible = sortDofsWhenPossible;
 		}
 
@@ -54,7 +55,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 			var internalToFree = new HashSet<int>();
 			int subdomainBoundaryIdx = 0;
 
-			ISubdomainFreeDofOrdering dofOrdering = getSubdomainFreeDofs();
+			ISubdomainFreeDofOrdering dofOrdering = linearSystem.DofOrdering;
 			DofTable freeDofs = dofOrdering.FreeDofs;
 			IEnumerable<INode> nodes = freeDofs.GetRows();
 			if (sortDofsWhenPossible)

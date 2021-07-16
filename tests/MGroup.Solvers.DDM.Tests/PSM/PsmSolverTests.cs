@@ -10,7 +10,7 @@ using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.NumericalAnalyzers;
-using MGroup.Solvers.AlgebraicModel;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.Psm;
 using MGroup.Solvers.DDM.PSM.Dofs;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;

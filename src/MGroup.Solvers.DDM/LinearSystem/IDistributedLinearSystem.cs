@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MGroup.Solvers.LinearSystem
+namespace MGroup.Solvers.DDM.LinearSystem
 {
 	public interface IDistributedLinearSystem
 	{

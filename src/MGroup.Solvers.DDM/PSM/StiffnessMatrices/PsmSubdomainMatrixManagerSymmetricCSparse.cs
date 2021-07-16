@@ -6,12 +6,14 @@ using MGroup.LinearAlgebra.Vectors;
 using MGroup.Solvers.Assemblers;
 using MGroup.Solvers.DDM.Commons;
 using MGroup.Solvers.DDM.LinearAlgebraExtensions;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PSM.Dofs;
 
 namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 {
-	public class PsmSubdomainMatrixManagerSymmetricCSparse : IPsmSubdomainMatrixManagerGeneric<SymmetricCscMatrix>
+	public class PsmSubdomainMatrixManagerSymmetricCSparse : IPsmSubdomainMatrixManager
 	{
+		private readonly SubdomainLinearSystem<SymmetricCscMatrix> linearSystem;
 		private readonly PsmSubdomainDofs subdomainDofs;
 		private readonly OrderingAmdCSparseNet reordering = new OrderingAmdCSparseNet();
 		private readonly SubmatrixExtractorCsrCscSym submatrixExtractor = new SubmatrixExtractorCsrCscSym();
@@ -21,9 +23,11 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 		private SymmetricCscMatrix Kii;
 		private CholeskyCSparseNet inverseKii;
 
-		public PsmSubdomainMatrixManagerSymmetricCSparse(PsmSubdomainDofs subdomainDofs)
+		public PsmSubdomainMatrixManagerSymmetricCSparse(PsmSubdomainDofs subdomainDofs, 
+			SubdomainLinearSystem<SymmetricCscMatrix> linearSystem)
 		{
 			this.subdomainDofs = subdomainDofs;
+			this.linearSystem = linearSystem;
 		}
 
 		public IMatrixView CalcSchurComplement()
@@ -43,11 +47,12 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 		}
 
 		//TODO: Optimize this method. It is too slow.
-		public void ExtractKiiKbbKib(SymmetricCscMatrix Kff)
+		public void ExtractKiiKbbKib()
 		{
 			int[] boundaryDofs = subdomainDofs.DofsBoundaryToFree;
 			int[] internalDofs = subdomainDofs.DofsInternalToFree;
 
+			SymmetricCscMatrix Kff = linearSystem.Matrix;
 			submatrixExtractor.ExtractSubmatrices(Kff, boundaryDofs, internalDofs);
 			Kbb = submatrixExtractor.Submatrix00;
 			Kbi = submatrixExtractor.Submatrix01;
@@ -74,9 +79,10 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 
 		public Vector MultiplyKib(Vector vector) => Kbi.Multiply(vector, true);
 
-		public void ReorderInternalDofs(SymmetricCscMatrix Kff)
+		public void ReorderInternalDofs()
 		{
 			int[] internalDofs = subdomainDofs.DofsInternalToFree;
+			SymmetricCscMatrix Kff = linearSystem.Matrix;
 			(int[] rowIndicesKii, int[] colOffsetsKii) = submatrixExtractor.ExtractSparsityPattern(Kff, internalDofs);
 			(int[] permutation, bool oldToNew) = reordering.FindPermutation(
 				internalDofs.Length, rowIndicesKii, colOffsetsKii);
@@ -88,8 +94,9 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 		{
 			public ISubdomainMatrixAssembler<SymmetricCscMatrix> CreateAssembler() => new SymmetricCscMatrixAssembler(true);
 
-			public IPsmSubdomainMatrixManagerGeneric<SymmetricCscMatrix> CreateMatrixManager(PsmSubdomainDofs subdomainDofs)
-				=> new PsmSubdomainMatrixManagerSymmetricCSparse(subdomainDofs);
+			public IPsmSubdomainMatrixManager CreateMatrixManager(
+				PsmSubdomainDofs subdomainDofs, SubdomainLinearSystem<SymmetricCscMatrix> linearSystem)
+				=> new PsmSubdomainMatrixManagerSymmetricCSparse(subdomainDofs, linearSystem);
 		}
 	}
 }
