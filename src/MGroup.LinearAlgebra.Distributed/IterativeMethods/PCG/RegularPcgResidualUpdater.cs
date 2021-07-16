@@ -15,7 +15,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
         /// <summary>
         /// See <see cref="IPcgResidualUpdater.UpdateResidual(PcgAlgorithmBase, IVector)"/>
         /// </summary>
-        public void UpdateResidual(PcgAlgorithmBase pcg, IDistributedVector residual)
+        public void UpdateResidual(PcgAlgorithmBase pcg, IGlobalVector residual)
         {
             // Normally the residual vector is updated as: r = r - α * A*d
             residual.AxpyIntoThis(pcg.MatrixTimesDirection, -pcg.StepSize);

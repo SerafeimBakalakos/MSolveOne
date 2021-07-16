@@ -20,14 +20,14 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning
         }
 
         /// <summary>
-        /// See <see cref="IPreconditioner.Apply(IDistributedVector, IDistributedVector)"/>.
+        /// See <see cref="IPreconditioner.Apply(IGlobalVector, IGlobalVector)"/>.
         /// </summary>
         /// <remarks>
         /// This method works for all dimensions of the preconditioner matrix and the right hand side vector. This way the user
         /// doesn't have to define the dimensions of the linear system, which is useful when testing or benchmarking, at the 
         /// expense of little extra safety.
         /// </remarks>
-        public void Apply(IDistributedVector rhsVector, IDistributedVector lhsVector) 
+        public void Apply(IGlobalVector rhsVector, IGlobalVector lhsVector) 
             => lhsVector.CopyFrom(rhsVector);
 
         /// <summary>

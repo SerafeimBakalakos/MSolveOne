@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Solution.Exceptions;
-using MGroup.MSolve.Solution.LinearSystem;
 
 //TODO: The vector types used for subdomain-level operations should implement IVectorAbstraction directly. 
 //		This is basically an adapter and should be removed.
@@ -37,6 +37,12 @@ namespace MGroup.Solvers.LinearSystem
 		{
 			GlobalVector globalVector = checkCompatibleVector(other);
 			this.SingleVector.CopyFrom(globalVector.SingleVector);
+		}
+
+		public double DotProduct(IGlobalVector otherVector)
+		{
+			GlobalVector globalVector = checkCompatibleVector(otherVector);
+			return this.SingleVector.DotProduct(globalVector.SingleVector);
 		}
 
 		public IGlobalVector CreateZero()

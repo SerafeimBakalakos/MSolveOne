@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Matrices;
 
-namespace MGroup.MSolve.Solution.LinearSystem
+namespace MGroup.LinearAlgebra.Distributed
 {
 	public interface IGlobalMatrix
 	{

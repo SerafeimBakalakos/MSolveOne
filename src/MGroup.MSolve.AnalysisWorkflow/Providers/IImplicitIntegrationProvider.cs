@@ -1,8 +1,7 @@
 using System.Collections.Generic;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Matrices;
-using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Solution.LinearSystem;
 
 //TODO: This should be called second order provider. The matrices, coefficients, etc. should be named 0th-order, 1st-order,
 //      2nd-order.

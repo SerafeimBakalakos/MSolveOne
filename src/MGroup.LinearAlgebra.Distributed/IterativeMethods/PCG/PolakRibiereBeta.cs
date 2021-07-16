@@ -12,7 +12,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
     /// </summary>
     public class PolakRibiereBeta : IPcgBetaParameterCalculation
     {
-        private IDistributedVector residualOld;
+        private IGlobalVector residualOld;
 
         /// <summary>
         /// See <see cref="IPcgBetaParameterCalculation.Initialize(IVectorView)"/>.

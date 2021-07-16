@@ -7,6 +7,7 @@ using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.MSolve.Solution.AlgebraicModel;
+using MGroup.LinearAlgebra.Distributed;
 
 namespace MGroup.NumericalAnalyzers.NonLinear
 {

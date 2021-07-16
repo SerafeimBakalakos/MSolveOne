@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MGroup.LinearAlgebra.Distributed;
 
 namespace MGroup.MSolve.Solution.LinearSystem
 {

@@ -1,17 +1,11 @@
 using System;
-using System.Collections.Generic;
-using MGroup.MSolve.AnalysisWorkflow;
-using MGroup.LinearAlgebra.Matrices;
-using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.AnalysisWorkflow.Providers;
-using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Discretization.Loads;
-using MGroup.MSolve.Solution;
-using MGroup.MSolve.Solution.LinearSystem;
 
 using MGroup.FEM.Entities;
-using System.Linq;
-
+using MGroup.LinearAlgebra.Distributed;
+using MGroup.MSolve.AnalysisWorkflow;
+using MGroup.MSolve.AnalysisWorkflow.Providers;
+using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Solution;
 using MGroup.MSolve.Solution.AlgebraicModel;
 
 //TODO: Usually the LinearSystem is passed in, but for GetRHSFromHistoryLoad() it is stored as a field. Decide on one method.

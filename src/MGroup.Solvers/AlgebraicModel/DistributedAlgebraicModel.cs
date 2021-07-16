@@ -15,6 +15,7 @@ using System.Linq;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Solvers.LinearSystem;
+using MGroup.LinearAlgebra.Distributed;
 
 namespace MGroup.Solvers.AlgebraicModel
 {

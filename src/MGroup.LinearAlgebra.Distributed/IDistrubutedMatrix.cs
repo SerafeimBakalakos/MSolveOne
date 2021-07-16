@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,6 +8,6 @@ namespace MGroup.LinearAlgebra.Distributed
     {
         IDistributedIndexer Indexer { get; }
 
-        void Multiply(IDistributedVector lhs, IDistributedVector rhs);
+        void Multiply(IGlobalVector lhs, IGlobalVector rhs);
     }
 }

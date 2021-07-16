@@ -1,6 +1,6 @@
 using System;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.Solution.LinearSystem;
 
 namespace MGroup.MSolve.AnalysisWorkflow.Logging
 {

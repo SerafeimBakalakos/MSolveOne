@@ -21,266 +21,282 @@ using MGroup.Environments;
 //      round it to the nearest integer (and pray the precision errors are negligible).
 namespace MGroup.LinearAlgebra.Distributed.Overlapping
 {
-    public class DistributedOverlappingVector : IDistributedVector
-    {
-        private readonly IComputeEnvironment environment;
-        private readonly DistributedOverlappingIndexer indexer;
+	public class DistributedOverlappingVector : IGlobalVector
+	{
+		private readonly IComputeEnvironment environment;
+		private readonly DistributedOverlappingIndexer indexer;
 
-        public DistributedOverlappingVector(IComputeEnvironment environment, DistributedOverlappingIndexer indexer)
-        {
-            this.environment = environment;
-            this.indexer = indexer;
-            this.LocalVectors = environment.CreateDictionaryPerNode(
-                node => Vector.CreateZero(indexer.GetLocalComponent(node).NumEntries));
-        }
+		public DistributedOverlappingVector(IComputeEnvironment environment, DistributedOverlappingIndexer indexer)
+		{
+			this.environment = environment;
+			this.indexer = indexer;
+			this.LocalVectors = environment.CreateDictionaryPerNode(
+				node => Vector.CreateZero(indexer.GetLocalComponent(node).NumEntries));
+		}
 
-        public DistributedOverlappingVector(IComputeEnvironment environment, DistributedOverlappingIndexer indexer,
-            Dictionary<int, Vector> localVectors)
-        {
-            this.environment = environment;
-            this.indexer = indexer;
-            this.LocalVectors = localVectors;
-        }
+		public DistributedOverlappingVector(IComputeEnvironment environment, DistributedOverlappingIndexer indexer,
+			Dictionary<int, Vector> localVectors)
+		{
+			this.environment = environment;
+			this.indexer = indexer;
+			this.LocalVectors = localVectors;
+		}
 
-        public IDistributedIndexer Indexer => indexer;
+		public IDistributedIndexer Indexer => indexer;
 
-        public Dictionary<int, Vector> LocalVectors { get; }
+		public Dictionary<int, Vector> LocalVectors { get; }
 
-        public void AxpyIntoThis(IDistributedVector otherVector, double otherCoefficient)
-        {
-            if (otherVector is DistributedOverlappingVector casted) AxpyIntoThis(casted, otherCoefficient);
-            else
-            {
-                throw new ArgumentException(
-                    "This operation is legal only if the 2 vectors have the same type and indexers.");
-            }
-        }
+		public void AxpyIntoThis(IGlobalVector otherVector, double otherCoefficient)
+		{
+			if (otherVector is DistributedOverlappingVector casted) AxpyIntoThis(casted, otherCoefficient);
+			else
+			{
+				throw new ArgumentException(
+					"This operation is legal only if the 2 vectors have the same type and indexers.");
+			}
+		}
 
-        public void AxpyIntoThis(DistributedOverlappingVector otherVector, double otherCoefficient)
-        {
-            Debug.Assert((this.environment == otherVector.environment) && (this.indexer == otherVector.indexer));
-            environment.DoPerNode(
-                node => this.LocalVectors[node].AxpyIntoThis(otherVector.LocalVectors[node], otherCoefficient)
-            );
-        }
+		public void AxpyIntoThis(DistributedOverlappingVector otherVector, double otherCoefficient)
+		{
+			Debug.Assert((this.environment == otherVector.environment) && (this.indexer == otherVector.indexer));
+			environment.DoPerNode(
+				node => this.LocalVectors[node].AxpyIntoThis(otherVector.LocalVectors[node], otherCoefficient)
+			);
+		}
 
-        public void Clear()
-        {
-            environment.DoPerNode(node => LocalVectors[node].Clear());
-        }
+		public void Clear()
+		{
+			environment.DoPerNode(node => LocalVectors[node].Clear());
+		}
 
-        IDistributedVector IDistributedVector.Copy() => Copy(); //TODO: Copy can be expressed with CreateZero() and CopyFrom().
+		IGlobalVector IGlobalVector.Copy() => Copy(); //TODO: Copy can be expressed with CreateZero() and CopyFrom().
 
-        public DistributedOverlappingVector Copy()
-        {
-            Dictionary<int, Vector> localVectorsCloned =
-                environment.CreateDictionaryPerNode(node => LocalVectors[node].Copy());
-            return new DistributedOverlappingVector(environment, indexer, localVectorsCloned);
-        }
+		public DistributedOverlappingVector Copy()
+		{
+			Dictionary<int, Vector> localVectorsCloned =
+				environment.CreateDictionaryPerNode(node => LocalVectors[node].Copy());
+			return new DistributedOverlappingVector(environment, indexer, localVectorsCloned);
+		}
 
-        public void CopyFrom(IDistributedVector otherVector)
-        {
-            if (otherVector is DistributedOverlappingVector casted) CopyFrom(casted);
-            else
-            {
-                throw new ArgumentException(
-                    "This operation is legal only if the 2 vectors have the same type and indexers.");
-            }
-        }
+		public void CopyFrom(IGlobalVector otherVector)
+		{
+			if (otherVector is DistributedOverlappingVector casted) CopyFrom(casted);
+			else
+			{
+				throw new ArgumentException(
+					"This operation is legal only if the 2 vectors have the same type and indexers.");
+			}
+		}
 
-        public void CopyFrom(DistributedOverlappingVector other)
-        {
-            Debug.Assert((this.environment == other.environment) && (this.indexer == other.indexer));
-            environment.DoPerNode(node => this.LocalVectors[node].CopyFrom(other.LocalVectors[node]));
-        }
+		public void CopyFrom(DistributedOverlappingVector other)
+		{
+			Debug.Assert((this.environment == other.environment) && (this.indexer == other.indexer));
+			environment.DoPerNode(node => this.LocalVectors[node].CopyFrom(other.LocalVectors[node]));
+		}
 
-        /// <summary>
-        /// Creates the global array representation from any subvectors employed internally. Mainly for testing purposes. 
-        /// </summary>
-        /// <returns></returns>
-        public double[] CopyToArray()
-        {
-            //TODOMPI: Use AllGatherV and then remove duplicate entries or copy to a single array.
-            throw new NotImplementedException();
-        }
+		IGlobalVector IGlobalVector.CreateZero() => CreateZero();
 
-        IDistributedVector IDistributedVector.CreateZeroVectorWithSameFormat() => CreateZeroVectorWithSameFormat();
+		public DistributedOverlappingVector CreateZero() 
+			=> new DistributedOverlappingVector(environment, indexer);
 
-        public DistributedOverlappingVector CreateZeroVectorWithSameFormat() 
-            => new DistributedOverlappingVector(environment, indexer);
+		public double DotProduct(IGlobalVector otherVector)
+		{
+			if (otherVector is DistributedOverlappingVector casted) return DotProduct(casted);
+			else
+			{
+				throw new ArgumentException(
+					"This operation is legal only if the 2 vectors have the same type and indexers.");
+			}
+		}
 
-        public double DotProduct(IDistributedVector otherVector)
-        {
-            if (otherVector is DistributedOverlappingVector casted) return DotProduct(casted);
-            else
-            {
-                throw new ArgumentException(
-                    "This operation is legal only if the 2 vectors have the same type and indexers.");
-            }
-        }
+		/// <summary>
+		/// See <see cref="IGlobalVector.DotProduct(IGlobalVector)"/>.
+		/// </summary>
+		/// <remarks>
+		/// Warning: This does not work correctly if 2 local vectors have different values at the same common entry. In such 
+		/// cases make, perhaps <see cref="SumOverlappingEntries"/> may be of use.
+		/// </remarks>
+		public double DotProduct(DistributedOverlappingVector otherVector)
+		{
+			Debug.Assert((this.environment == otherVector.environment) && (this.indexer == otherVector.indexer));
+			Func<int, double> calcLocalDot = node =>
+			{
+				Vector thisLocalVector = this.LocalVectors[node];
+				Vector otherLocalVector = otherVector.LocalVectors[node];
+				int[] multiplicities = indexer.GetLocalComponent(node).Multiplicities;
 
-        /// <summary>
-        /// See <see cref="IDistributedVector.DotProduct(IDistributedVector)"/>.
-        /// </summary>
-        /// <remarks>
-        /// Warning: This does not work correctly if 2 local vectors have different values at the same common entry. In such 
-        /// cases make, perhaps <see cref="SumOverlappingEntries"/> may be of use.
-        /// </remarks>
-        public double DotProduct(DistributedOverlappingVector otherVector)
-        {
-            Debug.Assert((this.environment == otherVector.environment) && (this.indexer == otherVector.indexer));
-            Func<int, double> calcLocalDot = node =>
-            {
-                Vector thisLocalVector = this.LocalVectors[node];
-                Vector otherLocalVector = otherVector.LocalVectors[node];
-                int[] multiplicities = indexer.GetLocalComponent(node).Multiplicities;
+				double dotLocal = 0.0;
+				for (int i = 0; i < thisLocalVector.Length; ++i)
+				{
+					dotLocal += thisLocalVector[i] * otherLocalVector[i] / multiplicities[i];
+				}
 
-                double dotLocal = 0.0;
-                for (int i = 0; i < thisLocalVector.Length; ++i)
-                {
-                    dotLocal += thisLocalVector[i] * otherLocalVector[i] / multiplicities[i];
-                }
+				return dotLocal;
+			};
 
-                return dotLocal;
-            };
+			Dictionary<int, double> dotPerNode = environment.CreateDictionaryPerNode(calcLocalDot);
+			return environment.AllReduceSum(dotPerNode);
+		}
 
-            Dictionary<int, double> dotPerNode = environment.CreateDictionaryPerNode(calcLocalDot);
-            return environment.AllReduceSum(dotPerNode);
-        }
+		public bool Equals(DistributedOverlappingVector other, double tolerance = 1E-7)
+		{
+			if ((this.environment != other.environment) || (this.indexer != other.indexer)) return false;
 
-        public bool Equals(DistributedOverlappingVector other, double tolerance = 1E-7)
-        {
-            if ((this.environment != other.environment) || (this.indexer != other.indexer)) return false;
+			Dictionary<int, bool> flags = environment.CreateDictionaryPerNode(
+				node => this.LocalVectors[node].Equals(other.LocalVectors[node], tolerance));
+			return environment.AllReduceAnd(flags);
+		}
 
-            Dictionary<int, bool> flags = environment.CreateDictionaryPerNode(
-                node => this.LocalVectors[node].Equals(other.LocalVectors[node], tolerance));
-            return environment.AllReduceAnd(flags);
-        }
+		public void LinearCombinationIntoThis(
+			double thisCoefficient, IGlobalVector otherVector, double otherCoefficient)
+		{
+			if (otherVector is DistributedOverlappingVector casted)
+			{
+				LinearCombinationIntoThis(thisCoefficient, casted, otherCoefficient);
+			}
+			else
+			{
+				throw new ArgumentException(
+					"This operation is legal only if the 2 vectors have the same type and indexers.");
+			}
+		}
 
-        public void LinearCombinationIntoThis(
-            double thisCoefficient, IDistributedVector otherVector, double otherCoefficient)
-        {
-            if (otherVector is DistributedOverlappingVector casted)
-            {
-                LinearCombinationIntoThis(thisCoefficient, casted, otherCoefficient);
-            }
-            else
-            {
-                throw new ArgumentException(
-                    "This operation is legal only if the 2 vectors have the same type and indexers.");
-            }
-        }
+		public void LinearCombinationIntoThis(
+			double thisCoefficient, DistributedOverlappingVector otherVector, double otherCoefficient)
+		{
+			Debug.Assert((this.environment == otherVector.environment) && (this.indexer == otherVector.indexer));
+			environment.DoPerNode(
+				node => this.LocalVectors[node].LinearCombinationIntoThis(
+					thisCoefficient, otherVector.LocalVectors[node], otherCoefficient)
+			);
+		}
 
-        public void LinearCombinationIntoThis(
-            double thisCoefficient, DistributedOverlappingVector otherVector, double otherCoefficient)
-        {
-            Debug.Assert((this.environment == otherVector.environment) && (this.indexer == otherVector.indexer));
-            environment.DoPerNode(
-                node => this.LocalVectors[node].LinearCombinationIntoThis(
-                    thisCoefficient, otherVector.LocalVectors[node], otherCoefficient)
-            );
-        }
+		public double Norm2()
+		{
+			Func<int, double> calcLocalDot = node =>
+			{
+				Vector localVector = this.LocalVectors[node];
+				int[] multiplicities = indexer.GetLocalComponent(node).Multiplicities;
 
-        public void ScaleIntoThis(double scalar)
-        {
-            environment.DoPerNode(node => LocalVectors[node].ScaleIntoThis(scalar));
-        }
+				double dotLocal = 0.0;
+				for (int i = 0; i < localVector.Length; ++i)
+				{
+					dotLocal += localVector[i] * localVector[i] / multiplicities[i];
+				}
 
-        //TODOMPI: A ReduceOverlappingEntries(IReduction), which would cover sum and regularization would be more useful. 
-        //      However the implementation should not be slower than the current SumOverlappingEntries(), since that is a very
-        //      important operation.
-        //TODOMPI: Test this
-        /// <summary>
-        /// Gathers the entries of remote vectors that correspond to the boundary entries of the local vectors and regularizes 
-        /// them, meaning each of these entries is divided via the sum of corresponding entries over all local vectors. 
-        /// Therefore, the resulting local vectors will not have the same values at their corresponding overlapping entries.
-        /// </summary>
-        /// <remarks>
-        /// Requires communication between compute nodes:
-        /// Each compute node sends its boundary entries to the neighbors that are assiciated with these entries. 
-        /// Each neighbor receives only the entries it has in common.
-        /// </remarks>
-        public void RegularizeOverlappingEntries()
-        {
-            // Sum the values of overlapping entries in a different vector.
-            DistributedOverlappingVector reducedVector = Copy();
-            reducedVector.SumOverlappingEntries();
+				return dotLocal;
+			};
 
-            // Divide the values of overlapping entries via their sums.
-            Action<int> regularizeLocalVectors = nodeID =>
-            {
-                ComputeNode node = environment.GetComputeNode(nodeID);
-                DistributedOverlappingIndexer.Local localIndexer = indexer.GetLocalComponent(nodeID);
-                Vector orginalLocalVector = this.LocalVectors[nodeID];
-                Vector reducedLocalVector = reducedVector.LocalVectors[nodeID];
+			Dictionary<int, double> dotPerNode = environment.CreateDictionaryPerNode(calcLocalDot);
+			return Math.Sqrt(environment.AllReduceSum(dotPerNode));
+		}
 
-                for (int i = 0; i < localIndexer.NumEntries; ++i)
-                {
-                    //TODO: This assumes that all entries with multiplicity > 1 are overlapping and must be regularized. 
-                    //      Is that always a correct assumption?
-                    if (localIndexer.Multiplicities[i] > 1)
-                    {
-                        orginalLocalVector[i] /= reducedLocalVector[i];
-                    }
-                }
-            };
-            environment.DoPerNode(regularizeLocalVectors);
-        }
+		public void ScaleIntoThis(double scalar)
+		{
+			environment.DoPerNode(node => LocalVectors[node].ScaleIntoThis(scalar));
+		}
 
-        /// <summary>
-        /// Gathers the entries of remote vectors that correspond to the boundary entries of the local vectors and sums them.
-        /// As a result, the overlapping entries of each local vector will have the same values. These values are the same
-        /// as the ones we would have if a global vector was created by assembling the local vectors.
-        /// </summary>
-        /// <remarks>
-        /// Requires communication between compute nodes:
-        /// Each compute node sends its boundary entries to the neighbors that are assiciated with these entries. 
-        /// Each neighbor receives only the entries it has in common.
-        /// </remarks>
-        public void SumOverlappingEntries()
-        {
-            // Prepare the boundary entries of each node before communicating them to its neighbors.
-            Func<int, AllToAllNodeData<double>> prepareLocalData = nodeID =>
-            {
-                ComputeNode node = environment.GetComputeNode(nodeID);
-                Vector localVector = LocalVectors[nodeID];
-                DistributedOverlappingIndexer.Local localIndexer = indexer.GetLocalComponent(nodeID);
+		public void SetAll(double value)
+		{
+			environment.DoPerNode(node => LocalVectors[node].SetAll(value));
+		}
 
-                // Find the common entries (to send) of this node with each of its neighbors
-                var transferData = new AllToAllNodeData<double>();
-                transferData.sendValues = localIndexer.CreateBuffersForAllToAllWithNeighbors();
-                foreach (int neighborID in node.Neighbors) 
-                {
-                    int[] commonEntries = localIndexer.GetCommonEntriesWithNeighbor(neighborID);
-                    var sv = Vector.CreateFromArray(transferData.sendValues[neighborID]);
-                    sv.CopyNonContiguouslyFrom(localVector, commonEntries);
-                }
 
-                // Get a buffer for the common entries (to receive) of this node with each of its neighbors. 
-                transferData.recvValues = localIndexer.CreateBuffersForAllToAllWithNeighbors();
-                return transferData;
-            };
-            var dataPerNode = environment.CreateDictionaryPerNode(prepareLocalData);
+		//TODOMPI: A ReduceOverlappingEntries(IReduction), which would cover sum and regularization would be more useful. 
+		//      However the implementation should not be slower than the current SumOverlappingEntries(), since that is a very
+		//      important operation.
+		//TODOMPI: Test this
+		/// <summary>
+		/// Gathers the entries of remote vectors that correspond to the boundary entries of the local vectors and regularizes 
+		/// them, meaning each of these entries is divided via the sum of corresponding entries over all local vectors. 
+		/// Therefore, the resulting local vectors will not have the same values at their corresponding overlapping entries.
+		/// </summary>
+		/// <remarks>
+		/// Requires communication between compute nodes:
+		/// Each compute node sends its boundary entries to the neighbors that are assiciated with these entries. 
+		/// Each neighbor receives only the entries it has in common.
+		/// </remarks>
+		public void RegularizeOverlappingEntries()
+		{
+			// Sum the values of overlapping entries in a different vector.
+			DistributedOverlappingVector reducedVector = Copy();
+			reducedVector.SumOverlappingEntries();
 
-            // Perform AllToAll to exchange the common boundary entries of each node with its neighbors.
-            environment.NeighborhoodAllToAll(dataPerNode, true);
+			// Divide the values of overlapping entries via their sums.
+			Action<int> regularizeLocalVectors = nodeID =>
+			{
+				ComputeNode node = environment.GetComputeNode(nodeID);
+				DistributedOverlappingIndexer.Local localIndexer = indexer.GetLocalComponent(nodeID);
+				Vector orginalLocalVector = this.LocalVectors[nodeID];
+				Vector reducedLocalVector = reducedVector.LocalVectors[nodeID];
 
-            // Add the common entries of neighbors back to the original local vector.
-            Action<int> sumLocalSubvectors = nodeID =>
-            {
-                ComputeNode node = environment.GetComputeNode(nodeID);
-                Vector localVector = LocalVectors[nodeID];
-                DistributedOverlappingIndexer.Local localIndexer = indexer.GetLocalComponent(nodeID);
+				for (int i = 0; i < localIndexer.NumEntries; ++i)
+				{
+					//TODO: This assumes that all entries with multiplicity > 1 are overlapping and must be regularized. 
+					//      Is that always a correct assumption?
+					if (localIndexer.Multiplicities[i] > 1)
+					{
+						orginalLocalVector[i] /= reducedLocalVector[i];
+					}
+				}
+			};
+			environment.DoPerNode(regularizeLocalVectors);
+		}
 
-                IDictionary<int, double[]> recvValues = dataPerNode[nodeID].recvValues;
-                foreach (int neighborID in node.Neighbors) 
-                {
-                    int[] commonEntries = localIndexer.GetCommonEntriesWithNeighbor(neighborID);
-                    var rv = Vector.CreateFromArray(recvValues[neighborID]);
-                    localVector.AddIntoThisNonContiguouslyFrom(commonEntries, rv);
-                }
-            };
-            environment.DoPerNode(sumLocalSubvectors);
-        }
-    }
+		/// <summary>
+		/// Gathers the entries of remote vectors that correspond to the boundary entries of the local vectors and sums them.
+		/// As a result, the overlapping entries of each local vector will have the same values. These values are the same
+		/// as the ones we would have if a global vector was created by assembling the local vectors.
+		/// </summary>
+		/// <remarks>
+		/// Requires communication between compute nodes:
+		/// Each compute node sends its boundary entries to the neighbors that are assiciated with these entries. 
+		/// Each neighbor receives only the entries it has in common.
+		/// </remarks>
+		public void SumOverlappingEntries()
+		{
+			// Prepare the boundary entries of each node before communicating them to its neighbors.
+			Func<int, AllToAllNodeData<double>> prepareLocalData = nodeID =>
+			{
+				ComputeNode node = environment.GetComputeNode(nodeID);
+				Vector localVector = LocalVectors[nodeID];
+				DistributedOverlappingIndexer.Local localIndexer = indexer.GetLocalComponent(nodeID);
+
+				// Find the common entries (to send) of this node with each of its neighbors
+				var transferData = new AllToAllNodeData<double>();
+				transferData.sendValues = localIndexer.CreateBuffersForAllToAllWithNeighbors();
+				foreach (int neighborID in node.Neighbors) 
+				{
+					int[] commonEntries = localIndexer.GetCommonEntriesWithNeighbor(neighborID);
+					var sv = Vector.CreateFromArray(transferData.sendValues[neighborID]);
+					sv.CopyNonContiguouslyFrom(localVector, commonEntries);
+				}
+
+				// Get a buffer for the common entries (to receive) of this node with each of its neighbors. 
+				transferData.recvValues = localIndexer.CreateBuffersForAllToAllWithNeighbors();
+				return transferData;
+			};
+			var dataPerNode = environment.CreateDictionaryPerNode(prepareLocalData);
+
+			// Perform AllToAll to exchange the common boundary entries of each node with its neighbors.
+			environment.NeighborhoodAllToAll(dataPerNode, true);
+
+			// Add the common entries of neighbors back to the original local vector.
+			Action<int> sumLocalSubvectors = nodeID =>
+			{
+				ComputeNode node = environment.GetComputeNode(nodeID);
+				Vector localVector = LocalVectors[nodeID];
+				DistributedOverlappingIndexer.Local localIndexer = indexer.GetLocalComponent(nodeID);
+
+				IDictionary<int, double[]> recvValues = dataPerNode[nodeID].recvValues;
+				foreach (int neighborID in node.Neighbors) 
+				{
+					int[] commonEntries = localIndexer.GetCommonEntriesWithNeighbor(neighborID);
+					var rv = Vector.CreateFromArray(recvValues[neighborID]);
+					localVector.AddIntoThisNonContiguouslyFrom(commonEntries, rv);
+				}
+			};
+			environment.DoPerNode(sumLocalSubvectors);
+		}
+	}
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Solution.LinearSystem;
@@ -125,5 +126,9 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			}
 		}
 
+		public double DotProduct(IGlobalVector otherVector)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

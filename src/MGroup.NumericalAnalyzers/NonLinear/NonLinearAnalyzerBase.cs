@@ -6,10 +6,10 @@ using MGroup.NumericalAnalyzers.Logging;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Solution;
-using MGroup.MSolve.Solution.LinearSystem;
 using ISAAR.MSolve.Logging;
 using MGroup.MSolve.AnalysisWorkflow.Logging;
 using MGroup.MSolve.Solution.AlgebraicModel;
+using MGroup.LinearAlgebra.Distributed;
 
 namespace MGroup.NumericalAnalyzers.NonLinear
 {

@@ -1,6 +1,4 @@
-using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Solution.LinearSystem;
+using MGroup.LinearAlgebra.Distributed;
 
 namespace MGroup.MSolve.AnalysisWorkflow.Providers
 {

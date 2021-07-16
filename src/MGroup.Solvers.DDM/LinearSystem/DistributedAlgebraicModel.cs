@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MGroup.Environments;
+using MGroup.LinearAlgebra.Distributed;
+using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.DataStructures;
@@ -24,11 +26,10 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		private readonly IModel model;
 		private readonly IDofOrderer dofOrderer;
 		private readonly Dictionary<int, ISubdomainMatrixAssembler<TMatrix>> subdomainMatrixAssemblers;
-		//private readonly IDdmSolver solver;
 		private readonly SubdomainVectorAssembler subdomainVectorAssembler = new SubdomainVectorAssembler();
 
 		public DistributedAlgebraicModel(IComputeEnvironment environment, IModel model, IDofOrderer dofOrderer,
-			ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler/*, IDdmSolver solver*/)
+			ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler)
 		{
 			this.environment = environment;
 			this.model = model;
@@ -59,6 +60,10 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		public IGlobalFreeDofOrdering DofOrdering { get; set; }
 
 		internal Guid Format { get; private set; }
+
+		//TODOMPI: Perhaps this and subdomain free dof orderings must be managed by a dedicated component. That component could 
+		//		also perform some of all these tasks done by SubdomainTopology.
+		public DistributedOverlappingIndexer FreeDofIndexer { get; private set; } 
 
 		IGlobalLinearSystem IAlgebraicModel.LinearSystem => LinearSystem;
 
@@ -238,6 +243,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		{
 			DofOrdering = dofOrderer.OrderFreeDofs(model);
 			SubdomainTopology.FindCommonDofsBetweenSubdomains();
+			FreeDofIndexer = SubdomainTopology.CreateDistributedVectorIndexer(s => DofOrdering.SubdomainDofOrderings[s].FreeDofs);
 			foreach (IAlgebraicModelObserver observer in Observers)
 			{
 				observer.HandleDofOrderWasModified();

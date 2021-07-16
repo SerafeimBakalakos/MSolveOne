@@ -22,6 +22,6 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning
         /// Thrown if the <see cref="IIndexable1D.Length"/> of <paramref name="input"/> or <paramref name="output"/> 
         /// is different than the number of rows of this <see cref="IPreconditioner"/>.
         /// </exception>
-        void Apply(IDistributedVector input, IDistributedVector output);
+        void Apply(IGlobalVector input, IGlobalVector output);
     }
 }

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Loads;
-using MGroup.MSolve.Solution.LinearSystem;
 
 namespace MGroup.MSolve.Solution.AlgebraicModel
 {

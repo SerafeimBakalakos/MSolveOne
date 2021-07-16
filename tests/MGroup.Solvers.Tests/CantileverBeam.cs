@@ -16,6 +16,7 @@ using MGroup.Solvers.Direct;
 using MGroup.MSolve.Solution;
 using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.MSolve.Solution.AlgebraicModel;
+using MGroup.LinearAlgebra.Distributed;
 
 // Geometry:
 //             | 
@@ -44,7 +45,7 @@ using MGroup.MSolve.Solution.AlgebraicModel;
 namespace MGroup.Solvers.Tests
 {
 	public class CantileverBeam
-    {
+	{
 		private const double eulerBeamDimensionsRatio = 10.0;
 		private const int subdomainID = 0;
 

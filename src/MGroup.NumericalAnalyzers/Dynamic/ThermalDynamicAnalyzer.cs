@@ -4,12 +4,11 @@ using System.Diagnostics;
 using MGroup.MSolve.AnalysisWorkflow;
 using MGroup.MSolve.AnalysisWorkflow.Providers;
 using MGroup.NumericalAnalyzers.Logging;
-//using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Solution;
-using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.MSolve.AnalysisWorkflow.Logging;
 using MGroup.MSolve.Solution.AlgebraicModel;
+using MGroup.LinearAlgebra.Distributed;
 
 namespace MGroup.NumericalAnalyzers.Dynamic
 {

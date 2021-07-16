@@ -29,7 +29,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods
         }
 
         protected override IterativeStatistics SolveInternal(int maxIterations, 
-            Func<IDistributedVector> initializeZeroVector)
+            Func<IGlobalVector> initializeZeroVector)
         {
             // In contrast to the source algorithm, we initialize s here. At each iteration it will be overwritten, 
             // thus avoiding allocating & deallocating a new vector.

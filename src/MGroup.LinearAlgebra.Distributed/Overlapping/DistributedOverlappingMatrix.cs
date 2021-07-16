@@ -47,7 +47,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
         public IDistributedIndexer Indexer => indexer;
 
 
-        public void Multiply(IDistributedVector lhs, IDistributedVector rhs)
+        public void Multiply(IGlobalVector lhs, IGlobalVector rhs)
         {
             if ((lhs is DistributedOverlappingVector lhsCasted) && (rhs is DistributedOverlappingVector rhsCasted))
             {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.AnalysisWorkflow;
 using MGroup.MSolve.AnalysisWorkflow.Logging;
@@ -7,7 +8,6 @@ using MGroup.MSolve.AnalysisWorkflow.Providers;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Solution;
 using MGroup.MSolve.Solution.AlgebraicModel;
-using MGroup.MSolve.Solution.LinearSystem;
 
 namespace MGroup.NumericalAnalyzers
 {

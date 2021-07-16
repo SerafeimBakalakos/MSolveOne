@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.Environments;
 using MGroup.Environments.Mpi;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Solution.AlgebraicModel;
-using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.Solvers.DofOrdering;
 using Xunit;
 

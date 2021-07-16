@@ -3,11 +3,10 @@ using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
 
 using System.Collections.Generic;
-using MGroup.MSolve.Solution.LinearSystem;
-using MGroup.MSolve.Solution;
 using System;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Solution.AlgebraicModel;
+using MGroup.LinearAlgebra.Distributed;
 
 namespace MGroup.NumericalAnalyzers.NonLinear
 {

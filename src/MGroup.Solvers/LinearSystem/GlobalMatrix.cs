@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Solution.Exceptions;
 using MGroup.MSolve.Solution.LinearSystem;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
@@ -48,28 +49,6 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests
 					$"Node {node} dof {dof}: expected = {expectedValue}, computed = {computedValue}");
 			}
 		}
-
-		//public static Table<int, int, double> FindNodalFieldValues(ISubdomain subdomain, IVectorView subdomainSolution)
-		//{
-		//	var result = new Table<int, int, double>();
-
-		//	// Free dofs
-		//	foreach ((INode node, IDofType dof, int freeDofIdx) in subdomain.FreeDofOrdering.FreeDofs)
-		//	{
-		//		result[node.ID, AllDofs.GetIdOfDof(dof)] = subdomainSolution[freeDofIdx];
-		//	}
-
-		//	// Constrained dofs
-		//	foreach (INode node in subdomain.Nodes)
-		//	{
-		//		foreach (Constraint dirichlet in node.Constraints)
-		//		{
-		//			result[node.ID, AllDofs.GetIdOfDof(dirichlet.DOF)] = dirichlet.Amount;
-		//		}
-		//	}
-
-		//	return result;
-		//}
 
 		public static Table<int, int, double> FindNodalFieldValues(ISubdomain subdomain, ISubdomainFreeDofOrdering freeDofs, 
 			IAlgebraicModel algebraicModel, IGlobalVector solution)

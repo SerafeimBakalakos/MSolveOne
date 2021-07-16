@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Solution.LinearSystem;
 

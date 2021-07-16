@@ -19,7 +19,7 @@ using Xunit;
 namespace MGroup.Solvers.Tests
 {
 	public static class SingleSubdomainTests
-    {
+	{
 		[SkippableFact]
 		internal static void TestDenseSolver()
 		{

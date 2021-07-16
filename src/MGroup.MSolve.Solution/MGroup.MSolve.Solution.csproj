@@ -14,6 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MGroup.LinearAlgebra.Distributed\MGroup.LinearAlgebra.Distributed.csproj" />
     <ProjectReference Include="..\MGroup.MSolve.Geometry\MGroup.MSolve.Geometry.csproj" />
     <ProjectReference Include="..\MGroup.MSolve.Discretization\MGroup.MSolve.Discretization.csproj" />
   </ItemGroup>

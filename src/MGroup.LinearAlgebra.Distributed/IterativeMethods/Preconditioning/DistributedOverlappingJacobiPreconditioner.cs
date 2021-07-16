@@ -18,7 +18,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning
         /// </summary>
         /// <param name="environment">
         /// The computing environment that will be used for the operations during this constructor and during 
-        /// <see cref="Apply(IDistributedVector, IDistributedVector)"/>.
+        /// <see cref="Apply(IGlobalVector, IGlobalVector)"/>.
         /// </param>
         /// <param name="diagonal">
         /// A distributed vector that contains the diagonal entries of each local matrix that corresponds to a 
@@ -39,7 +39,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning
 
         public Dictionary<int, Vector> LocalInverseDiagonals { get; }
 
-        public void Apply(IDistributedVector input, IDistributedVector output)
+        public void Apply(IGlobalVector input, IGlobalVector output)
         {
             if ((input is DistributedOverlappingVector lhsCasted) && (output is DistributedOverlappingVector rhsCasted))
             {

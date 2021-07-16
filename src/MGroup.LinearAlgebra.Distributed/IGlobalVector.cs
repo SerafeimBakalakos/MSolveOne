@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using MGroup.LinearAlgebra.Vectors;
 
-namespace MGroup.MSolve.Solution.LinearSystem
+//TODO: Eventually this should be joined with IVector and be in MGroup.LinearAlgebra project
+namespace MGroup.LinearAlgebra.Distributed
 {
 	public interface IGlobalVector
 	{
@@ -23,8 +23,6 @@ namespace MGroup.MSolve.Solution.LinearSystem
 
 		void Clear();
 
-		void CopyFrom(IGlobalVector other);
-
 		IGlobalVector Copy()
 		{
 			IGlobalVector copy = CreateZero();
@@ -32,7 +30,11 @@ namespace MGroup.MSolve.Solution.LinearSystem
 			return copy;
 		}
 
+		void CopyFrom(IGlobalVector other);
+
 		IGlobalVector CreateZero();
+
+		double DotProduct(IGlobalVector otherVector);
 
 		IGlobalVector LinearCombination(double thisCoefficient, IGlobalVector otherVector, double otherCoefficient) //TODO: This (and similar default methods) should be an extension method
 		{
@@ -43,7 +45,7 @@ namespace MGroup.MSolve.Solution.LinearSystem
 
 		void LinearCombinationIntoThis(double thisCoefficient, IGlobalVector otherVector, double otherCoefficient);
 
-		double Norm2();
+		double Norm2() => Math.Sqrt(this.DotProduct(this));
 
 		IGlobalVector Scale(double coefficient)
 		{

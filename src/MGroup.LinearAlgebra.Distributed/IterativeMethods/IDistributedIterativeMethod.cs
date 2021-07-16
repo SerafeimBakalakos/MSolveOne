@@ -9,6 +9,6 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods
     public interface IDistributedIterativeMethod
     {
         IterativeStatistics Solve(IDistributedMatrix matrix, IPreconditioner preconditioner,
-            IDistributedVector rhs, IDistributedVector solution, bool initialGuessIsZero);
+            IGlobalVector rhs, IGlobalVector solution, bool initialGuessIsZero);
     }
 }

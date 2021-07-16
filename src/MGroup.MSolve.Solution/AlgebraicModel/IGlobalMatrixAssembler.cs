@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Solution.LinearSystem;
 
 namespace MGroup.MSolve.Solution.AlgebraicModel
 {
-    /// <summary>
-    /// Builds the matrix of the linear system that will be solved.
-    /// Authors: Serafeim Bakalakos
-    /// </summary>
-    public interface IGlobalMatrixAssembler
-    {
+	/// <summary>
+	/// Builds the matrix of the linear system that will be solved.
+	/// Authors: Serafeim Bakalakos
+	/// </summary>
+	public interface IGlobalMatrixAssembler
+	{
 		/// <summary>
 		/// Builds the linear system matrix that corresponds to the free (unconstrained) freedom degrees.
 		/// </summary>
