@@ -21,7 +21,6 @@ using MGroup.Solvers.DDM.PSM.Preconditioning;
 using MGroup.Solvers.DDM.PSM.Scaling;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.DDM.PSM.Vectors;
-using MGroup.Solvers.DDM.StiffnessMatrices;
 using MGroup.Solvers.DofOrdering;
 using MGroup.Solvers.DofOrdering.Reordering;
 using MGroup.Solvers.Logging;

@@ -5,15 +5,15 @@ using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.Commons;
-using MGroup.Solvers.DDM.StiffnessMatrices;
-using MGroup.MSolve.Discretization;
+using MGroup.Solvers.DDM.LinearSystem;
+using MGroup.Solvers.Assemblers;
 
 namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 {
 	public class FetiDPSubdomainMatrixManagerDense : IFetiDPSubdomainMatrixManager
 	{
+		private readonly SubdomainLinearSystem<Matrix> linearSystem;
 		private readonly FetiDPSubdomainDofs subdomainDofs;
-		private readonly SubdomainMatrixManagerDense managerBasic;
 
 		private Matrix Kcc;
 		private Matrix KccStar;
@@ -22,10 +22,10 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		private Matrix Krr;
 		private Matrix inverseKrr;
 
-		public FetiDPSubdomainMatrixManagerDense(FetiDPSubdomainDofs subdomainDofs, SubdomainMatrixManagerDense managerBasic)
+		public FetiDPSubdomainMatrixManagerDense(SubdomainLinearSystem<Matrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
 		{
+			this.linearSystem = linearSystem;
 			this.subdomainDofs = subdomainDofs;
-			this.managerBasic = managerBasic;
 		}
 
 		public IMatrix SchurComplementOfRemainderDofs => KccStar;
@@ -49,7 +49,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		{
 			int[] cornerToFree = subdomainDofs.DofsCornerToFree;
 			int[] remainderToFree = subdomainDofs.DofsRemainderToFree;
-			Matrix Kff = managerBasic.MatrixKff;
+			Matrix Kff = linearSystem.Matrix;
 			Kcc = Kff.GetSubmatrix(cornerToFree, cornerToFree);
 			Kcr = Kff.GetSubmatrix(cornerToFree, remainderToFree);
 			Krc = Kff.GetSubmatrix(remainderToFree, cornerToFree);
@@ -74,15 +74,13 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		public void ReorderRemainderDofs() => subdomainDofs.ReorderRemainderDofs(DofPermutation.CreateNoPermutation());
 
-		public class Factory : IFetiDPSubdomainMatrixManagerFactory
+		public class Factory : IFetiDPSubdomainMatrixManagerFactory<Matrix>
 		{
-			public (ISubdomainMatrixManager, IFetiDPSubdomainMatrixManager) CreateMatrixManagers(
-				ISubdomain subdomain, FetiDPSubdomainDofs subdomainDofs)
-			{
-				var basicMatrixManager = new SubdomainMatrixManagerDense(subdomain);
-				var fetiDPMatrixManager = new FetiDPSubdomainMatrixManagerDense(subdomainDofs, basicMatrixManager);
-				return (basicMatrixManager, fetiDPMatrixManager);
-			}
+			public ISubdomainMatrixAssembler<Matrix> CreateAssembler() => new DenseMatrixAssembler();
+
+			public IFetiDPSubdomainMatrixManager CreateMatrixManager(
+				SubdomainLinearSystem<Matrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
+				=> new FetiDPSubdomainMatrixManagerDense(linearSystem, subdomainDofs);
 		}
 	}
 }

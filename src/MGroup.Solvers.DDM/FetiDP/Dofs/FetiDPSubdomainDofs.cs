@@ -4,14 +4,17 @@ using System.Linq;
 using System.Text;
 using MGroup.MSolve.Discretization;
 using MGroup.Solvers.DDM.Commons;
+using MGroup.Solvers.DDM.LinearSystem;
 
 namespace MGroup.Solvers.DDM.FetiDP.Dofs
 {
 	public class FetiDPSubdomainDofs
 	{
-		public FetiDPSubdomainDofs(ISubdomain subdomain)
+		private readonly ISubdomainLinearSystem linearSystem;
+
+		public FetiDPSubdomainDofs(ISubdomainLinearSystem linearSystem)
 		{
-			this.Subdomain = subdomain;
+			this.linearSystem = linearSystem;
 		}
 
 		public DofTable DofOrderingCorner { get; private set; }
@@ -23,8 +26,6 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 		public int[] DofsInternalToRemainder { get; private set; }
 
 		public int[] DofsRemainderToFree { get; private set; }
-
-		public int NumFreeDofs { get; private set; }
 
 		public ISubdomain Subdomain { get; }
 
@@ -38,40 +39,38 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 
 		public void SeparateFreeDofsIntoCornerAndRemainder(ICornerDofSelection cornerDofSelection)
 		{
-			throw new NotImplementedException();
-			//var cornerDofOrdering = new DofTable();
-			//var cornerToFree = new List<int>();
-			//var remainderToFree = new HashSet<int>();
-			//int numCornerDofs = 0;
-			//DofTable freeDofs = Subdomain.FreeDofOrdering.FreeDofs;
-			//IEnumerable<INode> nodes = freeDofs.GetRows(); //TODO: Optimize access: Directly get INode, Dictionary<IDof, int>
-			//foreach (INode node in nodes)
-			//{
-			//	IReadOnlyDictionary<IDofType, int> dofsOfNode = freeDofs.GetDataOfRow(node);
-			//	foreach (var dofIdxPair in dofsOfNode)
-			//	{
-			//		IDofType dof = dofIdxPair.Key;
-			//		if (cornerDofSelection.IsCornerDof(node, dof))
-			//		{
-			//			cornerDofOrdering[node, dof] = numCornerDofs++;
-			//			cornerToFree.Add(dofIdxPair.Value);
-			//		}
-			//		else
-			//		{
-			//			remainderToFree.Add(dofIdxPair.Value);
-			//		}
-			//	}
-			//}
+			var cornerDofOrdering = new DofTable();
+			var cornerToFree = new List<int>();
+			var remainderToFree = new HashSet<int>();
+			int numCornerDofs = 0;
+			DofTable freeDofs = linearSystem.DofOrdering.FreeDofs;
+			IEnumerable<INode> nodes = freeDofs.GetRows(); //TODO: Optimize access: Directly get INode, Dictionary<IDof, int>
+			foreach (INode node in nodes)
+			{
+				IReadOnlyDictionary<IDofType, int> dofsOfNode = freeDofs.GetDataOfRow(node);
+				foreach (var dofIdxPair in dofsOfNode)
+				{
+					IDofType dof = dofIdxPair.Key;
+					if (cornerDofSelection.IsCornerDof(node, dof))
+					{
+						cornerDofOrdering[node, dof] = numCornerDofs++;
+						cornerToFree.Add(dofIdxPair.Value);
+					}
+					else
+					{
+						remainderToFree.Add(dofIdxPair.Value);
+					}
+				}
+			}
 
-			//this.NumFreeDofs = Subdomain.FreeDofOrdering.NumFreeDofs;
-			//this.DofOrderingCorner = cornerDofOrdering;
-			//this.DofsCornerToFree = cornerToFree.ToArray();
-			//this.DofsRemainderToFree = remainderToFree.ToArray();
+			this.DofOrderingCorner = cornerDofOrdering;
+			this.DofsCornerToFree = cornerToFree.ToArray();
+			this.DofsRemainderToFree = remainderToFree.ToArray();
 		}
 
 		public void SeparateRemainderDofsIntoBoundaryAndInternalDofs()
 		{
-			throw new NotImplementedException("Useful in FETI-DP, but not in P-FETI-DP");
+			throw new NotImplementedException("Unused in PFETI-DP. Implement it for FETI-DP");
 		}
 	}
 }

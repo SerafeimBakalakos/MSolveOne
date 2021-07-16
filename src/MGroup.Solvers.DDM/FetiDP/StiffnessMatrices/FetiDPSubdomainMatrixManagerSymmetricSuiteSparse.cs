@@ -6,18 +6,18 @@ using MGroup.LinearAlgebra.Reordering;
 using MGroup.LinearAlgebra.Triangulation;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
-using MGroup.Solvers.DDM.StiffnessMatrices;
 using MGroup.Solvers.DDM.LinearAlgebraExtensions;
 using MGroup.Solvers.DDM.Commons;
-using MGroup.MSolve.Discretization;
+using MGroup.Solvers.DDM.LinearSystem;
+using MGroup.Solvers.Assemblers;
 
 //TODO: a lot of duplication with the CSparse version
 namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 {
 	public class FetiDPSubdomainMatrixManagerSymmetricSuiteSparse : IFetiDPSubdomainMatrixManager
 	{
+		private readonly SubdomainLinearSystem<SymmetricCscMatrix> linearSystem;
 		private readonly FetiDPSubdomainDofs subdomainDofs;
-		private readonly SubdomainMatrixManagerSymmetricCsc managerBasic;
 		private readonly OrderingAmdSuiteSparse reordering = new OrderingAmdSuiteSparse();
 		private readonly SubmatrixExtractorPckCsrCscSym submatrixExtractor = new SubmatrixExtractorPckCsrCscSym();
 
@@ -27,11 +27,11 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		private SymmetricCscMatrix Krr;
 		private CholeskySuiteSparse inverseKrr;
 
-		public FetiDPSubdomainMatrixManagerSymmetricSuiteSparse(FetiDPSubdomainDofs subdomainDofs,
-			SubdomainMatrixManagerSymmetricCsc managerBasic)
+		public FetiDPSubdomainMatrixManagerSymmetricSuiteSparse(
+			SubdomainLinearSystem<SymmetricCscMatrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
 		{
+			this.linearSystem = linearSystem;
 			this.subdomainDofs = subdomainDofs;
-			this.managerBasic = managerBasic;
 		}
 
 		public IMatrix SchurComplementOfRemainderDofs => KccStar;
@@ -60,7 +60,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			int[] cornerToFree = subdomainDofs.DofsCornerToFree;
 			int[] remainderToFree = subdomainDofs.DofsRemainderToFree;
 
-			SymmetricCscMatrix Kff = managerBasic.MatrixKff;
+			SymmetricCscMatrix Kff = linearSystem.Matrix;
 			submatrixExtractor.ExtractSubmatrices(Kff, cornerToFree, remainderToFree);
 			Kcc = submatrixExtractor.Submatrix00;
 			Kcr = submatrixExtractor.Submatrix01;
@@ -94,7 +94,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		public void ReorderRemainderDofs()
 		{
 			int[] remainderDofs = subdomainDofs.DofsRemainderToFree;
-			SymmetricCscMatrix Kff = managerBasic.MatrixKff;
+			SymmetricCscMatrix Kff = linearSystem.Matrix;
 			(int[] rowIndicesKrr, int[] colOffsetsKrr) = submatrixExtractor.ExtractSparsityPattern(Kff, remainderDofs);
 
 			bool oldToNew = false; //TODO: This should be provided by the reordering algorithm
@@ -103,15 +103,14 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 			subdomainDofs.ReorderRemainderDofs(DofPermutation.Create(permutation, oldToNew));
 		}
-		public class Factory : IFetiDPSubdomainMatrixManagerFactory
+
+		public class Factory : IFetiDPSubdomainMatrixManagerFactory<SymmetricCscMatrix>
 		{
-			public (ISubdomainMatrixManager, IFetiDPSubdomainMatrixManager) CreateMatrixManagers(
-				ISubdomain subdomain, FetiDPSubdomainDofs subdomainDofs)
-			{
-				var basicMatrixManager = new SubdomainMatrixManagerSymmetricCsc(subdomain);
-				var fetiDPMatrixManager = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse(subdomainDofs, basicMatrixManager);
-				return (basicMatrixManager, fetiDPMatrixManager);
-			}
+			public ISubdomainMatrixAssembler<SymmetricCscMatrix> CreateAssembler() => new SymmetricCscMatrixAssembler(true);
+
+			public IFetiDPSubdomainMatrixManager CreateMatrixManager(
+				SubdomainLinearSystem<SymmetricCscMatrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
+				=> new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse(linearSystem, subdomainDofs);
 		}
 	}
 }

@@ -20,7 +20,6 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 	public class HeterogeneousScaling : IBoundaryDofScaling
 	{
 		private readonly IComputeEnvironment environment;
-		private readonly PsmInterfaceProblemDofs interfaceProblemDofs;
 		private readonly Func<int, ISubdomainLinearSystem> getSubdomainLinearSystem;
 		private readonly Func<int, PsmSubdomainDofs> getSubdomainDofs;
 		private readonly ConcurrentDictionary<int, double[]> relativeStiffnesses = new ConcurrentDictionary<int, double[]>();
@@ -56,7 +55,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 				//TODO: It would be better to extract the diagonal from Kbb directly.
 				Vector Df = Kff.GetDiagonal();
 
-				int[] boundaryDofs = interfaceProblemDofs.GetSubdomainDofs(subdomainID).DofsBoundaryToFree;
+				int[] boundaryDofs = getSubdomainDofs(subdomainID).DofsBoundaryToFree;
 				Vector Db = Df.GetSubvector(boundaryDofs);
 
 				return Db;
@@ -128,7 +127,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 
 		public void ScaleForceVector(int subdomainID, Vector subdomainForces)
 		{
-			int[] boundaryDofs = interfaceProblemDofs.GetSubdomainDofs(subdomainID).DofsBoundaryToFree;
+			int[] boundaryDofs = getSubdomainDofs(subdomainID).DofsBoundaryToFree;
 			double[] coefficients = relativeStiffnesses[subdomainID];
 			for (int i = 0; i < boundaryDofs.Length; i++)
 			{

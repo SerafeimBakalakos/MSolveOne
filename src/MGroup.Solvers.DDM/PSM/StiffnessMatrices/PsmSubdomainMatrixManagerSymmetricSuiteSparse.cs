@@ -9,7 +9,6 @@ using MGroup.Solvers.DDM.Commons;
 using MGroup.Solvers.DDM.LinearAlgebraExtensions;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PSM.Dofs;
-using MGroup.Solvers.DDM.StiffnessMatrices;
 
 namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 {

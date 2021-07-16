@@ -119,8 +119,6 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 			environment.DoPerNode(processReceivedDofs);
 		}
 
-		public PsmSubdomainDofs GetSubdomainDofs(int subdomainID) => getPsmSubdomainDofs(subdomainID);
-
 		private Dictionary<int, DofSet> FindSubdomainDofsAtCommonNodes(int subdomainID)
 		{
 			var commonDofsOfSubdomain = new Dictionary<int, DofSet>();
