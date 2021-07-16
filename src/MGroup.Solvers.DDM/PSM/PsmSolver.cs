@@ -48,15 +48,15 @@ namespace MGroup.Solvers.DDM.Psm
 		private DistributedOverlappingIndexer indexer; //TODOMPI: Perhaps this should be accessed from DofSeparator
 
 		protected PsmSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel, 
-			SubdomainTopology subdomainTopology, IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory, 
+			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory, 
 			bool explicitSubdomainMatrices, IPsmPreconditioner preconditioner,
 			IDistributedIterativeMethod interfaceProblemSolver, bool isHomogeneous, string name = "PSM Solver")
 		{
 			this.name = name;
 			this.environment = environment;
 			this.model = model;
-			this.subdomainTopology = subdomainTopology;
 			this.algebraicModel = algebraicModel;
+			this.subdomainTopology = algebraicModel.SubdomainTopology;
 			this.LinearSystem = algebraicModel.LinearSystem;
 			this.preconditioner = preconditioner;
 			this.interfaceProblemSolver = interfaceProblemSolver;
@@ -87,7 +87,7 @@ namespace MGroup.Solvers.DDM.Psm
 			}
 
 			this.interfaceProblemDofs = new PsmInterfaceProblemDofs(environment, model, subdomainTopology, 
-				s => algebraicModel.SubdomainLinearSystems[s], s => subdomainDofsPsm[s]);
+				s => subdomainDofsPsm[s]);
 			this.interfaceProblemVectors = new PsmInterfaceProblemVectors(environment, subdomainVectors);
 			if (explicitSubdomainMatrices)
 			{
@@ -126,7 +126,6 @@ namespace MGroup.Solvers.DDM.Psm
 			{
 				subdomainDofsPsm[subdomainID].SeparateFreeDofsIntoBoundaryAndInternal();
 			}); 
-			interfaceProblemDofs.FindCommonDofsBetweenSubdomains();
 			this.indexer = interfaceProblemDofs.CreateDistributedVectorIndexer();
 
 			//TODOMPI: What should I log here? And where? There is not a central place for logs.
@@ -217,13 +216,12 @@ namespace MGroup.Solvers.DDM.Psm
 			public IPsmPreconditioner Preconditioner { get; set; }
 
 			public DistributedAlgebraicModel<TMatrix> BuildAlgebraicModel(IModel model)
-				=> new DistributedAlgebraicModel<TMatrix>(model, DofOrderer, MatrixManagerFactory.CreateAssembler());
+				=> new DistributedAlgebraicModel<TMatrix>(environment, model, DofOrderer, MatrixManagerFactory.CreateAssembler());
 
-			public PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel, 
-				SubdomainTopology subdomainTopology)
+			public PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
 			{
-				return new PsmSolver<TMatrix>(environment, model, algebraicModel, subdomainTopology, 
-					MatrixManagerFactory, ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolver, IsHomogeneousProblem);
+				return new PsmSolver<TMatrix>(environment, model, algebraicModel, MatrixManagerFactory, 
+					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolver, IsHomogeneousProblem);
 			}
 		}
 	}

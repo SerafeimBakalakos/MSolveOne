@@ -39,7 +39,6 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			// Model
 			IModel model = Brick3DExample.CreateMultiSubdomainModel();
 			model.ConnectDataStructures(); //TODOMPI: this is also done in the analyzer
-			var subdomainTopology = new SubdomainTopology(environment, model);
 
 			// Solver
 			var pcgBuilder = new PcgAlgorithm.Builder();
@@ -49,7 +48,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory());
 			solverFactory.InterfaceProblemSolver = pcgBuilder.Build();
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
-			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel, subdomainTopology);
+			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 
 			// Linear static analysis
 			var problem = new ProblemThermal(model, algebraicModel, solver);
@@ -99,13 +98,12 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			// Model
 			IModel model = Line1DExample.CreateMultiSubdomainModel();
 			model.ConnectDataStructures(); //TODOMPI: this is also done in the analyzer
-			var subdomainTopology = new SubdomainTopology(environment, model);
 
 			// Solver
 			var solverFactory = new PsmSolver<SymmetricCscMatrix>.Factory(
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory());
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
-			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel, subdomainTopology);
+			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 
 			// Linear static analysis
 			var problem = new ProblemThermal(model, algebraicModel, solver);
@@ -155,7 +153,6 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			// Model
 			IModel model = Plane2DExample.CreateMultiSubdomainModel();
 			model.ConnectDataStructures(); //TODOMPI: this is also done in the analyzer
-			var subdomainTopology = new SubdomainTopology(environment, model);
 
 			// Solver
 			var pcgBuilder = new PcgAlgorithm.Builder();
@@ -165,7 +162,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory());
 			solverFactory.InterfaceProblemSolver = pcgBuilder.Build();
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
-			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel, subdomainTopology);
+			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 
 			// Linear static analysis
 			var problem = new ProblemThermal(model, algebraicModel, solver);

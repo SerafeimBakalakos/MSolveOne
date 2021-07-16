@@ -1,105 +1,197 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using MGroup.Environments;
 using MGroup.MSolve.Discretization;
+using MGroup.Solvers.Commons;
+using MGroup.Solvers.DofOrdering;
 
+//TODO: Perhaps the common nodes and common dofs must be calculated and handled by different classes. Common dofs must be created
+//		immediately after ordering subdomain free dofs. Common nodes, immediately after partitioning/repartitioning.
+//TODO: There is some duplication between processing nodes and processing dofs.
 namespace MGroup.Solvers.DDM
 {
-    /// <remarks>
-    /// In the current design, the subdomain neighbors and their common (boundary) nodes are supposed to remain constant 
-    /// throughout the analysis. The dofs at these nodes may be different per subdomain and even change during the analysis. 
-    /// </remarks>
-    public class SubdomainTopology
-    {
-        private readonly Dictionary<int, SortedSet<int>> neighborsPerSubdomain;
+	/// <remarks>
+	/// In the current design, the subdomain neighbors and their common (boundary) nodes are supposed to remain constant 
+	/// throughout the analysis. The dofs at these nodes may be different per subdomain and even change during the analysis. 
+	/// </remarks>
+	public class SubdomainTopology
+	{
+		private readonly IComputeEnvironment environment;
+		private readonly IModel model;
+		private readonly Func<int, ISubdomainFreeDofOrdering> getSubdomainFreeDofs;
+		private readonly Dictionary<int, SortedSet<int>> neighborsPerSubdomain;
 
-        /// <summary>
-        /// The common nodes for two neighbors s0, s1 will be found and stored twice: once for s0 and once for s1.
-        /// </summary>
-        private readonly Dictionary<int, Dictionary<int, SortedSet<int>>> commonNodesWithNeighborsPerSubdomain;
+		/// <summary>
+		/// The common nodes for two neighbors s0, s1 will be found and stored twice: once for s0 and once for s1.
+		/// </summary>
+		private readonly ConcurrentDictionary<int, Dictionary<int, SortedSet<int>>> commonNodesWithNeighborsPerSubdomain
+			= new ConcurrentDictionary<int, Dictionary<int, SortedSet<int>>>();
 
-        public SubdomainTopology(IComputeEnvironment environment, IModel model)
-        {
-            Func<int, SortedSet<int>> findSubdomainNeighbors = subdomainID =>
-            {
-                ComputeNode computeNode = environment.GetComputeNode(subdomainID);
-                var neighbors = new SortedSet<int>();
-                neighbors.UnionWith(computeNode.Neighbors);
-                return neighbors;
-            };
-            this.neighborsPerSubdomain = environment.CreateDictionaryPerNode(findSubdomainNeighbors);
+		/// <summary>
+		/// First key: local subdomain. Second key: neighbor subdomain. Value: dofs at common nodes between these 2 subdomains.
+		/// Again there is duplication between the 2 subdomains of each pair.
+		/// </summary>
+		private readonly ConcurrentDictionary<int, Dictionary<int, DofSet>> commonDofsBetweenSubdomains
+			= new ConcurrentDictionary<int, Dictionary<int, DofSet>>();
 
-            Func<int, Dictionary<int, SortedSet<int>>> findCommonNodes = subdomainID =>
-            {
-                ISubdomain subdomain = model.GetSubdomain(subdomainID);
-                var commonNodesOfThisSubdomain = new Dictionary<int, SortedSet<int>>();
-                foreach (INode node in subdomain.Nodes)
-                {
-                    if (node.SubdomainsDictionary.Count == 1) continue; // internal node
+		public SubdomainTopology(IComputeEnvironment environment, IModel model, 
+			Func<int, ISubdomainFreeDofOrdering> getSubdomainFreeDofs)
+		{
+			this.environment = environment;
+			this.model = model;
+			this.getSubdomainFreeDofs = getSubdomainFreeDofs;
+			Func<int, SortedSet<int>> findSubdomainNeighbors = subdomainID =>
+			{
+				ComputeNode computeNode = environment.GetComputeNode(subdomainID);
+				var neighbors = new SortedSet<int>();
+				neighbors.UnionWith(computeNode.Neighbors);
+				return neighbors;
+			};
+			this.neighborsPerSubdomain = environment.CreateDictionaryPerNode(findSubdomainNeighbors);
+		}
 
-                    foreach (int otherSubdomainID in node.SubdomainsDictionary.Keys)
-                    {
-                        if (otherSubdomainID == subdomainID) continue; // one of all will the current subdomain
+		//TODOMPI: this is not very safe. It is easy to mix up the two subdomains, which will lead to NullReferenceException if
+		//      they belong to different clusters/MPI processes. Perhaps this info should be given together with neighborsPerSubdomain
+		//      to avoid such cases. Or ISubdomain could contain both of these data.
+		public DofSet GetCommonDofsOfSubdomains(int localSubdomainID, int neighborSubdomainID)
+			=> commonDofsBetweenSubdomains[localSubdomainID][neighborSubdomainID];
 
-                        Debug.Assert(neighborsPerSubdomain[subdomainID].Contains(otherSubdomainID), 
-                            $"Subdomain {otherSubdomainID} is not listed as a neighbor of subdomain {subdomainID}," +
-                            $" but node {node.ID} exists in both subdomains");
+		//TODOMPI: this is not very safe. It is easy to mix up the two subdomains, which will lead to NullReferenceException if
+		//      they belong to different clusters/MPI processes. Perhaps this info should be given together with neighborsPerSubdomain
+		//      to avoid such cases. Or ISubdomain could contain both of these data.
+		/// <summary>
+		/// Find the nodes of subdomain <paramref name="localSubdomainID"/> that are common with subdomain 
+		/// <paramref name="neighborSubdomainID"/>. The order of these two subdomains is important.
+		/// </summary>
+		/// <param name="localSubdomainID">
+		/// The main subdomain being processed by the current execution unit.
+		/// </param>
+		/// <param name="neighborSubdomainID">A neighboring subdomain of <paramref name="localSubdomainID"/>.</param>
+		public SortedSet<int> GetCommonNodesOfSubdomains(int localSubdomainID, int neighborSubdomainID)
+			=> commonNodesWithNeighborsPerSubdomain[localSubdomainID][neighborSubdomainID];
 
-                        bool subdomainPairExists = commonNodesOfThisSubdomain.TryGetValue(
-                            otherSubdomainID, out SortedSet<int> commonNodes);
-                        if (!subdomainPairExists)
-                        {
-                            commonNodes = new SortedSet<int>();
-                            commonNodesOfThisSubdomain[otherSubdomainID] = commonNodes;
-                        }
-                        commonNodes.Add(node.ID);
-                    }
-                }
-                return commonNodesOfThisSubdomain;
-            };
-            this.commonNodesWithNeighborsPerSubdomain = environment.CreateDictionaryPerNode(findCommonNodes);
-        }
+		public SortedSet<int> GetNeighborsOfSubdomain(int subdomainID) => neighborsPerSubdomain[subdomainID];
 
-        //TODOMPI: this is not very safe. It is easy to mix up the two subdomains, which will lead to NullReferenceException if
-        //      they belong to different clusters/MPI processes. Perhaps this info should be given together with neighborsPerSubdomain
-        //      to avoid such cases. Or ISubdomain could contain both of these data.
+		public void FindCommonDofsBetweenSubdomains()
+		{
+			// Find all dofs of each subdomain at the common nodes.
+			Action<int> findLocalDofsAtCommonNodes = subdomainID =>
+			{
+				Dictionary<int, DofSet> commonDofs = FindLocalSubdomainDofsAtCommonNodes(subdomainID);
+				commonDofsBetweenSubdomains[subdomainID] = commonDofs;
+			};
+			environment.DoPerNode(findLocalDofsAtCommonNodes);
 
-        /// <summary>
-        /// Find the nodes of subdomain <paramref name="localSubdomainID"/> that are common with subdomain 
-        /// <paramref name="neighborSubdomainID"/>. The order of these two subdomains is important.
-        /// </summary>
-        /// <param name="localSubdomainID">
-        /// The main subdomain being processed by the current execution unit.
-        /// </param>
-        /// <param name="neighborSubdomainID">A neighboring subdomain of <paramref name="localSubdomainID"/>.</param>
-        public SortedSet<int> GetCommonNodesOfSubdomains(int localSubdomainID, int neighborSubdomainID)
-            => commonNodesWithNeighborsPerSubdomain[localSubdomainID][neighborSubdomainID];
+			// Send these dofs to the corresponding neighbors and receive theirs.
+			Func<int, AllToAllNodeData<int>> prepareDofsToSend = subdomainID =>
+			{
+				var transferData = new AllToAllNodeData<int>();
+				transferData.sendValues = new ConcurrentDictionary<int, int[]>();
+				foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
+				{
+					DofSet commonDofs = commonDofsBetweenSubdomains[subdomainID][neighborID];
 
-        public SortedSet<int> GetNeighborsOfSubdomain(int subdomainID) => neighborsPerSubdomain[subdomainID];
+					//TODOMPI: Serialization & deserialization should be done by the environment, if necessary.
+					transferData.sendValues[neighborID] = commonDofs.Serialize();
+				}
 
-        //TODOMPI: Avoid finding and storing the common nodes of a subdomain pair twice. Actually, the GetCommonNodesOfSubdomains 
-        //      is safer this way.
-        #region premature optimization 
-        ///// <summary>
-        ///// First key = subdomain with min id. Second key = subdomain with max id. Value = common nodes between the 2 subdomains.
-        ///// This way ids of the common nodes are only stored once. 
-        ///// </summary>
-        //private readonly ConcurrentDictionary<int, ConcurrentDictionary<int, SortedSet<int>>> commonNodesWithNeighbors;
+				// No buffers for receive values yet, since their lengths are unknown. 
+				// Let the environment create them, by using extra communication.
+				transferData.recvValues = new ConcurrentDictionary<int, int[]>();
+				return transferData;
+			};
+			Dictionary<int, AllToAllNodeData<int>> transferDataPerSubdomain =
+				environment.CreateDictionaryPerNode(prepareDofsToSend);
+			environment.NeighborhoodAllToAll(transferDataPerSubdomain, false);
 
-        //public SortedSet<int> GetCommonNodesOfSubdomains(int subdomain0, int subdomain1)
-        //{
-        //    if (subdomain0 < subdomain1)
-        //    {
-        //        return commonNodesWithNeighbors[subdomain0][subdomain1];
-        //    }
-        //    else
-        //    {
-        //        Debug.Assert(subdomain0 > subdomain1, "Requesting the common nodes of a subdomain with itself is illegal.");
-        //        return commonNodesWithNeighbors[subdomain1][subdomain0];
-        //    }
-        //}
-        #endregion
-    }
+			// Find the intersection between the dofs of a subdomain and the ones received by its neighbor.
+			Action<int> processReceivedDofs = subdomainID =>
+			{
+				AllToAllNodeData<int> transferData = transferDataPerSubdomain[subdomainID];
+				foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
+				{
+					DofSet receivedDofs = DofSet.Deserialize(transferData.recvValues[neighborID]);
+					commonDofsBetweenSubdomains[subdomainID][neighborID] =
+						commonDofsBetweenSubdomains[subdomainID][neighborID].IntersectionWith(receivedDofs);
+				}
+			};
+			environment.DoPerNode(processReceivedDofs);
+		}
+
+		public void FindCommonNodesBetweenSubdomains()
+		{
+			Action<int> findCommonNodes = subdomainID =>
+			{
+				ISubdomain subdomain = model.GetSubdomain(subdomainID);
+				var commonNodesOfThisSubdomain = new Dictionary<int, SortedSet<int>>();
+				foreach (INode node in subdomain.Nodes)
+				{
+					if (node.SubdomainsDictionary.Count == 1) continue; // internal node
+
+					foreach (int otherSubdomainID in node.SubdomainsDictionary.Keys)
+					{
+						if (otherSubdomainID == subdomainID) continue; // one of all will the current subdomain
+
+						Debug.Assert(neighborsPerSubdomain[subdomainID].Contains(otherSubdomainID),
+							$"Subdomain {otherSubdomainID} is not listed as a neighbor of subdomain {subdomainID}," +
+							$" but node {node.ID} exists in both subdomains");
+
+						bool subdomainPairExists = commonNodesOfThisSubdomain.TryGetValue(
+							otherSubdomainID, out SortedSet<int> commonNodes);
+						if (!subdomainPairExists)
+						{
+							commonNodes = new SortedSet<int>();
+							commonNodesOfThisSubdomain[otherSubdomainID] = commonNodes;
+						}
+						commonNodes.Add(node.ID);
+					}
+				}
+				this.commonNodesWithNeighborsPerSubdomain[subdomainID] = commonNodesOfThisSubdomain;
+			};
+			environment.DoPerNode(findCommonNodes);
+		}
+
+		private Dictionary<int, DofSet> FindLocalSubdomainDofsAtCommonNodes(int subdomainID)
+		{
+			var commonDofsOfSubdomain = new Dictionary<int, DofSet>();
+			DofTable freeDofs = getSubdomainFreeDofs(subdomainID).FreeDofs;
+			foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
+			{
+				var dofSet = new DofSet();
+				foreach (int nodeID in GetCommonNodesOfSubdomains(subdomainID, neighborID))
+				{
+					INode node = model.GetNode(nodeID);
+					dofSet.AddDofs(node, freeDofs.GetColumnsOfRow(node));
+				}
+				commonDofsOfSubdomain[neighborID] = dofSet;
+			}
+			return commonDofsOfSubdomain;
+		}
+
+		//TODOMPI: Avoid finding and storing the common nodes of a subdomain pair twice. Actually, the GetCommonNodesOfSubdomains 
+		//      is safer this way.
+		#region premature optimization 
+		///// <summary>
+		///// First key = subdomain with min id. Second key = subdomain with max id. Value = common nodes between the 2 subdomains.
+		///// This way ids of the common nodes are only stored once. 
+		///// </summary>
+		//private readonly ConcurrentDictionary<int, ConcurrentDictionary<int, SortedSet<int>>> commonNodesWithNeighbors;
+
+		//public SortedSet<int> GetCommonNodesOfSubdomains(int subdomain0, int subdomain1)
+		//{
+		//    if (subdomain0 < subdomain1)
+		//    {
+		//        return commonNodesWithNeighbors[subdomain0][subdomain1];
+		//    }
+		//    else
+		//    {
+		//        Debug.Assert(subdomain0 > subdomain1, "Requesting the common nodes of a subdomain with itself is illegal.");
+		//        return commonNodesWithNeighbors[subdomain1][subdomain0];
+		//    }
+		//}
+		#endregion
+	}
 }

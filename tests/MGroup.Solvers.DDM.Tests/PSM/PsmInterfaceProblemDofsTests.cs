@@ -59,18 +59,19 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			IComputeEnvironment environment, IModel model)
 		{
 			model.ConnectDataStructures();
-			var subdomainTopology = new SubdomainTopology(environment, model);
 
 			IGlobalFreeDofOrdering dofOrdering = ModelUtilities.OrderDofs(model);
+			var subdomainTopology = new SubdomainTopology(environment, model, s => dofOrdering.SubdomainDofOrderings[s]);
 
 			Dictionary<int, MockSubdomainLinearSystem> linearSystems = environment.CreateDictionaryPerNode(
 				s => new MockSubdomainLinearSystem(dofOrdering.SubdomainDofOrderings[s]));
 			Dictionary<int, PsmSubdomainDofs> subdomainDofs = environment.CreateDictionaryPerNode(
 				s => new PsmSubdomainDofs(linearSystems[s], true));
-			var interfaceProblemDofs = new PsmInterfaceProblemDofs(environment, model, subdomainTopology,
-				s => linearSystems[s], s => subdomainDofs[s]);
+			var interfaceProblemDofs = new PsmInterfaceProblemDofs(environment, model, subdomainTopology, s => subdomainDofs[s]);
+
+			subdomainTopology.FindCommonNodesBetweenSubdomains();
+			subdomainTopology.FindCommonDofsBetweenSubdomains();
 			environment.DoPerNode(s => subdomainDofs[s].SeparateFreeDofsIntoBoundaryAndInternal());
-			interfaceProblemDofs.FindCommonDofsBetweenSubdomains();
 			return interfaceProblemDofs.CreateDistributedVectorIndexer();
 		}
 

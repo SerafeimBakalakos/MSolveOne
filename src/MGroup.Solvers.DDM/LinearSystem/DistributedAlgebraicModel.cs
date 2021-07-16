@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using MGroup.Environments;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.DataStructures;
@@ -20,15 +20,17 @@ namespace MGroup.Solvers.DDM.LinearSystem
 	{
 		private readonly int numSubdomains;
 		private readonly IEnumerable<ISubdomain> subdomains;
+		private readonly IComputeEnvironment environment;
 		private readonly IModel model;
 		private readonly IDofOrderer dofOrderer;
 		private readonly Dictionary<int, ISubdomainMatrixAssembler<TMatrix>> subdomainMatrixAssemblers;
 		//private readonly IDdmSolver solver;
 		private readonly SubdomainVectorAssembler subdomainVectorAssembler = new SubdomainVectorAssembler();
 
-		public DistributedAlgebraicModel(IModel model, IDofOrderer dofOrderer,
+		public DistributedAlgebraicModel(IComputeEnvironment environment, IModel model, IDofOrderer dofOrderer,
 			ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler/*, IDdmSolver solver*/)
 		{
+			this.environment = environment;
 			this.model = model;
 			this.dofOrderer = dofOrderer;
 			//this.solver = solver;
@@ -48,6 +50,9 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				this.SubdomainLinearSystems[subdomain.ID] = new SubdomainLinearSystem<TMatrix>(this, subdomain.ID);
 			}
 
+			this.SubdomainTopology = new SubdomainTopology(environment, model, s => DofOrdering.SubdomainDofOrderings[s]);
+			this.SubdomainTopology.FindCommonNodesBetweenSubdomains(); //TODO: what about problems where the mesh is repartitioned in some iterations?
+
 			Observers = new HashSet<IAlgebraicModelObserver>();
 		}
 
@@ -62,6 +67,8 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		public HashSet<IAlgebraicModelObserver> Observers { get; }
 
 		public Dictionary<int, SubdomainLinearSystem<TMatrix>> SubdomainLinearSystems { get; }
+
+		public SubdomainTopology SubdomainTopology { get; }
 
 		public void AddToGlobalVector(Func<int, IEnumerable<IElement>> accessElements, IGlobalVector vector,
 			IElementVectorProvider vectorProvider)
@@ -230,6 +237,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		public void OrderDofs()
 		{
 			DofOrdering = dofOrderer.OrderFreeDofs(model);
+			SubdomainTopology.FindCommonDofsBetweenSubdomains();
 			foreach (IAlgebraicModelObserver observer in Observers)
 			{
 				observer.HandleDofOrderWasModified();
