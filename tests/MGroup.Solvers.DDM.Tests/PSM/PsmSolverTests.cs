@@ -5,6 +5,7 @@ using System.Text;
 using MGroup.Constitutive.Thermal;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods;
+using MGroup.LinearAlgebra.Iterative;
 using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.DataStructures;
@@ -70,6 +71,17 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 					Utilities.FindNodalFieldValues(subdomain, freeDofs, algebraicModel, solver.LinearSystem.Solution);
 				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
 			});
+
+			//Debug.WriteLine($"Num PCG iterations = {solver.PcgStats.NumIterationsRequired}," +
+			//    $" final residual norm ratio = {solver.PcgStats.ResidualNormRatioEstimation}");
+
+			// Check convergence
+			int precision = 10;
+			int pcgIterationsExpected = 160;
+			double pcgResidualNormRatioExpected = 7.487370033127084E-11;
+			IterativeStatistics stats = solver.InterfaceProblemSolutionStats;
+			Assert.Equal(pcgIterationsExpected, stats.NumIterationsRequired);
+			Assert.Equal(pcgResidualNormRatioExpected, stats.ResidualNormRatioEstimation, precision);
 		}
 
 		[Theory]
@@ -115,6 +127,17 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 					Utilities.FindNodalFieldValues(subdomain, freeDofs, algebraicModel, solver.LinearSystem.Solution);
 				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
 			});
+
+			//Debug.WriteLine($"Num PCG iterations = {solver.PcgStats.NumIterationsRequired}," +
+			//    $" final residual norm ratio = {solver.PcgStats.ResidualNormRatioEstimation}");
+
+			// Check convergence
+			int precision = 10;
+			int pcgIterationsExpected = 7;
+			double pcgResidualNormRatioExpected = 0;
+			IterativeStatistics stats = solver.InterfaceProblemSolutionStats;
+			Assert.Equal(pcgIterationsExpected, stats.NumIterationsRequired);
+			Assert.Equal(pcgResidualNormRatioExpected, stats.ResidualNormRatioEstimation, precision);
 		}
 
 		[Theory]
@@ -164,6 +187,17 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 					Utilities.FindNodalFieldValues(subdomain, freeDofs, algebraicModel, solver.LinearSystem.Solution);
 				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
 			});
+
+			//Debug.WriteLine($"Num PCG iterations = {solver.PcgStats.NumIterationsRequired}," +
+			//    $" final residual norm ratio = {solver.PcgStats.ResidualNormRatioEstimation}");
+
+			// Check convergence
+			int precision = 10;
+			int pcgIterationsExpected = 63;
+			double pcgResidualNormRatioExpected = 4.859075883397028E-11;
+			IterativeStatistics stats = solver.InterfaceProblemSolutionStats;
+			Assert.Equal(pcgIterationsExpected, stats.NumIterationsRequired);
+			Assert.Equal(pcgResidualNormRatioExpected, stats.ResidualNormRatioEstimation, precision);
 		}
 	}
 }

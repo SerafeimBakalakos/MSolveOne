@@ -103,6 +103,8 @@ namespace MGroup.Solvers.DDM.Psm
 			Logger = new SolverLogger(name);
 		}
 
+		public IterativeStatistics InterfaceProblemSolutionStats { get; private set; }
+
 		public IGlobalLinearSystem LinearSystem { get; }
 
 		public ISolverLogger Logger { get; }
@@ -177,6 +179,7 @@ namespace MGroup.Solvers.DDM.Psm
 			IterativeStatistics stats = interfaceProblemSolver.Solve(
 				interfaceProblemMatrix.Matrix, preconditioner.Preconditioner, interfaceProblemVectors.InterfaceProblemRhs,
 				interfaceProblemVectors.InterfaceProblemSolution, initalGuessIsZero);
+			InterfaceProblemSolutionStats = stats;
 			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
 			Debug.WriteLine("Iterations for boundary problem = " + stats.NumIterationsRequired);
 		}
