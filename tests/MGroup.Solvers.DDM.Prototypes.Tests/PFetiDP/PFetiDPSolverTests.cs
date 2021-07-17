@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using MGroup.Constitutive.Thermal;
+using MGroup.Environments;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.NumericalAnalyzers;
-using MGroup.Solvers.AlgebraicModel;
+using MGroup.Solvers.DDM.FetiDP.Dofs;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.Prototypes.FetiDP;
 using MGroup.Solvers.DDM.Prototypes.PFetiDP;
 using MGroup.Solvers.DDM.Prototypes.StrategyEnums;
-using MGroup.Solvers.DDM.Prototypes.Tests.ExampleModels;
+using MGroup.Solvers.DDM.Tests.ExampleModels;
 using MGroup.Solvers.DofOrdering;
 using Xunit;
 
@@ -29,6 +31,11 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PFetiDP
 		public static void TestForBrick3D(PsmInterfaceProblem interfaceProblem, FetiDPCoarseProblem coarseProblem,
 			PFetiDPScaling scaling, PFetiDPPreconditioner preconditioner)
 		{
+			// Environment
+			IComputeEnvironment environment = new SequentialSharedEnvironment();
+			ComputeNodeTopology nodeTopology = Brick3DExample.CreateNodeTopology();
+			environment.Initialize(nodeTopology);
+
 			// Model
 			IModel model = Brick3DExample.CreateMultiSubdomainModel();
 			model.ConnectDataStructures();
@@ -37,7 +44,7 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PFetiDP
 			// Solver
 			var solverFactory = new PFetiDPSolver.Factory(
 				true, 1E-10, 200, interfaceProblem, coarseProblem, scaling, preconditioner);
-			DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(environment, model);
 			PFetiDPSolver solver = solverFactory.BuildSolver(model, cornerDofs, algebraicModel);
 
 			// Linear static analysis
@@ -80,6 +87,11 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PFetiDP
 		public static void TestForPlane2D(PsmInterfaceProblem interfaceProblem, FetiDPCoarseProblem coarseProblem,
 			PFetiDPScaling scaling, PFetiDPPreconditioner preconditioner)
 		{
+			// Environment
+			IComputeEnvironment environment = new SequentialSharedEnvironment();
+			ComputeNodeTopology nodeTopology = Plane2DExample.CreateNodeTopology();
+			environment.Initialize(nodeTopology);
+
 			// Model
 			IModel model = Plane2DExample.CreateMultiSubdomainModel();
 			model.ConnectDataStructures();
@@ -88,7 +100,7 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PFetiDP
 			// Solver
 			var solverFactory = new PFetiDPSolver.Factory(
 				true, 1E-10, 200, interfaceProblem, coarseProblem, scaling, preconditioner);
-			DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(environment, model);
 			PFetiDPSolver solver = solverFactory.BuildSolver(model, cornerDofs, algebraicModel);
 
 			// Linear static analysis

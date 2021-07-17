@@ -1,17 +1,15 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
+using MGroup.Environments;
 using MGroup.LinearAlgebra.Iterative.Preconditioning;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
-using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.Assemblers;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.Prototypes.FetiDP;
 using MGroup.Solvers.DDM.Prototypes.PSM;
 using MGroup.Solvers.DDM.Prototypes.StrategyEnums;
 using MGroup.Solvers.DofOrdering;
 using MGroup.Solvers.DofOrdering.Reordering;
-using MGroup.Solvers.LinearSystem;
 
 namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 {
@@ -25,7 +23,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 		private readonly IPFetiDPScaling pfetiDPScaling;
 		private readonly IPFetiDPPreconditioner preconditioner;
 
-		public PFetiDPSolver(IModel model, DistributedAlgebraicModel<Matrix> algebraicModel, ICornerDofSelection cornerDofs, 
+		public PFetiDPSolver(IModel model, DistributedAlgebraicModel<Matrix> algebraicModel, DDM.FetiDP.Dofs.ICornerDofSelection cornerDofs, 
 			bool homogeneousProblem, double pcgTolerance, int maxPcgIterations, PsmInterfaceProblem interfaceProblemChoice, 
 			FetiDPCoarseProblem coarseProblemChoice, PFetiDPScaling scalingChoice, PFetiDPPreconditioner preconditionerChoice) 
 			: base(model, algebraicModel, homogeneousProblem, pcgTolerance, maxPcgIterations, interfaceProblemChoice)
@@ -124,7 +122,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 			pfetiDPScaling.Initialize();
 
 			// Prepare FetiDP matrices
-			DistributedMatrix<Matrix> Kff = algebraicModel.LinearSystem.Matrix;
+			DistributedOverlappingMatrix<Matrix> Kff = algebraicModel.LinearSystem.Matrix;
 			fetiDPStiffnesses.CalcAllMatrices(s => Kff.LocalMatrices[s]);
 			coarseProblem.Prepare();
 
@@ -161,13 +159,13 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 
 			public bool IsMatrixPositiveDefinite { get; set; } = true;
 
-			public PFetiDPSolver BuildSolver(IModel model, ICornerDofSelection cornerDofs, 
+			public PFetiDPSolver BuildSolver(IModel model, DDM.FetiDP.Dofs.ICornerDofSelection cornerDofs, 
 				DistributedAlgebraicModel<Matrix> algebraicModel)
 				=> new PFetiDPSolver(model, algebraicModel, cornerDofs, homogeneousProblem, pcgTolerance, maxPcgIterations, 
 					interfaceProblemChoice, coarseProblemChoice, scalingChoice, preconditionerChoice);
 
-			public DistributedAlgebraicModel<Matrix> BuildAlgebraicModel(IModel model)
-				=> new DistributedAlgebraicModel<Matrix>(model, DofOrderer, new DenseMatrixAssembler());
+			public DistributedAlgebraicModel<Matrix> BuildAlgebraicModel(IComputeEnvironment environment, IModel model)
+				=> new DistributedAlgebraicModel<Matrix>(environment, model, DofOrderer, new DenseMatrixAssembler());
 		}
 	}
 }

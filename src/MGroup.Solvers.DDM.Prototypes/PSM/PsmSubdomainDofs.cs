@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using MGroup.MSolve.Discretization;
 using MGroup.LinearAlgebra.Matrices;
-using MGroup.Solvers;
-using MGroup.Solvers.DofOrdering;
-using MGroup.Solvers.AlgebraicModel;
+using MGroup.MSolve.Discretization;
+using MGroup.Solvers.DDM.LinearSystem;
 
 namespace MGroup.Solvers.DDM.Prototypes.PSM
 {

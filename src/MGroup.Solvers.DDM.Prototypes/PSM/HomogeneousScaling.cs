@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using MGroup.MSolve.Discretization;
+
+using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.DataStructures;
+using MGroup.MSolve.Discretization;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DofOrdering;
-using MGroup.Solvers.AlgebraicModel;
-using MGroup.LinearAlgebra.Matrices;
 
 namespace MGroup.Solvers.DDM.Prototypes.PSM
 {
@@ -14,7 +14,6 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 	{
 		private readonly IModel model;
 		private readonly DistributedAlgebraicModel<Matrix> algebraicModel;
-		private readonly IGlobalFreeDofOrdering dofOrdering;
 
 		public HomogeneousScaling(IModel model, DistributedAlgebraicModel<Matrix> algebraicModel)
 		{

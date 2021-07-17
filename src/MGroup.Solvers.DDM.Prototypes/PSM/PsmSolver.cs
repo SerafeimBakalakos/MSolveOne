@@ -1,23 +1,23 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using MGroup.MSolve.Discretization;
+using MGroup.Environments;
+using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Iterative;
 using MGroup.LinearAlgebra.Iterative.PreconditionedConjugateGradient;
 using MGroup.LinearAlgebra.Iterative.Preconditioning;
 using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.MSolve.DataStructures;
+using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Solution;
+using MGroup.MSolve.Solution.LinearSystem;
+using MGroup.Solvers.Assemblers;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.Prototypes.LinearAlgebraExtensions;
 using MGroup.Solvers.DDM.Prototypes.StrategyEnums;
-using MGroup.MSolve.Solution;
 using MGroup.Solvers.DofOrdering;
 using MGroup.Solvers.DofOrdering.Reordering;
-using MGroup.Solvers.AlgebraicModel;
-using MGroup.Solvers.Assemblers;
-using MGroup.MSolve.DataStructures;
-using MGroup.MSolve.Solution.LinearSystem;
-using MGroup.Solvers.LinearSystem;
 
 namespace MGroup.Solvers.DDM.Prototypes.PSM
 {
@@ -101,8 +101,8 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			interfaceProblem.FindDofs();
 
 			// Prepare interface problem
-			DistributedMatrix<Matrix> Kff = algebraicModel.LinearSystem.Matrix;
-			DistributedVector Ff = algebraicModel.LinearSystem.RhsVector;
+			DistributedOverlappingMatrix<Matrix> Kff = algebraicModel.LinearSystem.Matrix;
+			DistributedOverlappingVector Ff = algebraicModel.LinearSystem.RhsVector;
 			psmStiffnesses.CalcAllMatrices(s => Kff.LocalMatrices[s]);
 			vectors.CalcAllRhsVectors(s => Ff.LocalVectors[s]);
 			BlockMatrix Sbbe = psmStiffnesses.Sbbe;
@@ -123,7 +123,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 
 		protected void CalcFreeDisplacements(BlockVector Ube)
 		{
-			DistributedVector Uf = algebraicModel.LinearSystem.Solution;
+			DistributedOverlappingVector Uf = algebraicModel.LinearSystem.Solution;
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
 				int s = subdomain.ID;
@@ -157,8 +157,8 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			public PsmSolver BuildSolver(IModel model, DistributedAlgebraicModel<Matrix> algebraicModel)
 				=> new PsmSolver(model, algebraicModel, homogeneousProblem, pcgTolerance, maxPcgIterations, interfaceProblem);
 
-			public DistributedAlgebraicModel<Matrix> BuildAlgebraicModel(IModel model)
-				=> new DistributedAlgebraicModel<Matrix>(model, DofOrderer, new DenseMatrixAssembler());
+			public DistributedAlgebraicModel<Matrix> BuildAlgebraicModel(IComputeEnvironment environment, IModel model)
+				=> new DistributedAlgebraicModel<Matrix>(environment, model, DofOrderer, new DenseMatrixAssembler());
 		}
 	}
 }

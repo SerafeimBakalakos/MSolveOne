@@ -16,6 +16,7 @@ using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Meshes.Structured;
+using MGroup.Solvers.DDM.FetiDP.Dofs;
 using Xunit;
 
 // Global
@@ -370,6 +371,30 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			Model model = CreateSingleSubdomainModel();
 			model.DecomposeIntoSubdomains(NumSubdomains[0] * NumSubdomains[1], e => elementsToSubdomains[e]);
 			return model;
+		}
+
+		public static UserDefinedCornerDofSelection GetCornerDofs(IModel model)
+		{
+			var cornerNodes = new HashSet<int>();
+			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
+			{
+				INode[] subdomainCorners = CornerNodeUtilities.FindCornersOfRectangle2D(subdomain);
+				foreach (INode node in subdomainCorners)
+				{
+					if (node.SubdomainsDictionary.Count > 1) //TODO for some reason this does not work if > 2. One Krr is singular.
+					{
+						cornerNodes.Add(node.ID);
+					}
+				}
+			}
+
+			//int[] cornerNodes = { 20, 22, 24, 38, 40, 42, 56, 58, 60 };
+			var cornerDofs = new UserDefinedCornerDofSelection();
+			foreach (int node in cornerNodes)
+			{
+				cornerDofs.AddCornerNode(node);
+			}
+			return cornerDofs;
 		}
 
 		public static Table<int, int, double> GetExpectedNodalValues()

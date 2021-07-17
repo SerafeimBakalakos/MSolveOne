@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using MGroup.Constitutive.Thermal;
+using MGroup.Environments;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.NumericalAnalyzers;
-using MGroup.Solvers.AlgebraicModel;
+using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.Prototypes.PSM;
 using MGroup.Solvers.DDM.Prototypes.StrategyEnums;
-using MGroup.Solvers.DDM.Prototypes.Tests.ExampleModels;
+using MGroup.Solvers.DDM.Tests.ExampleModels;
 using MGroup.Solvers.DofOrdering;
 using Xunit;
 
@@ -24,13 +25,18 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PSM
 		[InlineData(PsmInterfaceProblem.Distributed)]
 		public static void TestForBrick3D(PsmInterfaceProblem interfaceProblem)
 		{
+			// Environment
+			IComputeEnvironment environment = new SequentialSharedEnvironment();
+			ComputeNodeTopology nodeTopology = Brick3DExample.CreateNodeTopology();
+			environment.Initialize(nodeTopology);
+
 			// Model
 			IModel model = Brick3DExample.CreateMultiSubdomainModel();
 			model.ConnectDataStructures();
 
 			// Solver
 			var solverFactory = new PsmSolver.Factory(true, 1E-10, 200, interfaceProblem);
-			DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(environment, model);
 			PsmSolver solver = solverFactory.BuildSolver(model, algebraicModel);
 
 			// Linear static analysis
@@ -69,13 +75,18 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PSM
 		[InlineData(PsmInterfaceProblem.Distributed)]
 		public static void TestForLine1D(PsmInterfaceProblem interfaceProblem)
 		{
+			// Environment
+			IComputeEnvironment environment = new SequentialSharedEnvironment();
+			ComputeNodeTopology nodeTopology = Line1DExample.CreateNodeTopology();
+			environment.Initialize(nodeTopology);
+
 			// Model
 			IModel model = Line1DExample.CreateMultiSubdomainModel();
 			model.ConnectDataStructures();
 
 			// Solver
 			var solverFactory = new PsmSolver.Factory(true, 1E-10, 200, interfaceProblem);
-			DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(environment, model);
 			PsmSolver solver = solverFactory.BuildSolver(model, algebraicModel);
 
 			// Linear static analysis
@@ -114,13 +125,18 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PSM
 		[InlineData(PsmInterfaceProblem.Distributed)]
 		public static void TestForPlane2D(PsmInterfaceProblem interfaceProblem)
 		{
+			// Environment
+			IComputeEnvironment environment = new SequentialSharedEnvironment();
+			ComputeNodeTopology nodeTopology = Plane2DExample.CreateNodeTopology();
+			environment.Initialize(nodeTopology);
+
 			// Model
 			IModel model = Plane2DExample.CreateMultiSubdomainModel();
 			model.ConnectDataStructures();
 
 			// Solver
 			var solverFactory = new PsmSolver.Factory(true, 1E-10, 200, interfaceProblem);
-			DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(environment, model);
 			PsmSolver solver = solverFactory.BuildSolver(model, algebraicModel);
 
 			// Linear static analysis

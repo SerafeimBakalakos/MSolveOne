@@ -14,6 +14,7 @@ using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Meshes.Structured;
+using MGroup.Solvers.DDM.FetiDP.Dofs;
 
 //TODO: different number of clusters, subdomains, elements per axis. Try to make this as nonsymmetric as possible, 
 //      but keep subdomain-elements ratio constant to have the same stiffnesses.
@@ -112,6 +113,29 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			Model model = CreateSingleSubdomainModel();
 			model.DecomposeIntoSubdomains(NumSubdomains[0] * NumSubdomains[1] * NumSubdomains[2], e => elementsToSubdomains[e]);
 			return model;
+		}
+
+		public static UserDefinedCornerDofSelection GetCornerDofs(IModel model)
+		{
+			var cornerNodes = new HashSet<int>();
+			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
+			{
+				INode[] subdomainCorners = CornerNodeUtilities.FindCornersOfBrick3D(subdomain);
+				foreach (INode node in subdomainCorners)
+				{
+					if (node.SubdomainsDictionary.Count > 2)
+					{
+						cornerNodes.Add(node.ID);
+					}
+				}
+			}
+
+			var cornerDofs = new UserDefinedCornerDofSelection();
+			foreach (int node in cornerNodes)
+			{
+				cornerDofs.AddCornerNode(node);
+			}
+			return cornerDofs;
 		}
 
 		public static Table<int, int, double> GetExpectedNodalValues()

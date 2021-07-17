@@ -7,8 +7,8 @@ using MGroup.MSolve.Discretization;
 
 namespace MGroup.Solvers.DDM.Prototypes.PSM
 {
-    public class HeterogeneousScaling : IPrimalScaling
-    {
+	public class HeterogeneousScaling : IPrimalScaling
+	{
 		private readonly IModel model;
 
 		public HeterogeneousScaling(IModel model)
@@ -17,8 +17,8 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 		}
 
 		public Dictionary<int, SparseVector> DistributeNodalLoads(Table<INode, IDofType, double> nodalLoads)
-        {
+		{
 			throw new NotImplementedException();
 		}
-    }
+	}
 }

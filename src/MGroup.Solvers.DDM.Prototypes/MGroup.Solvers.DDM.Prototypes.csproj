@@ -9,7 +9,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MGroup.LinearAlgebra.Distributed\MGroup.LinearAlgebra.Distributed.csproj" />
     <ProjectReference Include="..\MGroup.MSolve.Discretization\MGroup.MSolve.Discretization.csproj" />
+    <ProjectReference Include="..\MGroup.Solvers.DDM\MGroup.Solvers.DDM.csproj" />
     <ProjectReference Include="..\MGroup.Solvers\MGroup.Solvers.csproj" />
   </ItemGroup>
 
