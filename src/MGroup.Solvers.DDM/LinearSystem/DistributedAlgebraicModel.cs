@@ -132,7 +132,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		public IGlobalMatrix BuildGlobalMatrix(Func<int, IEnumerable<IElement>> accessElements, 
 			IElementMatrixProvider elementMatrixProvider)
 		{
-			var globalMatrix = new DistributedOverlappingMatrix<TMatrix>(environment, FreeDofIndexer);
+			var globalMatrix = new DistributedOverlappingMatrix<TMatrix>(FreeDofIndexer);
 			environment.DoPerNode(subdomainID =>
 			{
 				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomainID];
@@ -145,7 +145,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		IGlobalVector IGlobalVectorAssembler.CreateZeroVector() => CreateZeroVector();
 
-		public DistributedOverlappingVector CreateZeroVector() => new DistributedOverlappingVector(environment, FreeDofIndexer);
+		public DistributedOverlappingVector CreateZeroVector() => new DistributedOverlappingVector(FreeDofIndexer);
 
 		public void DoPerElement(Func<int, IEnumerable<IElement>> accessElements, Action<IElement> elementAction)
 		{

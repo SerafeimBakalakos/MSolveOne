@@ -15,10 +15,10 @@ namespace MGroup.Solvers.DDM.LinearSystem
 	public class DistributedOverlappingMatrix<TMatrix> : IGlobalMatrix
 		where TMatrix : class, IMatrix
 	{
-		public DistributedOverlappingMatrix(IComputeEnvironment environment, DistributedOverlappingIndexer indexer)
+		public DistributedOverlappingMatrix(DistributedOverlappingIndexer indexer)
 		{
-			Environment = environment;
 			this.Indexer = indexer;
+			this.Environment = indexer.Environment;
 		}
 
 		public IComputeEnvironment Environment { get; }
@@ -46,7 +46,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public IGlobalMatrix Copy()
 		{
-			var copy = new DistributedOverlappingMatrix<TMatrix>(Environment, Indexer);
+			var copy = new DistributedOverlappingMatrix<TMatrix>(Indexer);
 			Environment.DoPerNode(nodeID => copy.LocalMatrices[nodeID] = (TMatrix)this.LocalMatrices[nodeID].Copy());
 			return copy;
 		}

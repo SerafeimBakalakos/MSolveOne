@@ -32,11 +32,11 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 
 		private readonly MultiplyLocalVector multiplyMatrixVectorPerComputeNode;
 
-		public DistributedOverlappingTransformation(IComputeEnvironment environment, DistributedOverlappingIndexer indexer,
+		public DistributedOverlappingTransformation(DistributedOverlappingIndexer indexer,
 			MultiplyLocalVector multiplyMatrixVectorPerComputeNode)
 		{
-			this.Environment = environment;
 			this.Indexer = indexer;
+			this.Environment = indexer.Environment;
 			this.multiplyMatrixVectorPerComputeNode = multiplyMatrixVectorPerComputeNode;
 		}
 

@@ -30,7 +30,10 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 		{
 			localIndexers = environment.CreateDictionaryPerNode(
 				n => new Local(environment.GetComputeNode(n)));
+			Environment = environment;
 		}
+
+		public IComputeEnvironment Environment { get; }
 
 		public DistributedOverlappingIndexer.Local GetLocalComponent(int nodeID) => localIndexers[nodeID];
 

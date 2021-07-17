@@ -29,7 +29,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 		{
 			Dictionary<int, Vector> fbCondensed = environment.CreateDictionaryPerNode(
 				subdomainID => subdomainVectors[subdomainID].CalcCondensedRhsVector());
-			InterfaceProblemRhs = new DistributedOverlappingVector(environment, indexer, fbCondensed);
+			InterfaceProblemRhs = new DistributedOverlappingVector(indexer, fbCondensed);
 			InterfaceProblemRhs.SumOverlappingEntries();
 		}
 

@@ -24,19 +24,18 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 {
 	public class DistributedOverlappingVector : IGlobalVector
 	{
-		public DistributedOverlappingVector(IComputeEnvironment environment, DistributedOverlappingIndexer indexer)
+		public DistributedOverlappingVector(DistributedOverlappingIndexer indexer)
 		{
-			this.Environment = environment;
 			this.Indexer = indexer;
-			this.LocalVectors = environment.CreateDictionaryPerNode(
+			this.Environment = indexer.Environment;
+			this.LocalVectors = Environment.CreateDictionaryPerNode(
 				node => Vector.CreateZero(indexer.GetLocalComponent(node).NumEntries));
 		}
 
-		public DistributedOverlappingVector(IComputeEnvironment environment, DistributedOverlappingIndexer indexer,
-			Dictionary<int, Vector> localVectors)
+		public DistributedOverlappingVector(DistributedOverlappingIndexer indexer, Dictionary<int, Vector> localVectors)
 		{
-			this.Environment = environment;
 			this.Indexer = indexer;
+			this.Environment = indexer.Environment;
 			this.LocalVectors = localVectors;
 		}
 
@@ -71,7 +70,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 		{
 			Dictionary<int, Vector> localVectorsCloned =
 				Environment.CreateDictionaryPerNode(node => LocalVectors[node].Copy());
-			return new DistributedOverlappingVector(Environment, Indexer, localVectorsCloned);
+			return new DistributedOverlappingVector(Indexer, localVectorsCloned);
 		}
 
 		public void CopyFrom(IGlobalVector otherVector)
@@ -88,7 +87,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 
 		IGlobalVector IGlobalVector.CreateZero() => CreateZero();
 
-		public DistributedOverlappingVector CreateZero() => new DistributedOverlappingVector(Environment, Indexer);
+		public DistributedOverlappingVector CreateZero() => new DistributedOverlappingVector(Indexer);
 
 		public double DotProduct(IGlobalVector otherVector)
 		{

@@ -41,7 +41,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 			};
 			environment.DoPerNode(calcSchurComplement);
 
-			Matrix = new DistributedOverlappingTransformation(environment, indexer, MultiplySubdomainSchurComplement);
+			Matrix = new DistributedOverlappingTransformation(indexer, MultiplySubdomainSchurComplement);
 		}
 
 		public double[] ExtractDiagonal(int subdomainID)
