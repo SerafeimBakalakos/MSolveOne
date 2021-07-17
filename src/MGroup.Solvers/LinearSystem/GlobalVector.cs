@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.Solution.Exceptions;
 
 //TODO: The vector types used for subdomain-level operations should implement IVectorAbstraction directly. 
 //		This is basically an adapter and should be removed.

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Matrices;
 
+//TODO: This belongs in LinearAlgebra project
 namespace MGroup.LinearAlgebra.Distributed
 {
 	public interface IGlobalMatrix : ILinearTransformation

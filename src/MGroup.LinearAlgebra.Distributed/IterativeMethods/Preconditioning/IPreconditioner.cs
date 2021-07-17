@@ -18,7 +18,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning
         /// <param name="output">
         /// The left hand side vector of the system M * v = w. It will be overwritten by the solution of the linear system.
         /// </param>
-        /// <exception cref="Exceptions.NonMatchingDimensionsException">
+        /// <exception cref="LinearAlgebraExtensions.NonMatchingDimensionsException">
         /// Thrown if the <see cref="IIndexable1D.Length"/> of <paramref name="input"/> or <paramref name="output"/> 
         /// is different than the number of rows of this <see cref="IPreconditioner"/>.
         /// </exception>

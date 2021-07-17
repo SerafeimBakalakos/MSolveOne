@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Matrices;
-using MGroup.MSolve.Solution.Exceptions;
-using MGroup.MSolve.Solution.LinearSystem;
 
 //TODO: The matrix types used for subdomain-level operations should implement IMatrixAbstraction directly. 
 //		This is basically an adapter and should be removed.

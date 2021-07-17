@@ -33,7 +33,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 
 		public void Calculate(DistributedOverlappingIndexer indexer)
 		{
-			Matrix = new DistributedOverlappingTransformation(environment, indexer, other => (DistributedOverlappingVector)other, MultiplySubdomainSchurComplement);
+			Matrix = new DistributedOverlappingTransformation(environment, indexer, MultiplySubdomainSchurComplement);
 		}
 
 		//TODO: this looks like it belongs to LinearAlgebra. Perhaps in an implicit matrix class.

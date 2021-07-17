@@ -56,8 +56,8 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning
         public void Multiply(DistributedOverlappingVector input, DistributedOverlappingVector output)
         {
             //TODOMPI: also check that environment is the same between M,x and M,y
-            Debug.Assert(this.Indexer.Matches(input.Indexer) /*&& (this.environment == lhs.environment)*/);
-            Debug.Assert(this.Indexer.Matches(output.Indexer) /*&& (this.environment == rhs.environment)*/);
+            Debug.Assert(this.Indexer.IsCompatibleWith(input.Indexer) /*&& (this.environment == lhs.environment)*/);
+            Debug.Assert(this.Indexer.IsCompatibleWith(output.Indexer) /*&& (this.environment == rhs.environment)*/);
 
             Action<int> multiplyLocal = nodeID =>
             {

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.LinearAlgebra.Distributed.LinearAlgebraExtensions;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
@@ -11,34 +13,23 @@ using MGroup.LinearAlgebra.Vectors;
 namespace MGroup.Solvers.DDM.LinearSystem
 {
 	public class DistributedOverlappingMatrix<TMatrix> : IGlobalMatrix
-		where TMatrix : IMatrix
+		where TMatrix : class, IMatrix
 	{
-		private readonly DistributedOverlappingIndexer indexer;
-		private readonly Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector;
-		private readonly Func<IGlobalMatrix, DistributedOverlappingMatrix<TMatrix>> checkCompatibleMatrix;
-
-		public DistributedOverlappingMatrix(IComputeEnvironment environment, DistributedOverlappingIndexer indexer, 
-			Guid format, Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector,
-			Func<IGlobalMatrix, DistributedOverlappingMatrix<TMatrix>> checkCompatibleMatrix)
+		public DistributedOverlappingMatrix(IComputeEnvironment environment, DistributedOverlappingIndexer indexer)
 		{
 			Environment = environment;
-			this.indexer = indexer;
-			Format = format;
-			this.checkCompatibleVector = checkCompatibleVector;
-			this.checkCompatibleMatrix = checkCompatibleMatrix;
+			this.Indexer = indexer;
 		}
 
 		public IComputeEnvironment Environment { get; }
 
-		public Guid Format { get; }
-
-		public IDistributedIndexer Indexer => indexer;
+		public DistributedOverlappingIndexer Indexer { get; }
 
 		public ConcurrentDictionary<int, TMatrix> LocalMatrices { get; } = new ConcurrentDictionary<int, TMatrix>();
 
 		public void AxpyIntoThis(IGlobalMatrix otherMatrix, double otherCoefficient)
 		{
-			DistributedOverlappingMatrix<TMatrix> distributedOther = checkCompatibleMatrix(otherMatrix);
+			DistributedOverlappingMatrix<TMatrix> distributedOther = Indexer.CheckCompatibleMatrix<TMatrix>(otherMatrix);
 			Action<int> localOperation = nodeID =>
 			{
 				TMatrix thisSubdomainMatrix = this.LocalMatrices[nodeID];
@@ -55,14 +46,14 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public IGlobalMatrix Copy()
 		{
-			var copy = new DistributedOverlappingMatrix<TMatrix>(Environment, indexer, Format, checkCompatibleVector, checkCompatibleMatrix);
+			var copy = new DistributedOverlappingMatrix<TMatrix>(Environment, Indexer);
 			Environment.DoPerNode(nodeID => copy.LocalMatrices[nodeID] = (TMatrix)this.LocalMatrices[nodeID].Copy());
 			return copy;
 		}
 
 		public void LinearCombinationIntoThis(double thisCoefficient, IGlobalMatrix otherMatrix, double otherCoefficient)
 		{
-			DistributedOverlappingMatrix<TMatrix> distributedOther = checkCompatibleMatrix(otherMatrix);
+			DistributedOverlappingMatrix<TMatrix> distributedOther = Indexer.CheckCompatibleMatrix<TMatrix>(otherMatrix);
 			Action<int> localOperation = nodeID =>
 			{
 				TMatrix thisSubdomainMatrix = this.LocalMatrices[nodeID];
@@ -74,15 +65,15 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public void MultiplyVector(IGlobalVector input, IGlobalVector output)
 		{
-			DistributedOverlappingVector distributedInput = checkCompatibleVector(input);
-			DistributedOverlappingVector distributedOutput = checkCompatibleVector(output);
+			DistributedOverlappingVector distributedInput = Indexer.CheckCompatibleVector(input);
+			DistributedOverlappingVector distributedOutput = Indexer.CheckCompatibleVector(output);
 			MultiplyVector(distributedInput, distributedOutput);
 		}
 
 		public void MultiplyVector(DistributedOverlappingVector input, DistributedOverlappingVector output)
 		{
-			checkCompatibleVector(input);
-			checkCompatibleVector(output);
+			Indexer.CheckCompatibleVector(input);
+			Indexer.CheckCompatibleVector(output);
 
 			Action<int> multiplyLocal = nodeID =>
 			{

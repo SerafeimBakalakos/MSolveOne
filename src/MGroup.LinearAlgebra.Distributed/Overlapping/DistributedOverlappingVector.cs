@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.Environments;
+using MGroup.LinearAlgebra.Distributed.LinearAlgebraExtensions;
 
 //TODOMPI: this class will be mainly used for iterative methods. Taking that into account, make optimizations. E.g. work arrays
 //      used as buffers for MPI communication can be reused across vectors, instead of each vector allocating/freeing identical 
@@ -23,48 +24,37 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 {
 	public class DistributedOverlappingVector : IGlobalVector
 	{
-		private readonly Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector;
-		private readonly DistributedOverlappingIndexer indexer;
-
-		public DistributedOverlappingVector(IComputeEnvironment environment, DistributedOverlappingIndexer indexer, 
-			Guid format, Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector)
+		public DistributedOverlappingVector(IComputeEnvironment environment, DistributedOverlappingIndexer indexer)
 		{
 			this.Environment = environment;
-			this.indexer = indexer;
-			Format = format;
-			this.checkCompatibleVector = checkCompatibleVector;
+			this.Indexer = indexer;
 			this.LocalVectors = environment.CreateDictionaryPerNode(
 				node => Vector.CreateZero(indexer.GetLocalComponent(node).NumEntries));
 		}
 
 		public DistributedOverlappingVector(IComputeEnvironment environment, DistributedOverlappingIndexer indexer,
-			Guid format, Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector, 
 			Dictionary<int, Vector> localVectors)
 		{
 			this.Environment = environment;
-			this.indexer = indexer;
-			Format = format;
-			this.checkCompatibleVector = checkCompatibleVector;
+			this.Indexer = indexer;
 			this.LocalVectors = localVectors;
 		}
 
 		public IComputeEnvironment Environment { get; }
 
-		public Guid Format { get; }
-
-		public IDistributedIndexer Indexer => indexer;
+		public DistributedOverlappingIndexer Indexer { get; }
 
 		public Dictionary<int, Vector> LocalVectors { get; }
 
 		public void AxpyIntoThis(IGlobalVector otherVector, double otherCoefficient)
 		{
-			DistributedOverlappingVector casted = checkCompatibleVector(otherVector);
-			AxpyIntoThis(casted, otherCoefficient);
+			DistributedOverlappingVector otherDistributed = Indexer.CheckCompatibleVector(otherVector);
+			AxpyIntoThis(otherDistributed, otherCoefficient);
 		}
 
 		public void AxpyIntoThis(DistributedOverlappingVector otherVector, double otherCoefficient)
 		{
-			checkCompatibleVector(otherVector);
+			Indexer.CheckCompatibleVector(otherVector);
 			Environment.DoPerNode(
 				node => this.LocalVectors[node].AxpyIntoThis(otherVector.LocalVectors[node], otherCoefficient)
 			);
@@ -81,30 +71,29 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 		{
 			Dictionary<int, Vector> localVectorsCloned =
 				Environment.CreateDictionaryPerNode(node => LocalVectors[node].Copy());
-			return new DistributedOverlappingVector(Environment, indexer, Format, checkCompatibleVector, localVectorsCloned);
+			return new DistributedOverlappingVector(Environment, Indexer, localVectorsCloned);
 		}
 
 		public void CopyFrom(IGlobalVector otherVector)
 		{
-			DistributedOverlappingVector casted = checkCompatibleVector(otherVector);
-			CopyFrom(casted);
+			DistributedOverlappingVector otherDistributed = Indexer.CheckCompatibleVector(otherVector);
+			CopyFrom(otherDistributed);
 		}
 
 		public void CopyFrom(DistributedOverlappingVector otherVector)
 		{
-			checkCompatibleVector(otherVector);
+			Indexer.CheckCompatibleVector(otherVector);
 			Environment.DoPerNode(node => this.LocalVectors[node].CopyFrom(otherVector.LocalVectors[node]));
 		}
 
 		IGlobalVector IGlobalVector.CreateZero() => CreateZero();
 
-		public DistributedOverlappingVector CreateZero() 
-			=> new DistributedOverlappingVector(Environment, indexer, Format, checkCompatibleVector);
+		public DistributedOverlappingVector CreateZero() => new DistributedOverlappingVector(Environment, Indexer);
 
 		public double DotProduct(IGlobalVector otherVector)
 		{
-			DistributedOverlappingVector casted = checkCompatibleVector(otherVector);
-			return DotProduct(casted);
+			DistributedOverlappingVector otherDistributed = Indexer.CheckCompatibleVector(otherVector);
+			return DotProduct(otherDistributed);
 		}
 
 		/// <summary>
@@ -116,12 +105,12 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 		/// </remarks>
 		public double DotProduct(DistributedOverlappingVector otherVector)
 		{
-			checkCompatibleVector(otherVector);
+			Indexer.CheckCompatibleVector(otherVector);
 			Func<int, double> calcLocalDot = node =>
 			{
 				Vector thisLocalVector = this.LocalVectors[node];
 				Vector otherLocalVector = otherVector.LocalVectors[node];
-				int[] multiplicities = indexer.GetLocalComponent(node).Multiplicities;
+				int[] multiplicities = Indexer.GetLocalComponent(node).Multiplicities;
 
 				double dotLocal = 0.0;
 				for (int i = 0; i < thisLocalVector.Length; ++i)
@@ -138,11 +127,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 
 		public bool Equals(DistributedOverlappingVector other, double tolerance = 1E-7)
 		{
-			try
-			{
-				checkCompatibleVector(other);
-			}
-			catch (Exception)
+			if (!this.Indexer.IsCompatibleWith(other.Indexer))
 			{
 				return false;
 			}
@@ -154,14 +139,14 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 		public void LinearCombinationIntoThis(
 			double thisCoefficient, IGlobalVector otherVector, double otherCoefficient)
 		{
-			DistributedOverlappingVector casted = checkCompatibleVector(otherVector);
-			LinearCombinationIntoThis(thisCoefficient, casted, otherCoefficient);
+			DistributedOverlappingVector otherDistributed = Indexer.CheckCompatibleVector(otherVector);
+			LinearCombinationIntoThis(thisCoefficient, otherDistributed, otherCoefficient);
 		}
 
 		public void LinearCombinationIntoThis(
 			double thisCoefficient, DistributedOverlappingVector otherVector, double otherCoefficient)
 		{
-			checkCompatibleVector(otherVector);
+			Indexer.CheckCompatibleVector(otherVector);
 			Environment.DoPerNode(
 				node => this.LocalVectors[node].LinearCombinationIntoThis(
 					thisCoefficient, otherVector.LocalVectors[node], otherCoefficient)
@@ -173,7 +158,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			Func<int, double> calcLocalDot = node =>
 			{
 				Vector localVector = this.LocalVectors[node];
-				int[] multiplicities = indexer.GetLocalComponent(node).Multiplicities;
+				int[] multiplicities = Indexer.GetLocalComponent(node).Multiplicities;
 
 				double dotLocal = 0.0;
 				for (int i = 0; i < localVector.Length; ++i)
@@ -223,7 +208,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			Action<int> regularizeLocalVectors = nodeID =>
 			{
 				ComputeNode node = Environment.GetComputeNode(nodeID);
-				DistributedOverlappingIndexer.Local localIndexer = indexer.GetLocalComponent(nodeID);
+				DistributedOverlappingIndexer.Local localIndexer = Indexer.GetLocalComponent(nodeID);
 				Vector orginalLocalVector = this.LocalVectors[nodeID];
 				Vector reducedLocalVector = reducedVector.LocalVectors[nodeID];
 
@@ -257,7 +242,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			{
 				ComputeNode node = Environment.GetComputeNode(nodeID);
 				Vector localVector = LocalVectors[nodeID];
-				DistributedOverlappingIndexer.Local localIndexer = indexer.GetLocalComponent(nodeID);
+				DistributedOverlappingIndexer.Local localIndexer = Indexer.GetLocalComponent(nodeID);
 
 				// Find the common entries (to send) of this node with each of its neighbors
 				var transferData = new AllToAllNodeData<double>();
@@ -283,7 +268,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			{
 				ComputeNode node = Environment.GetComputeNode(nodeID);
 				Vector localVector = LocalVectors[nodeID];
-				DistributedOverlappingIndexer.Local localIndexer = indexer.GetLocalComponent(nodeID);
+				DistributedOverlappingIndexer.Local localIndexer = Indexer.GetLocalComponent(nodeID);
 
 				IDictionary<int, double[]> recvValues = dataPerNode[nodeID].recvValues;
 				foreach (int neighborID in node.Neighbors) 

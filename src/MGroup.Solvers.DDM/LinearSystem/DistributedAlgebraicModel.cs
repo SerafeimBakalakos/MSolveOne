@@ -10,7 +10,6 @@ using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Solution.AlgebraicModel;
-using MGroup.MSolve.Solution.Exceptions;
 using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.Solvers.Assemblers;
 using MGroup.Solvers.DofOrdering;
@@ -71,7 +70,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		public void AddToGlobalVector(Func<int, IEnumerable<IElement>> accessElements, IGlobalVector vector,
 			IElementVectorProvider vectorProvider)
 		{
-			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
+			DistributedOverlappingVector distributedVector = FreeDofIndexer.CheckCompatibleVector(vector);
 			environment.DoPerNode(subdomainID =>
 			{
 				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomainID];
@@ -87,7 +86,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public void AddToGlobalVector(Func<int, IEnumerable<IElementLoad>> accessLoads, IGlobalVector vector)
 		{
-			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
+			DistributedOverlappingVector distributedVector = FreeDofIndexer.CheckCompatibleVector(vector);
 			environment.DoPerNode(subdomainID =>
 			{
 				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomainID];
@@ -103,7 +102,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public void AddToGlobalVector(Func<int, IEnumerable<INodalLoad>> accessLoads, IGlobalVector vector)
 		{
-			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
+			DistributedOverlappingVector distributedVector = FreeDofIndexer.CheckCompatibleVector(vector);
 			environment.DoPerNode(subdomainID =>
 			{
 				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomainID];
@@ -118,7 +117,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public void AddToGlobalVector(IEnumerable<IAllNodeLoad> loads, IGlobalVector vector)
 		{
-			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
+			DistributedOverlappingVector distributedVector = FreeDofIndexer.CheckCompatibleVector(vector);
 			environment.DoPerNode(subdomainID =>
 			{
 				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomainID];
@@ -133,7 +132,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		public IGlobalMatrix BuildGlobalMatrix(Func<int, IEnumerable<IElement>> accessElements, 
 			IElementMatrixProvider elementMatrixProvider)
 		{
-			var globalMatrix = new DistributedOverlappingMatrix<TMatrix>(environment, FreeDofIndexer, Format, CheckCompatibleVector, CheckCompatibleMatrix);
+			var globalMatrix = new DistributedOverlappingMatrix<TMatrix>(environment, FreeDofIndexer);
 			environment.DoPerNode(subdomainID =>
 			{
 				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomainID];
@@ -146,8 +145,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		IGlobalVector IGlobalVectorAssembler.CreateZeroVector() => CreateZeroVector();
 
-		public DistributedOverlappingVector CreateZeroVector()
-			=> new DistributedOverlappingVector(environment, FreeDofIndexer, Format, CheckCompatibleVector);
+		public DistributedOverlappingVector CreateZeroVector() => new DistributedOverlappingVector(environment, FreeDofIndexer);
 
 		public void DoPerElement(Func<int, IEnumerable<IElement>> accessElements, Action<IElement> elementAction)
 		{
@@ -166,7 +164,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			{
 				throw new NotImplementedException("We need to locate the correct subdomain first");
 			}
-			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
+			DistributedOverlappingVector distributedVector = FreeDofIndexer.CheckCompatibleVector(vector);
 			int s = element.Subdomain.ID;
 			ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[s];
 			return subdomainDofs.ExtractVectorElementFromSubdomain(element, distributedVector.LocalVectors[s]);
@@ -178,7 +176,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			{
 				throw new NotImplementedException("We need to locate the correct subdomain first");
 			}
-			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
+			DistributedOverlappingVector distributedVector = FreeDofIndexer.CheckCompatibleVector(vector);
 			if (node.SubdomainsDictionary.Count == 1) // Internal nodes are straightforward
 			{
 				ISubdomain subdomain = node.SubdomainsDictionary.First().Value;
@@ -253,7 +251,8 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		public void RebuildGlobalMatrixPartially(IGlobalMatrix currentMatrix, Func<int, IEnumerable<IElement>> accessElements, 
 			IElementMatrixProvider elementMatrixProvider, IElementMatrixPredicate predicate)
 		{
-			DistributedOverlappingMatrix<TMatrix> globalMatrix = CheckCompatibleMatrix(currentMatrix);
+			DistributedOverlappingMatrix<TMatrix> distributedMatrix = 
+				FreeDofIndexer.CheckCompatibleMatrix<TMatrix>(currentMatrix);
 			environment.DoPerNode(subdomainID =>
 			{
 				IEnumerable<IElement> subdomainElements = accessElements(subdomainID);
@@ -262,43 +261,15 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				if (subdomainMatrix != null)
 				{
 					//TODO: This is a good point to notify solvers, etc, if the processed matrix is the linear system matrix 
-					globalMatrix.LocalMatrices[subdomainID] = subdomainMatrix;
+					distributedMatrix.LocalMatrices[subdomainID] = subdomainMatrix;
 				}
 			});
 		}
 
-		internal DistributedOverlappingMatrix<TMatrix> CheckCompatibleMatrix(IGlobalMatrix matrix)
-		{
-			// Casting inside here is usually safe since all global matrices should be created by this object
-			if (matrix is DistributedOverlappingMatrix<TMatrix> distributedMatrix)
-			{
-				bool isCompatible = distributedMatrix.Format == this.Format;
-				isCompatible &= distributedMatrix.LocalMatrices.Count == numSubdomains;
-				isCompatible &= distributedMatrix.Indexer == this.FreeDofIndexer;
-				isCompatible &= distributedMatrix.Environment == this.environment;
-				if (isCompatible)
-				{
-					return distributedMatrix;
-				}
-			}
-			throw new InvalidLinearSystemFormat("The provided matrix has a different format than the current linear system.");
-		}
+		internal DistributedOverlappingMatrix<TMatrix> CheckCompatibleMatrix(IGlobalMatrix matrix) 
+			=> FreeDofIndexer.CheckCompatibleMatrix<TMatrix>(matrix);
 
-		internal DistributedOverlappingVector CheckCompatibleVector(IGlobalVector vector)
-		{
-			// Casting inside here is usually safe since all global vectors should be created by the this object
-			if (vector is DistributedOverlappingVector distributedVector)
-			{
-				bool isCompatible = distributedVector.Format == this.Format;
-				isCompatible &= distributedVector.LocalVectors.Count == numSubdomains;
-				isCompatible &= distributedVector.Indexer == this.FreeDofIndexer;
-				isCompatible &= distributedVector.Environment == this.environment;
-				if (isCompatible)
-				{
-					return distributedVector;
-				}
-			}
-			throw new InvalidLinearSystemFormat("The provided vector has a different format than the current linear system.");
-		}
+		internal DistributedOverlappingVector CheckCompatibleVector(IGlobalVector vector) 
+			=> FreeDofIndexer.CheckCompatibleVector(vector);
 	}
 }

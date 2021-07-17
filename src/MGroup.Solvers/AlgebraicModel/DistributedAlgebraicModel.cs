@@ -3,7 +3,6 @@ using MGroup.LinearAlgebra.Vectors;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.MSolve.Solution;
-using MGroup.MSolve.Solution.Exceptions;
 using MGroup.MSolve.Discretization;
 using System;
 using MGroup.Solvers.Assemblers;
@@ -16,6 +15,7 @@ using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Solvers.LinearSystem;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.LinearAlgebra.Distributed.LinearAlgebraExtensions;
 
 namespace MGroup.Solvers.AlgebraicModel
 {
@@ -265,7 +265,7 @@ namespace MGroup.Solvers.AlgebraicModel
 					}
 				}
 			}
-			throw new InvalidLinearSystemFormat("The provided matrix has a different format than the current linear system."
+			throw new NonMatchingFormatException("The provided matrix has a different format than the current linear system."
 				+ $" Make sure it was created by the linear system with format = {Format},"
 				+ $" corresponds to {numSubdomains} subdomains and that the type {typeof(TMatrix)} is used.");
 		}
@@ -283,7 +283,7 @@ namespace MGroup.Solvers.AlgebraicModel
 					}
 				}
 			}
-			throw new InvalidLinearSystemFormat("The provided vector has a different format than the current linear system."
+			throw new NonMatchingFormatException("The provided vector has a different format than the current linear system."
 				+ $" Make sure it was created by the linear system with format = {Format}"
 				+ $" and corresponds to {numSubdomains} subdomains.");
 		}

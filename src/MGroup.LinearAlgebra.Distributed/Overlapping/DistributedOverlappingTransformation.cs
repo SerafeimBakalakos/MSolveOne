@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using MGroup.LinearAlgebra.Exceptions;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.Environments;
+using MGroup.LinearAlgebra.Distributed.LinearAlgebraExtensions;
 
-//TODO: Actually if IDistributedVector exposes its local subvectors, it probably does not matter if the lhs vector is 
-//      DistributedOverlappingVector.
 namespace MGroup.LinearAlgebra.Distributed.Overlapping
 {
 	public class DistributedOverlappingTransformation : ILinearTransformation
@@ -32,35 +30,31 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 		/// </param>
 		public delegate void MultiplyLocalVector(int computeNodeID, Vector input, Vector output);
 
-		private readonly IComputeEnvironment environment;
-		private readonly Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector;
-		private readonly DistributedOverlappingIndexer indexer;
 		private readonly MultiplyLocalVector multiplyMatrixVectorPerComputeNode;
 
 		public DistributedOverlappingTransformation(IComputeEnvironment environment, DistributedOverlappingIndexer indexer,
-			Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector, 
 			MultiplyLocalVector multiplyMatrixVectorPerComputeNode)
 		{
-			this.environment = environment;
-			this.indexer = indexer;
-			this.checkCompatibleVector = checkCompatibleVector;
+			this.Environment = environment;
+			this.Indexer = indexer;
 			this.multiplyMatrixVectorPerComputeNode = multiplyMatrixVectorPerComputeNode;
 		}
 
-		public IDistributedIndexer Indexer => indexer;
+		public IComputeEnvironment Environment { get; }
 
+		public DistributedOverlappingIndexer Indexer { get; }
 
 		public void MultiplyVector(IGlobalVector input, IGlobalVector output)
 		{
-			DistributedOverlappingVector inputCasted = checkCompatibleVector(input);
-			DistributedOverlappingVector outputCasted = checkCompatibleVector(output);
-			MultiplyVector(inputCasted, outputCasted);
+			DistributedOverlappingVector distributedInput = Indexer.CheckCompatibleVector(input);
+			DistributedOverlappingVector distributedOutput = Indexer.CheckCompatibleVector(output);
+			MultiplyVector(distributedInput, distributedOutput);
 		}
 
 		public void MultiplyVector(DistributedOverlappingVector input, DistributedOverlappingVector output)
 		{
-			checkCompatibleVector(input);
-			checkCompatibleVector(output);
+			Indexer.CheckCompatibleVector(input);
+			Indexer.CheckCompatibleVector(output);
 
 			Action<int> multiplyLocal = nodeID =>
 			{
@@ -68,7 +62,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				Vector localY = output.LocalVectors[nodeID];
 				multiplyMatrixVectorPerComputeNode(nodeID, localX, localY);
 			};
-			environment.DoPerNode(multiplyLocal);
+			Environment.DoPerNode(multiplyLocal);
 
 			output.SumOverlappingEntries();
 		}

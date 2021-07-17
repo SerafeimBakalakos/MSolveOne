@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.LinearAlgebra.Distributed.LinearAlgebraExtensions;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Solution.AlgebraicModel;
 
-using MGroup.MSolve.Solution.Exceptions;
 using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.Solvers.Assemblers;
 using MGroup.Solvers.DofOrdering;
@@ -175,7 +175,7 @@ namespace MGroup.Solvers.AlgebraicModel
 					return globalMatrix;
 				}
 			}
-			throw new InvalidLinearSystemFormat("The provided matrix has a different format than the current linear system."
+			throw new NonMatchingFormatException("The provided matrix has a different format than the current linear system."
 				+ $" Make sure it was created by the linear system with format = {Format}"
 				+ $" and that the type {typeof(TMatrix)} is used.");
 		}
@@ -190,7 +190,7 @@ namespace MGroup.Solvers.AlgebraicModel
 					return globalVector;
 				}
 			}
-			throw new InvalidLinearSystemFormat("The provided vector has a different format than the current linear system."
+			throw new NonMatchingFormatException("The provided vector has a different format than the current linear system."
 				+ $" Make sure it was created by the linear system with format = {Format}.");
 		}
 	}
