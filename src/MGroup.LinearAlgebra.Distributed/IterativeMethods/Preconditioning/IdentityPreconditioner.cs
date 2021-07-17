@@ -1,4 +1,4 @@
-﻿using MGroup.LinearAlgebra.Matrices;
+using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 
 namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning
@@ -43,7 +43,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning
             /// <summary>
             /// See <see cref="IPreconditionerFactory.CreatePreconditionerFor(IDistributedMatrix)"/>.
             /// </summary>
-            public IPreconditioner CreatePreconditionerFor(IDistributedMatrix matrix) 
+            public IPreconditioner CreatePreconditionerFor(ILinearTransformation matrix) 
                 => new IdentityPreconditioner();
         }
     }

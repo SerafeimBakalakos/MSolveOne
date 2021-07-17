@@ -169,7 +169,7 @@ namespace MGroup.Solvers.DDM.Psm
 			bool initalGuessIsZero = !StartIterativeSolverFromPreviousSolution;
 			if (!StartIterativeSolverFromPreviousSolution)
 			{
-				interfaceProblemVectors.InterfaceProblemSolution = new DistributedOverlappingVector(environment, indexer);
+				interfaceProblemVectors.InterfaceProblemSolution = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other);
 			}
 			IterativeStatistics stats = interfaceProblemSolver.Solve(
 				interfaceProblemMatrix.Matrix, preconditioner.Preconditioner, interfaceProblemVectors.InterfaceProblemRhs,

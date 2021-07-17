@@ -49,13 +49,13 @@ namespace MGroup.LinearAlgebra.Distributed.Tests
 			DistributedOverlappingIndexer indexer = CreateIndexer(environment);
 
 			Dictionary<int, Vector> localX = environment.CreateDictionaryPerNode(n => GetX(n));
-			var distributedX = new DistributedOverlappingVector(environment, indexer, localX);
+			var distributedX = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localX);
 
 			Dictionary<int, Vector> localY = environment.CreateDictionaryPerNode(n => GetY(n));
-			var distributedY = new DistributedOverlappingVector(environment, indexer, localY);
+			var distributedY = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localY);
 
 			Dictionary<int, Vector> localZExpected = environment.CreateDictionaryPerNode(n => GetX(n) - 2.0 * GetY(n));
-			var distributedZExpected = new DistributedOverlappingVector(environment, indexer, localZExpected);
+			var distributedZExpected = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localZExpected);
 
 			DistributedOverlappingVector distributedZ = distributedX.Copy();
 			distributedZ.AxpyIntoThis(distributedY, -2.0);
@@ -75,10 +75,10 @@ namespace MGroup.LinearAlgebra.Distributed.Tests
 			DistributedOverlappingIndexer indexer = CreateIndexer(environment);
 
 			Dictionary<int, Vector> localX = environment.CreateDictionaryPerNode(n => GetX(n));
-			var distributedX = new DistributedOverlappingVector(environment, indexer, localX);
+			var distributedX = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localX);
 
 			Dictionary<int, Vector> localY = environment.CreateDictionaryPerNode(n => GetY(n));
-			var distributedY = new DistributedOverlappingVector(environment, indexer, localY);
+			var distributedY = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localY);
 
 			double dotExpected = GetXDotY();
 			double dot = distributedX.DotProduct(distributedY);
@@ -98,9 +98,9 @@ namespace MGroup.LinearAlgebra.Distributed.Tests
 			DistributedOverlappingIndexer indexer = CreateIndexer(environment);
 
 			Dictionary<int, Vector> localX = environment.CreateDictionaryPerNode(n => GetX(n));
-			var distributedX = new DistributedOverlappingVector(environment, indexer, localX);
+			var distributedX = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localX);
 
-			var distributedXAlt = new DistributedOverlappingVector(environment, indexer, localX);
+			var distributedXAlt = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localX);
 			environment.DoPerNode(n => distributedXAlt.LocalVectors[n].CopyFrom(GetX(n)));
 
 			double tol = 1E-13;
@@ -119,13 +119,13 @@ namespace MGroup.LinearAlgebra.Distributed.Tests
 			DistributedOverlappingIndexer indexer = CreateIndexer(environment);
 
 			Dictionary<int, Vector> localX = environment.CreateDictionaryPerNode(n => GetX(n));
-			var distributedX = new DistributedOverlappingVector(environment, indexer, localX);
+			var distributedX = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localX);
 
 			Dictionary<int, Vector> localY = environment.CreateDictionaryPerNode(n => GetY(n));
-			var distributedY = new DistributedOverlappingVector(environment, indexer, localY);
+			var distributedY = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localY);
 
 			Dictionary<int, Vector> localZExpected = environment.CreateDictionaryPerNode(n => 2.0 * GetX(n) + 3.0 * GetY(n));
-			var distributedZExpected = new DistributedOverlappingVector(environment, indexer, localZExpected);
+			var distributedZExpected = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localZExpected);
 
 			DistributedOverlappingVector distributedZ = distributedX.Copy();
 			distributedZ.LinearCombinationIntoThis(2.0, distributedY, 3.0);
@@ -145,17 +145,17 @@ namespace MGroup.LinearAlgebra.Distributed.Tests
 			environment.Initialize(CreateNodeTopology());
 			DistributedOverlappingIndexer indexer = CreateIndexer(environment);
 
-			var distributedA = new DistributedOverlappingMatrix(environment, indexer, 
+			var distributedA = new DistributedOverlappingTransformation(environment, indexer, other => (DistributedOverlappingVector)other, 
 				(n, x, y) => GetMatrixA(n).MultiplyIntoResult(x, y));
 
 			Dictionary<int, Vector> localX = environment.CreateDictionaryPerNode(n => GetX(n));
-			var distributedX = new DistributedOverlappingVector(environment, indexer, localX);
+			var distributedX = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localX);
 
 			Dictionary<int, Vector> localAxExpected = environment.CreateDictionaryPerNode(n => GetAx(n));
-			var distributedAxExpected = new DistributedOverlappingVector(environment, indexer, localAxExpected);
+			var distributedAxExpected = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localAxExpected);
 
-			var distributedAx = new DistributedOverlappingVector(environment, indexer);
-			distributedA.Multiply(distributedX, distributedAx);
+			var distributedAx = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other);
+			distributedA.MultiplyVector(distributedX, distributedAx);
 
 			double tol = 1E-13;
 			Assert.True(distributedAxExpected.Equals(distributedAx, tol));
@@ -171,21 +171,21 @@ namespace MGroup.LinearAlgebra.Distributed.Tests
 			environment.Initialize(CreateNodeTopology());
 			DistributedOverlappingIndexer indexer = CreateIndexer(environment);
 
-			var distributedA = new DistributedOverlappingMatrix(environment, indexer,
+			var distributedA = new DistributedOverlappingTransformation(environment, indexer, other => (DistributedOverlappingVector)other,
 				(n, x, y) => GetMatrixA(n).MultiplyIntoResult(x, y));
 
 			Dictionary<int, Vector> localAx = environment.CreateDictionaryPerNode(n => GetAx(n));
-			var distributedAx = new DistributedOverlappingVector(environment, indexer, localAx);
+			var distributedAx = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localAx);
 
 			Dictionary<int, Vector> localXExpected = environment.CreateDictionaryPerNode(n => GetX(n));
-			var distributedXExpected = new DistributedOverlappingVector(environment, indexer, localXExpected);
+			var distributedXExpected = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localXExpected);
 
 			var pcgBuilder = new PcgAlgorithm.Builder();
 			int maxIterations = 12;
 			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(maxIterations);
 			pcgBuilder.ResidualTolerance = 1E-10;
 			PcgAlgorithm pcg = pcgBuilder.Build();
-			var distributedX = new DistributedOverlappingVector(environment, indexer);
+			var distributedX = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other);
 			IterativeStatistics stats = pcg.Solve(distributedA, new IdentityPreconditioner(), distributedAx, distributedX, true);
 
 			double tol = 1E-10;
@@ -204,10 +204,10 @@ namespace MGroup.LinearAlgebra.Distributed.Tests
 			DistributedOverlappingIndexer indexer = CreateIndexer(environment);
 
 			Dictionary<int, Vector> localX = environment.CreateDictionaryPerNode(n => GetX(n));
-			var distributedX = new DistributedOverlappingVector(environment, indexer, localX);
+			var distributedX = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localX);
 
 			Dictionary<int, Vector> localZExpected = environment.CreateDictionaryPerNode(n => -3.0 * GetX(n));
-			var distributedZExpected = new DistributedOverlappingVector(environment, indexer, localZExpected);
+			var distributedZExpected = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localZExpected);
 
 			DistributedOverlappingVector distributedZ = distributedX.Copy();
 			distributedZ.ScaleIntoThis(-3.0);
@@ -228,10 +228,10 @@ namespace MGroup.LinearAlgebra.Distributed.Tests
 			DistributedOverlappingIndexer indexer = CreateIndexer(environment);
 
 			Dictionary<int, Vector> localInputW = environment.CreateDictionaryPerNode(n => GetWBeforeSumOverlapping(n));
-			var distributedInputW = new DistributedOverlappingVector(environment, indexer, localInputW);
+			var distributedInputW = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localInputW);
 
 			Dictionary<int, Vector> localOutputW = environment.CreateDictionaryPerNode(n => GetWAfterSumOverlapping(n));
-			var distributedOutputW = new DistributedOverlappingVector(environment, indexer, localOutputW);
+			var distributedOutputW = new DistributedOverlappingVector(environment, indexer, Guid.Empty, other => (DistributedOverlappingVector)other, localOutputW);
 
 			distributedInputW.SumOverlappingEntries();
 

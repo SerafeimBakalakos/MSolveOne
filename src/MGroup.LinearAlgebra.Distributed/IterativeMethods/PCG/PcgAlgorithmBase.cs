@@ -52,7 +52,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
         /// <summary>
         /// The matrix A of the linear system or another object that implements matrix-vector multiplications.
         /// </summary>
-        public IDistributedMatrix Matrix { get; private set; }
+        public ILinearTransformation Matrix { get; private set; }
 
         /// <summary>
         /// The vector that results from <see cref="Matrix"/> * <see cref="Direction"/>.
@@ -151,7 +151,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
         /// <exception cref="NonMatchingDimensionsException">
         /// Thrown if <paramref name="rhs"/> or <paramref name="solution"/> violate the described constraints.
         /// </exception>
-        public IterativeStatistics Solve(IDistributedMatrix matrix, IPreconditioner preconditioner,
+        public IterativeStatistics Solve(ILinearTransformation matrix, IPreconditioner preconditioner,
             IGlobalVector rhs, IGlobalVector solution, bool initialGuessIsZero) //TODO: find a better way to handle the case x0=0
         {
             this.Matrix = matrix;

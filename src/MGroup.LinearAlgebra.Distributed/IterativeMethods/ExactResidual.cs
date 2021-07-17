@@ -4,7 +4,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods
 {
     internal static class ExactResidual
     {
-        internal static IGlobalVector Calculate(IDistributedMatrix matrix,
+        internal static IGlobalVector Calculate(ILinearTransformation matrix,
             IGlobalVector rhs, IGlobalVector solution)
         {
             IGlobalVector residual = rhs.CreateZero();
@@ -12,11 +12,11 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods
             return residual;
         }
 
-        internal static void Calculate(IDistributedMatrix matrix, IGlobalVector rhs,
+        internal static void Calculate(ILinearTransformation matrix, IGlobalVector rhs,
             IGlobalVector solution, IGlobalVector residual)
         {
             //TODO: There is a BLAS operation y = y + a * A*x, that would be perfect for here. rhs.Copy() and then that.
-            matrix.Multiply(solution, residual);
+            matrix.MultiplyVector(solution, residual);
             residual.LinearCombinationIntoThis(-1.0, rhs, 1.0);
         }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Iterative;
@@ -8,7 +8,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods
 {
     public interface IDistributedIterativeMethod
     {
-        IterativeStatistics Solve(IDistributedMatrix matrix, IPreconditioner preconditioner,
+        IterativeStatistics Solve(ILinearTransformation matrix, IPreconditioner preconditioner,
             IGlobalVector rhs, IGlobalVector solution, bool initialGuessIsZero);
     }
 }

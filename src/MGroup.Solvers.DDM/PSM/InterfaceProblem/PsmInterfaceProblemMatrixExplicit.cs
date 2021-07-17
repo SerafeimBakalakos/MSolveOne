@@ -28,7 +28,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 			this.getSubdomainMatrices = getSubdomainMatrices;
 		}
 
-		public DistributedOverlappingMatrix Matrix { get; private set; }
+		public DistributedOverlappingTransformation Matrix { get; private set; }
 
 		public void Calculate(DistributedOverlappingIndexer indexer)
 		{
@@ -41,7 +41,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 			};
 			environment.DoPerNode(calcSchurComplement);
 
-			Matrix = new DistributedOverlappingMatrix(environment, indexer, MultiplySubdomainSchurComplement);
+			Matrix = new DistributedOverlappingTransformation(environment, indexer, other => (DistributedOverlappingVector)other, MultiplySubdomainSchurComplement);
 		}
 
 		public double[] ExtractDiagonal(int subdomainID)

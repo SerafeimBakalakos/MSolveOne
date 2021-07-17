@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -20,6 +20,6 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning
         /// Initializes and returns an <see cref="IPreconditioner"/> for the provided <paramref name="matrix"/>.
         /// </summary>
         /// <param name="matrix">The original matrix, whose preconditioner will be created.</param>
-        IPreconditioner CreatePreconditionerFor(IDistributedMatrix matrix);
+        IPreconditioner CreatePreconditionerFor(ILinearTransformation matrix);
     }
 }

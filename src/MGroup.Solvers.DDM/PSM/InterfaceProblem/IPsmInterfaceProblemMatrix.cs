@@ -8,7 +8,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 {
 	public interface IPsmInterfaceProblemMatrix
 	{
-		DistributedOverlappingMatrix Matrix { get; }
+		DistributedOverlappingTransformation Matrix { get; }
 
 		void Calculate(DistributedOverlappingIndexer indexer);
 

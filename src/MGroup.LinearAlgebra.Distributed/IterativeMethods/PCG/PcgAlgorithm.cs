@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using MGroup.LinearAlgebra.Iterative;
 using MGroup.LinearAlgebra.Iterative.Termination;
@@ -55,7 +55,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods
             for (iteration = 0; iteration < maxIterations; ++iteration)
             {
                 // q = A * d
-                Matrix.Multiply(direction, matrixTimesDirection);
+                Matrix.MultiplyVector(direction, matrixTimesDirection);
 
                 // α = δnew / (d * q)
                 stepSize = resDotPrecondRes / direction.DotProduct(matrixTimesDirection);

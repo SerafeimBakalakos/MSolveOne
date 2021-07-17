@@ -1,18 +1,19 @@
 using System;
 using System.Collections.Generic;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Solution.LinearSystem;
 
 namespace MGroup.Solvers.DDM.LinearSystem
 {
-	public class DistributedLinearSystem<TMatrix> : IGlobalLinearSystem, IDistributedLinearSystem
+	public class DistributedLinearSystem<TMatrix> : IGlobalLinearSystem
 		where TMatrix : class, IMatrix
 	{
-		private readonly Func<IGlobalVector, DistributedVector> checkCompatibleVector;
+		private readonly Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector;
 		private readonly Func<IGlobalMatrix, DistributedMatrix<TMatrix>> checkCompatibleMatrix;
 
-		public DistributedLinearSystem(Func<IGlobalVector, DistributedVector> checkCompatibleVector,
+		public DistributedLinearSystem(Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector,
 			Func<IGlobalMatrix, DistributedMatrix<TMatrix>> checkCompatibleMatrix)
 		{
 			this.checkCompatibleVector = checkCompatibleVector;
@@ -43,15 +44,15 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			get => RhsVector;
 			set
 			{
-				DistributedVector globalVector = checkCompatibleVector(value);
+				DistributedOverlappingVector globalVector = checkCompatibleVector(value);
 				RhsVector = globalVector;
 			}
 		}
 
-		public DistributedVector RhsVector { get; set; }
+		public DistributedOverlappingVector RhsVector { get; set; }
 
 		IGlobalVector IGlobalLinearSystem.Solution => Solution;
 
-		public DistributedVector Solution { get; set; }
+		public DistributedOverlappingVector Solution { get; set; }
 	}
 }

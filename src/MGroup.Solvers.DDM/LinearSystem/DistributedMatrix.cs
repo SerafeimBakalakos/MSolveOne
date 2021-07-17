@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Solution.LinearSystem;
 
@@ -10,10 +11,10 @@ namespace MGroup.Solvers.DDM.LinearSystem
 	public class DistributedMatrix<TMatrix> : IGlobalMatrix
 		where TMatrix : IMatrix
 	{
-		private readonly Func<IGlobalVector, DistributedVector> checkCompatibleVector;
+		private readonly Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector;
 		private readonly Func<IGlobalMatrix, DistributedMatrix<TMatrix>> checkCompatibleMatrix;
 
-		public DistributedMatrix(Guid format, Func<IGlobalVector, DistributedVector> checkCompatibleVector,
+		public DistributedMatrix(Guid format, Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector,
 			Func<IGlobalMatrix, DistributedMatrix<TMatrix>> checkCompatibleMatrix)
 		{
 			Format = format;
@@ -67,8 +68,8 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public void MultiplyVector(IGlobalVector input, IGlobalVector output)
 		{
-			DistributedVector distributedInput = checkCompatibleVector(input);
-			DistributedVector distributedOutput = checkCompatibleVector(output);
+			DistributedOverlappingVector distributedInput = checkCompatibleVector(input);
+			DistributedOverlappingVector distributedOutput = checkCompatibleVector(output);
 			foreach (int s in LocalMatrices.Keys)
 			{
 				this.LocalMatrices[s].MultiplyIntoResult(distributedInput.LocalVectors[s], distributedOutput.LocalVectors[s]);

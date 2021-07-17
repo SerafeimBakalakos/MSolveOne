@@ -5,7 +5,7 @@ using MGroup.LinearAlgebra.Matrices;
 
 namespace MGroup.LinearAlgebra.Distributed
 {
-	public interface IGlobalMatrix
+	public interface IGlobalMatrix : ILinearTransformation
 	{
 		IGlobalMatrix Add(IGlobalMatrix otherMatrix) => Axpy(otherMatrix, +1.0);
 
@@ -34,8 +34,6 @@ namespace MGroup.LinearAlgebra.Distributed
 		}
 
 		void LinearCombinationIntoThis(double thisCoefficient, IGlobalMatrix otherMatrix, double otherCoefficient);
-
-		void MultiplyVector(IGlobalVector input, IGlobalVector output);
 
 		IGlobalMatrix Scale(double coefficient)
 		{
