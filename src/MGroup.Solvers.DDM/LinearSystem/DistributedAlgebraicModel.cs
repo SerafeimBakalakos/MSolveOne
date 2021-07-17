@@ -139,7 +139,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public IGlobalMatrix BuildGlobalMatrix(Func<int, IEnumerable<IElement>> accessElements, IElementMatrixProvider elementMatrixProvider)
 		{
-			var globalMatrix = new DistributedMatrix<TMatrix>(Format, CheckCompatibleVector, CheckCompatibleMatrix);
+			var globalMatrix = new DistributedOverlappingMatrix<TMatrix>(environment, FreeDofIndexer, Format, CheckCompatibleVector, CheckCompatibleMatrix);
 			foreach (ISubdomain subdomain in subdomains)
 			{
 				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
@@ -251,7 +251,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		public void RebuildGlobalMatrixPartially(IGlobalMatrix currentMatrix, Func<int, IEnumerable<IElement>> accessElements, 
 			IElementMatrixProvider elementMatrixProvider, IElementMatrixPredicate predicate)
 		{
-			DistributedMatrix<TMatrix> globalMatrix = CheckCompatibleMatrix(currentMatrix);
+			DistributedOverlappingMatrix<TMatrix> globalMatrix = CheckCompatibleMatrix(currentMatrix);
 			foreach (ISubdomain subdomain in subdomains)
 			{
 				IEnumerable<IElement> subdomainElements = accessElements(subdomain.ID);
@@ -265,22 +265,21 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			}
 		}
 
-		internal DistributedMatrix<TMatrix> CheckCompatibleMatrix(IGlobalMatrix matrix)
+		internal DistributedOverlappingMatrix<TMatrix> CheckCompatibleMatrix(IGlobalMatrix matrix)
 		{
 			// Casting inside here is usually safe since all global matrices should be created by this object
-			if (matrix is DistributedMatrix<TMatrix> distributedMatrix)
+			if (matrix is DistributedOverlappingMatrix<TMatrix> distributedMatrix)
 			{
-				if (distributedMatrix.Format == this.Format)
+				bool isCompatible = distributedMatrix.Format == this.Format;
+				isCompatible &= distributedMatrix.LocalMatrices.Count == numSubdomains;
+				isCompatible &= distributedMatrix.Indexer == this.FreeDofIndexer;
+				isCompatible &= distributedMatrix.Environment == this.environment;
+				if (isCompatible)
 				{
-					if (distributedMatrix.LocalMatrices.Count == numSubdomains)
-					{
-						return distributedMatrix;
-					}
+					return distributedMatrix;
 				}
 			}
-			throw new InvalidLinearSystemFormat("The provided matrix has a different format than the current linear system."
-				+ $" Make sure it was created by the linear system with format = {Format},"
-				+ $" corresponds to {numSubdomains} subdomains and that the type {typeof(TMatrix)} is used.");
+			throw new InvalidLinearSystemFormat("The provided matrix has a different format than the current linear system.");
 		}
 
 		internal DistributedOverlappingVector CheckCompatibleVector(IGlobalVector vector)

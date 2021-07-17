@@ -11,10 +11,10 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		where TMatrix : class, IMatrix
 	{
 		private readonly Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector;
-		private readonly Func<IGlobalMatrix, DistributedMatrix<TMatrix>> checkCompatibleMatrix;
+		private readonly Func<IGlobalMatrix, DistributedOverlappingMatrix<TMatrix>> checkCompatibleMatrix;
 
 		public DistributedLinearSystem(Func<IGlobalVector, DistributedOverlappingVector> checkCompatibleVector,
-			Func<IGlobalMatrix, DistributedMatrix<TMatrix>> checkCompatibleMatrix)
+			Func<IGlobalMatrix, DistributedOverlappingMatrix<TMatrix>> checkCompatibleMatrix)
 		{
 			this.checkCompatibleVector = checkCompatibleVector;
 			this.checkCompatibleMatrix = checkCompatibleMatrix;
@@ -26,7 +26,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			get => Matrix;
 			set
 			{
-				DistributedMatrix<TMatrix> globalMatrix = checkCompatibleMatrix(value);
+				DistributedOverlappingMatrix<TMatrix> globalMatrix = checkCompatibleMatrix(value);
 				foreach (var observer in Observers)
 				{
 					observer.HandleMatrixWillBeSet();
@@ -35,7 +35,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			}
 		}
 
-		public DistributedMatrix<TMatrix> Matrix { get; set; }
+		public DistributedOverlappingMatrix<TMatrix> Matrix { get; set; }
 
 		public HashSet<ILinearSystemObserver> Observers { get; }
 
