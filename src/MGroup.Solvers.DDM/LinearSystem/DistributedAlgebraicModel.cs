@@ -38,18 +38,11 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			subdomains = model.EnumerateSubdomains();
 			numSubdomains = model.NumSubdomains;
 
-			this.subdomainMatrixAssemblers = new Dictionary<int, ISubdomainMatrixAssembler<TMatrix>>();
-			foreach (ISubdomain subdomain in subdomains)
-			{
-				this.subdomainMatrixAssemblers[subdomain.ID] = subdomainMatrixAssembler.Clone();
-			}
+			this.subdomainMatrixAssemblers = environment.CreateDictionaryPerNode(subdomainID => subdomainMatrixAssembler.Clone());
 
 			this.LinearSystem = new DistributedLinearSystem<TMatrix>(CheckCompatibleVector, CheckCompatibleMatrix);
-			this.SubdomainLinearSystems = new Dictionary<int, SubdomainLinearSystem<TMatrix>>();
-			foreach (ISubdomain subdomain in subdomains)
-			{
-				this.SubdomainLinearSystems[subdomain.ID] = new SubdomainLinearSystem<TMatrix>(this, subdomain.ID);
-			}
+			this.SubdomainLinearSystems = environment.CreateDictionaryPerNode(
+				subdomainID => new SubdomainLinearSystem<TMatrix>(this, subdomainID));
 
 			this.SubdomainTopology = new SubdomainTopology(environment, model, s => DofOrdering.SubdomainDofOrderings[s]);
 			this.SubdomainTopology.FindCommonNodesBetweenSubdomains(); //TODO: what about problems where the mesh is repartitioned in some iterations?
@@ -79,13 +72,13 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			IElementVectorProvider vectorProvider)
 		{
 			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
-			foreach (ISubdomain subdomain in subdomains)
+			environment.DoPerNode(subdomainID =>
 			{
-				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
-				IEnumerable<IElement> elements = accessElements(subdomain.ID);
-				var subdomainVector = distributedVector.LocalVectors[subdomain.ID];
+				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomainID];
+				IEnumerable<IElement> elements = accessElements(subdomainID);
+				var subdomainVector = distributedVector.LocalVectors[subdomainID];
 				subdomainVectorAssembler.AddToSubdomainVector(elements, subdomainVector, vectorProvider, subdomainDofs);
-			}
+			});
 
 			// Element loads at the same boundary dof must be summed across subdomains. 
 			// This way the resulting global vector is the same as the corresponding global vector without domain decomposition.
@@ -95,13 +88,13 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		public void AddToGlobalVector(Func<int, IEnumerable<IElementLoad>> accessLoads, IGlobalVector vector)
 		{
 			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
-			foreach (ISubdomain subdomain in subdomains)
+			environment.DoPerNode(subdomainID =>
 			{
-				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
-				IEnumerable<IElementLoad> loads = accessLoads(subdomain.ID);
-				var subdomainVector = distributedVector.LocalVectors[subdomain.ID];
+				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomainID];
+				IEnumerable<IElementLoad> loads = accessLoads(subdomainID);
+				var subdomainVector = distributedVector.LocalVectors[subdomainID];
 				subdomainVectorAssembler.AddToSubdomainVector(loads, subdomainVector, subdomainDofs);
-			}
+			});
 
 			// Element loads at the same boundary dof must be summed across subdomains. 
 			// This way the resulting global vector is the same as the corresponding global vector without domain decomposition.
@@ -111,42 +104,43 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		public void AddToGlobalVector(Func<int, IEnumerable<INodalLoad>> accessLoads, IGlobalVector vector)
 		{
 			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
-			foreach (ISubdomain subdomain in subdomains)
+			environment.DoPerNode(subdomainID =>
 			{
-				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
-				IEnumerable<INodalLoad> loads = accessLoads(subdomain.ID);
-				var subdomainVector = distributedVector.LocalVectors[subdomain.ID];
+				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomainID];
+				IEnumerable<INodalLoad> loads = accessLoads(subdomainID);
+				var subdomainVector = distributedVector.LocalVectors[subdomainID];
 				subdomainVectorAssembler.AddToSubdomainVector(loads, subdomainVector, subdomainDofs);
-				//throw new NotImplementedException("This should probably be done privately by the solver without affecting global vectors used by other components");
-				//solver.DistributeNodalLoads(loads, subdomainVector, subdomainDofs);
-			}
-			// Nodal loads at the same boundary dof are the same across all relevant subdomains, so we do not need to sum overlapping entries
+			});
+
+			// Nodal loads at the same boundary dof are the same across all relevant subdomains, 
+			// so we do not need to sum overlapping entries
 		}
 
 		public void AddToGlobalVector(IEnumerable<IAllNodeLoad> loads, IGlobalVector vector)
 		{
 			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
-			foreach (ISubdomain subdomain in subdomains)
+			environment.DoPerNode(subdomainID =>
 			{
-				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
-				var subdomainVector = distributedVector.LocalVectors[subdomain.ID];
+				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomainID];
+				var subdomainVector = distributedVector.LocalVectors[subdomainID];
 				subdomainVectorAssembler.AddToSubdomainVector(loads, subdomainVector, subdomainDofs);
-				//throw new NotImplementedException("This should probably be done privately by the solver without affecting global vectors used by other components");
-				//solver.DistributeAllNodalLoads(subdomainVector, subdomainDofs);
-			}
-			// Nodal loads at the same boundary dof are the same across all relevant subdomains, so we do not need to sum overlapping entries
+			});
+
+			// Nodal loads at the same boundary dof are the same across all relevant subdomains, 
+			// so we do not need to sum overlapping entries
 		}
 
-		public IGlobalMatrix BuildGlobalMatrix(Func<int, IEnumerable<IElement>> accessElements, IElementMatrixProvider elementMatrixProvider)
+		public IGlobalMatrix BuildGlobalMatrix(Func<int, IEnumerable<IElement>> accessElements, 
+			IElementMatrixProvider elementMatrixProvider)
 		{
 			var globalMatrix = new DistributedOverlappingMatrix<TMatrix>(environment, FreeDofIndexer, Format, CheckCompatibleVector, CheckCompatibleMatrix);
-			foreach (ISubdomain subdomain in subdomains)
+			environment.DoPerNode(subdomainID =>
 			{
-				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
-				TMatrix matrix = subdomainMatrixAssemblers[subdomain.ID].BuildGlobalMatrix(
-						subdomainDofs, accessElements(subdomain.ID), elementMatrixProvider);
-				globalMatrix.LocalMatrices[subdomain.ID] = matrix;
-			}
+				ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomainID];
+				TMatrix matrix = subdomainMatrixAssemblers[subdomainID].BuildGlobalMatrix(
+						subdomainDofs, accessElements(subdomainID), elementMatrixProvider);
+				globalMatrix.LocalMatrices[subdomainID] = matrix;
+			});
 			return globalMatrix;
 		}
 
@@ -157,17 +151,21 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public void DoPerElement(Func<int, IEnumerable<IElement>> accessElements, Action<IElement> elementAction)
 		{
-			foreach (ISubdomain subdomain in subdomains)
+			environment.DoPerNode(subdomainID =>
 			{
-				foreach (IElement element in accessElements(subdomain.ID))
+				foreach (IElement element in accessElements(subdomainID))
 				{
 					elementAction(element);
 				}
-			}
+			});
 		}
 
 		public double[] ExtractElementVector(IGlobalVector vector, IElement element)
 		{
+			if (!(environment is SequentialSharedEnvironment) && !(environment is TplSharedEnvironment))
+			{
+				throw new NotImplementedException("We need to locate the correct subdomain first");
+			}
 			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
 			int s = element.Subdomain.ID;
 			ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[s];
@@ -176,6 +174,10 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public double ExtractSingleValue(IGlobalVector vector, INode node, IDofType dof) //TODO: Dedicated classes to extract values.
 		{
+			if (!(environment is SequentialSharedEnvironment) && !(environment is TplSharedEnvironment))
+			{
+				throw new NotImplementedException("We need to locate the correct subdomain first");
+			}
 			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
 			if (node.SubdomainsDictionary.Count == 1) // Internal nodes are straightforward
 			{
@@ -252,17 +254,17 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			IElementMatrixProvider elementMatrixProvider, IElementMatrixPredicate predicate)
 		{
 			DistributedOverlappingMatrix<TMatrix> globalMatrix = CheckCompatibleMatrix(currentMatrix);
-			foreach (ISubdomain subdomain in subdomains)
+			environment.DoPerNode(subdomainID =>
 			{
-				IEnumerable<IElement> subdomainElements = accessElements(subdomain.ID);
-				TMatrix subdomainMatrix = subdomainMatrixAssemblers[subdomain.ID].RebuildSubdomainMatrix(
-					subdomainElements, DofOrdering.SubdomainDofOrderings[subdomain.ID], elementMatrixProvider, predicate);
+				IEnumerable<IElement> subdomainElements = accessElements(subdomainID);
+				TMatrix subdomainMatrix = subdomainMatrixAssemblers[subdomainID].RebuildSubdomainMatrix(
+					subdomainElements, DofOrdering.SubdomainDofOrderings[subdomainID], elementMatrixProvider, predicate);
 				if (subdomainMatrix != null)
 				{
 					//TODO: This is a good point to notify solvers, etc, if the processed matrix is the linear system matrix 
-					globalMatrix.LocalMatrices[subdomain.ID] = subdomainMatrix;
+					globalMatrix.LocalMatrices[subdomainID] = subdomainMatrix;
 				}
-			}
+			});
 		}
 
 		internal DistributedOverlappingMatrix<TMatrix> CheckCompatibleMatrix(IGlobalMatrix matrix)
