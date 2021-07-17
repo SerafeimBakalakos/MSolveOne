@@ -44,7 +44,7 @@ namespace MGroup.Solvers.DDM.Psm
 		protected readonly SubdomainTopology subdomainTopology;
 		protected readonly ConcurrentDictionary<int, PsmSubdomainVectors> subdomainVectors;
 
-		private DistributedOverlappingIndexer indexer; //TODOMPI: Perhaps this should be accessed from DofSeparator
+		private DistributedOverlappingIndexer boundaryDofIndexer; //TODOMPI: Perhaps this should be accessed from DofSeparator
 
 		protected PsmSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel, 
 			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory, 
@@ -109,50 +109,53 @@ namespace MGroup.Solvers.DDM.Psm
 
 		public bool StartIterativeSolverFromPreviousSolution { get; set; } = false;
 
-		public virtual Dictionary<int, SparseVector> DistributeNodalLoads(Table<INode, IDofType, double> nodalLoads)
-			=> stiffnessDistribution.DistributeNodalLoads(nodalLoads);
-
 		public virtual void HandleMatrixWillBeSet()
 		{
 		}
 
-		public virtual void Initialize() //TODOMPI: Restructure this. The analyzers now call only solver.Solve()
-		{
-			// Reordering the internal dofs is not done here, since subdomain Kff must be built first. 
-			environment.DoPerNode(subdomainID =>
-			{
-				subdomainDofsPsm[subdomainID].SeparateFreeDofsIntoBoundaryAndInternal();
-			}); 
-			this.indexer = subdomainTopology.CreateDistributedVectorIndexer(s => subdomainDofsPsm[s].DofOrderingBoundary);
-
-			//TODOMPI: What should I log here? And where? There is not a central place for logs.
-			//Logger.LogNumDofs("Global boundary dofs", dofSeparatorPsm.GetNumBoundaryDofsCluster(clusterID));
-		}
+		public void Initialize() { }
 
 		public virtual void PreventFromOverwrittingSystemMatrices() {}
 
 		public virtual void Solve() 
 		{
-			Initialize();
-			Action<int> calcSubdomainMatrices = subdomainID =>
+			// Subdomain-level dofs
+			environment.DoPerNode(subdomainID =>
 			{
-				//TODO: This should only happen if the connectivity of the subdomain changes. 
+				//TODO: These should only happen if the connectivity of the subdomain changes. 
+				subdomainDofsPsm[subdomainID].SeparateFreeDofsIntoBoundaryAndInternal();
 				subdomainMatricesPsm[subdomainID].ReorderInternalDofs();
+			});
 
+			// Intersubdomain dofs
+			this.boundaryDofIndexer = subdomainTopology.CreateDistributedVectorIndexer(
+				s => subdomainDofsPsm[s].DofOrderingBoundary);
+
+			// Subdomain-level matrices
+			environment.DoPerNode(subdomainID =>
+			{
 				//TODO: These should happen if the connectivity or stiffness of the subdomain changes
 				subdomainMatricesPsm[subdomainID].ExtractKiiKbbKib();
 				subdomainMatricesPsm[subdomainID].InvertKii();
+			});
 
+			// Scaling
+			stiffnessDistribution.CalcScalingMatrices(boundaryDofIndexer);
+
+			// Subdomain-level vectors
+			environment.DoPerNode(subdomainID =>
+			{
 				subdomainVectors[subdomainID].Clear();
-				subdomainVectors[subdomainID].ExtractInternalRhsVector();
-			};
-			environment.DoPerNode(calcSubdomainMatrices);
+				subdomainVectors[subdomainID].ExtractBoundaryInternalRhsVectors(
+					fb => stiffnessDistribution.ScaleBoundaryRhsVector(subdomainID, fb));
+			});
 
-			interfaceProblemMatrix.Calculate(indexer);
-			preconditioner.Calculate(environment, indexer, interfaceProblemMatrix);
-
+			// Prepare and solve the interface problem
+			interfaceProblemMatrix.Calculate(boundaryDofIndexer);
+			preconditioner.Calculate(environment, boundaryDofIndexer, interfaceProblemMatrix);
 			SolveInterfaceProblem();
 
+			// Find the solution at all free dofs
 			environment.DoPerNode(subdomainID =>
 			{
 				Vector subdomainBoundarySolution = interfaceProblemVectors.InterfaceProblemSolution.LocalVectors[subdomainID];
@@ -165,11 +168,11 @@ namespace MGroup.Solvers.DDM.Psm
 		protected void SolveInterfaceProblem()
 		{
 			interfaceProblemVectors.Clear();
-			interfaceProblemVectors.CalcInterfaceRhsVector(indexer);
+			interfaceProblemVectors.CalcInterfaceRhsVector(boundaryDofIndexer);
 			bool initalGuessIsZero = !StartIterativeSolverFromPreviousSolution;
 			if (!StartIterativeSolverFromPreviousSolution)
 			{
-				interfaceProblemVectors.InterfaceProblemSolution = new DistributedOverlappingVector(indexer);
+				interfaceProblemVectors.InterfaceProblemSolution = new DistributedOverlappingVector(boundaryDofIndexer);
 			}
 			IterativeStatistics stats = interfaceProblemSolver.Solve(
 				interfaceProblemMatrix.Matrix, preconditioner.Preconditioner, interfaceProblemVectors.InterfaceProblemRhs,

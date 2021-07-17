@@ -11,16 +11,8 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 {
 	public interface IBoundaryDofScaling
 	{
-		void CalcSubdomainScaling(DistributedOverlappingIndexer indexer);
+		void CalcScalingMatrices(DistributedOverlappingIndexer indexer);
 
-		//TODOMPI: These need rework at the equation level in the distributed logic. I should probably use scaling matrices without any mapping 
-		///// <summary>
-		///// In theory these matrices are called Lpb.
-		///// </summary>
-		//IMappingMatrix GetDofMappingBoundaryClusterToSubdomain(int subdomainID);
-
-		Dictionary<int, SparseVector> DistributeNodalLoads(Table<INode, IDofType, double> nodalLoads);
-
-		void ScaleForceVector(int subdomainID, Vector subdomainForces); 
+		void ScaleBoundaryRhsVector(int subdomainID, Vector subdomainForces); 
 	}
 }

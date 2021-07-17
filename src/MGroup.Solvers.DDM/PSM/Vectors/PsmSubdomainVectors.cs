@@ -14,6 +14,8 @@ namespace MGroup.Solvers.DDM.PSM.Vectors
 		private readonly IPsmSubdomainMatrixManager matrixManagerPsm;
 		private readonly PsmSubdomainDofs subdomainDofs;
 		private readonly ISubdomainLinearSystem linearSystem;
+
+		private Vector vectorFb;
 		private Vector vectorFi;
 
 		public PsmSubdomainVectors(ISubdomainLinearSystem linearSystem, PsmSubdomainDofs subdomainDofs, 
@@ -26,17 +28,12 @@ namespace MGroup.Solvers.DDM.PSM.Vectors
 
 		public Vector CalcCondensedRhsVector()
 		{
-			// Extract boundary part of rhs vector 
-			int[] boundaryDofs = subdomainDofs.DofsBoundaryToFree;
-			Vector ff = linearSystem.RhsVector;
-			Vector fb = ff.GetSubvector(boundaryDofs);
-
 			// Static condensation: fbCondensed[s] = fb[s] - Kbi[s] * inv(Kii[s]) * fi[s]
 			Vector temp = matrixManagerPsm.MultiplyInverseKii(vectorFi);
 			temp = matrixManagerPsm.MultiplyKbi(temp);
-			fb.SubtractIntoThis(temp);
+			Vector fbCondensed = vectorFb - temp;
 
-			return fb;
+			return fbCondensed;
 		}
 
 		public void Clear()
@@ -44,16 +41,19 @@ namespace MGroup.Solvers.DDM.PSM.Vectors
 			vectorFi = null;
 		}
 
-		public void ExtractInternalRhsVector()
+		public void ExtractBoundaryInternalRhsVectors(Action<Vector> scaleBoundaryVector)
 		{
 			int[] internalDofs = subdomainDofs.DofsInternalToFree;
+			int[] boundaryDofs = subdomainDofs.DofsBoundaryToFree;
 			Vector ff = linearSystem.RhsVector;
+
 			this.vectorFi = ff.GetSubvector(internalDofs);
+			this.vectorFb = ff.GetSubvector(boundaryDofs);
+			scaleBoundaryVector(vectorFb);
 		}
 
 		public void CalcSubdomainFreeSolution(Vector subdomainBoundarySolution)
 		{
-			// Extract internal and boundary parts of rhs vector 
 			int numFreeDofs = linearSystem.DofOrdering.NumFreeDofs;
 			int[] boundaryDofs = subdomainDofs.DofsBoundaryToFree;
 			int[] internalDofs = subdomainDofs.DofsInternalToFree;

@@ -12,6 +12,7 @@ using MGroup.MSolve.Discretization;
 using MGroup.MSolve.DataStructures;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PSM.InterfaceProblem;
+using System.Diagnostics;
 
 //TODO: If Jacobi preconditioning is used, then the most time consuming part of finding the relative stiffnesses 
 //		(distributedVector.SumOverlappingEntries()) is done there too. The two objects should synchronize to only do that once. 
@@ -22,9 +23,8 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 		private readonly IComputeEnvironment environment;
 		private readonly Func<int, ISubdomainLinearSystem> getSubdomainLinearSystem;
 		private readonly Func<int, PsmSubdomainDofs> getSubdomainDofs;
+
 		private readonly ConcurrentDictionary<int, double[]> relativeStiffnesses = new ConcurrentDictionary<int, double[]>();
-		//private readonly ConcurrentDictionary<int, IMappingMatrix> dofMappingBoundaryClusterToSubdomain = 
-		//new ConcurrentDictionary<int, IMappingMatrix>();
 
 		public HeterogeneousScaling(IComputeEnvironment environment, 
 			Func<int, ISubdomainLinearSystem> getSubdomainLinearSystem, Func<int, PsmSubdomainDofs> getSubdomainDofs)
@@ -38,7 +38,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 		/// See eq (6.3) from Papagiannakis bachelor :
 		/// Lpb^e = Db^e * Lb^e * inv( (Lb^e)^T * Db^e * Lb^e)
 		/// </summary>
-		public void CalcSubdomainScaling(DistributedOverlappingIndexer indexer)
+		public void CalcScalingMatrices(DistributedOverlappingIndexer indexer)
 		{
 			throw new NotImplementedException();
 			//Build Db^s from each subdomain's Kff
@@ -79,60 +79,13 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 			environment.DoPerNode(storeRelativeStiffness);
 		}
 		
-
-		//public IMappingMatrix GetDofMappingBoundaryClusterToSubdomain(int subdomainID) 
-		//	=> dofMappingBoundaryClusterToSubdomain[subdomainID];
-
-		public Dictionary<int, SparseVector> DistributeNodalLoads(Table<INode, IDofType, double> nodalLoads)
+		public void ScaleBoundaryRhsVector(int subdomainID, Vector boundaryRhsVector)
 		{
-			throw new NotImplementedException();
-			//Func<int, SparseVector> calcSubdomainForces = subdomainID =>
-			//{
-			//	ISubdomain subdomain = model.GetSubdomain(subdomainID);
-			//	DofTable freeDofs = subdomain.FreeDofOrdering.FreeDofs;
-			//	DofTable boundaryDofs = interfaceProblemDofs.GetSubdomainDofs(subdomainID).DofOrderingBoundary;
-			//	double[] coefficients = relativeStiffnesses[subdomainID];
-
-			//	//TODO: I go through every node and ignore the ones that are not loaded. 
-			//	//		It would be better to directly access the loaded ones.
-			//	var nonZeroLoads = new SortedDictionary<int, double>();
-			//	foreach (INode node in subdomain.Nodes)
-			//	{
-			//		bool isLoaded = nodalLoads.TryGetDataOfRow(node, out IReadOnlyDictionary<IDofType, double> loadsOfNode);
-			//		if (!isLoaded) continue;
-
-			//		if (node.SubdomainsDictionary.Count == 1) // optimization for internal dofs
-			//		{
-			//			foreach (var dofLoadPair in loadsOfNode)
-			//			{
-			//				int freeDofIdx = freeDofs[node, dofLoadPair.Key];
-			//				nonZeroLoads[freeDofIdx] = dofLoadPair.Value;
-			//			}
-			//		}
-			//		else
-			//		{
-			//			foreach (var dofLoadPair in loadsOfNode)
-			//			{
-			//				int freeDofIdx = freeDofs[node, dofLoadPair.Key];
-			//				int boundaryDofIdx = boundaryDofs[node, dofLoadPair.Key];
-			//				nonZeroLoads[freeDofIdx] = dofLoadPair.Value * coefficients[boundaryDofIdx];
-			//			}
-			//		}
-			//	}
-
-			//	return SparseVector.CreateFromDictionary(subdomain.FreeDofOrdering.NumFreeDofs, nonZeroLoads);
-			//};
-			//return environment.CreateDictionaryPerNode(calcSubdomainForces);
-		}
-
-		public void ScaleForceVector(int subdomainID, Vector subdomainForces)
-		{
-			int[] boundaryDofs = getSubdomainDofs(subdomainID).DofsBoundaryToFree;
 			double[] coefficients = relativeStiffnesses[subdomainID];
-			for (int i = 0; i < boundaryDofs.Length; i++)
+			Debug.Assert(boundaryRhsVector.Length == coefficients.Length);
+			for (int i = 0; i < coefficients.Length; i++)
 			{
-				double coeff = coefficients[i];
-				subdomainForces[boundaryDofs[i]] *= coeff;
+				boundaryRhsVector[i] *= coefficients[i];
 			}
 		}
 	}
