@@ -16,11 +16,11 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		private readonly FetiDPSubdomainDofs subdomainDofs;
 
 		private Matrix Kcc;
-		private Matrix KccStar;
 		private Matrix Kcr;
 		private Matrix Krc;
 		private Matrix Krr;
 		private Matrix inverseKrr;
+		private Matrix Scc;
 
 		public FetiDPSubdomainMatrixManagerDense(SubdomainLinearSystem<Matrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
 		{
@@ -28,11 +28,11 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			this.subdomainDofs = subdomainDofs;
 		}
 
-		public IMatrix SchurComplementOfRemainderDofs => KccStar;
+		public IMatrix SchurComplementOfRemainderDofs => Scc;
 
 		public void CalcSchurComplementOfRemainderDofs()
 		{
-			KccStar = Kcc - (Kcr * (inverseKrr * Krc));
+			Scc = Kcc - (Kcr * (inverseKrr * Krc));
 		}
 
 		public void ClearSubMatrices()
@@ -42,7 +42,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			Kcr = null;
 			Krc = null;
 			Krr = null;
-			KccStar = null;
+			Scc = null;
 		}
 
 		public void ExtractKrrKccKrc()

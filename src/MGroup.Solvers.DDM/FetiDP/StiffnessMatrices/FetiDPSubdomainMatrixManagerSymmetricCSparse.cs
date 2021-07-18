@@ -21,10 +21,10 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		private readonly SubmatrixExtractorPckCsrCscSym submatrixExtractor = new SubmatrixExtractorPckCsrCscSym();
 
 		private SymmetricMatrix Kcc;
-		private SymmetricMatrix KccStar;
 		private CsrMatrix Kcr;
 		private SymmetricCscMatrix Krr;
 		private CholeskyCSparseNet inverseKrr;
+		private SymmetricMatrix Scc;
 
 		public FetiDPSubdomainMatrixManagerSymmetricCSparse(
 			SubdomainLinearSystem<SymmetricCscMatrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
@@ -33,12 +33,12 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			this.subdomainDofs = subdomainDofs;
 		}
 
-		public IMatrix SchurComplementOfRemainderDofs => KccStar;
+		public IMatrix SchurComplementOfRemainderDofs => Scc;
 
 		public void CalcSchurComplementOfRemainderDofs()
 		{
-			KccStar = SymmetricMatrix.CreateZero(Kcc.Order);
-			SchurComplementPckCsrCscSym.CalcSchurComplement(Kcc, Kcr, inverseKrr, KccStar);
+			Scc = SymmetricMatrix.CreateZero(Kcc.Order);
+			SchurComplementPckCsrCscSym.CalcSchurComplement(Kcc, Kcr, inverseKrr, Scc);
 		}
 
 		public void ClearSubMatrices()
@@ -47,7 +47,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			Kcc = null;
 			Kcr = null;
 			Krr = null;
-			KccStar = null;
+			Scc = null;
 		}
 
 		public void ExtractKrrKccKrc()
@@ -73,8 +73,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		public void InvertKrr()
 		{
-			var factorization = CholeskyCSparseNet.Factorize(Krr);
-			inverseKrr = factorization;
+			inverseKrr = CholeskyCSparseNet.Factorize(Krr);
 			Krr = null; // It has not been mutated, but it is no longer needed
 		}
 

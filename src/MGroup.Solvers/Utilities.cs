@@ -1,8 +1,8 @@
 namespace MGroup.Solvers
 {
-	internal static class Utilities
+	public static class Utilities
 	{
-		internal static bool AreEqual(int[] array1, int[] array2)
+		public static bool AreEqual(int[] array1, int[] array2)
 		{
 			if (array1.Length != array2.Length) return false;
 			for (int i = 0; i < array1.Length; ++i)
@@ -12,7 +12,7 @@ namespace MGroup.Solvers
 			return true;
 		}
 
-		internal static int[] Range(int startInclusive, int endExclusive)
+		public static int[] Range(int startInclusive, int endExclusive)
 		{
 			var result = new int[endExclusive - startInclusive];
 			for (int i = startInclusive; i < endExclusive; ++i)

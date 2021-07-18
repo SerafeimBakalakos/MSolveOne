@@ -19,11 +19,11 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		private readonly SubmatrixExtractorFullCsrCsc submatrixExtractor = new SubmatrixExtractorFullCsrCsc();
 
 		private Matrix Kcc;
-		private Matrix KccStar;
 		private CsrMatrix Kcr;
 		private CsrMatrix Krc;
 		private CscMatrix Krr;
 		private LUCSparseNet inverseKrr;
+		private Matrix Scc;
 
 		public FetiDPSubdomainMatrixManagerCSparse(
 			SubdomainLinearSystem<CsrMatrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
@@ -32,12 +32,12 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			this.subdomainDofs = subdomainDofs;
 		}
 
-		public IMatrix SchurComplementOfRemainderDofs => KccStar;
+		public IMatrix SchurComplementOfRemainderDofs => Scc;
 
 		public void CalcSchurComplementOfRemainderDofs()
 		{
-			KccStar = Matrix.CreateZero(Kcc.NumRows, Kcc.NumColumns);
-			SchurComplementFullCsrCsc.CalcSchurComplement(Kcc, Kcr, Krc, inverseKrr, KccStar);
+			Scc = Matrix.CreateZero(Kcc.NumRows, Kcc.NumColumns);
+			SchurComplementFullCsrCsc.CalcSchurComplement(Kcc, Kcr, Krc, inverseKrr, Scc);
 		}
 
 		public void ClearSubMatrices()
@@ -47,7 +47,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			Kcr = null;
 			Krc = null;
 			Krr = null;
-			KccStar = null;
+			Scc = null;
 		}
 
 		public void ExtractKrrKccKrc()
