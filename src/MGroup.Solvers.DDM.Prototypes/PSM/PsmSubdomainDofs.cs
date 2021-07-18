@@ -46,7 +46,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			var internalToFree = new HashSet<int>();
 			int subdomainBoundaryIdx = 0;
 
-			DofTable freeDofs = algebraicModel.DofOrdering.SubdomainDofOrderings[subdomain.ID].FreeDofs;
+			DofTable freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID].FreeDofs;
 			IEnumerable<INode> nodes = freeDofs.GetRows();
 			nodes = nodes.OrderBy(node => node.ID);
 
@@ -81,7 +81,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			SubdomainDofOrderingBoundary[s] = boundaryDofOrdering;
 			NumSubdomainDofsBoundary[s] = boundaryToFree.Count;
 			NumSubdomainDofsInternal[s] = internalToFree.Count;
-			NumSubdomainDofsFree[s] = algebraicModel.DofOrdering.SubdomainDofOrderings[subdomain.ID].NumFreeDofs;
+			NumSubdomainDofsFree[s] = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID].NumFreeDofs;
 			SubdomainDofsBoundaryToFree[s] = boundaryToFree.ToArray();
 			SubdomainDofsInternalToFree[s] = internalToFree.ToArray();
 		}

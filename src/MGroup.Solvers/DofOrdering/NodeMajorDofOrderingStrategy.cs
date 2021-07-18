@@ -14,24 +14,6 @@ namespace MGroup.Solvers.DofOrdering
 	/// </summary>
 	public class NodeMajorDofOrderingStrategy : IFreeDofOrderingStrategy
 	{
-		public (int numGlobalFreeDofs, DofTable globalFreeDofs) OrderGlobalDofs(IModel model)
-		{
-			if (model.NumSubdomains != 1)
-			{
-				var allElements = new HashSet<IElement>();
-				foreach (ISubdomain subdomain in model.EnumerateSubdomains())
-				{
-					allElements.UnionWith(subdomain.Elements);
-				}
-				return OrderFreeDofsOfElementSet(allElements, model.EnumerateNodes());
-			}
-			else
-			{
-				int subdomainID = model.EnumerateSubdomains().First().ID;
-				return OrderFreeDofsOfElementSet(model.EnumerateElements(subdomainID), model.EnumerateNodes());
-			}
-		}
-
 		public (int numSubdomainFreeDofs, DofTable subdomainFreeDofs) OrderSubdomainDofs(ISubdomain subdomain)
 			=> OrderFreeDofsOfElementSet(subdomain.Elements, subdomain.Nodes);
 

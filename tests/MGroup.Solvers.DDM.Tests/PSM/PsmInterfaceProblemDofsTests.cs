@@ -60,11 +60,12 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 		{
 			model.ConnectDataStructures();
 
-			IGlobalFreeDofOrdering dofOrdering = ModelUtilities.OrderDofs(model);
-			var subdomainTopology = new SubdomainTopology(environment, model, s => dofOrdering.SubdomainDofOrderings[s]);
+			Dictionary<int, ISubdomainFreeDofOrdering> dofOrderings = environment.CreateDictionaryPerNode(
+				s => ModelUtilities.OrderDofs(model.GetSubdomain(s)));
+			var subdomainTopology = new SubdomainTopology(environment, model, s => dofOrderings[s]);
 
 			Dictionary<int, MockSubdomainLinearSystem> linearSystems = environment.CreateDictionaryPerNode(
-				s => new MockSubdomainLinearSystem(dofOrdering.SubdomainDofOrderings[s]));
+				s => new MockSubdomainLinearSystem(dofOrderings[s]));
 			Dictionary<int, PsmSubdomainDofs> subdomainDofs = environment.CreateDictionaryPerNode(
 				s => new PsmSubdomainDofs(linearSystems[s], true));
 

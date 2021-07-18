@@ -19,7 +19,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			this.algebraicModel = algebraicModel;
 		}
 
-		public ISubdomainFreeDofOrdering DofOrdering => algebraicModel.DofOrdering.SubdomainDofOrderings[subdomainID];
+		public ISubdomainFreeDofOrdering DofOrdering => algebraicModel.SubdomainFreeDofOrderings[subdomainID];
 
 		IMatrix ISubdomainLinearSystem.Matrix => this.Matrix;
 

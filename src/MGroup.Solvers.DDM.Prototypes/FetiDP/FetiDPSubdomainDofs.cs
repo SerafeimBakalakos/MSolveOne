@@ -47,7 +47,7 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 			var remainderToFree = new HashSet<int>();
 			int subdomainCornerIdx = 0;
 
-			DofTable freeDofs = algebraicModel.DofOrdering.SubdomainDofOrderings[subdomain.ID].FreeDofs;
+			DofTable freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID].FreeDofs;
 			IEnumerable<INode> nodes = freeDofs.GetRows();
 			nodes = nodes.OrderBy(node => node.ID);
 

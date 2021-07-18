@@ -21,7 +21,6 @@ namespace MGroup.Solvers.AlgebraicModel
 		where TMatrix : class, IMatrix
 	{
 		private readonly ISubdomain subdomain;
-		private readonly IModel model;
 		private readonly IDofOrderer dofOrderer;
 		private readonly ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler;
 		private readonly SubdomainVectorAssembler subdomainVectorAssembler = new SubdomainVectorAssembler();
@@ -29,7 +28,6 @@ namespace MGroup.Solvers.AlgebraicModel
 		public GlobalAlgebraicModel(IModel model, IDofOrderer dofOrderer,
 			ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler)
 		{
-			this.model = model;
 			this.dofOrderer = dofOrderer;
 			this.subdomainMatrixAssembler = subdomainMatrixAssembler;
 			subdomain = model.EnumerateSubdomains().First();
@@ -37,7 +35,7 @@ namespace MGroup.Solvers.AlgebraicModel
 			Observers = new HashSet<IAlgebraicModelObserver>();
 		}
 
-		public IGlobalFreeDofOrdering DofOrdering { get; private set; }
+		public ISubdomainFreeDofOrdering SubdomainFreeDofOrdering { get; private set; }
 
 		public Guid Format { get; private set; }
 
@@ -53,7 +51,7 @@ namespace MGroup.Solvers.AlgebraicModel
 			IElementVectorProvider vectorProvider)
 		{
 			GlobalVector globalVector = CheckCompatibleVector(vector);
-			ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
+			ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrdering;
 			IEnumerable<IElement> elements = accessElements(subdomain.ID);
 			subdomainVectorAssembler.AddToSubdomainVector(elements, globalVector.SingleVector, vectorProvider, subdomainDofs);
 		}
@@ -61,7 +59,7 @@ namespace MGroup.Solvers.AlgebraicModel
 		public void AddToGlobalVector(Func<int, IEnumerable<INodalLoad>> accessLoads, IGlobalVector vector)
 		{
 			GlobalVector globalVector = CheckCompatibleVector(vector);
-			ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
+			ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrdering;
 			IEnumerable<INodalLoad> loads = accessLoads(subdomain.ID);
 			subdomainVectorAssembler.AddToSubdomainVector(loads, globalVector.SingleVector, subdomainDofs);
 		}
@@ -69,7 +67,7 @@ namespace MGroup.Solvers.AlgebraicModel
 		public void AddToGlobalVector(Func<int, IEnumerable<IElementLoad>> accessLoads, IGlobalVector vector)
 		{
 			GlobalVector globalVector = CheckCompatibleVector(vector);
-			ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
+			ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrdering;
 			IEnumerable<IElementLoad> loads = accessLoads(subdomain.ID);
 			subdomainVectorAssembler.AddToSubdomainVector(loads, globalVector.SingleVector, subdomainDofs);
 		}
@@ -77,14 +75,14 @@ namespace MGroup.Solvers.AlgebraicModel
 		public void AddToGlobalVector(IEnumerable<IAllNodeLoad> loads, IGlobalVector vector)
 		{
 			GlobalVector globalVector = CheckCompatibleVector(vector);
-			ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
+			ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrdering;
 			subdomainVectorAssembler.AddToSubdomainVector(loads, globalVector.SingleVector, subdomainDofs);
 		}
 
 		public IGlobalMatrix BuildGlobalMatrix(
 			Func<int, IEnumerable<IElement>> accessElements, IElementMatrixProvider elementMatrixProvider)
 		{
-			ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
+			ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrdering;
 			var globalMatrix = new GlobalMatrix<TMatrix>(Format, CheckCompatibleVector, CheckCompatibleMatrix);
 			globalMatrix.SingleMatrix = subdomainMatrixAssembler.BuildGlobalMatrix(
 				subdomainDofs, accessElements(subdomain.ID), elementMatrixProvider);
@@ -97,7 +95,7 @@ namespace MGroup.Solvers.AlgebraicModel
 		public GlobalVector CreateZeroVector()
 		{
 			var result = new GlobalVector(Format, CheckCompatibleVector);
-			result.SingleVector = Vector.CreateZero(DofOrdering.SubdomainDofOrderings[subdomain.ID].NumFreeDofs);
+			result.SingleVector = Vector.CreateZero(SubdomainFreeDofOrdering.NumFreeDofs);
 			return result;
 		}
 
@@ -112,14 +110,14 @@ namespace MGroup.Solvers.AlgebraicModel
 		public double[] ExtractElementVector(IGlobalVector vector, IElement element)
 		{
 			GlobalVector globalVector = CheckCompatibleVector(vector);
-			ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
+			ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrdering;
 			return subdomainDofs.ExtractVectorElementFromSubdomain(element, globalVector.SingleVector);
 		}
 
 		public double ExtractSingleValue(IGlobalVector vector, INode node, IDofType dof)
 		{
 			GlobalVector globalVector = CheckCompatibleVector(vector);
-			ISubdomainFreeDofOrdering subdomainDofs = DofOrdering.SubdomainDofOrderings[subdomain.ID];
+			ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrdering;
 			bool dofExists = subdomainDofs.FreeDofs.TryGetValue(node, dof, out int dofIdx);
 			if (dofExists)
 			{
@@ -133,7 +131,7 @@ namespace MGroup.Solvers.AlgebraicModel
 
 		public void OrderDofs()
 		{
-			DofOrdering = dofOrderer.OrderFreeDofs(model);
+			SubdomainFreeDofOrdering = dofOrderer.OrderFreeDofs(subdomain);
 			foreach (IAlgebraicModelObserver observer in Observers)
 			{
 				observer.HandleDofOrderWasModified();
@@ -157,7 +155,7 @@ namespace MGroup.Solvers.AlgebraicModel
 
 			IEnumerable<IElement> subdomainElements = accessElements(subdomain.ID);
 			TMatrix subdomainMatrix = subdomainMatrixAssembler.RebuildSubdomainMatrix(
-				subdomainElements, DofOrdering.SubdomainDofOrderings[subdomain.ID], elementMatrixProvider, predicate);
+				subdomainElements, SubdomainFreeDofOrdering, elementMatrixProvider, predicate);
 			if (subdomainMatrix != null)
 			{
 				//TODO: This is a good point to notify solvers, etc, if the processed matrix is the linear system matrix 

@@ -10,12 +10,6 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 {
 	public static class ModelUtilities
 	{
-		public static IGlobalFreeDofOrdering OrderDofs(IModel model)
-		{
-			var dofOrderer = new DofOrderer(new NodeMajorDofOrderingStrategy(), new NullReordering());
-			return dofOrderer.OrderFreeDofs(model);
-		}
-
 		public static ISubdomainFreeDofOrdering OrderDofs(ISubdomain subdomain)
 		{
 			var dofOrderer = new NodeMajorDofOrderingStrategy();

@@ -186,7 +186,7 @@ namespace MGroup.Solvers.DDM.Psm
 
 			public Factory(IComputeEnvironment environment, IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory)
 			{
-				DofOrderer = new DofOrderer(new NodeMajorDofOrderingStrategy(), new NullReordering(), true);
+				DofOrderer = new DofOrderer(new NodeMajorDofOrderingStrategy(), new NullReordering());
 				ExplicitSubdomainMatrices = false;
 
 				//TODO: perhaps use a custom convergence check like in FETI

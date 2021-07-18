@@ -65,7 +65,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			environment.DoPerNode(subdomainID =>
 			{
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
-				ISubdomainFreeDofOrdering freeDofs = algebraicModel.DofOrdering.SubdomainDofOrderings[subdomain.ID];
+				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
 				Table<int, int, double> computedResults =
 					Utilities.FindNodalFieldValues(subdomain, freeDofs, algebraicModel, solver.LinearSystem.Solution);
 				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
@@ -120,7 +120,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			environment.DoPerNode(subdomainID =>
 			{
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
-				ISubdomainFreeDofOrdering freeDofs = algebraicModel.DofOrdering.SubdomainDofOrderings[subdomain.ID];
+				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
 				Table<int, int, double> computedResults =
 					Utilities.FindNodalFieldValues(subdomain, freeDofs, algebraicModel, solver.LinearSystem.Solution);
 				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
@@ -179,7 +179,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			environment.DoPerNode(subdomainID =>
 			{
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
-				ISubdomainFreeDofOrdering freeDofs = algebraicModel.DofOrdering.SubdomainDofOrderings[subdomain.ID];
+				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
 				Table<int, int, double> computedResults =
 					Utilities.FindNodalFieldValues(subdomain, freeDofs, algebraicModel, solver.LinearSystem.Solution);
 				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
