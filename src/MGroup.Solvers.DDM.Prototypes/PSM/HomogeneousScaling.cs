@@ -10,49 +10,43 @@ using MGroup.Solvers.DofOrdering;
 
 namespace MGroup.Solvers.DDM.Prototypes.PSM
 {
-	public class HomogeneousScaling : IPrimalScaling
+	public class HomogeneousScaling : IPsmScaling
 	{
 		private readonly IModel model;
 		private readonly DistributedAlgebraicModel<Matrix> algebraicModel;
+		private readonly PsmSubdomainDofs dofs;
 
-		public HomogeneousScaling(IModel model, DistributedAlgebraicModel<Matrix> algebraicModel)
+		public Dictionary<int, double[]> SudomainInverseMultiplicities { get; } = new Dictionary<int, double[]>();
+
+		public HomogeneousScaling(IModel model, DistributedAlgebraicModel<Matrix> algebraicModel, PsmSubdomainDofs dofs)
 		{
 			this.model = model;
 			this.algebraicModel = algebraicModel;
+			this.dofs = dofs;
 		}
 
-		public Dictionary<int, SparseVector> DistributeNodalLoads(Table<INode, IDofType, double> nodalLoads)
+		public void CalcScalingMatrices(Func<int, Matrix> getKff)
 		{
-			Func<int, SparseVector> calcSubdomainForces = subdomainID =>
-			{
-				ISubdomain subdomain = model.GetSubdomain(subdomainID);
-				ISubdomainFreeDofOrdering dofOrdering = algebraicModel.DofOrdering.SubdomainDofOrderings[subdomain.ID];
-				DofTable freeDofs = dofOrdering.FreeDofs;
-
-				//TODO: I go through every node and ignore the ones that are not loaded. 
-				//		It would be better to directly access the loaded ones.
-				var nonZeroLoads = new SortedDictionary<int, double>();
-				foreach (INode node in subdomain.Nodes)
-				{
-					bool isLoaded = nodalLoads.TryGetDataOfRow(node, out IReadOnlyDictionary<IDofType, double> loadsOfNode);
-					if (!isLoaded) continue;
-
-					foreach (var dofLoadPair in loadsOfNode)
-					{
-						int freeDofIdx = freeDofs[node, dofLoadPair.Key];
-						nonZeroLoads[freeDofIdx] = dofLoadPair.Value / node.SubdomainsDictionary.Count;
-					}
-				}
-
-				return SparseVector.CreateFromDictionary(dofOrdering.NumFreeDofs, nonZeroLoads);
-			};
-
-			var results = new Dictionary<int, SparseVector>();
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
-				results[subdomain.ID] = calcSubdomainForces(subdomain.ID);
+				int s = subdomain.ID;
+				DofTable boundaryDofs = dofs.SubdomainDofOrderingBoundary[s];
+				var inverseMultiplicities = new double[dofs.NumSubdomainDofsBoundary[s]];
+				foreach ((INode node, _, int idx) in boundaryDofs)
+				{
+					inverseMultiplicities[idx] = 1.0 / node.SubdomainsDictionary.Count;
+				}
+				this.SudomainInverseMultiplicities[s] = inverseMultiplicities;
 			}
-			return results;
+		}
+
+		public void ScaleRhsVector(int subdomainID, Vector Fb)
+		{
+			double[] coeffs = this.SudomainInverseMultiplicities[subdomainID];
+			for (int i = 0; i < coeffs.Length; ++i)
+			{
+				Fb[i] *= coeffs[i];
+			}
 		}
 	}
 }

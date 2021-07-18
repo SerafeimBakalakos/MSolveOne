@@ -28,7 +28,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 		protected readonly IPsmInterfaceProblem interfaceProblem;
 		protected readonly PcgAlgorithm iterativeSolver;
 		protected readonly PsmSubdomainDofs psmDofs;
-		protected readonly IPrimalScaling scaling;
+		protected readonly IPsmScaling scaling;
 		protected readonly PsmSubdomainStiffnesses psmStiffnesses;
 		protected readonly PsmSubdomainVectors vectors;
 		protected readonly DenseMatrixAssembler assembler = new DenseMatrixAssembler();
@@ -55,7 +55,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			// Scaling
 			if (homogeneousProblem)
 			{
-				scaling = new HomogeneousScaling(model, algebraicModel);
+				scaling = new HomogeneousScaling(model, algebraicModel, psmDofs);
 			}
 			else
 			{
@@ -76,9 +76,6 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 		public string Name => throw new NotImplementedException();
 
 		public IterativeStatistics IterativeSolverStats { get; set; }
-
-		public Dictionary<int, SparseVector> DistributeNodalLoads(Table<INode, IDofType, double> nodalLoads)
-			=> scaling.DistributeNodalLoads(nodalLoads);
 
 		public void HandleMatrixWillBeSet()
 		{
@@ -104,7 +101,8 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			DistributedOverlappingMatrix<Matrix> Kff = algebraicModel.LinearSystem.Matrix;
 			DistributedOverlappingVector Ff = algebraicModel.LinearSystem.RhsVector;
 			psmStiffnesses.CalcAllMatrices(s => Kff.LocalMatrices[s]);
-			vectors.CalcAllRhsVectors(s => Ff.LocalVectors[s]);
+			scaling.CalcScalingMatrices(s => Kff.LocalMatrices[s]);
+			vectors.CalcAllRhsVectors(s => Ff.LocalVectors[s], scaling.ScaleRhsVector);
 			BlockMatrix Sbbe = psmStiffnesses.Sbbe;
 			BlockVector FbeCondensed = vectors.FbeCondensed;
 			BlockVector Ube = FbeCondensed.CreateZeroVectorWithSameFormat();

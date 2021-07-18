@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 
 namespace MGroup.Solvers.DDM.Prototypes.PSM
 {
-	public class HeterogeneousScaling : IPrimalScaling
+	public class HeterogeneousScaling : IPsmScaling
 	{
 		private readonly IModel model;
 
@@ -16,7 +17,12 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			this.model = model;
 		}
 
-		public Dictionary<int, SparseVector> DistributeNodalLoads(Table<INode, IDofType, double> nodalLoads)
+		public void CalcScalingMatrices(Func<int, Matrix> getKff)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void ScaleRhsVector(int subdomainID, Vector Fb)
 		{
 			throw new NotImplementedException();
 		}
