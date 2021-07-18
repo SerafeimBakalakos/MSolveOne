@@ -45,8 +45,6 @@ namespace MGroup.Solvers.Iterative
 			preconditioner = null;
 		}
 
-		public override void Initialize() { }
-
 		public override void PreventFromOverwrittingSystemMatrices()
 		{
 			// No factorization is done.

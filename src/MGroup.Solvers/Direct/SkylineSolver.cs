@@ -38,8 +38,6 @@ namespace MGroup.Solvers.Direct
 			factorizedMatrix = null;
 		}
 
-		public override void Initialize() { }
-
 		public override void PreventFromOverwrittingSystemMatrices() => factorizeInPlace = false;
 
 		/// <summary>

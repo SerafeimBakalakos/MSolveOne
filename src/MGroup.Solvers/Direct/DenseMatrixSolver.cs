@@ -40,8 +40,6 @@ namespace MGroup.Solvers.Direct
 			inverse = null;
 		}
 
-		public override void Initialize() { }
-
 		public override void PreventFromOverwrittingSystemMatrices() => factorizeInPlace = false;
 
 		/// <summary>

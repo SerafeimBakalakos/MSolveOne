@@ -24,12 +24,6 @@ namespace MGroup.MSolve.Solution
 		string Name { get; }
 
 		/// <summary>
-		/// Initializes the state of this <see cref="ISolver"/> instance. This needs to be called only once, since it  
-		/// could potentially perform actions that must not be repeated or are too expensive.
-		/// </summary>
-		void Initialize();
-		
-		/// <summary>
 		/// Notifies this <see cref="ISolver"/> that it cannot overwrite the data of <see cref="IGlobalLinearSystem.Matrix"/>.
 		/// Some solvers would otherwise overwrite the matrices (e.g. with the factorization) to avoid using extra memory.
 		/// </summary>

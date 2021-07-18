@@ -82,11 +82,6 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			
 		}
 
-		public virtual void Initialize()
-		{
-			
-		}
-
 		public void PreventFromOverwrittingSystemMatrices()
 		{
 		}

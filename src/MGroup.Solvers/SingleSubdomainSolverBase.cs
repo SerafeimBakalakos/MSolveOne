@@ -68,7 +68,6 @@ namespace MGroup.Solvers
 			return new Dictionary<int, Matrix>() { { id, result } };
 		}
 
-		public abstract void Initialize();
 		public abstract void HandleMatrixWillBeSet();
 		public abstract void PreventFromOverwrittingSystemMatrices();
 		public abstract void Solve();

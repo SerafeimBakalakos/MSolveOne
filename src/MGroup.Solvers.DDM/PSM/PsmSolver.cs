@@ -113,8 +113,6 @@ namespace MGroup.Solvers.DDM.Psm
 		{
 		}
 
-		public void Initialize() { }
-
 		public virtual void PreventFromOverwrittingSystemMatrices() {}
 
 		public virtual void Solve() 
