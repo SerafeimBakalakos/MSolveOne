@@ -67,7 +67,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			Dictionary<int, MockSubdomainLinearSystem> linearSystems = environment.CreateDictionaryPerNode(
 				s => new MockSubdomainLinearSystem(dofOrderings[s]));
 			Dictionary<int, PsmSubdomainDofs> subdomainDofs = environment.CreateDictionaryPerNode(
-				s => new PsmSubdomainDofs(linearSystems[s], true));
+				s => new PsmSubdomainDofs(model.AllDofs, linearSystems[s], true));
 
 			subdomainTopology.FindCommonNodesBetweenSubdomains();
 			subdomainTopology.FindCommonDofsBetweenSubdomains();

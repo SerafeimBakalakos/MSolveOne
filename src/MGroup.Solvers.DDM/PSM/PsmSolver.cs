@@ -66,7 +66,7 @@ namespace MGroup.Solvers.DDM.Psm
 			environment.DoPerNode(subdomainID =>
 			{
 				SubdomainLinearSystem<TMatrix> linearSystem = algebraicModel.SubdomainLinearSystems[subdomainID];
-				var dofs = new PsmSubdomainDofs(linearSystem, false);
+				var dofs = new PsmSubdomainDofs(model.AllDofs, linearSystem, false);
 				IPsmSubdomainMatrixManager matrices = matrixManagerFactory.CreateMatrixManager(linearSystem, dofs);
 				var vectors = new PsmSubdomainVectors(linearSystem, dofs, matrices);
 

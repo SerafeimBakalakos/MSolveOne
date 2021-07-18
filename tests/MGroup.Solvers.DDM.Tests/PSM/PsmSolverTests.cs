@@ -67,7 +67,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
 				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
 				Table<int, int, double> computedResults =
-					Utilities.FindNodalFieldValues(subdomain, freeDofs, algebraicModel, solver.LinearSystem.Solution);
+					Utilities.FindNodalFieldValues(subdomain, freeDofs, model, algebraicModel, solver.LinearSystem.Solution);
 				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
 			});
 
@@ -122,7 +122,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
 				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
 				Table<int, int, double> computedResults =
-					Utilities.FindNodalFieldValues(subdomain, freeDofs, algebraicModel, solver.LinearSystem.Solution);
+					Utilities.FindNodalFieldValues(subdomain, freeDofs, model, algebraicModel, solver.LinearSystem.Solution);
 				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
 			});
 
@@ -181,7 +181,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
 				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
 				Table<int, int, double> computedResults =
-					Utilities.FindNodalFieldValues(subdomain, freeDofs, algebraicModel, solver.LinearSystem.Solution);
+					Utilities.FindNodalFieldValues(subdomain, freeDofs, model, algebraicModel, solver.LinearSystem.Solution);
 				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
 			});
 

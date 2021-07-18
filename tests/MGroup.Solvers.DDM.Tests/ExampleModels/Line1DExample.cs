@@ -126,9 +126,8 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 
 		public static Model CreateSingleSubdomainModel()
 		{
-			AllDofs.Clear();
-			AllDofs.AddDof(ThermalDof.Temperature);
 			var model = new Model();
+			model.AllDofs.AddDof(ThermalDof.Temperature);
 			model.SubdomainsDictionary[0] = new Subdomain(0);
 
 			// Nodes

@@ -51,14 +51,14 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests
 		}
 
 		public static Table<int, int, double> FindNodalFieldValues(ISubdomain subdomain, ISubdomainFreeDofOrdering freeDofs, 
-			IAlgebraicModel algebraicModel, IGlobalVector solution)
+			IModel model, IAlgebraicModel algebraicModel, IGlobalVector solution)
 		{
 			var result = new Table<int, int, double>();
 
 			// Free dofs
 			foreach ((INode node, IDofType dof, int freeDofIdx) in freeDofs.FreeDofs)
 			{
-				result[node.ID, AllDofs.GetIdOfDof(dof)] = algebraicModel.ExtractSingleValue(solution, node, dof);
+				result[node.ID, model.AllDofs.GetIdOfDof(dof)] = algebraicModel.ExtractSingleValue(solution, node, dof);
 			}
 
 			// Constrained dofs
@@ -66,7 +66,7 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests
 			{
 				foreach (Constraint dirichlet in node.Constraints)
 				{
-					result[node.ID, AllDofs.GetIdOfDof(dirichlet.DOF)] = dirichlet.Amount;
+					result[node.ID, model.AllDofs.GetIdOfDof(dirichlet.DOF)] = dirichlet.Amount;
 				}
 			}
 

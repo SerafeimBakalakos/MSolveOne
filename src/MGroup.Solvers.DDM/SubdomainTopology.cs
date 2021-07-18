@@ -74,7 +74,7 @@ namespace MGroup.Solvers.DDM
 						//TODO: It would be faster to iterate each node and then its dofs. Same for DofTable. 
 						//		Even better let DofTable take DofSet as argument and return the indices.
 						INode node = model.GetNode(nodeID);
-						IDofType dof = AllDofs.GetDofWithId(dofID);
+						IDofType dof = model.AllDofs.GetDofWithId(dofID);
 						commonDofIndices[idx++] = subdomainDofs[node, dof];
 					}
 					allCommonDofIndices[neighborID] = commonDofIndices;
@@ -146,7 +146,7 @@ namespace MGroup.Solvers.DDM
 				AllToAllNodeData<int> transferData = transferDataPerSubdomain[subdomainID];
 				foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
 				{
-					DofSet receivedDofs = DofSet.Deserialize(transferData.recvValues[neighborID]);
+					DofSet receivedDofs = DofSet.Deserialize(model.AllDofs, transferData.recvValues[neighborID]);
 					commonDofsBetweenSubdomains[subdomainID][neighborID] =
 						commonDofsBetweenSubdomains[subdomainID][neighborID].IntersectionWith(receivedDofs);
 				}
@@ -193,7 +193,7 @@ namespace MGroup.Solvers.DDM
 			DofTable freeDofs = getSubdomainFreeDofs(subdomainID).FreeDofs;
 			foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
 			{
-				var dofSet = new DofSet();
+				var dofSet = new DofSet(model.AllDofs);
 				foreach (int nodeID in GetCommonNodesOfSubdomains(subdomainID, neighborID))
 				{
 					INode node = model.GetNode(nodeID);

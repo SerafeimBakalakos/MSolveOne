@@ -326,10 +326,9 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 
 		public static Model CreateSingleSubdomainModel()
 		{
-			AllDofs.Clear();
-			AllDofs.AddDof(StructuralDof.TranslationX);
-			AllDofs.AddDof(StructuralDof.TranslationY);
 			var model = new Model();
+			model.AllDofs.AddDof(StructuralDof.TranslationX);
+			model.AllDofs.AddDof(StructuralDof.TranslationY);
 			model.SubdomainsDictionary[0] = new Subdomain(0);
 
 			var mesh = new UniformCartesianMesh2D.Builder(MinCoords, MaxCoords, NumElements).SetMajorAxis(0).BuildMesh();

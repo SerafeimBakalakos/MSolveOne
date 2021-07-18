@@ -71,7 +71,7 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 			{
 				foreach ((INode node, IDofType dof, int idx) in dofs.SubdomainDofOrderingCorner[subdomain.ID])
 				{
-					bool didNotExist = globalCornerDofs.TryAdd(node.ID, AllDofs.GetIdOfDof(dof), numCornerDofs);
+					bool didNotExist = globalCornerDofs.TryAdd(node.ID, model.AllDofs.GetIdOfDof(dof), numCornerDofs);
 					if (didNotExist)
 					{
 						numCornerDofs++;
@@ -82,7 +82,7 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 			var cornerDofOrdering = new DofTable();
 			foreach ((int nodeID, int dofID, int idx) in globalCornerDofs)
 			{
-				cornerDofOrdering[model.GetNode(nodeID), AllDofs.GetDofWithId(dofID)] = idx;
+				cornerDofOrdering[model.GetNode(nodeID), model.AllDofs.GetDofWithId(dofID)] = idx;
 			}
 
 			GlobalDofOrderingCorner = cornerDofOrdering;

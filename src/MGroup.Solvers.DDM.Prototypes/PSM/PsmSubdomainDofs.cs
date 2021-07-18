@@ -53,7 +53,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			foreach (INode node in nodes)
 			{
 				IReadOnlyDictionary<IDofType, int> dofsOfNode = freeDofs.GetDataOfRow(node);
-				var sortedDofsOfNode = new SortedDictionary<IDofType, int>(new DofTypeComparer());
+				var sortedDofsOfNode = new SortedDictionary<IDofType, int>(new DofTypeComparer(model.AllDofs));
 				foreach (var dofTypeIdxPair in dofsOfNode)
 				{
 					sortedDofsOfNode[dofTypeIdxPair.Key] = dofTypeIdxPair.Value;
@@ -88,9 +88,16 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 
 		private class DofTypeComparer : IComparer<IDofType>
 		{
+			private readonly ActiveDofs allDofs;
+
+			public DofTypeComparer(ActiveDofs allDofs)
+			{
+				this.allDofs = allDofs;
+			}
+
 			public int Compare(IDofType x, IDofType y)
 			{
-				return AllDofs.GetIdOfDof(x) - AllDofs.GetIdOfDof(y);
+				return allDofs.GetIdOfDof(x) - allDofs.GetIdOfDof(y);
 			}
 		}
 	}

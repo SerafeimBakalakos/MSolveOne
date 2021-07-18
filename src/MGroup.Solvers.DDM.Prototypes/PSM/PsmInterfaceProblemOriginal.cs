@@ -77,7 +77,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			{
 				foreach ((INode node, IDofType dof, int idx) in dofs.SubdomainDofOrderingBoundary[subdomain.ID])
 				{
-					bool didNotExist = globalBoundaryDofs.TryAdd(node.ID, AllDofs.GetIdOfDof(dof), numBoundaryDofs);
+					bool didNotExist = globalBoundaryDofs.TryAdd(node.ID, model.AllDofs.GetIdOfDof(dof), numBoundaryDofs);
 					if (didNotExist)
 					{
 						numBoundaryDofs++;
@@ -88,7 +88,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			var boundaryDofOrdering = new DofTable();
 			foreach ((int nodeID, int dofID, int idx) in globalBoundaryDofs)
 			{
-				boundaryDofOrdering[model.GetNode(nodeID), AllDofs.GetDofWithId(dofID)] = idx;
+				boundaryDofOrdering[model.GetNode(nodeID), model.AllDofs.GetDofWithId(dofID)] = idx;
 			}
 
 			GlobalDofOrderingBoundary = boundaryDofOrdering;

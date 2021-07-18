@@ -5,11 +5,13 @@ using MGroup.MSolve.Discretization.Loads;
 
 namespace MGroup.MSolve.Discretization
 {
-    public interface IModel
-    {
+	public interface IModel
+	{
+		ActiveDofs AllDofs { get; }
+
 		int NumSubdomains { get; }
 
-        void ConnectDataStructures();
+		void ConnectDataStructures();
 
 		IEnumerable<DirichletElementLoad> EnumerateDirichletBoundaryConditions(int subdomainID);
 

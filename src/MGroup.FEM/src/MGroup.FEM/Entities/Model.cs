@@ -21,6 +21,8 @@ namespace MGroup.FEM.Entities
 	{
 		//public IList<EmbeddedNode> EmbeddedNodes { get; } = new List<EmbeddedNode>();
 
+		public ActiveDofs AllDofs { get; } = new ActiveDofs();
+
 		public IList<Cluster> Clusters => ClustersDictionary.Values.ToList();
 		public Dictionary<int, Cluster> ClustersDictionary { get; } = new Dictionary<int, Cluster>();
 

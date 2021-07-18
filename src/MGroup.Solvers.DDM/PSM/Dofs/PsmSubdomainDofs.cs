@@ -17,13 +17,15 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 {
 	public class PsmSubdomainDofs
 	{
+		private readonly ActiveDofs allDofs;
 		private readonly ISubdomainLinearSystem linearSystem;
 
 		//TODO: This is essential for testing and very useful for debugging, but not production code. Should I remove it?
 		private readonly bool sortDofsWhenPossible;
 
-		public PsmSubdomainDofs(ISubdomainLinearSystem linearSystem, bool sortDofsWhenPossible = false)
+		public PsmSubdomainDofs(ActiveDofs allDofs, ISubdomainLinearSystem linearSystem, bool sortDofsWhenPossible = false)
 		{
+			this.allDofs = allDofs;
 			this.linearSystem = linearSystem;
 			this.sortDofsWhenPossible = sortDofsWhenPossible;
 		}
@@ -67,7 +69,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 				IReadOnlyDictionary<IDofType, int> dofsOfNode = freeDofs.GetDataOfRow(node);
 				if (sortDofsWhenPossible)
 				{
-					var sortedDofsOfNode = new SortedDictionary<IDofType, int>(new DofTypeComparer());
+					var sortedDofsOfNode = new SortedDictionary<IDofType, int>(new DofTypeComparer(allDofs));
 					foreach (var dofTypeIdxPair in dofsOfNode)
 					{
 						sortedDofsOfNode[dofTypeIdxPair.Key] = dofTypeIdxPair.Value;
@@ -99,9 +101,16 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 
 		private class DofTypeComparer : IComparer<IDofType>
 		{
+			private readonly ActiveDofs allDofs;
+
+			public DofTypeComparer(ActiveDofs allDofs)
+			{
+				this.allDofs = allDofs;
+			}
+
 			public int Compare(IDofType x, IDofType y)
 			{
-				return AllDofs.GetIdOfDof(x) - AllDofs.GetIdOfDof(y);
+				return allDofs.GetIdOfDof(x) - allDofs.GetIdOfDof(y);
 			}
 		}
 	}

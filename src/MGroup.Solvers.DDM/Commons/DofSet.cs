@@ -11,10 +11,16 @@ namespace MGroup.Solvers.Commons
 	{
 		//TODO: Perhaps I should use HashSets and order them, when I actually need to number the dofs
 		private SortedDictionary<int, SortedSet<int>> data = new SortedDictionary<int, SortedSet<int>>();
+		private readonly ActiveDofs allDofs;
 
-		public static DofSet Deserialize(int[] serializedData)
+		public DofSet(ActiveDofs allDofs)
 		{
-			var dofSet = new DofSet();
+			this.allDofs = allDofs;
+		}
+
+		public static DofSet Deserialize(ActiveDofs allDofs, int[] serializedData)
+		{
+			var dofSet = new DofSet(allDofs);
 			int i = 0;
 			while (i < serializedData.Length)
 			{
@@ -37,7 +43,7 @@ namespace MGroup.Solvers.Commons
 			return dofSet;
 		}
 
-		public void AddDof(INode node, IDofType dof) => AddDof(node.ID, AllDofs.GetIdOfDof(dof));
+		public void AddDof(INode node, IDofType dof) => AddDof(node.ID, allDofs.GetIdOfDof(dof));
 
 		public void AddDof(int nodeID, int dofID)
 		{
@@ -51,7 +57,7 @@ namespace MGroup.Solvers.Commons
 		}
 
 		public void AddDofs(INode node, IEnumerable<IDofType> dofs) 
-			=> AddDofs(node.ID, dofs.Select(dof => AllDofs.GetIdOfDof(dof)));
+			=> AddDofs(node.ID, dofs.Select(dof => allDofs.GetIdOfDof(dof)));
 
 		public void AddDofs(int nodeID, IEnumerable<int> dofIDs)
 		{
@@ -99,7 +105,7 @@ namespace MGroup.Solvers.Commons
 			//TODO: Lookups (log(n)) in other.data can be avoided by working with the enumerators of this.data and other.data
 			//TODO: Nodes that are not in common or do not have common dofs will be left with empty sets of dofs (int). 
 			//		Perhaps they should be cleaned up.
-			var result = new DofSet();
+			var result = new DofSet(allDofs);
 			result.data = this.data;
 			this.data = null;
 			foreach (var nodeDofsPair in result.data)
@@ -144,7 +150,7 @@ namespace MGroup.Solvers.Commons
 				INode node = getNodeFromID(nodeDofPair.Key);
 				foreach (int dofID in nodeDofPair.Value)
 				{
-					IDofType dof = AllDofs.GetDofWithId(dofID);
+					IDofType dof = allDofs.GetDofWithId(dofID);
 					dofTable[node, dof] = numDofs++;
 				}
 			}
