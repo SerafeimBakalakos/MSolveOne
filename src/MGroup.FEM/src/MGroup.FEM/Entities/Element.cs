@@ -35,8 +35,7 @@ namespace MGroup.FEM.Entities
 		IElementType IElement.ElementType => ElementType;
 		public IFiniteElement ElementType { get; set; }
 
-		ISubdomain IElement.Subdomain => this.Subdomain;
-		public Subdomain Subdomain { get; set; }
+		public int SubdomainID { get; set; } = int.MinValue;
 
 		public void AddNode(Node node) => nodesDictionary.Add(node.ID, node);
 

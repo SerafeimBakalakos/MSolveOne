@@ -75,7 +75,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			var result = new int[dofs.NumSubdomainDofsBoundary[subdomain.ID]];
 			foreach ((INode node, IDofType dof, int idx) in dofs.SubdomainDofOrderingBoundary[subdomain.ID])
 			{
-				result[idx] = node.SubdomainsDictionary.Count;
+				result[idx] = node.Subdomains.Count;
 			}
 			return result;
 		}

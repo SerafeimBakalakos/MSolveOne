@@ -34,7 +34,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 				var inverseMultiplicities = new double[dofs.NumSubdomainDofsBoundary[s]];
 				foreach ((INode node, _, int idx) in boundaryDofs)
 				{
-					inverseMultiplicities[idx] = 1.0 / node.SubdomainsDictionary.Count;
+					inverseMultiplicities[idx] = 1.0 / node.Subdomains.Count;
 				}
 				this.SudomainInverseMultiplicities[s] = inverseMultiplicities;
 			}

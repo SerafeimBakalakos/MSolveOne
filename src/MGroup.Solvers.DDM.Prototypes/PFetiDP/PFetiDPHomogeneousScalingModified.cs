@@ -52,7 +52,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 				DofTable boundaryDofs = psmDofs.SubdomainDofOrderingBoundary[s];
 				foreach ((INode node, _, int idx) in boundaryDofs)
 				{
-					Ws[idx, idx] = 1.0 / node.SubdomainsDictionary.Count;
+					Ws[idx, idx] = 1.0 / node.Subdomains.Count;
 				}
 				this.SudomainMatricesWb[s] = Ws;
 				this.MatrixWbe.AddBlock(s, s, Ws);

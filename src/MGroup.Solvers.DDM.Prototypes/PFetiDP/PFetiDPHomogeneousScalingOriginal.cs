@@ -42,7 +42,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 			MatrixWb = Matrix.CreateZero(interfaceProblem.NumGlobalDofsBoundary, interfaceProblem.NumGlobalDofsBoundary);
 			foreach ((INode node, _, int idx) in interfaceProblem.GlobalDofOrderingBoundary)
 			{
-				MatrixWb[idx, idx] = 1.0 / node.SubdomainsDictionary.Count;
+				MatrixWb[idx, idx] = 1.0 / node.Subdomains.Count;
 			}
 		}
 	}

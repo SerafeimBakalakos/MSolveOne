@@ -77,7 +77,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 					dofsOfNode = sortedDofsOfNode;
 				}
 
-				if (node.SubdomainsDictionary.Count > 1)
+				if (node.Subdomains.Count > 1)
 				{
 					foreach (var dofTypeIdxPair in dofsOfNode)
 					{

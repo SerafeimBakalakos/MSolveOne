@@ -380,7 +380,7 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 				INode[] subdomainCorners = CornerNodeUtilities.FindCornersOfRectangle2D(subdomain);
 				foreach (INode node in subdomainCorners)
 				{
-					if (node.SubdomainsDictionary.Count > 1) //TODO for some reason this does not work if > 2. One Krr is singular.
+					if (node.Subdomains.Count > 1) //TODO for some reason this does not work if > 2. One Krr is singular.
 					{
 						cornerNodes.Add(node.ID);
 					}

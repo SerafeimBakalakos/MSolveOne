@@ -57,13 +57,15 @@ namespace MGroup.FEM
 			foreach (Subdomain subdomain in Model.SubdomainsDictionary.Values)
 			{
 				foreach (Element element in subdomain.Elements)
-					element.Subdomain = subdomain;
+				{
+					element.SubdomainID = subdomain.ID;
+				}
 			}
 
 			foreach (Node node in Model.NodesDictionary.Values)
 			{
-				node.SubdomainsDictionary.Clear();
-				node.BuildSubdomainDictionary();
+				node.Subdomains.Clear();
+				node.FindAssociatedSubdomains();
 			}
 
 			foreach (Subdomain subdomain in Model.SubdomainsDictionary.Values)

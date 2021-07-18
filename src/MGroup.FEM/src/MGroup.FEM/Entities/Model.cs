@@ -111,7 +111,7 @@ namespace MGroup.FEM.Entities
 			var subdomainLoads = new List<SerafeimsAwesomeElementAccelerationLoad>();
 			foreach (ElementMassAccelerationLoad load in ElementMassAccelerationLoads)
 			{
-				if (load.Element.Subdomain.ID != subdomainID)
+				if (load.Element.SubdomainID != subdomainID)
 				{
 					continue;
 				}
@@ -152,7 +152,7 @@ namespace MGroup.FEM.Entities
 
 			foreach (ElementMassAccelerationHistoryLoad load in ElementMassAccelerationHistoryLoads)
 			{
-				if (load.Element.Subdomain.ID != subdomainID)
+				if (load.Element.SubdomainID != subdomainID)
 				{
 					continue;
 				}
@@ -180,7 +180,7 @@ namespace MGroup.FEM.Entities
 			var subdomainLoads = new List<Load>();
 			foreach (Load load in Loads)
 			{
-				if (load.Node.SubdomainsDictionary.ContainsKey(subdomainID))
+				if (load.Node.Subdomains.Contains(subdomainID))
 				{
 					subdomainLoads.Add(load);
 				}
@@ -194,7 +194,7 @@ namespace MGroup.FEM.Entities
 			var subdomainLoads = new List<TransientNodalLoad>();
 			foreach (TransientNodalLoad load in TransientNodalLoads)
 			{
-				if (load.Node.SubdomainsDictionary.ContainsKey(subdomainID))
+				if (load.Node.Subdomains.Contains(subdomainID))
 				{
 					subdomainLoads.Add(load);
 				}
@@ -242,7 +242,7 @@ namespace MGroup.FEM.Entities
 			BuildSubdomainOfEachElement();
 			DuplicateInterSubdomainEmbeddedElements();
 			BuildElementDictionaryOfEachNode();
-			foreach (Node node in NodesDictionary.Values) node.BuildSubdomainDictionary();
+			foreach (Node node in NodesDictionary.Values) node.FindAssociatedSubdomains();
 
 			//BuildNonConformingNodes();
 
@@ -253,7 +253,10 @@ namespace MGroup.FEM.Entities
 		{
 			foreach (Subdomain subdomain in SubdomainsDictionary.Values)
 			{
-				foreach (Element element in subdomain.Elements) element.Subdomain = subdomain;
+				foreach (Element element in subdomain.Elements)
+				{
+					element.SubdomainID = subdomain.ID;
+				}
 			}
 		}
 
@@ -266,7 +269,7 @@ namespace MGroup.FEM.Entities
 
 				foreach (Node node in element.Nodes)
 				{
-					foreach (int subID in node.SubdomainsDictionary.Keys)
+					foreach (int subID in node.Subdomains)
 					{
 						if (!subIDs.Contains(subID)) subIDs.Add(subID);
 
@@ -277,7 +280,7 @@ namespace MGroup.FEM.Entities
 				{
 					foreach (int subID in subIDs)
 					{
-						if (!node.SubdomainsDictionary.ContainsKey(subID))
+						if (!node.Subdomains.Contains(subID))
 						{
 							node.NonMatchingSubdomainsDictionary.Add(subID, SubdomainsDictionary[subID]);
 						}
@@ -291,9 +294,11 @@ namespace MGroup.FEM.Entities
 		{
 			foreach (var e in ElementsDictionary.Values.Where(x => x.ElementType is IEmbeddedElement))
 			{
-				var subs = ((IEmbeddedElement)e.ElementType).EmbeddedNodes.Select(x => x.EmbeddedInElement.Subdomain).Distinct();
-				foreach (var s in subs.Where(x => x.ID != e.Subdomain.ID))
-					s.Elements.Add(e);
+				var subIDs = ((IEmbeddedElement)e.ElementType).EmbeddedNodes.Select(x => x.EmbeddedInElement.SubdomainID).Distinct();
+				foreach (var s in subIDs.Where(x => x != e.SubdomainID))
+				{
+					SubdomainsDictionary[s].Elements.Add(e);
+				}
 			}
 		}
 

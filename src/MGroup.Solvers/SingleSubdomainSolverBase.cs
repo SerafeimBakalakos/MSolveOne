@@ -2,21 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+
 using MGroup.LinearAlgebra.Matrices;
-using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.Discretization;
 using MGroup.MSolve.DataStructures;
-
 using MGroup.MSolve.Solution;
-
 using MGroup.MSolve.Solution.LinearSystem;
-using MGroup.Solvers.Logging;
-using MGroup.Solvers.DofOrdering;
-using MGroup.MSolve.Discretization.Loads;
-using MGroup.Solvers.LinearSystem;
-using MGroup.Solvers.Assemblers;
-using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Solvers.AlgebraicModel;
+using MGroup.Solvers.LinearSystem;
+using MGroup.Solvers.Logging;
 
 namespace MGroup.Solvers
 {

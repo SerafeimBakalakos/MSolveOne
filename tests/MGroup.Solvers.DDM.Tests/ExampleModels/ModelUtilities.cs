@@ -21,8 +21,8 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 		public static void DecomposeIntoSubdomains(this Model model, int numSubdomains, Func<int, int> getSubdomainOfElement)
 		{
 			model.SubdomainsDictionary.Clear();
-			foreach (Node node in model.NodesDictionary.Values) node.SubdomainsDictionary.Clear();
-			foreach (Element element in model.ElementsDictionary.Values) element.Subdomain = null;
+			foreach (Node node in model.NodesDictionary.Values) node.Subdomains.Clear();
+			foreach (Element element in model.ElementsDictionary.Values) element.SubdomainID = int.MinValue;
 
 			for (int s = 0; s < numSubdomains; ++s)
 			{

@@ -92,7 +92,7 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 			var result = new int[dofs.NumSubdomainDofsCorner[subdomain.ID]];
 			foreach ((INode node, IDofType dof, int idx) in dofs.SubdomainDofOrderingCorner[subdomain.ID])
 			{
-				result[idx] = node.SubdomainsDictionary.Count;
+				result[idx] = node.Subdomains.Count;
 			}
 			return result;
 		}

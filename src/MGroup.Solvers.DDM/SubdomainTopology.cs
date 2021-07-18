@@ -162,9 +162,9 @@ namespace MGroup.Solvers.DDM
 				var commonNodesOfThisSubdomain = new Dictionary<int, SortedSet<int>>();
 				foreach (INode node in subdomain.Nodes)
 				{
-					if (node.SubdomainsDictionary.Count == 1) continue; // internal node
+					if (node.Subdomains.Count == 1) continue; // internal node
 
-					foreach (int otherSubdomainID in node.SubdomainsDictionary.Keys)
+					foreach (int otherSubdomainID in node.Subdomains)
 					{
 						if (otherSubdomainID == subdomainID) continue; // one of all will be the current subdomain
 

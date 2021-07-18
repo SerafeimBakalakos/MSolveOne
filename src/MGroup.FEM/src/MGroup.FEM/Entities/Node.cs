@@ -17,7 +17,6 @@ namespace MGroup.FEM.Entities
 		private readonly List<Constraint> constraints = new List<Constraint>();
 		private readonly Dictionary<int, IElement> elementsDictionary = new Dictionary<int, IElement>();
 		private readonly Dictionary<int, Subdomain> nonMatchingSubdomainsDictionary = new Dictionary<int, Subdomain>();
-		private readonly Dictionary<int, ISubdomain> subdomainsDictionary = new Dictionary<int, ISubdomain>();
 
 		/// <summary>
 		/// Instantiates a <see cref="Node"/>.
@@ -57,14 +56,16 @@ namespace MGroup.FEM.Entities
 		public List<Constraint> Constraints => constraints;
 		public Dictionary<int, IElement> ElementsDictionary => elementsDictionary; //TODO: This should be IElement
 		public Dictionary<int, Subdomain> NonMatchingSubdomainsDictionary => nonMatchingSubdomainsDictionary;
-		public Dictionary<int, ISubdomain> SubdomainsDictionary => subdomainsDictionary;
+
+		public HashSet<int> Subdomains { get; } = new HashSet<int>();
 
 
-		public void BuildSubdomainDictionary()
+		public void FindAssociatedSubdomains()
 		{
 			foreach (Element element in elementsDictionary.Values)
-				if (!subdomainsDictionary.ContainsKey(element.Subdomain.ID))
-					subdomainsDictionary.Add(element.Subdomain.ID, element.Subdomain);
+			{
+				Subdomains.Add(element.SubdomainID);
+			}
 		}
 
 		public int CompareTo(INode other) => this.ID - other.ID;

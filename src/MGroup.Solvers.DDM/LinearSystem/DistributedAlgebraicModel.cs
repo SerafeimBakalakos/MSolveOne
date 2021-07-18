@@ -162,7 +162,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				throw new NotImplementedException("We need to locate the correct subdomain first");
 			}
 			DistributedOverlappingVector distributedVector = FreeDofIndexer.CheckCompatibleVector(vector);
-			int s = element.Subdomain.ID;
+			int s = element.SubdomainID;
 			ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[s];
 			return subdomainDofs.ExtractVectorElementFromSubdomain(element, distributedVector.LocalVectors[s]);
 		}
@@ -174,14 +174,14 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				throw new NotImplementedException("We need to locate the correct subdomain first");
 			}
 			DistributedOverlappingVector distributedVector = FreeDofIndexer.CheckCompatibleVector(vector);
-			if (node.SubdomainsDictionary.Count == 1) // Internal nodes are straightforward
+			if (node.Subdomains.Count == 1) // Internal nodes are straightforward
 			{
-				ISubdomain subdomain = node.SubdomainsDictionary.First().Value;
-				ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[subdomain.ID];
+				int s = node.Subdomains.First();
+				ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[s];
 				bool dofExists = subdomainDofs.FreeDofs.TryGetValue(node, dof, out int dofIdx);
 				if (dofExists)
 				{
-					return distributedVector.LocalVectors[subdomain.ID][dofIdx];
+					return distributedVector.LocalVectors[s][dofIdx];
 				}
 				else
 				{
@@ -193,14 +193,14 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				double tol = 1E-6; // TODO: this should be a parameter of the dedicated object that extracts values
 				var comparer = new ValueComparer(tol);
 				var values = new List<double>();
-				foreach (ISubdomain subdomain in node.SubdomainsDictionary.Values)
+				foreach (int s in node.Subdomains)
 				{
-					ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[subdomain.ID];
+					ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[s];
 					bool dofExists = subdomainDofs.FreeDofs.TryGetValue(node, dof, out int dofIdx);
 					if (dofExists)
 					{
 						// It is possible that this dof is activated by the elements of only 1 subdomain
-						values.Add(distributedVector.LocalVectors[subdomain.ID][dofIdx]);
+						values.Add(distributedVector.LocalVectors[s][dofIdx]);
 					}
 				}
 
