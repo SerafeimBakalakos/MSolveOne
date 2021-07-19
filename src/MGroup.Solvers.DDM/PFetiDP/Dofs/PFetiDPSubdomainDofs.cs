@@ -52,7 +52,7 @@ namespace MGroup.Solvers.DDM.PFetiDP.Dofs
             }
             this.MatrixNcb = new BooleanMatrixRowsToColumns(cornerToFree.Length, boundaryToFree.Length, cornerToBoundary);
 
-            // Remainder to free dofs
+            // Remainder to boundary dofs
             int[] remainderToFree = fetiDPDofs.DofsRemainderToFree;
             var remainderToBoundary = new Dictionary<int, int>();
             for (int r = 0; r < remainderToFree.Length; r++)

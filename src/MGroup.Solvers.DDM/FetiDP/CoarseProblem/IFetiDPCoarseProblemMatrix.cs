@@ -9,11 +9,11 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 {
 	public interface IFetiDPCoarseProblemMatrix
 	{
-		void InvertGlobalScc(int numGlobalCornerDofs, Dictionary<int, int[]> subdomainToGlobalCornerDofs,
-			Dictionary<int, IMatrix> subdomainMatricesScc);
+		void InvertGlobalScc(int numGlobalCornerDofs, IDictionary<int, int[]> subdomainToGlobalCornerDofs,
+			IDictionary<int, IMatrix> subdomainMatricesScc);
 
 		void MultiplyInverseScc(Vector input, Vector output);
 
-		DofPermutation ReorderGlobalCornerDofs(int numGlobalCornerDofs, Dictionary<int, int[]> subdomainToGlobalCornerDofs);
+		DofPermutation ReorderGlobalCornerDofs(int numGlobalCornerDofs, IDictionary<int, int[]> subdomainToGlobalCornerDofs);
 	}
 }

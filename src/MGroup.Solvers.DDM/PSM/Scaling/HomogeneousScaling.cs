@@ -12,6 +12,7 @@ using MGroup.MSolve.DataStructures;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PSM.Vectors;
 using System.Diagnostics;
+using MGroup.LinearAlgebra.Matrices;
 
 namespace MGroup.Solvers.DDM.PSM.Scaling
 {
@@ -27,6 +28,8 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 			this.environment = environment;
 			this.getSubdomainDofs = getSubdomainDofs;
 		}
+
+		public IDictionary<int, DiagonalMatrix> SubdomainMatricesWb { get; } = new ConcurrentDictionary<int, DiagonalMatrix>();
 
 		public void CalcScalingMatrices(DistributedOverlappingIndexer boundaryDofIndexer)
 		{
@@ -48,6 +51,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 				//}
 
 				inverseMultiplicities[subdomainID] = subdomainW;
+				SubdomainMatricesW[subdomainID] = DiagonalMatrix.CreateFromArray(subdomainW);
 
 				//BooleanMatrixRowsToColumns Lb = dofSeparator.GetDofMappingBoundaryClusterToSubdomain(subdomain.ID);
 				//var Lpb = new ScalingMatrixRowMajor(Lb.NumRows, Lb.NumColumns, Lb.RowsToColumns, subdomainW);

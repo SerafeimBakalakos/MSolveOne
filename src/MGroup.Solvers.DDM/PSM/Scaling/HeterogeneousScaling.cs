@@ -34,6 +34,8 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 			this.getSubdomainDofs = getSubdomainDofs;
 		}
 
+		public IDictionary<int, DiagonalMatrix> SubdomainMatricesWb { get; } = new ConcurrentDictionary<int, DiagonalMatrix>();
+
 		/// <summary>
 		/// See eq (6.3) from Papagiannakis bachelor :
 		/// Lpb^e = Db^e * Lb^e * inv( (Lb^e)^T * Db^e * Lb^e)
