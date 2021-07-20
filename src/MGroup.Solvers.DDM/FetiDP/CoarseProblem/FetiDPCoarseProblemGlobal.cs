@@ -49,8 +49,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 				globalDofs.NumGlobalCornerDofs, globalDofs.SubdomainToGlobalCornerDofMaps, subdomainMatricesScc);
 		}
 
-		public void SolveCoarseProblem(DistributedOverlappingVector coarseProblemRhs, 
-			DistributedOverlappingVector coarseProblemSolution)
+		public void SolveCoarseProblem(IDictionary<int, Vector> coarseProblemRhs, IDictionary<int, Vector> coarseProblemSolution)
 		{
 			// Map reduce subdomain vectors to global
 			Dictionary<int, Vector> subdomainRhsVectors = GatherSubdomainVectors(coarseProblemRhs);
@@ -87,7 +86,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 				subdomainSolutionVectors[s] = subdomainSolution;
 			}
-			ScatterSubdomainVectors(coarseProblemSolution, subdomainSolutionVectors);
+			ScatterSubdomainVectors(subdomainSolutionVectors, coarseProblemSolution);
 		}
 
 		#region TODOMPI: these should be done by the environment or by a dedicated class that bridges the environment and coarse problems/global operations
@@ -101,24 +100,27 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			return subdomainMatricesScc;
 		}
 
-		private Dictionary<int, Vector> GatherSubdomainVectors(DistributedOverlappingVector distributedVector)
+		private Dictionary<int, Vector> GatherSubdomainVectors(IDictionary<int, Vector> coarseProblemRhs)
 		{
-			var result = new Dictionary<int, Vector>();
+			var localVectors = new Dictionary<int, Vector>();
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
 				int s = subdomain.ID;
-				result[s] = distributedVector.LocalVectors[s];
+				localVectors[s] = coarseProblemRhs[s];
 			}
-			return result;
+			return localVectors;
 		}
 
-		private void ScatterSubdomainVectors(
-			DistributedOverlappingVector distributedVector, Dictionary<int, Vector> subdomainVectors)
+		private void ScatterSubdomainVectors(Dictionary<int, Vector> localVectors, IDictionary<int, Vector> remoteVectors)
 		{
+			if (remoteVectors.Count > 0)
+			{
+				throw new NotImplementedException();
+			}
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
 				int s = subdomain.ID;
-				distributedVector.LocalVectors[s] = subdomainVectors[s];
+				remoteVectors[s] = localVectors[s];
 			}
 		}
 		#endregion

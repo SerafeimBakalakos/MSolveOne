@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.Environments;
@@ -10,7 +10,7 @@ namespace MGroup.Solvers.DDM.PSM.Preconditioning
 {
 	public interface IPsmPreconditioner
 	{
-		void Calculate(IComputeEnvironment environment, DistributedOverlappingIndexer indexer, 
+		void Calculate(IComputeEnvironment environment, DistributedOverlappingIndexer boundaryDofIndexer, 
 			IPsmInterfaceProblemMatrix interfaceProblemMatrix);
 
 		IPreconditioner Preconditioner { get; }

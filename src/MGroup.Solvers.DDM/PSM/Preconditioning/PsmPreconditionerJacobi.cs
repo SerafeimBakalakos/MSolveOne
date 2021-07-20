@@ -19,13 +19,13 @@ namespace MGroup.Solvers.DDM.PSM.Preconditioning
 
         public IPreconditioner Preconditioner { get; private set; }
 
-        public void Calculate(IComputeEnvironment environment, DistributedOverlappingIndexer indexer,
+        public void Calculate(IComputeEnvironment environment, DistributedOverlappingIndexer boundaryDofIndexer,
             IPsmInterfaceProblemMatrix interfaceProblemMatrix)
         {
             Func<int, Vector> extractDiagonal = subdomainID 
                 => Vector.CreateFromArray(interfaceProblemMatrix.ExtractDiagonal(subdomainID));
             Dictionary<int, Vector> localDiagonals = environment.CreateDictionaryPerNode(extractDiagonal);
-            var distributedDiagonal = new DistributedOverlappingVector(indexer, localDiagonals);
+            var distributedDiagonal = new DistributedOverlappingVector(boundaryDofIndexer, localDiagonals);
             
             // All dofs belong to 2 or more subdomains and must have the stiffness contributions from all these subdomains.
             distributedDiagonal.SumOverlappingEntries();
