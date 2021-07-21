@@ -17,8 +17,8 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 		private CholeskySuiteSparse inverseSccGlobal;
 		
-		public void InvertGlobalScc(int numGlobalCornerDofs, Dictionary<int, int[]> subdomainToGlobalCornerDofs, 
-			Dictionary<int, IMatrix>  subdomainMatricesScc)
+		public void InvertGlobalScc(int numGlobalCornerDofs, IDictionary<int, int[]> subdomainToGlobalCornerDofs, 
+			IDictionary<int, IMatrix>  subdomainMatricesScc)
 		{
 			if (inverseSccGlobal != null)
 			{
@@ -31,7 +31,8 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 		public void MultiplyInverseScc(Vector input, Vector output) => inverseSccGlobal.SolveLinearSystem(input, output);
 
-		public DofPermutation ReorderGlobalCornerDofs(int numGlobalCornerDofs, Dictionary<int, int[]> subdomainToGlobalCornerDofs)
+		public DofPermutation ReorderGlobalCornerDofs(int numGlobalCornerDofs, 
+			IDictionary<int, int[]> subdomainToGlobalCornerDofs)
 		{
 			var pattern = SparsityPatternSymmetric.CreateEmpty(numGlobalCornerDofs);
 			foreach (int s in subdomainToGlobalCornerDofs.Keys)

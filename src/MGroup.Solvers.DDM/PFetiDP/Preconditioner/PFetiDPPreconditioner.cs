@@ -24,15 +24,15 @@ namespace MGroup.Solvers.DDM.PFetiDP.Preconditioner
 		private readonly IFetiDPCoarseProblem coarseProblem;
 		private readonly Func<int, IFetiDPSubdomainMatrixManager> getFetiDPSubdomainMatrices;
 		private readonly Func<int, PFetiDPSubdomainDofs> getPFetiDPSubdomainDofs;
-		private readonly DistributedOverlappingIndexer indexer;
+		private readonly Func<DistributedOverlappingIndexer> getIndexer;
 		private readonly IBoundaryDofScaling scaling;
 
-		public PFetiDPPreconditioner(IComputeEnvironment environment, DistributedOverlappingIndexer boundaryDofIndexer,
+		public PFetiDPPreconditioner(IComputeEnvironment environment, Func<DistributedOverlappingIndexer> getBoundaryDofIndexer,
 			IBoundaryDofScaling scaling, Func<int, IFetiDPSubdomainMatrixManager> getFetiDPSubdomainMatrices,
 			IFetiDPCoarseProblem coarseProblem, Func<int, PFetiDPSubdomainDofs> getPFetiDPSubdomainDofs)
 		{
 			this.environment = environment;
-			this.indexer = boundaryDofIndexer;
+			this.getIndexer = getBoundaryDofIndexer;
 			this.scaling = scaling;
 			this.getFetiDPSubdomainMatrices = getFetiDPSubdomainMatrices;
 			this.coarseProblem = coarseProblem;
@@ -43,8 +43,8 @@ namespace MGroup.Solvers.DDM.PFetiDP.Preconditioner
 
 		public void Apply(IGlobalVector input, IGlobalVector output)
 		{
-			DistributedOverlappingVector ybe = indexer.CheckCompatibleVector(input);
-			DistributedOverlappingVector xbe = indexer.CheckCompatibleVector(output);
+			DistributedOverlappingVector ybe = getIndexer().CheckCompatibleVector(input);
+			DistributedOverlappingVector xbe = getIndexer().CheckCompatibleVector(output);
 			xbe.Clear();
 
 			// Operations before coarse problem solution

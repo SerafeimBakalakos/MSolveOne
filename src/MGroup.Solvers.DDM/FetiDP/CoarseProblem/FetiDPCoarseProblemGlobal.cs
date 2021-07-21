@@ -13,7 +13,7 @@ using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 
 namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 {
-	public class FetiDPCoarseProblem : IFetiDPCoarseProblem
+	public class FetiDPCoarseProblemGlobal : IFetiDPCoarseProblem
 	{
 		private readonly IComputeEnvironment environment;
 		private readonly IModel model;
@@ -22,7 +22,8 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		private readonly Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices;
 		private readonly FetiDPCoarseProblemDofsGlobal globalDofs;
 
-		public FetiDPCoarseProblem(IComputeEnvironment environment, IModel model, IFetiDPCoarseProblemMatrix coarseProblemMatrix,
+		public FetiDPCoarseProblemGlobal(IComputeEnvironment environment, IModel model, 
+			IFetiDPCoarseProblemMatrix coarseProblemMatrix,
 			Func<int, FetiDPSubdomainDofs> getSubdomainDofs, Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices)
 		{
 			this.environment = environment;
@@ -124,5 +125,22 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			}
 		}
 		#endregion
+
+		public class Factory : IFetiDPCoarseProblemFactory
+		{
+			private readonly IFetiDPCoarseProblemMatrix coarseProblemMatrix;
+
+			public Factory(IFetiDPCoarseProblemMatrix coarseProblemMatrix)
+			{
+				this.coarseProblemMatrix = coarseProblemMatrix;
+			}
+
+			public IFetiDPCoarseProblem CreateCoarseProblem(IComputeEnvironment environment, IModel model,
+				Func<int, FetiDPSubdomainDofs> getSubdomainDofs, Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices)
+			{
+				return new FetiDPCoarseProblemGlobal(environment, model, coarseProblemMatrix, getSubdomainDofs, 
+					getSubdomainMatrices);
+			}
+		}
 	}
 }

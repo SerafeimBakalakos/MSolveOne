@@ -29,7 +29,7 @@ namespace MGroup.Solvers.DDM.AssemblerExtensions
 		}
 
 		public CscMatrix BuildGlobalMatrix(int numGlobalDofs,
-			Dictionary<int, int[]> localToGlobalMaps, Dictionary<int, IMatrix> localMatrices)
+			IDictionary<int, int[]> localToGlobalMaps, IDictionary<int, IMatrix> localMatrices)
 		{
 			var globalMatrix = DokColMajor.CreateEmpty(numGlobalDofs, numGlobalDofs);
 			foreach (int s in localToGlobalMaps.Keys)

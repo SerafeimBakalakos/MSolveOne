@@ -13,8 +13,8 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		private readonly DenseMatrixAssembler assembler = new DenseMatrixAssembler();
 		private Matrix inverseSccGlobal;
 		
-		public void InvertGlobalScc(int numGlobalCornerDofs, Dictionary<int, int[]> subdomainToGlobalCornerDofs, 
-			Dictionary<int, IMatrix>  subdomainMatricesScc)
+		public void InvertGlobalScc(int numGlobalCornerDofs, IDictionary<int, int[]> subdomainToGlobalCornerDofs, 
+			IDictionary<int, IMatrix>  subdomainMatricesScc)
 		{
 			Matrix globalScc = 
 				assembler.BuildGlobalMatrix(numGlobalCornerDofs, subdomainToGlobalCornerDofs, subdomainMatricesScc);
@@ -24,7 +24,8 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 		public void MultiplyInverseScc(Vector input, Vector output) => inverseSccGlobal.MultiplyIntoResult(input, output);
 
-		public DofPermutation ReorderGlobalCornerDofs(int numGlobalCornerDofs, Dictionary<int, int[]> subdomainToGlobalCornerDofs)
+		public DofPermutation ReorderGlobalCornerDofs(int numGlobalCornerDofs, 
+			IDictionary<int, int[]> subdomainToGlobalCornerDofs)
 			=> DofPermutation.CreateNoPermutation();
 	}
 }

@@ -27,7 +27,7 @@ namespace MGroup.Solvers.DDM.AssemblerExtensions
 		}
 
 		public SymmetricCscMatrix BuildGlobalMatrix(int numGlobalDofs,
-			Dictionary<int, int[]> localToGlobalMaps, Dictionary<int, IMatrix> localMatrices)
+			IDictionary<int, int[]> localToGlobalMaps, IDictionary<int, IMatrix> localMatrices)
 		{
 			var globalMatrix = DokSymmetric.CreateEmpty(numGlobalDofs);
 			foreach (int s in localToGlobalMaps.Keys)

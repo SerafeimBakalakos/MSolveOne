@@ -8,7 +8,7 @@ namespace MGroup.Solvers.DDM.AssemblerExtensions
 	public class DenseMatrixAssembler
 	{
 		public Matrix BuildGlobalMatrix(int numGlobalDofs,
-			Dictionary<int, int[]> localToGlobalMaps, Dictionary<int, IMatrix> localMatrices)
+			IDictionary<int, int[]> localToGlobalMaps, IDictionary<int, IMatrix> localMatrices)
 		{
 			var globalMatrix = Matrix.CreateZero(numGlobalDofs, numGlobalDofs);
 

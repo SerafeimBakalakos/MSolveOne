@@ -51,7 +51,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 				//}
 
 				inverseMultiplicities[subdomainID] = subdomainW;
-				SubdomainMatricesW[subdomainID] = DiagonalMatrix.CreateFromArray(subdomainW);
+				SubdomainMatricesWb[subdomainID] = DiagonalMatrix.CreateFromArray(subdomainW);
 
 				//BooleanMatrixRowsToColumns Lb = dofSeparator.GetDofMappingBoundaryClusterToSubdomain(subdomain.ID);
 				//var Lpb = new ScalingMatrixRowMajor(Lb.NumRows, Lb.NumColumns, Lb.RowsToColumns, subdomainW);
