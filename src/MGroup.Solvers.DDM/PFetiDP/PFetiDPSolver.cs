@@ -5,14 +5,8 @@ using System.Text;
 
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods;
-using MGroup.LinearAlgebra.Distributed.Overlapping;
-using MGroup.LinearAlgebra.Iterative;
-using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;
-using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Solution;
-using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
@@ -20,15 +14,8 @@ using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PFetiDP.Dofs;
 using MGroup.Solvers.DDM.PFetiDP.Preconditioner;
 using MGroup.Solvers.DDM.Psm;
-using MGroup.Solvers.DDM.PSM.Dofs;
-using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.Preconditioning;
-using MGroup.Solvers.DDM.PSM.Scaling;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
-using MGroup.Solvers.DDM.PSM.Vectors;
-using MGroup.Solvers.DofOrdering;
-using MGroup.Solvers.DofOrdering.Reordering;
-using MGroup.Solvers.Logging;
 
 namespace MGroup.Solvers.DDM.PFetiDP
 {
@@ -66,8 +53,8 @@ namespace MGroup.Solvers.DDM.PFetiDP
 				subdomainMatricesFetiDP[subdomainID] = matricesFetiDP;
 			});
 
-			this.coarseProblemFetiDP = coarseProblemFactory.CreateCoarseProblem(environment, model,
-				s => subdomainDofsFetiDP[s], s => subdomainMatricesFetiDP[s]);
+			this.coarseProblemFetiDP = coarseProblemFactory.CreateCoarseProblem(environment, model, 
+				algebraicModel.SubdomainTopology, s => subdomainDofsFetiDP[s], s => subdomainMatricesFetiDP[s]);
 			this.preconditioner = new PFetiDPPreconditioner(environment, () => base.boundaryDofIndexer, scaling,
 				s => subdomainMatricesFetiDP[s], coarseProblemFetiDP, s => subdomainDofsPFetiDP[s]);
 		}
@@ -84,7 +71,6 @@ namespace MGroup.Solvers.DDM.PFetiDP
 
 				subdomainMatricesFetiDP[subdomainID].ExtractKrrKccKrc();
 				subdomainMatricesFetiDP[subdomainID].InvertKrr();
-				subdomainMatricesFetiDP[subdomainID].CalcSchurComplementOfRemainderDofs();
 			});
 
 			// Prepare coarse problem

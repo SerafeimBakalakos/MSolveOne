@@ -70,7 +70,7 @@ namespace MGroup.Solvers.DDM.PFetiDP.Preconditioner
 			});
 
 			// Coarse problem solution
-			var xce = new ConcurrentDictionary<int, Vector>();
+			var xce = environment.CreateDictionaryPerNode(s => Vector.CreateZero(yce[s].Length));
 			coarseProblem.SolveCoarseProblem(yce, xce);
 
 			// Operations after coarse problem solution

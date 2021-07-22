@@ -98,34 +98,6 @@ namespace MGroup.Solvers.DDM.Psm
 			Logger = new SolverLogger(name);
 		}
 
-		protected PsmSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel,
-			ConcurrentDictionary<int, PsmSubdomainDofs> subdomainDofsPsm,
-			ConcurrentDictionary<int, IPsmSubdomainMatrixManager> subdomainMatricesPsm,
-			ConcurrentDictionary<int, PsmSubdomainVectors> subdomainVectors,
-			IBoundaryDofScaling scaling,
-			IPsmInterfaceProblemMatrix interfaceProblemMatrix,
-			IDistributedIterativeMethod interfaceProblemSolver,
-			PsmInterfaceProblemVectors interfaceProblemVectors,
-			IPsmPreconditioner preconditioner,
-			string name)
-		{
-			this.environment = environment;
-			this.model = model;
-			this.algebraicModel = algebraicModel;
-			this.subdomainDofsPsm = subdomainDofsPsm;
-			this.subdomainMatricesPsm = subdomainMatricesPsm;
-			this.subdomainVectors = subdomainVectors;
-			this.scaling = scaling;
-			this.interfaceProblemMatrix = interfaceProblemMatrix;
-			this.interfaceProblemSolver = interfaceProblemSolver;
-			this.interfaceProblemVectors = interfaceProblemVectors;
-			this.preconditioner = preconditioner;
-
-			this.subdomainTopology = algebraicModel.SubdomainTopology;
-			this.LinearSystem = algebraicModel.LinearSystem;
-			this.Logger = new SolverLogger(name);
-		}
-
 		public IterativeStatistics InterfaceProblemSolutionStats { get; private set; }
 
 		public IGlobalLinearSystem LinearSystem { get; }
@@ -248,51 +220,6 @@ namespace MGroup.Solvers.DDM.Psm
 			{
 				return new PsmSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
 					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolver, IsHomogeneousProblem);
-			}
-
-			public PsmSolver<TMatrix> BuildSolver2(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
-			{
-				var subdomainDofsPsm = new ConcurrentDictionary<int, PsmSubdomainDofs>();
-				var subdomainMatricesPsm = new ConcurrentDictionary<int, IPsmSubdomainMatrixManager>();
-				var subdomainVectors = new ConcurrentDictionary<int, PsmSubdomainVectors>();
-				environment.DoPerNode(subdomainID =>
-				{
-					SubdomainLinearSystem<TMatrix> linearSystem = algebraicModel.SubdomainLinearSystems[subdomainID];
-					var dofs = new PsmSubdomainDofs(model.AllDofs, linearSystem, false);
-					IPsmSubdomainMatrixManager matrices = PsmMatricesFactory.CreateMatrixManager(linearSystem, dofs);
-					var vectors = new PsmSubdomainVectors(linearSystem, dofs, matrices);
-
-					subdomainDofsPsm[subdomainID] = dofs;
-					subdomainMatricesPsm[subdomainID] = matrices;
-					subdomainVectors[subdomainID] = vectors;
-				});
-
-				IBoundaryDofScaling scaling;
-				if (IsHomogeneousProblem)
-				{
-					scaling = new HomogeneousScaling(environment, s => subdomainDofsPsm[s]);
-				}
-				else
-				{
-					scaling = new HeterogeneousScaling(
-						environment, s => algebraicModel.SubdomainLinearSystems[s], s => subdomainDofsPsm[s]);
-				}
-
-				IPsmInterfaceProblemMatrix interfaceProblemMatrix;
-				if (ExplicitSubdomainMatrices)
-				{
-					interfaceProblemMatrix = new PsmInterfaceProblemMatrixExplicit(environment, s => subdomainMatricesPsm[s]);
-				}
-				else
-				{
-					interfaceProblemMatrix = new PsmInterfaceProblemMatrixImplicit(environment,
-						s => subdomainDofsPsm[s], s => subdomainMatricesPsm[s]);
-				}
-				var interfaceProblemVectors = new PsmInterfaceProblemVectors(environment, subdomainVectors);
-
-				return new PsmSolver<TMatrix>(environment, model, algebraicModel, subdomainDofsPsm, subdomainMatricesPsm, 
-					subdomainVectors, scaling, interfaceProblemMatrix, InterfaceProblemSolver, interfaceProblemVectors,
-					Preconditioner, "PSM Solver");
 			}
 		}
 	}

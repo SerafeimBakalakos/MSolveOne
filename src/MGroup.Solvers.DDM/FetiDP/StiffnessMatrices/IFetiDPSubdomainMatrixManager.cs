@@ -28,6 +28,20 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		Vector MultiplyKrcTimes(Vector vector);
 
+		/// <summary>
+		/// S[s] * x = (Kcc[s] - Kcr[s] * inv(Krr[s]) * Krc[s]) * x, where s is a subdomain and x is the <paramref name="input"/>.
+		/// </summary>
+		/// <param name="input">The displacements that correspond to corner dofs of this subdomain.</param>
+		/// <param name="output">The forces that correspond to corner dofs of this subdomain.</param>
+		public void MultiplySchurComplementImplicitly(Vector input, Vector output)
+		{
+			output.CopyFrom(MultiplyKccTimes(input));
+			Vector temp = MultiplyKrcTimes(input);
+			temp = MultiplyInverseKrrTimes(temp);
+			temp = MultiplyKcrTimes(temp);
+			output.SubtractIntoThis(temp);
+		}
+
 		void ReorderRemainderDofs();
 	}
 }

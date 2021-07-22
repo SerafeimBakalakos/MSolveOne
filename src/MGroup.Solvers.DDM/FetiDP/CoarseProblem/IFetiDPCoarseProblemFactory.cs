@@ -10,7 +10,8 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 {
 	public interface IFetiDPCoarseProblemFactory
 	{
-		IFetiDPCoarseProblem CreateCoarseProblem(IComputeEnvironment environment, IModel model,
-				Func<int, FetiDPSubdomainDofs> getSubdomainDofs, Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices);
+		IFetiDPCoarseProblem CreateCoarseProblem(
+			IComputeEnvironment environment, IModel model, SubdomainTopology subdomainTopology,
+			Func<int, FetiDPSubdomainDofs> getSubdomainDofs, Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices);
 	}
 }

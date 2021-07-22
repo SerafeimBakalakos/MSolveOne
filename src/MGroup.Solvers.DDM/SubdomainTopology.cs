@@ -75,7 +75,12 @@ namespace MGroup.Solvers.DDM
 						//		Even better let DofTable take DofSet as argument and return the indices.
 						INode node = model.GetNode(nodeID);
 						IDofType dof = model.AllDofs.GetDofWithId(dofID);
-						commonDofIndices[idx++] = subdomainDofs[node, dof];
+
+						bool isRelevant = subdomainDofs.TryGetValue(node, dof, out int subdomainIdx);
+						if (isRelevant)
+						{
+							commonDofIndices[idx++] = subdomainIdx;
+						}
 					}
 					allCommonDofIndices[neighborID] = commonDofIndices;
 				}

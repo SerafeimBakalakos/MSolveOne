@@ -32,7 +32,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				node => Vector.CreateZero(indexer.GetLocalComponent(node).NumEntries));
 		}
 
-		public DistributedOverlappingVector(DistributedOverlappingIndexer indexer, Dictionary<int, Vector> localVectors)
+		public DistributedOverlappingVector(DistributedOverlappingIndexer indexer, IDictionary<int, Vector> localVectors)
 		{
 			this.Indexer = indexer;
 			this.Environment = indexer.Environment;
@@ -43,7 +43,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 
 		public DistributedOverlappingIndexer Indexer { get; }
 
-		public Dictionary<int, Vector> LocalVectors { get; }
+		public IDictionary<int, Vector> LocalVectors { get; }
 
 		public void AxpyIntoThis(IGlobalVector otherVector, double otherCoefficient)
 		{

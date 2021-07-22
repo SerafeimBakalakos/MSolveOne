@@ -11,29 +11,30 @@ using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.NumericalAnalyzers;
+using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PFetiDP;
 using MGroup.Solvers.DDM.Psm;
-using MGroup.Solvers.DDM.PSM.Dofs;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.DDM.Tests.ExampleModels;
 using MGroup.Solvers.DofOrdering;
-using TriangleNet;
 using Xunit;
 
-namespace MGroup.Solvers.DDM.Tests.PSM
+namespace MGroup.Solvers.DDM.Tests.PFetiDP
 {
 	public static class PFetiDPSolverTests
 	{
 		[Theory]
-		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
-		public static void TestForBrick3D(EnvironmentChoice environmentChoice)
-			=> TestForBrick3DInternal(Utilities.CreateEnvironment(environmentChoice));
+		[InlineData(EnvironmentChoice.SequentialSharedEnvironment, false)]
+		[InlineData(EnvironmentChoice.SequentialSharedEnvironment, true)]
+		[InlineData(EnvironmentChoice.TplSharedEnvironment, false)]
+		[InlineData(EnvironmentChoice.TplSharedEnvironment, true)]
+		public static void TestForBrick3D(EnvironmentChoice environmentChoice, bool isCoarseProblemDistributed)
+			=> TestForBrick3DInternal(Utilities.CreateEnvironment(environmentChoice), isCoarseProblemDistributed);
 
-		internal static void TestForBrick3DInternal(IComputeEnvironment environment)
+		internal static void TestForBrick3DInternal(IComputeEnvironment environment, bool isCoarseProblemDistributed)
 		{
 			// Environment
 			ComputeNodeTopology nodeTopology = Brick3DExample.CreateNodeTopology();
@@ -45,12 +46,23 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			ICornerDofSelection cornerDofs = Brick3DExample.GetCornerDofs(model);
 
 			// Solver
-			var pcgBuilder = new PcgAlgorithm.Builder();
-			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-			pcgBuilder.ResidualTolerance = 1E-10;
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
 				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
+			var pcgBuilder = new PcgAlgorithm.Builder();
+			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+			pcgBuilder.ResidualTolerance = 1E-10;
+			if (isCoarseProblemDistributed)
+			{
+				var coarseProblemFactory = new FetiDPCoarseProblemDistributed.Factory();
+				coarseProblemFactory.CoarseProblemSolver = pcgBuilder.Build();
+				solverFactory.CoarseProblemFactory = coarseProblemFactory;
+			}
+			else 
+			{
+				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
+				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+			}
 			solverFactory.InterfaceProblemSolver = pcgBuilder.Build();
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
@@ -89,12 +101,14 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 		}
 
 		[Theory]
-		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
-		public static void TestForPlane2D(EnvironmentChoice environmentChoice)
-			=> TestForPlane2DInternal(Utilities.CreateEnvironment(environmentChoice));
+		[InlineData(EnvironmentChoice.SequentialSharedEnvironment, false)]
+		[InlineData(EnvironmentChoice.SequentialSharedEnvironment, true)]
+		[InlineData(EnvironmentChoice.TplSharedEnvironment, false)]
+		[InlineData(EnvironmentChoice.TplSharedEnvironment, true)]
+		public static void TestForPlane2D(EnvironmentChoice environmentChoice, bool isCoarseProblemDistributed)
+			=> TestForPlane2DInternal(Utilities.CreateEnvironment(environmentChoice), isCoarseProblemDistributed);
 
-		internal static void TestForPlane2DInternal(IComputeEnvironment environment)
+		internal static void TestForPlane2DInternal(IComputeEnvironment environment, bool isCoarseProblemDistributed)
 		{
 			// Environment
 			ComputeNodeTopology nodeTopology = Plane2DExample.CreateNodeTopology();
@@ -106,12 +120,23 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			ICornerDofSelection cornerDofs = Plane2DExample.GetCornerDofs(model);
 
 			// Solver
-			var pcgBuilder = new PcgAlgorithm.Builder();
-			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-			pcgBuilder.ResidualTolerance = 1E-10;
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
 				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
+			var pcgBuilder = new PcgAlgorithm.Builder();
+			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+			pcgBuilder.ResidualTolerance = 1E-10;
+			if (isCoarseProblemDistributed)
+			{
+				var coarseProblemFactory = new FetiDPCoarseProblemDistributed.Factory();
+				coarseProblemFactory.CoarseProblemSolver = pcgBuilder.Build();
+				solverFactory.CoarseProblemFactory = coarseProblemFactory;
+			}
+			else 
+			{
+				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
+				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+			}
 			solverFactory.InterfaceProblemSolver = pcgBuilder.Build();
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);

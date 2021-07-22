@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using MGroup.MSolve.Numerics.Interpolation.Inverse;
 using MGroup.MSolve.Numerics.Interpolation.Jacobians;
 using MGroup.LinearAlgebra.Matrices;
@@ -125,14 +125,18 @@ namespace MGroup.MSolve.Numerics.Interpolation
 			if (isCached) return naturalGradientsAtGPs;
 			else
 			{
-				int numGPs = quadrature.IntegrationPoints.Count;
-				var naturalGradientsAtGPsArray = new Matrix[numGPs];
-				for (int gp = 0; gp < numGPs; ++gp)
+				Matrix[] naturalGradientsAtGPsArray;
+				lock(cachedNaturalGradientsAtGPs)
 				{
-					GaussPoint gaussPoint = quadrature.IntegrationPoints[gp];
-					naturalGradientsAtGPsArray[gp] = EvaluateGradientsAt(gaussPoint.Xi, gaussPoint.Eta, gaussPoint.Zeta);
+					int numGPs = quadrature.IntegrationPoints.Count;
+					naturalGradientsAtGPsArray = new Matrix[numGPs];
+					for (int gp = 0; gp < numGPs; ++gp)
+					{
+						GaussPoint gaussPoint = quadrature.IntegrationPoints[gp];
+						naturalGradientsAtGPsArray[gp] = EvaluateGradientsAt(gaussPoint.Xi, gaussPoint.Eta, gaussPoint.Zeta);
+					}
+					cachedNaturalGradientsAtGPs[quadrature] = naturalGradientsAtGPsArray;
 				}
-				cachedNaturalGradientsAtGPs.Add(quadrature, naturalGradientsAtGPsArray);
 				return naturalGradientsAtGPsArray;
 			}
 		}

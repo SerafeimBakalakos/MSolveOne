@@ -45,6 +45,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 		public void PrepareMatricesForSolution()
 		{
+			environment.DoPerNode(subdomainID => getSubdomainMatrices(subdomainID).CalcSchurComplementOfRemainderDofs());
 			Dictionary<int, IMatrix> subdomainMatricesScc = GatherSubdomainMatricesScc();
 			coarseProblemMatrix.InvertGlobalScc(
 				globalDofs.NumGlobalCornerDofs, globalDofs.SubdomainToGlobalCornerDofMaps, subdomainMatricesScc);
@@ -114,14 +115,10 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 		private void ScatterSubdomainVectors(Dictionary<int, Vector> localVectors, IDictionary<int, Vector> remoteVectors)
 		{
-			if (remoteVectors.Count > 0)
-			{
-				throw new NotImplementedException();
-			}
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
 				int s = subdomain.ID;
-				remoteVectors[s] = localVectors[s];
+				remoteVectors[s].CopyFrom(localVectors[s]);
 			}
 		}
 		#endregion
@@ -135,7 +132,8 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 				this.coarseProblemMatrix = coarseProblemMatrix;
 			}
 
-			public IFetiDPCoarseProblem CreateCoarseProblem(IComputeEnvironment environment, IModel model,
+			public IFetiDPCoarseProblem CreateCoarseProblem(
+				IComputeEnvironment environment, IModel model, SubdomainTopology subdomainTopology,
 				Func<int, FetiDPSubdomainDofs> getSubdomainDofs, Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices)
 			{
 				return new FetiDPCoarseProblemGlobal(environment, model, coarseProblemMatrix, getSubdomainDofs, 
