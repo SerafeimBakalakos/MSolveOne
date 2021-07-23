@@ -16,6 +16,8 @@ using MGroup.Solvers.Assemblers;
 using MGroup.Solvers.DofOrdering;
 using MGroup.Solvers.Results;
 
+
+//TODO: Move all Extract~() methods to a dedicated DistributedValueExtractor class.
 namespace MGroup.Solvers.DDM.LinearSystem
 {
 	public class DistributedAlgebraicModel<TMatrix> : IAlgebraicModel
@@ -188,10 +190,22 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			{
 				throw new NotImplementedException("We need to locate the correct subdomain first");
 			}
-			DistributedOverlappingVector distributedVector = FreeDofIndexer.CheckCompatibleVector(vector);
+			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
 			int s = element.SubdomainID;
 			ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[s];
 			return subdomainDofs.ExtractVectorElementFromSubdomain(element, distributedVector.LocalVectors[s]);
+		}
+
+		public NodalResults ExtractGlobalResults(IGlobalVector vector, double differentValueTolerance)
+		{
+			//TODOMPI: This only works for shared memory environments.
+			var globalResults = new NodalResults(new Table<int, int, double>());
+			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
+			{
+				NodalResults subdomainResults = ExtractAllResults(subdomain.ID, vector);
+				globalResults.UnionWith(subdomainResults, differentValueTolerance);
+			}
+			return globalResults;
 		}
 
 		public double ExtractSingleValue(IGlobalVector vector, INode node, IDofType dof) //TODO: Dedicated classes to extract values.
@@ -200,7 +214,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			{
 				throw new NotImplementedException("We need to locate the correct subdomain first");
 			}
-			DistributedOverlappingVector distributedVector = FreeDofIndexer.CheckCompatibleVector(vector);
+			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
 			if (node.Subdomains.Count == 1) // Internal nodes are straightforward
 			{
 				int s = node.Subdomains.First();

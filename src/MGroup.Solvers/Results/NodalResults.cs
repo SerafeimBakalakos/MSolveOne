@@ -2,11 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using MGroup.LinearAlgebra.Distributed;
 using MGroup.MSolve.DataStructures;
-using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Solution.AlgebraicModel;
-using MGroup.Solvers.DofOrdering;
 
 namespace MGroup.Solvers.Results
 {
@@ -19,52 +15,75 @@ namespace MGroup.Solvers.Results
 
 		public Table<int, int, double> Data { get; }
 
-		/// <summary>
-		/// ||computedNodalValues - expectedNodalValues|| / ||expectedNodalValues||
-		/// </summary>
-		/// <param name="expectedNodalValues"></param>
-		/// <param name="computedNodalValues"></param>
-		/// <returns></returns>
-		public static double CalcDeviationNorm(Table<int, int, double> expectedNodalValues,
-			Table<int, int, double> computedNodalValues)
-		{
-			//TODO: Table should define DoEntrywise() and reduction methods.
-			Debug.Assert(expectedNodalValues.EntryCount == computedNodalValues.EntryCount);
-			var diff = new Table<int, int, double>();
-			double sumNumerator = 0.0;
-			double sumDenominator = 0.0;
-			foreach ((int node, int dof, double computedValue) in computedNodalValues)
-			{
-				bool expectedValueExists = expectedNodalValues.TryGetValue(node, dof, out double expectedValue);
-				Debug.Assert(expectedValueExists, $"Node {node} dof {dof}: No expected value provided");
-
-				sumNumerator += (computedValue - expectedValue) * (computedValue - expectedValue);
-				sumDenominator += expectedValue * expectedValue;
-			}
-			return Math.Sqrt(sumNumerator) / Math.Sqrt(sumDenominator);
-		}
-
 		public bool IsSuperSetOf(NodalResults other, double tolerance, out string msg)
 		{
 			var comparer = new ValueComparer(tolerance);
-			foreach ((int node, int dof, double computedValue) in other.Data)
+			foreach ((int node, int dof, double otherValue) in other.Data)
 			{
-				bool expectedValueExists = this.Data.TryGetValue(node, dof, out double expectedValue);
-				if (!expectedValueExists)
+				bool thisValueExists = this.Data.TryGetValue(node, dof, out double thisValue);
+				if (!thisValueExists)
 				{
-					msg = $"Node {node} dof {dof}: No expected value provided";
+					msg = $"Node {node} dof {dof} does not exist in the superset.";
 					return false;
 				}
 
-				if (!comparer.AreEqual(expectedValue, computedValue))
+				if (!comparer.AreEqual(thisValue, otherValue))
 				{
-					msg = $"Node {node} dof {dof}: expected = {expectedValue}, computed = {computedValue}";
+					msg = $"Node {node} dof {dof}: superset value = {thisValue}, subset value = {otherValue}";
 					return false;
 				}
 			}
 
 			msg = string.Empty;
 			return true;
+		}
+
+		public NodalResults LinearCombination(double thisCoeff, NodalResults other, double otherCoeff)
+		{
+			var result = new NodalResults(new Table<int, int, double>());
+			foreach ((int node, int dof, double thisValue) in this.Data)
+			{
+				double otherValue = other.Data[node, dof];
+				double resultValue = thisCoeff * thisValue + otherCoeff * otherValue;
+				result.Data[node, dof] = resultValue;
+			}
+			return result;
+		}
+
+		public double Norm2()
+		{
+			double sum = 0.0;
+			foreach ((int node, int dof, double val) in this.Data)
+			{
+				sum += val * val;
+			}
+			return Math.Sqrt(sum);
+		}
+
+		public NodalResults Subtract(NodalResults other) => LinearCombination(1.0, other, -1.0);
+
+		public void UnionWith(NodalResults other, double differentValueTolerance)
+		{
+			var comparer = new ValueComparer(differentValueTolerance);
+			foreach ((int node, int dof, double otherValue) in other.Data)
+			{
+				bool thisValueExists = this.Data.TryGetValue(node, dof, out double thisValue);
+				if (thisValueExists)
+				{
+					if (comparer.AreEqual(thisValue, otherValue))
+					{
+						this.Data[node, dof] = 0.5 * (thisValue + otherValue);
+					}
+					else
+					{
+						throw new ArgumentException($"Node {node} dof {dof}: the values of the 2 collections are too different");
+					}
+				}
+				else
+				{
+					this.Data[node, dof] = otherValue;
+				}
+			}
 		}
 	}
 }
