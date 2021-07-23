@@ -42,7 +42,6 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 		/// </summary>
 		public void CalcScalingMatrices(DistributedOverlappingIndexer indexer)
 		{
-			throw new NotImplementedException();
 			//Build Db^s from each subdomain's Kff
 			Func<int, Vector> calcSubdomainDb = subdomainID =>
 			{
@@ -71,12 +70,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 			Action<int> storeRelativeStiffness = subdomainID =>
 			{
 				relativeStiffnesses[subdomainID] = distributedVector.LocalVectors[subdomainID].RawData;
-
-				// Calculate Lpb^s = Db^s * Lb^s * inv( (Lb^e)^T * Db^e * Lb^e) )
-				//BooleanMatrixRowsToColumns Lb = dofSeparator.GetDofMappingBoundaryClusterToSubdomain(subdomainID);
-				//var Lpb = new ScalingMatrixRowMajor(
-				//	Lb.NumRows, Lb.NumColumns, Lb.RowsToColumns, relativeStiffnesses[subdomainID]);
-				//dofMappingBoundaryClusterToSubdomain[subdomain.ID] = Lpb;
+				SubdomainMatricesWb[subdomainID] = DiagonalMatrix.CreateFromArray(relativeStiffnesses[subdomainID]);
 			};
 			environment.DoPerNode(storeRelativeStiffness);
 		}

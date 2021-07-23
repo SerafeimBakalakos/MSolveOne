@@ -7,10 +7,6 @@ using System.Collections.Concurrent;
 using MGroup.Environments;
 using MGroup.Solvers.DDM.PSM.Dofs;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
-using MGroup.MSolve.Discretization;
-using MGroup.MSolve.DataStructures;
-using MGroup.Solvers.DDM.LinearSystem;
-using MGroup.Solvers.DDM.PSM.Vectors;
 using System.Diagnostics;
 using MGroup.LinearAlgebra.Matrices;
 
