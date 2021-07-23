@@ -35,9 +35,9 @@ using MGroup.Solvers.Results;
 namespace MGroup.Solvers.DDM.Tests.ExampleModels
 {
 	/// <summary>
-	/// See Papagiannakis Bachelor thesis, pages 134-147
+	/// See Papagiannakis Bachelor thesis, pages 111-132
 	/// </summary>
-	public static class PapagiannakisExample_9_1
+	public static class PapagiannakisExample_8
 	{
 		private const double E0 = 2.1E7, v = 0.3, thickness = 0.3;
 		private const double load = 100;
@@ -46,13 +46,13 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 
 		public static double[] MaxCoords => new double[] { 3, 1.5 };
 
-		public static int[] NumElements => new int[] { 20, 20 };
+		public static int[] NumElements => new int[] { 12, 6 };
 
 		public static int[] NumSubdomains => new int[] { 4, 2 };
 
 		public static int[] NumClusters => new int[] { 1, 1 };
 
-		public static int NumTotalDofs => 882;
+		public static int NumTotalDofs => 182;
 
 		public static Model CreateSingleSubdomainModel(double stiffnessRatio)
 		{

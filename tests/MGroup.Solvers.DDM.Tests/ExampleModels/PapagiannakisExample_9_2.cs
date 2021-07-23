@@ -37,7 +37,7 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 	/// <summary>
 	/// See Papagiannakis Bachelor thesis, pages 148-161
 	/// </summary>
-	public static class PapagiannakisModel_9_2
+	public static class PapagiannakisExample_9_2
 	{
 		private const double E0 = 2.1E7, v = 0.3, thickness = 0.3;
 		private const double load = 100;
