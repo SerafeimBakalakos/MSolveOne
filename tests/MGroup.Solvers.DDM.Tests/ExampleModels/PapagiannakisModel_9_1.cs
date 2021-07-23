@@ -20,6 +20,7 @@ using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.Partitioning;
 using MGroup.Solvers.Direct;
 using MGroup.Solvers.DofOrdering;
+using MGroup.Solvers.Results;
 
 // Subdomains:
 // /|
@@ -154,7 +155,7 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			return cornerDofs;
 		}
 
-		public static Table<int, int, double> SolveWithSkylineSolver(double stiffnessRatio)
+		public static NodalResults SolveWithSkylineSolver(double stiffnessRatio)
 		{
 			Model model = CreateSingleSubdomainModel(stiffnessRatio);
 			model.ConnectDataStructures();
@@ -173,13 +174,8 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			parentAnalyzer.Initialize();
 			parentAnalyzer.Solve();
 
-			// Check results
-			ISubdomain subdomain = model.SubdomainsDictionary.First().Value;
-			ISubdomainFreeDofOrdering subdomainFreeDofs = algebraicModel.SubdomainFreeDofOrdering;
-			Table<int, int, double>  nodalDisplacements = Utilities.FindNodalFieldValues(
-				subdomain, subdomainFreeDofs, model, algebraicModel, solver.LinearSystem.Solution);
-
-			Debug.Assert(nodalDisplacements.EntryCount == NumTotalDofs);
+			NodalResults nodalDisplacements = algebraicModel.ExtractAllResults(solver.LinearSystem.Solution);
+			Debug.Assert(nodalDisplacements.Data.EntryCount == NumTotalDofs);
 			return nodalDisplacements;
 		}
 	}

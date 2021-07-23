@@ -18,6 +18,7 @@ using MGroup.Solvers.DDM.PSM.Dofs;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.DDM.Tests.ExampleModels;
 using MGroup.Solvers.DofOrdering;
+using MGroup.Solvers.Results;
 using TriangleNet;
 using Xunit;
 
@@ -65,15 +66,12 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			parentAnalyzer.Solve();
 
 			// Check results
-			Table<int, int, double> expectedResults = PapagiannakisModel_9_1.SolveWithSkylineSolver(stiffnessRatio);
+			NodalResults expectedResults = PapagiannakisModel_9_1.SolveWithSkylineSolver(stiffnessRatio);
 			double tolerance = 1E-4;
 			environment.DoPerNode(subdomainID =>
 			{
-				ISubdomain subdomain = model.GetSubdomain(subdomainID);
-				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
-				Table<int, int, double> computedResults =
-					Utilities.FindNodalFieldValues(subdomain, freeDofs, model, algebraicModel, solver.LinearSystem.Solution);
-				Utilities.AssertSubset(expectedResults, computedResults, tolerance);
+				NodalResults computedResults = algebraicModel.ExtractAllResults(subdomainID, solver.LinearSystem.Solution);
+				Assert.True(expectedResults.IsSuperSetOf(computedResults, tolerance, out string msg), msg);
 			});
 
 			// Check convergence

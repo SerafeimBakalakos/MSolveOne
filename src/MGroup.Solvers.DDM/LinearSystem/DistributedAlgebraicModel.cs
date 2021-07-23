@@ -14,6 +14,7 @@ using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.Solvers.Assemblers;
 using MGroup.Solvers.DofOrdering;
+using MGroup.Solvers.Results;
 
 namespace MGroup.Solvers.DDM.LinearSystem
 {
@@ -153,6 +154,32 @@ namespace MGroup.Solvers.DDM.LinearSystem
 					elementAction(element);
 				}
 			});
+		}
+
+		public NodalResults ExtractAllResults(int subdomainID, IGlobalVector vector)
+		{
+			var results = new Table<int, int, double>();
+
+			// Free dofs
+			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
+			Vector subdomainVector = distributedVector.LocalVectors[subdomainID];
+			ISubdomainFreeDofOrdering subdomainFreeDofs = SubdomainFreeDofOrderings[subdomainID];
+			foreach ((INode node, IDofType dof, int freeDofIdx) in subdomainFreeDofs.FreeDofs)
+			{
+				results[node.ID, model.AllDofs.GetIdOfDof(dof)] = subdomainVector[freeDofIdx];
+			}
+
+			// Constrained dofs
+			ISubdomain subdomain = model.GetSubdomain(subdomainID);
+			foreach (INode node in subdomain.Nodes)
+			{
+				foreach (Constraint dirichlet in node.Constraints)
+				{
+					results[node.ID, model.AllDofs.GetIdOfDof(dirichlet.DOF)] = dirichlet.Amount;
+				}
+			}
+
+			return new NodalResults(results);
 		}
 
 		public double[] ExtractElementVector(IGlobalVector vector, IElement element)

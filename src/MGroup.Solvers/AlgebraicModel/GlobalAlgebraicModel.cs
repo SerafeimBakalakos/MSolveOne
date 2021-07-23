@@ -6,6 +6,7 @@ using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Distributed.LinearAlgebraExtensions;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Solution.AlgebraicModel;
@@ -14,6 +15,7 @@ using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.Solvers.Assemblers;
 using MGroup.Solvers.DofOrdering;
 using MGroup.Solvers.LinearSystem;
+using MGroup.Solvers.Results;
 
 namespace MGroup.Solvers.AlgebraicModel
 {
@@ -21,6 +23,7 @@ namespace MGroup.Solvers.AlgebraicModel
 		where TMatrix : class, IMatrix
 	{
 		private readonly ISubdomain subdomain;
+		private readonly IModel model;
 		private readonly IDofOrderer dofOrderer;
 		private readonly ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler;
 		private readonly SubdomainVectorAssembler subdomainVectorAssembler = new SubdomainVectorAssembler();
@@ -28,6 +31,7 @@ namespace MGroup.Solvers.AlgebraicModel
 		public GlobalAlgebraicModel(IModel model, IDofOrderer dofOrderer,
 			ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler)
 		{
+			this.model = model;
 			this.dofOrderer = dofOrderer;
 			this.subdomainMatrixAssembler = subdomainMatrixAssembler;
 			subdomain = model.EnumerateSubdomains().First();
@@ -105,6 +109,29 @@ namespace MGroup.Solvers.AlgebraicModel
 			{
 				elementAction(element);
 			}
+		}
+
+		public NodalResults ExtractAllResults(IGlobalVector vector)
+		{
+			var results = new Table<int, int, double>();
+
+			// Free dofs
+			GlobalVector globalVector = CheckCompatibleVector(vector);
+			foreach ((INode node, IDofType dof, int freeDofIdx) in SubdomainFreeDofOrdering.FreeDofs)
+			{
+				results[node.ID, model.AllDofs.GetIdOfDof(dof)] = globalVector.SingleVector[freeDofIdx];
+			}
+
+			// Constrained dofs
+			foreach (INode node in subdomain.Nodes)
+			{
+				foreach (Constraint dirichlet in node.Constraints)
+				{
+					results[node.ID, model.AllDofs.GetIdOfDof(dirichlet.DOF)] = dirichlet.Amount;
+				}
+			}
+
+			return new NodalResults(results);
 		}
 
 		public double[] ExtractElementVector(IGlobalVector vector, IElement element)

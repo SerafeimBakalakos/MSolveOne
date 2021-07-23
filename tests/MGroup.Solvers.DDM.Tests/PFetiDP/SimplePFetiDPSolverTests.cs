@@ -21,6 +21,7 @@ using MGroup.Solvers.DDM.Psm;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.DDM.Tests.ExampleModels;
 using MGroup.Solvers.DofOrdering;
+using MGroup.Solvers.Results;
 using Xunit;
 
 namespace MGroup.Solvers.DDM.Tests.PFetiDP
@@ -78,15 +79,12 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			parentAnalyzer.Solve();
 
 			// Check results
-			Table<int, int, double> expectedResults = Brick3DExample.GetExpectedNodalValues();
+			NodalResults expectedResults = Brick3DExample.GetExpectedNodalValues();
 			double tolerance = 1E-7;
 			environment.DoPerNode(subdomainID =>
 			{
-				ISubdomain subdomain = model.GetSubdomain(subdomainID);
-				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
-				Table<int, int, double> computedResults =
-					Utilities.FindNodalFieldValues(subdomain, freeDofs, model, algebraicModel, solver.LinearSystem.Solution);
-				Utilities.AssertSubset(expectedResults, computedResults, tolerance);
+				NodalResults computedResults = algebraicModel.ExtractAllResults(subdomainID, solver.LinearSystem.Solution);
+				Assert.True(expectedResults.IsSuperSetOf(computedResults, tolerance, out string msg), msg);
 			});
 
 			//Debug.WriteLine($"Num PCG iterations = {solver.PcgStats.NumIterationsRequired}," +
@@ -152,15 +150,12 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			parentAnalyzer.Solve();
 
 			// Check results
-			Table<int, int, double> expectedResults = Plane2DExample.GetExpectedNodalValues();
+			NodalResults expectedResults = Plane2DExample.GetExpectedNodalValues();
 			double tolerance = 1E-7;
 			environment.DoPerNode(subdomainID =>
 			{
-				ISubdomain subdomain = model.GetSubdomain(subdomainID);
-				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
-				Table<int, int, double> computedResults =
-					Utilities.FindNodalFieldValues(subdomain, freeDofs, model, algebraicModel, solver.LinearSystem.Solution);
-				Utilities.AssertSubset(expectedResults, computedResults, tolerance);
+				NodalResults computedResults = algebraicModel.ExtractAllResults(subdomainID, solver.LinearSystem.Solution);
+				Assert.True(expectedResults.IsSuperSetOf(computedResults, tolerance, out string msg), msg);
 			});
 
 			//Debug.WriteLine($"Num PCG iterations = {solver.PcgStats.NumIterationsRequired}," +
