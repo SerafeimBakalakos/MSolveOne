@@ -22,7 +22,7 @@ using Xunit;
 
 namespace MGroup.Solvers.DDM.Tests.PSM
 {
-	public static class PsmSolverTests
+	public static class SimplePsmSolverTests
 	{
 		[Theory]
 		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
@@ -68,7 +68,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
 				Table<int, int, double> computedResults =
 					Utilities.FindNodalFieldValues(subdomain, freeDofs, model, algebraicModel, solver.LinearSystem.Solution);
-				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
+				Utilities.AssertSubset(expectedResults, computedResults, tolerance);
 			});
 
 			//Debug.WriteLine($"Num PCG iterations = {solver.PcgStats.NumIterationsRequired}," +
@@ -123,7 +123,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
 				Table<int, int, double> computedResults =
 					Utilities.FindNodalFieldValues(subdomain, freeDofs, model, algebraicModel, solver.LinearSystem.Solution);
-				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
+				Utilities.AssertSubset(expectedResults, computedResults, tolerance);
 			});
 
 			//Debug.WriteLine($"Num PCG iterations = {solver.PcgStats.NumIterationsRequired}," +
@@ -182,7 +182,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
 				Table<int, int, double> computedResults =
 					Utilities.FindNodalFieldValues(subdomain, freeDofs, model, algebraicModel, solver.LinearSystem.Solution);
-				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
+				Utilities.AssertSubset(expectedResults, computedResults, tolerance);
 			});
 
 			//Debug.WriteLine($"Num PCG iterations = {solver.PcgStats.NumIterationsRequired}," +

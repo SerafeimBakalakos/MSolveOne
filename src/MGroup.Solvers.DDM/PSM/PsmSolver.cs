@@ -22,6 +22,7 @@ using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.DDM.PSM.Vectors;
 using MGroup.Solvers.DofOrdering;
 using MGroup.Solvers.DofOrdering.Reordering;
+using MGroup.Solvers.Exceptions;
 using MGroup.Solvers.Logging;
 
 namespace MGroup.Solvers.DDM.Psm
@@ -175,6 +176,12 @@ namespace MGroup.Solvers.DDM.Psm
 			IterativeStatistics stats = interfaceProblemSolver.Solve(
 				interfaceProblemMatrix.Matrix, preconditioner.Preconditioner, interfaceProblemVectors.InterfaceProblemRhs,
 				interfaceProblemVectors.InterfaceProblemSolution, initalGuessIsZero);
+			if (!stats.HasConverged)
+			{
+				throw new SolverDidNotConvergeException($"{stats.NumIterationsRequired} iterations were run and the residual " +
+					$"norm is approximately {stats.ResidualNormRatioEstimation}");
+			}
+
 			InterfaceProblemSolutionStats = stats;
 			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
 			Debug.WriteLine("Iterations for boundary problem = " + stats.NumIterationsRequired);

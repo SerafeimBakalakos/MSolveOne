@@ -10,6 +10,7 @@ using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Solution;
 using MGroup.NumericalAnalyzers;
 using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
@@ -24,7 +25,7 @@ using Xunit;
 
 namespace MGroup.Solvers.DDM.Tests.PFetiDP
 {
-	public static class PFetiDPSolverTests
+	public static class SimplePFetiDPSolverTests
 	{
 		[Theory]
 		[InlineData(EnvironmentChoice.SequentialSharedEnvironment, false)]
@@ -85,7 +86,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
 				Table<int, int, double> computedResults =
 					Utilities.FindNodalFieldValues(subdomain, freeDofs, model, algebraicModel, solver.LinearSystem.Solution);
-				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
+				Utilities.AssertSubset(expectedResults, computedResults, tolerance);
 			});
 
 			//Debug.WriteLine($"Num PCG iterations = {solver.PcgStats.NumIterationsRequired}," +
@@ -159,7 +160,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 				ISubdomainFreeDofOrdering freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID];
 				Table<int, int, double> computedResults =
 					Utilities.FindNodalFieldValues(subdomain, freeDofs, model, algebraicModel, solver.LinearSystem.Solution);
-				Utilities.AssertEqual(expectedResults, computedResults, tolerance);
+				Utilities.AssertSubset(expectedResults, computedResults, tolerance);
 			});
 
 			//Debug.WriteLine($"Num PCG iterations = {solver.PcgStats.NumIterationsRequired}," +

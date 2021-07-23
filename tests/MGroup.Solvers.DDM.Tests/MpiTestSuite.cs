@@ -33,17 +33,17 @@ namespace MGroup.Solvers.DDM.Tests
                 MpiDebugUtilities.DoSerially(MPI.Communicator.world,
                     () => Console.WriteLine(
                         $"Process {MPI.Communicator.world.Rank}: Now running PsmSolverTests.TestForLine1DInternal"));
-                PsmSolverTests.TestForLine1DInternal(mpiEnvironment);
+                SimplePsmSolverTests.TestForLine1DInternal(mpiEnvironment);
 
                 MpiDebugUtilities.DoSerially(MPI.Communicator.world,
                     () => Console.WriteLine(
                         $"Process {MPI.Communicator.world.Rank}: Now running PsmSolverTests.TestForPlane2DInternal"));
-                PsmSolverTests.TestForPlane2DInternal(mpiEnvironment);
+                SimplePsmSolverTests.TestForPlane2DInternal(mpiEnvironment);
 
                 MpiDebugUtilities.DoSerially(MPI.Communicator.world,
                     () => Console.WriteLine(
                         $"Process {MPI.Communicator.world.Rank}: Now running PsmSolverTests.TestForBrick3DInternal"));
-                PsmSolverTests.TestForBrick3DInternal(mpiEnvironment);
+                SimplePsmSolverTests.TestForBrick3DInternal(mpiEnvironment);
 
                 MpiDebugUtilities.DoSerially(MPI.Communicator.world,
                     () => Console.WriteLine($"Process {MPI.Communicator.world.Rank}: All tests passed"));
