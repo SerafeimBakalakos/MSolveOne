@@ -35,7 +35,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 		public static void RunTest_8(
 			double stiffnessRatio, int numIterationsExpected, double errorExpected, EnvironmentChoice environmentChoice)
 			=> RunTest_8_Internal(
-				stiffnessRatio, numIterationsExpected, errorExpected, Utilities.CreateEnvironment(environmentChoice));
+				stiffnessRatio, numIterationsExpected, errorExpected, environmentChoice.CreateEnvironment());
 
 		internal static void RunTest_8_Internal(
 			double stiffnessRatio, int numIterationsExpected, double errorExpected, IComputeEnvironment environment)
@@ -91,7 +91,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 		public static void RunTest_9_1(
 			double stiffnessRatio, int numIterationsExpected, double errorExpected, EnvironmentChoice environmentChoice)
 			=> RunTest_9_1_Internal(
-				stiffnessRatio, numIterationsExpected, errorExpected, Utilities.CreateEnvironment(environmentChoice));
+				stiffnessRatio, numIterationsExpected, errorExpected, environmentChoice.CreateEnvironment());
 
 		internal static void RunTest_9_1_Internal(
 			double stiffnessRatio, int numIterationsExpected, double errorExpected,IComputeEnvironment environment)
@@ -147,7 +147,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 		public static void RunTest_9_2(
 			double stiffnessRatio, int numIterationsExpected, double errorExpected, EnvironmentChoice environmentChoice)
 			=> RunTest_9_2_Internal(
-				stiffnessRatio, numIterationsExpected, errorExpected, Utilities.CreateEnvironment(environmentChoice));
+				stiffnessRatio, numIterationsExpected, errorExpected, environmentChoice.CreateEnvironment());
 
 		internal static void RunTest_9_2_Internal(
 			double stiffnessRatio, int numIterationsExpected, double errorExpected, IComputeEnvironment environment)

@@ -34,7 +34,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 		[InlineData(EnvironmentChoice.TplSharedEnvironment, false)]
 		[InlineData(EnvironmentChoice.TplSharedEnvironment, true)]
 		public static void TestForBrick3D(EnvironmentChoice environmentChoice, bool isCoarseProblemDistributed)
-			=> TestForBrick3DInternal(Utilities.CreateEnvironment(environmentChoice), isCoarseProblemDistributed);
+			=> TestForBrick3DInternal(environmentChoice.CreateEnvironment(), isCoarseProblemDistributed);
 
 		internal static void TestForBrick3DInternal(IComputeEnvironment environment, bool isCoarseProblemDistributed)
 		{
@@ -111,7 +111,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 		[InlineData(EnvironmentChoice.TplSharedEnvironment, false)]
 		[InlineData(EnvironmentChoice.TplSharedEnvironment, true)]
 		public static void TestForPlane2D(EnvironmentChoice environmentChoice, bool isCoarseProblemDistributed)
-			=> TestForPlane2DInternal(Utilities.CreateEnvironment(environmentChoice), isCoarseProblemDistributed);
+			=> TestForPlane2DInternal(environmentChoice.CreateEnvironment(), isCoarseProblemDistributed);
 
 		internal static void TestForPlane2DInternal(IComputeEnvironment environment, bool isCoarseProblemDistributed)
 		{

@@ -29,7 +29,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
 		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
 		public static void TestForBrick3D(EnvironmentChoice environmentChoice)
-			=> TestForBrick3DInternal(Utilities.CreateEnvironment(environmentChoice));
+			=> TestForBrick3DInternal(environmentChoice.CreateEnvironment());
 
 		internal static void TestForBrick3DInternal(IComputeEnvironment environment)
 		{
@@ -85,7 +85,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
 		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
 		public static void TestForLine1D(EnvironmentChoice environmentChoice)
-			=> TestForLine1DInternal(Utilities.CreateEnvironment(environmentChoice));
+			=> TestForLine1DInternal(environmentChoice.CreateEnvironment());
 
 		internal static void TestForLine1DInternal(IComputeEnvironment environment)
 		{
@@ -137,7 +137,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
 		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
 		public static void TestForPlane2D(EnvironmentChoice environmentChoice)
-			=> TestForPlane2DInternal(Utilities.CreateEnvironment(environmentChoice));
+			=> TestForPlane2DInternal(environmentChoice.CreateEnvironment());
 
 		internal static void TestForPlane2DInternal(IComputeEnvironment environment)
 		{

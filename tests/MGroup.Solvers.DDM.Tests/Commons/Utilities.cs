@@ -11,7 +11,7 @@ using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Solvers.DofOrdering;
 using Xunit;
 
-namespace MGroup.Solvers.DDM.Tests
+namespace MGroup.Solvers.DDM.Tests.Commons
 {
 	public static class Utilities
 	{
@@ -29,14 +29,6 @@ namespace MGroup.Solvers.DDM.Tests
 				}
 			}
 			return true;
-		}
-
-		public static IComputeEnvironment CreateEnvironment(this EnvironmentChoice environmentChoice)
-		{
-			if (environmentChoice == EnvironmentChoice.SequentialSharedEnvironment) return new SequentialSharedEnvironment();
-			else if (environmentChoice == EnvironmentChoice.TplSharedEnvironment) return new TplSharedEnvironment();
-			else if (environmentChoice == EnvironmentChoice.MklEnvironment) return new MpiEnvironment();
-			else throw new NotImplementedException();
 		}
 	}
 }

@@ -23,7 +23,7 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 	{
 		private static readonly IComputeEnvironment environment = new SequentialSharedEnvironment();
 
-		[Fact]
+		//[Fact]
 		public static void RunFullScalabilityAnalysisCantilever2D()
 		{
 			string outputDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\results\cantilever2D\";
