@@ -46,20 +46,19 @@ namespace MGroup.Solvers.DDM
 			this.environment = environment;
 			this.model = model;
 			this.getSubdomainFreeDofs = getSubdomainFreeDofs;
-			Func<int, SortedSet<int>> findSubdomainNeighbors = subdomainID =>
+			this.neighborsPerSubdomain = environment.CreateDictionaryPerNode(subdomainID =>
 			{
 				ComputeNode computeNode = environment.GetComputeNode(subdomainID);
 				var neighbors = new SortedSet<int>();
 				neighbors.UnionWith(computeNode.Neighbors);
 				return neighbors;
-			};
-			this.neighborsPerSubdomain = environment.CreateDictionaryPerNode(findSubdomainNeighbors);
+			});
 		}
 
 		public DistributedOverlappingIndexer CreateDistributedVectorIndexer(Func<int, DofTable> getSubdomainDofs)
 		{
 			var indexer = new DistributedOverlappingIndexer(environment);
-			Action<int> initializeIndexer = subdomainID =>
+			environment.DoPerNode(subdomainID =>
 			{
 				DofTable subdomainDofs = getSubdomainDofs(subdomainID);
 
@@ -85,8 +84,7 @@ namespace MGroup.Solvers.DDM
 				}
 
 				indexer.GetLocalComponent(subdomainID).Initialize(subdomainDofs.EntryCount, allCommonDofIndices);
-			};
-			environment.DoPerNode(initializeIndexer);
+			});
 			return indexer;
 		}
 
@@ -115,15 +113,14 @@ namespace MGroup.Solvers.DDM
 		public void FindCommonDofsBetweenSubdomains()
 		{
 			// Find all dofs of each subdomain at the common nodes.
-			Action<int> findLocalDofsAtCommonNodes = subdomainID =>
+			environment.DoPerNode(subdomainID =>
 			{
 				Dictionary<int, DofSet> commonDofs = FindLocalSubdomainDofsAtCommonNodes(subdomainID);
 				commonDofsBetweenSubdomains[subdomainID] = commonDofs;
-			};
-			environment.DoPerNode(findLocalDofsAtCommonNodes);
+			});
 
 			// Send these dofs to the corresponding neighbors and receive theirs.
-			Func<int, AllToAllNodeData<int>> prepareDofsToSend = subdomainID =>
+			Dictionary<int, AllToAllNodeData<int>> transferDataPerSubdomain = environment.CreateDictionaryPerNode(subdomainID =>
 			{
 				var transferData = new AllToAllNodeData<int>();
 				transferData.sendValues = new ConcurrentDictionary<int, int[]>();
@@ -139,13 +136,11 @@ namespace MGroup.Solvers.DDM
 				// Let the environment create them, by using extra communication.
 				transferData.recvValues = new ConcurrentDictionary<int, int[]>();
 				return transferData;
-			};
-			Dictionary<int, AllToAllNodeData<int>> transferDataPerSubdomain =
-				environment.CreateDictionaryPerNode(prepareDofsToSend);
+			});
 			environment.NeighborhoodAllToAll(transferDataPerSubdomain, false);
 
 			// Find the intersection between the dofs of a subdomain and the ones received by its neighbor.
-			Action<int> processReceivedDofs = subdomainID =>
+			environment.DoPerNode(subdomainID =>
 			{
 				AllToAllNodeData<int> transferData = transferDataPerSubdomain[subdomainID];
 				foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
@@ -154,13 +149,12 @@ namespace MGroup.Solvers.DDM
 					commonDofsBetweenSubdomains[subdomainID][neighborID] =
 						commonDofsBetweenSubdomains[subdomainID][neighborID].IntersectionWith(receivedDofs);
 				}
-			};
-			environment.DoPerNode(processReceivedDofs);
+			});
 		}
 
 		public void FindCommonNodesBetweenSubdomains()
 		{
-			Action<int> findCommonNodes = subdomainID =>
+			environment.DoPerNode(subdomainID =>
 			{
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
 				var commonNodesOfThisSubdomain = new Dictionary<int, SortedSet<int>>();
@@ -187,8 +181,7 @@ namespace MGroup.Solvers.DDM
 					}
 				}
 				this.commonNodesWithNeighborsPerSubdomain[subdomainID] = commonNodesOfThisSubdomain;
-			};
-			environment.DoPerNode(findCommonNodes);
+			});
 		}
 
 		private Dictionary<int, DofSet> FindLocalSubdomainDofsAtCommonNodes(int subdomainID)

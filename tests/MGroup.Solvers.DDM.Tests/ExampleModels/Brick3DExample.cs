@@ -124,6 +124,11 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 				INode[] subdomainCorners = CornerNodeUtilities.FindCornersOfBrick3D(subdomain);
 				foreach (INode node in subdomainCorners)
 				{
+					if (node.Constraints.Count > 0)
+					{
+						continue;
+					}
+
 					if (node.Subdomains.Count > 2)
 					{
 						cornerNodes.Add(node.ID);
