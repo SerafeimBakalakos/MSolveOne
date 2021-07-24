@@ -198,7 +198,10 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public NodalResults ExtractGlobalResults(IGlobalVector vector, double differentValueTolerance)
 		{
-			//TODOMPI: This only works for shared memory environments.
+			if (!(environment is SequentialSharedEnvironment) && !(environment is TplSharedEnvironment))
+			{
+				throw new NotImplementedException();
+			}
 			var globalResults = new NodalResults(new Table<int, int, double>());
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{

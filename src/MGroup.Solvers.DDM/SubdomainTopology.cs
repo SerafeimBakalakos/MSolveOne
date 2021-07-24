@@ -67,8 +67,7 @@ namespace MGroup.Solvers.DDM
 				foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
 				{
 					DofSet commonDofs = GetCommonDofsOfSubdomains(subdomainID, neighborID);
-					var commonDofIndices = new int[commonDofs.Count()];
-					int idx = 0;
+					var commonDofIndices = new List<int>(commonDofs.Count());
 					foreach ((int nodeID, int dofID) in commonDofs.EnumerateNodesDofs())
 					{
 						//TODO: It would be faster to iterate each node and then its dofs. Same for DofTable. 
@@ -79,10 +78,10 @@ namespace MGroup.Solvers.DDM
 						bool isRelevant = subdomainDofs.TryGetValue(node, dof, out int subdomainIdx);
 						if (isRelevant)
 						{
-							commonDofIndices[idx++] = subdomainIdx;
+							commonDofIndices.Add(subdomainIdx);
 						}
 					}
-					allCommonDofIndices[neighborID] = commonDofIndices;
+					allCommonDofIndices[neighborID] = commonDofIndices.ToArray();
 				}
 
 				indexer.GetLocalComponent(subdomainID).Initialize(subdomainDofs.EntryCount, allCommonDofIndices);

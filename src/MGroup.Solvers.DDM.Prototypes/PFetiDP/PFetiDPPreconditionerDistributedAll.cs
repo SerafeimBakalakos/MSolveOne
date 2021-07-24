@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -35,13 +35,17 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 			BlockMatrix Krce = fetiDPStiffnesses.Krce;
 			BlockMatrix invKrre = fetiDPStiffnesses.InvKrre;
 
-			int[][] multiplicities = Mbe.ColMultiplicities;
-			Wbe.RowMultiplicities = Wbe.ColMultiplicities = multiplicities;
-			Nrbe.RowMultiplicities = Nrbe.ColMultiplicities = multiplicities;
-			Ncbe.RowMultiplicities = Ncbe.ColMultiplicities = multiplicities;
-			Kcre.RowMultiplicities = Kcre.ColMultiplicities = multiplicities;
-			Krce.RowMultiplicities = Krce.ColMultiplicities = multiplicities;
-			invKrre.RowMultiplicities = invKrre.ColMultiplicities = multiplicities;
+			int[][] multiplicitiesBoundary = Mbe.ColMultiplicities;
+			int[][] multiplicitiesCorner = coarseProblem.MatrixMce.ColMultiplicities;
+			Wbe.RowMultiplicities = Wbe.ColMultiplicities = multiplicitiesBoundary;
+			Nrbe.RowMultiplicities = Nrbe.ColMultiplicities = multiplicitiesBoundary;
+			Ncbe.RowMultiplicities = multiplicitiesCorner;
+			Ncbe.ColMultiplicities = multiplicitiesBoundary;
+			Kcre.RowMultiplicities = multiplicitiesCorner;
+			Kcre.ColMultiplicities = multiplicitiesBoundary;
+			Krce.RowMultiplicities = multiplicitiesBoundary;
+			Krce.ColMultiplicities = multiplicitiesCorner;
+			invKrre.RowMultiplicities = invKrre.ColMultiplicities = multiplicitiesBoundary;
 
 			this.A1 = new MatrixProduct(Mbe, Wbe, Nrbe.Transpose(), invKrre, Nrbe, Wbe);
 			this.A21 = Ncbe.Transpose();

@@ -51,13 +51,14 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
 				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
-			var pcgBuilder = new PcgAlgorithm.Builder();
-			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-			pcgBuilder.ResidualTolerance = 1E-10;
+			
 			if (isCoarseProblemDistributed)
 			{
+				var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
+				coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+				coarseProblemPcgBuilder.ResidualTolerance = 1E-12;
 				var coarseProblemFactory = new FetiDPCoarseProblemDistributed.Factory();
-				coarseProblemFactory.CoarseProblemSolver = pcgBuilder.Build();
+				coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
 				solverFactory.CoarseProblemFactory = coarseProblemFactory;
 			}
 			else 
@@ -65,7 +66,12 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
 				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
 			}
-			solverFactory.InterfaceProblemSolver = pcgBuilder.Build();
+
+			var interfaceProblemPcgBuilder = new PcgAlgorithm.Builder();
+			interfaceProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+			interfaceProblemPcgBuilder.ResidualTolerance = 1E-10;
+			solverFactory.InterfaceProblemSolver = interfaceProblemPcgBuilder.Build();
+
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 
@@ -122,13 +128,14 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
 				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
-			var pcgBuilder = new PcgAlgorithm.Builder();
-			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-			pcgBuilder.ResidualTolerance = 1E-10;
+			
 			if (isCoarseProblemDistributed)
 			{
+				var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
+				coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+				coarseProblemPcgBuilder.ResidualTolerance = 1E-12;
 				var coarseProblemFactory = new FetiDPCoarseProblemDistributed.Factory();
-				coarseProblemFactory.CoarseProblemSolver = pcgBuilder.Build();
+				coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
 				solverFactory.CoarseProblemFactory = coarseProblemFactory;
 			}
 			else 
@@ -136,7 +143,12 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
 				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
 			}
-			solverFactory.InterfaceProblemSolver = pcgBuilder.Build();
+
+			var interfaceProblemPcgBuilder = new PcgAlgorithm.Builder();
+			interfaceProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+			interfaceProblemPcgBuilder.ResidualTolerance = 1E-10;
+			solverFactory.InterfaceProblemSolver = interfaceProblemPcgBuilder.Build();
+
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 
