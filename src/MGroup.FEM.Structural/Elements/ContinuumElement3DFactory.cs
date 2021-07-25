@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using ISAAR.MSolve.FEM.Elements;
 using ISAAR.MSolve.FEM.Interpolation;
 using MGroup.Constitutive.Structural;
@@ -133,7 +133,7 @@ namespace MGroup.FEM.Structural.Elements
 			return CreateElement(cellType, nodes, commonMaterial, commonDynamicProperties);
 		}
 
-		private ContinuumElement3D CreateElement(CellType cellType, IReadOnlyList<Node> nodes,
+		public ContinuumElement3D CreateElement(CellType cellType, IReadOnlyList<Node> nodes,
 			IContinuumMaterial3D commonMaterial, IDynamicMaterial commonDynamicProperties)
 		{
 			int numGPs = integrationsForStiffness[cellType].IntegrationPoints.Count;

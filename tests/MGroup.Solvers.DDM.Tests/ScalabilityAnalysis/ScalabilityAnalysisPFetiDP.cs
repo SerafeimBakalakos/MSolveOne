@@ -37,20 +37,20 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
 		}
 
-		//[Fact]
-		//public static void RunFullScalabilityAnalysisCantilever3D()
-		//{
-		//	IComputeEnvironment environment = new SequentialSharedEnvironment();
-		//	string outputDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\results\cantilever3D\";
-		//	var scalabilityAnalysis = new ScalabilityAnalysisPFetiDP();
-		//	scalabilityAnalysis.ModelBuilder = new CantilevelBeam3D();
-		//	scalabilityAnalysis.EnableNativeDlls = true;
-		//	scalabilityAnalysis.IterativeResidualTolerance = 1E-6;
+		[Fact]
+		public static void RunFullScalabilityAnalysisCantilever3D()
+		{
+			IComputeEnvironment environment = new SequentialSharedEnvironment();
+			string outputDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\results\cantilever3D\";
+			var scalabilityAnalysis = new ScalabilityAnalysisPFetiDP();
+			scalabilityAnalysis.ModelBuilder = new CantilevelBeam3D();
+			scalabilityAnalysis.EnableNativeDlls = false;
+			scalabilityAnalysis.IterativeResidualTolerance = 1E-6;
 
-		//	scalabilityAnalysis.RunParametricConstNumSubdomains(outputDirectory);
-		//	scalabilityAnalysis.RunParametricConstNumElements(outputDirectory);
-		//	scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
-		//}
+			scalabilityAnalysis.RunParametricConstNumSubdomains(outputDirectory);
+			//scalabilityAnalysis.RunParametricConstNumElements(outputDirectory);
+			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
+		}
 
 		[Fact]
 		public static void RunFullScalabilityAnalysisRve2D()
@@ -67,20 +67,20 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
 		}
 
-		//[Fact]
-		//public static void RunFullScalabilityAnalysisRve3D()
-		//{
-		//  IComputeEnvironment environment = new SequentialSharedEnvironment();
-		//	string outputDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\results\rve3D\";
-		//	var scalabilityAnalysis = new ScalabilityAnalysisPFetiDP();
-		//	scalabilityAnalysis.ModelBuilder = new Rve3D();
-		//	scalabilityAnalysis.EnableNativeDlls = true;
-		//	scalabilityAnalysis.IterativeResidualTolerance = 1E-6;
+		[Fact]
+		public static void RunFullScalabilityAnalysisRve3D()
+		{
+			IComputeEnvironment environment = new SequentialSharedEnvironment();
+			string outputDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\results\rve3D\";
+			var scalabilityAnalysis = new ScalabilityAnalysisPFetiDP();
+			scalabilityAnalysis.ModelBuilder = new Rve3D();
+			scalabilityAnalysis.EnableNativeDlls = false;
+			scalabilityAnalysis.IterativeResidualTolerance = 1E-6;
 
-		//	scalabilityAnalysis.RunParametricConstNumSubdomains(outputDirectory);
-		//	scalabilityAnalysis.RunParametricConstNumElements(outputDirectory);
-		//	scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
-		//}
+			scalabilityAnalysis.RunParametricConstNumSubdomains(outputDirectory);
+			//scalabilityAnalysis.RunParametricConstNumElements(outputDirectory);
+			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
+		}
 
 		public override (ISolver solver, IAlgebraicModel algebraicModel) CreateSolver(
 			IModel model, ComputeNodeTopology nodeTopology)

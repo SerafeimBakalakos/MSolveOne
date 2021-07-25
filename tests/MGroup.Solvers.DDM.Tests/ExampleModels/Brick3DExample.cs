@@ -53,36 +53,14 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 
 		public static Model CreateSingleSubdomainModel()
 		{
-			var model = new Model();
-			model.AllDofs.AddDof(StructuralDof.TranslationX);
-			model.AllDofs.AddDof(StructuralDof.TranslationY);
-			model.AllDofs.AddDof(StructuralDof.TranslationZ);
-			model.SubdomainsDictionary[0] = new Subdomain(0);
-
-			var mesh = new UniformCartesianMesh3D.Builder(MinCoords, MaxCoords, NumElements).
-				SetMajorMinorAxis(0, 2).SetElementNodeOrderBathe().BuildMesh();
-
-			// Nodes
-			foreach ((int id, double[] coords) in mesh.EnumerateNodes())
-			{
-				model.NodesDictionary[id] = new Node(id, coords[0], coords[1], coords[2]);
-			}
-
-			// Materials
-			var material = new ElasticMaterial3D() { YoungModulus = E, PoissonRatio = v };
-			var dynamicProperties = new DynamicMaterial(1.0, 1.0, 1.0);
-
-			// Elements
-			var elemFactory = new ContinuumElement3DFactory(material, dynamicProperties);
-			foreach ((int elementID, int[] nodeIDs) in mesh.EnumerateElements())
-			{
-				Node[] nodes = nodeIDs.Select(n => model.NodesDictionary[n]).ToArray();
-				var elementType = elemFactory.CreateElement(mesh.CellType, nodes);
-				var element = new Element() { ID = elementID, ElementType = elementType };
-				foreach (var node in nodes) element.AddNode(node);
-				model.ElementsDictionary[element.ID] = element;
-				model.SubdomainsDictionary[0].Elements.Add(element);
-			}
+			var builder = new UniformDdmModelBuilder3D();
+			builder.MinCoords = MinCoords;
+			builder.MaxCoords = MaxCoords;
+			builder.NumElementsTotal = NumElements;
+			builder.NumSubdomains = NumSubdomains;
+			builder.NumClusters = NumClusters;
+			builder.MaterialHomogeneous = new ElasticMaterial3D() { YoungModulus = E, PoissonRatio = v };
+			Model model = builder.BuildSingleSubdomainModel();
 
 			// Boundary conditions
 			//TODO: hardcode the node IDs
@@ -117,33 +95,8 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			return model;
 		}
 
-		public static UserDefinedCornerDofSelection GetCornerDofs(IModel model)
-		{
-			var cornerNodes = new HashSet<int>();
-			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
-			{
-				INode[] subdomainCorners = CornerNodeUtilities.FindCornersOfBrick3D(subdomain);
-				foreach (INode node in subdomainCorners)
-				{
-					if (node.Constraints.Count > 0)
-					{
-						continue;
-					}
-
-					if (node.Subdomains.Count > 2)
-					{
-						cornerNodes.Add(node.ID);
-					}
-				}
-			}
-
-			var cornerDofs = new UserDefinedCornerDofSelection();
-			foreach (int node in cornerNodes)
-			{
-				cornerDofs.AddCornerNode(node);
-			}
-			return cornerDofs;
-		}
+		public static ICornerDofSelection GetCornerDofs(IModel model) => UniformDdmModelBuilder3D.FindCornerDofs(model);
+		
 
 		public static NodalResults GetExpectedNodalValues()
 		{

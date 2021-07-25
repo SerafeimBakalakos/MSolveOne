@@ -140,6 +140,7 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 			builder.PrescribeDisplacement(UniformDdmModelBuilder2D.BoundaryRegion.UpperSide, StructuralDof.TranslationY, 0.0);
 			builder.PrescribeDisplacement(UniformDdmModelBuilder2D.BoundaryRegion.LowerSide, StructuralDof.TranslationX, 0.0);
 			builder.PrescribeDisplacement(UniformDdmModelBuilder2D.BoundaryRegion.LowerSide, StructuralDof.TranslationY, 0.0);
+
 			builder.PrescribeDisplacement(UniformDdmModelBuilder2D.BoundaryRegion.Center, StructuralDof.TranslationX,
 				CenterDisplacement[0]);
 			builder.PrescribeDisplacement(UniformDdmModelBuilder2D.BoundaryRegion.Center, StructuralDof.TranslationY,

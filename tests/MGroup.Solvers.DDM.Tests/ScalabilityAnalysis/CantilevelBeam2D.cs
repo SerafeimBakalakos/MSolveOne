@@ -68,7 +68,7 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 			numElements.Add(new int[] { 64, 16 });
 			numElements.Add(new int[] { 128, 32 });
 			numElements.Add(new int[] { 256, 64 });
-			numElements.Add(new int[] { 512, 128 });
+			//numElements.Add(new int[] { 512, 128 });
 			//numElements.Add(new int[] { 1024, 256 });
 			//numElements.Add(new int[] { 2048, 512 });
 
