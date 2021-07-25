@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using MGroup.Constitutive.Structural;
 using MGroup.Environments;
+using MGroup.Environments.Mpi;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Solution;
 using MGroup.MSolve.Solution.AlgebraicModel;
@@ -33,13 +34,10 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 			//CoarseProblemSize = -1;
 		}
 
-		public void RunParametricConstNumSubdomains(string outputDirectory)
+		public void RunParametricConstNumSubdomains(IComputeEnvironment environment, string outputDirectory)
 		{
 			string path = outputDirectory + "results_const_subdomains.txt";
-			if (File.Exists(path))
-			{
-				File.Delete(path);
-			}
+			environment.DoSingle(() => RenewFile(path));
 
 			(List<int[]> numElements, int[] numSubdomains) = ModelBuilder.GetParametricConfigConstNumSubdomains();
 			for (int i = 0; i < numElements.Count; i++)
@@ -47,18 +45,15 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 				Clear();
 				ModelBuilder.NumElementsPerAxis = numElements[i];
 				ModelBuilder.NumSubdomainsPerAxis = numSubdomains;
-				RunSingleAnalysis();
-				PrintAnalysisData(path);
+				RunSingleAnalysis(environment);
+				environment.DoSingle(() => PrintAnalysisData(path));
 			}
 		}
 
-		public void RunParametricConstNumElements(string outputDirectory)
+		public void RunParametricConstNumElements(IComputeEnvironment environment, string outputDirectory)
 		{
 			string path = outputDirectory + "results_const_elements.txt";
-			if (File.Exists(path))
-			{
-				File.Delete(path);
-			}
+			environment.DoSingle(() => RenewFile(path));
 
 			(int[] numElements, List<int[]> numSubdomains) = ModelBuilder.GetParametricConfigConstNumElements();
 			for (int i = 0; i < numSubdomains.Count; i++)
@@ -66,19 +61,16 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 				Clear();
 				ModelBuilder.NumElementsPerAxis = numElements;
 				ModelBuilder.NumSubdomainsPerAxis = numSubdomains[i];
-				RunSingleAnalysis();
-				PrintAnalysisData(path);
+				RunSingleAnalysis(environment);
+				environment.DoSingle(() => PrintAnalysisData(path));
 			}
 		}
 
-		public void RunParametricConstSubdomainPerElementSize(string outputDirectory)
+		public void RunParametricConstSubdomainPerElementSize(IComputeEnvironment environment, string outputDirectory)
 		{
 
 			string path = outputDirectory + "results_const_subdomain_per_element_size.txt";
-			if (File.Exists(path))
-			{
-				File.Delete(path);
-			}
+			environment.DoSingle(() => RenewFile(path));
 
 			(List<int[]> numElements, List<int[]> numSubdomains) = ModelBuilder.GetParametricConfigConstSubdomainPerElementSize();
 			for (int i = 0; i < numSubdomains.Count; i++)
@@ -86,16 +78,16 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 				Clear();
 				ModelBuilder.NumElementsPerAxis = numElements[i];
 				ModelBuilder.NumSubdomainsPerAxis = numSubdomains[i];
-				RunSingleAnalysis();
-				PrintAnalysisData(path);
+				RunSingleAnalysis(environment);
+				environment.DoSingle(() => PrintAnalysisData(path));
 			}
 		}
 
-		public void RunSingleAnalysis()
+		public void RunSingleAnalysis(IComputeEnvironment environment)
 		{
 			(IModel model, ComputeNodeTopology nodeTopology) = ModelBuilder.CreateMultiSubdomainModel();
 			model.ConnectDataStructures();
-			(ISolver solver, IAlgebraicModel algebraicModel) = CreateSolver(model, nodeTopology);
+			(ISolver solver, IAlgebraicModel algebraicModel) = CreateSolver(environment, model, nodeTopology);
 
 			// Structural problem provider
 			var provider = new ProblemStructural(model, algebraicModel, solver);
@@ -114,7 +106,7 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 		}
 
 		public abstract (ISolver solver, IAlgebraicModel algebraicModel) CreateSolver(
-			IModel model, ComputeNodeTopology nodeTopology);
+			IComputeEnvironment environment, IModel model, ComputeNodeTopology nodeTopology);
 
 		private void PrintAnalysisData(string path)
 		{
@@ -148,6 +140,14 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 				//writer.WriteLine($"Coarse problem size: {CoarseProblemSize}");
 				writer.WriteLine($"Number of solver iterations: {NumSolverIterations}");
 				writer.WriteLine();
+			}
+		}
+
+		private void RenewFile(string path)
+		{
+			if (File.Exists(path))
+			{
+				File.Delete(path);
 			}
 		}
 	}

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.Environments;
+using MGroup.Environments.Mpi;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods;
 using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;
@@ -21,69 +22,86 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 {
 	public class ScalabilityAnalysisPFetiDP : ScalabilityAnalysisBase
 	{
-		private static readonly IComputeEnvironment environment = new SequentialSharedEnvironment();
+		private const string workingDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\scalability\";
 
-		[Fact]
-		public static void RunFullScalabilityAnalysisCantilever2D()
+		[Theory]
+		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
+		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
+		public static void RunFullScalabilityAnalysisCantilever2D(EnvironmentChoice environmentChoice)
+			=> RunFullScalabilityAnalysisCantilever2DInternal(environmentChoice.CreateEnvironment());
+
+		internal static void RunFullScalabilityAnalysisCantilever2DInternal(IComputeEnvironment environment)
 		{
-			string outputDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\results\cantilever2D\";
+			string outputDirectory = workingDirectory + @"\cantilever2D\";
 			var scalabilityAnalysis = new ScalabilityAnalysisPFetiDP();
 			scalabilityAnalysis.ModelBuilder = new CantilevelBeam2D();
-			scalabilityAnalysis.EnableNativeDlls = false;
+			scalabilityAnalysis.EnableNativeDlls = true;
 			scalabilityAnalysis.IterativeResidualTolerance = 1E-6;
 
-			scalabilityAnalysis.RunParametricConstNumSubdomains(outputDirectory);
-			//scalabilityAnalysis.RunParametricConstNumElements(outputDirectory);
-			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
+			scalabilityAnalysis.RunParametricConstNumSubdomains(environment, outputDirectory);
+			//scalabilityAnalysis.RunParametricConstNumElements(environment, outputDirectory);
+			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(environment, outputDirectory);
 		}
 
-		[Fact]
-		public static void RunFullScalabilityAnalysisCantilever3D()
+		[Theory]
+		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
+		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
+		public static void RunFullScalabilityAnalysisCantilever3D(EnvironmentChoice environmentChoice)
+			=> RunFullScalabilityAnalysisCantilever3DInternal(environmentChoice.CreateEnvironment());
+
+		internal static void RunFullScalabilityAnalysisCantilever3DInternal(IComputeEnvironment environment)
 		{
-			IComputeEnvironment environment = new SequentialSharedEnvironment();
-			string outputDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\results\cantilever3D\";
+			string outputDirectory = workingDirectory + @"\cantilever3D\";
 			var scalabilityAnalysis = new ScalabilityAnalysisPFetiDP();
 			scalabilityAnalysis.ModelBuilder = new CantilevelBeam3D();
-			scalabilityAnalysis.EnableNativeDlls = false;
+			scalabilityAnalysis.EnableNativeDlls = true;
 			scalabilityAnalysis.IterativeResidualTolerance = 1E-6;
 
-			scalabilityAnalysis.RunParametricConstNumSubdomains(outputDirectory);
-			//scalabilityAnalysis.RunParametricConstNumElements(outputDirectory);
-			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
+			scalabilityAnalysis.RunParametricConstNumSubdomains(environment, outputDirectory);
+			//scalabilityAnalysis.RunParametricConstNumElements(environment, outputDirectory);
+			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(environment, outputDirectory);
 		}
 
-		[Fact]
-		public static void RunFullScalabilityAnalysisRve2D()
+		[Theory]
+		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
+		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
+		public static void RunFullScalabilityAnalysisRve2D(EnvironmentChoice environmentChoice)
+			=> RunFullScalabilityAnalysisRve2DInternal(environmentChoice.CreateEnvironment());
+
+		internal static void RunFullScalabilityAnalysisRve2DInternal(IComputeEnvironment environment)
 		{
-			IComputeEnvironment environment = new SequentialSharedEnvironment();
-			string outputDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\results\rve2D\";
+			string outputDirectory = workingDirectory + @"\rve2D\";
 			var scalabilityAnalysis = new ScalabilityAnalysisPFetiDP();
 			scalabilityAnalysis.ModelBuilder = new Rve2D();
-			scalabilityAnalysis.EnableNativeDlls = false;
+			scalabilityAnalysis.EnableNativeDlls = true;
 			scalabilityAnalysis.IterativeResidualTolerance = 1E-6;
 
-			scalabilityAnalysis.RunParametricConstNumSubdomains(outputDirectory);
-			//scalabilityAnalysis.RunParametricConstNumElements(outputDirectory);
-			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
+			scalabilityAnalysis.RunParametricConstNumSubdomains(environment, outputDirectory);
+			//scalabilityAnalysis.RunParametricConstNumElements(environment, outputDirectory);
+			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(environment, outputDirectory);
 		}
 
-		[Fact]
-		public static void RunFullScalabilityAnalysisRve3D()
+		[Theory]
+		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
+		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
+		public static void RunFullScalabilityAnalysisRve3D(EnvironmentChoice environmentChoice)
+			=> RunFullScalabilityAnalysisRve3DInternal(environmentChoice.CreateEnvironment());
+
+		internal static void RunFullScalabilityAnalysisRve3DInternal(IComputeEnvironment environment)
 		{
-			IComputeEnvironment environment = new SequentialSharedEnvironment();
-			string outputDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\results\rve3D\";
+			string outputDirectory = workingDirectory + @"\rve3D\";
 			var scalabilityAnalysis = new ScalabilityAnalysisPFetiDP();
 			scalabilityAnalysis.ModelBuilder = new Rve3D();
-			scalabilityAnalysis.EnableNativeDlls = false;
+			scalabilityAnalysis.EnableNativeDlls = true;
 			scalabilityAnalysis.IterativeResidualTolerance = 1E-6;
 
-			scalabilityAnalysis.RunParametricConstNumSubdomains(outputDirectory);
-			//scalabilityAnalysis.RunParametricConstNumElements(outputDirectory);
-			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
+			scalabilityAnalysis.RunParametricConstNumSubdomains(environment, outputDirectory);
+			//scalabilityAnalysis.RunParametricConstNumElements(environment, outputDirectory);
+			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(environment, outputDirectory);
 		}
 
 		public override (ISolver solver, IAlgebraicModel algebraicModel) CreateSolver(
-			IModel model, ComputeNodeTopology nodeTopology)
+			IComputeEnvironment environment, IModel model, ComputeNodeTopology nodeTopology)
 		{
 			ICornerDofSelection cornerDofs = ModelBuilder.GetCornerDofs(model);
 			environment.Initialize(nodeTopology);
@@ -109,11 +127,21 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, psmMatricesFactory, cornerDofs, fetiDPMatricesFactory);
+
+			if (environment is MpiEnvironment)
+			{
+				var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
+				coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+				coarseProblemPcgBuilder.ResidualTolerance = 1E-12;
+				var coarseProblemFactory = new FetiDPCoarseProblemDistributed.Factory();
+				coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
+				fetiDPCoarseProblemFactory = coarseProblemFactory;
+			}
 			solverFactory.CoarseProblemFactory = fetiDPCoarseProblemFactory;
 
 			var interfaceProblemPcgBuilder = new PcgAlgorithm.Builder();
 			interfaceProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-			interfaceProblemPcgBuilder.ResidualTolerance = 1E-10;
+			interfaceProblemPcgBuilder.ResidualTolerance = 1E-7;
 			solverFactory.InterfaceProblemSolver = interfaceProblemPcgBuilder.Build();
 			solverFactory.IsHomogeneousProblem = true;
 

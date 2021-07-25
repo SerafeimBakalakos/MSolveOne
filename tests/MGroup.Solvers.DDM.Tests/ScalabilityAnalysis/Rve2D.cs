@@ -18,7 +18,7 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 
 		public int[] NumSubdomainsPerAxis { get; set; }
 
-		public int[] NumClustersPerAxis { get; set; } = { 1, 1 };
+		public int[] NumClustersPerAxis { get; set; } = { 2, 2 };
 
 		public int[] SubdomainSizePerElementSize 
 		{ 
