@@ -1,22 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using MGroup.Constitutive.Structural;
 using MGroup.Constitutive.Structural.PlanarElements;
 using MGroup.Environments;
 using MGroup.FEM.Entities;
-using MGroup.FEM.Structural.Elements;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Loads;
-using MGroup.MSolve.Meshes.Structured;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
+using MGroup.Solvers.DDM.Tests.Commons;
 using MGroup.Solvers.Results;
 using Xunit;
 
@@ -327,34 +322,14 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 
 		public static Model CreateSingleSubdomainModel()
 		{
-			var model = new Model();
-			model.AllDofs.AddDof(StructuralDof.TranslationX);
-			model.AllDofs.AddDof(StructuralDof.TranslationY);
-			model.SubdomainsDictionary[0] = new Subdomain(0);
-
-			var mesh = new UniformCartesianMesh2D.Builder(MinCoords, MaxCoords, NumElements).SetMajorAxis(0).BuildMesh();
-
-			// Nodes
-			foreach ((int id, double[] coords) in mesh.EnumerateNodes())
-			{
-				model.NodesDictionary[id] = new Node(id, coords[0], coords[1]);
-			}
-
-			// Materials
-			var material = new ElasticMaterial2D(StressState2D.PlaneStress) { YoungModulus = E, PoissonRatio = v };
-			var dynamicProperties = new DynamicMaterial(1.0, 1.0, 1.0);
-
-			// Elements
-			var elemFactory = new ContinuumElement2DFactory(thickness, material, dynamicProperties);
-			foreach ((int elementID, int[] nodeIDs) in mesh.EnumerateElements())
-			{
-				Node[] nodes = nodeIDs.Select(n => model.NodesDictionary[n]).ToArray();
-				var elementType = elemFactory.CreateElement(mesh.CellType, nodes);
-				var element = new Element() { ID = elementID, ElementType = elementType };
-				foreach (var node in nodes) element.AddNode(node);
-				model.ElementsDictionary[element.ID] = element;
-				model.SubdomainsDictionary[0].Elements.Add(element);
-			}
+			var builder = new UniformDdmModelBuilder2D();
+			builder.MinCoords = MinCoords;
+			builder.MaxCoords = MaxCoords;
+			builder.NumElementsTotal = NumElements;
+			builder.NumSubdomains = NumSubdomains;
+			builder.NumClusters = NumClusters;
+			builder.MaterialHomogeneous = new ElasticMaterial2D(StressState2D.PlaneStress) { YoungModulus = E, PoissonRatio = v };
+			Model model = builder.BuildSingleSubdomainModel();
 
 			// Boundary conditions
 			model.NodesDictionary[0].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
@@ -373,33 +348,10 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			return model;
 		}
 
-		public static UserDefinedCornerDofSelection GetCornerDofs(IModel model)
+		public static ICornerDofSelection GetCornerDofs(IModel model)
 		{
-			var cornerNodes = new HashSet<int>();
-			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
-			{
-				INode[] subdomainCorners = CornerNodeUtilities.FindCornersOfRectangle2D(subdomain);
-				foreach (INode node in subdomainCorners)
-				{
-					if (node.Constraints.Count > 0)
-					{
-						continue;
-					}
-
-					if (node.Subdomains.Count > 1) //TODO for some reason this does not work if > 2. One Krr is singular.
-					{
-						cornerNodes.Add(node.ID);
-					}
-				}
-			}
-
 			//int[] cornerNodes = { 20, 22, 24, 38, 40, 42, 56, 58, 60 };
-			var cornerDofs = new UserDefinedCornerDofSelection();
-			foreach (int node in cornerNodes)
-			{
-				cornerDofs.AddCornerNode(node);
-			}
-			return cornerDofs;
+			return UniformDdmModelBuilder2D.FindCornerDofs(model, 2);
 		}
 
 		public static NodalResults GetExpectedNodalValues()

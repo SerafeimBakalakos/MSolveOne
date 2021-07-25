@@ -93,10 +93,9 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 
 		public void RunSingleAnalysis()
 		{
-			(IModel model, ICornerDofSelection cornerDofs, ComputeNodeTopology nodeTopology) 
-				= ModelBuilder.CreateMultiSubdomainModel();
+			(IModel model, ComputeNodeTopology nodeTopology) = ModelBuilder.CreateMultiSubdomainModel();
 			model.ConnectDataStructures();
-			(ISolver solver, IAlgebraicModel algebraicModel) = CreateSolver(model, cornerDofs, nodeTopology);
+			(ISolver solver, IAlgebraicModel algebraicModel) = CreateSolver(model, nodeTopology);
 
 			// Structural problem provider
 			var provider = new ProblemStructural(model, algebraicModel, solver);
@@ -115,7 +114,7 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 		}
 
 		public abstract (ISolver solver, IAlgebraicModel algebraicModel) CreateSolver(
-			IModel model, ICornerDofSelection cornerDofs, ComputeNodeTopology nodeTopology);
+			IModel model, ComputeNodeTopology nodeTopology);
 
 		private void PrintAnalysisData(string path)
 		{

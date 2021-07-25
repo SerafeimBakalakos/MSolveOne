@@ -17,9 +17,11 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 
 		int[] SubdomainSizePerElementSize { get; }
 
-		(IModel model, ICornerDofSelection cornerDofs, ComputeNodeTopology nodeTopology) CreateMultiSubdomainModel();
+		(IModel model, ComputeNodeTopology nodeTopology) CreateMultiSubdomainModel();
 
 		IModel CreateSingleSubdomainModel();
+
+		ICornerDofSelection GetCornerDofs(IModel model);
 
 		(List<int[]> numElements, int[] numSubdomains) GetParametricConfigConstNumSubdomains();
 

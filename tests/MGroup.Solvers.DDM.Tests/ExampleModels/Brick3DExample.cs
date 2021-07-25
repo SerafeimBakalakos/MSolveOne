@@ -15,6 +15,7 @@ using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Meshes.Structured;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
+using MGroup.Solvers.DDM.Tests.Commons;
 using MGroup.Solvers.Results;
 
 //TODO: different number of clusters, subdomains, elements per axis. Try to make this as nonsymmetric as possible, 

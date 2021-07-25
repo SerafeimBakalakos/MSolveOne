@@ -1,18 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using MGroup.Constitutive.Structural;
 using MGroup.Constitutive.Structural.PlanarElements;
 using MGroup.Environments;
-using MGroup.FEM.Entities;
-using MGroup.FEM.Structural.Elements;
 using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Discretization.Loads;
-using MGroup.MSolve.Meshes.Structured;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
-using MGroup.Solvers.DDM.Partitioning;
-using MGroup.Solvers.DDM.Tests.ExampleModels;
+using MGroup.Solvers.DDM.Tests.Commons;
 
 namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 {
@@ -47,25 +41,23 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 
 		public double EndPointLoad { get; set; } = -2E4;
 
-		public (IModel model, ICornerDofSelection cornerDofs, ComputeNodeTopology nodeTopology) CreateMultiSubdomainModel()
+		public (IModel model, ComputeNodeTopology nodeTopology) CreateMultiSubdomainModel()
 		{
-			var model = CreateSingleSubdomainModel();
-			var mesh = new UniformCartesianMesh2D.Builder(new double[2], DomainLengthPerAxis, NumElementsPerAxis)
-				.SetMajorAxis(0).BuildMesh();
-			var partitioner = new UniformMeshPartitioner2D(mesh, NumSubdomainsPerAxis, NumClustersPerAxis);
-			partitioner.Partition(model);
-			ModelUtilities.DecomposeIntoSubdomains(model, partitioner.NumSubdomainsTotal, partitioner.GetSubdomainOfElement);
-
-			var topology = new ComputeNodeTopology();
-			for (int s = 0; s < partitioner.NumSubdomainsTotal; ++s)
-			{
-				topology.AddNode(s, partitioner.GetNeighboringSubdomains(s), partitioner.GetClusterOfSubdomain(s));
-			}
-
-			return (model, GetCornerDofs(model), topology);
+			UniformDdmModelBuilder2D builder = CreateDefaultModelBuilder();
+			builder.NumSubdomains = NumSubdomainsPerAxis;
+			builder.NumClusters = NumClustersPerAxis;
+			return builder.BuildMultiSubdomainModel();
 		}
 
-		IModel IModelBuilder.CreateSingleSubdomainModel() => CreateSingleSubdomainModel();
+		public IModel CreateSingleSubdomainModel()
+		{
+			UniformDdmModelBuilder2D builder = CreateDefaultModelBuilder();
+			builder.NumSubdomains = new int[] { 1, 1 };
+			builder.NumClusters = new int[] { 1, 1 };
+			return builder.BuildSingleSubdomainModel();
+		}
+
+		public ICornerDofSelection GetCornerDofs(IModel model) => UniformDdmModelBuilder2D.FindCornerDofs(model, 2);
 
 		public (List<int[]> numElements, int[] numSubdomains) GetParametricConfigConstNumSubdomains()
 		{
@@ -123,93 +115,25 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 			return (numElements, numSubdomains);
 		}
 
-		private Model CreateSingleSubdomainModel()
+		private UniformDdmModelBuilder2D CreateDefaultModelBuilder()
 		{
-			var mesh = new UniformCartesianMesh2D.Builder(new double[2], DomainLengthPerAxis, NumElementsPerAxis)
-				.SetMajorAxis(0).BuildMesh();
+			var builder = new UniformDdmModelBuilder2D();
+			builder.MinCoords = new double[2];
+			builder.MaxCoords = DomainLengthPerAxis;
+			builder.NumElementsTotal = NumElementsPerAxis;
 
-			var model = new Model();
-			model.AllDofs.AddDof(StructuralDof.TranslationX);
-			model.AllDofs.AddDof(StructuralDof.TranslationY);
-			model.SubdomainsDictionary[0] = new Subdomain(0);
-
-			// Nodes
-			foreach ((int id, double[] coords) in mesh.EnumerateNodes())
-			{
-				model.NodesDictionary[id] = new Node(id, coords[0], coords[1]);
-			}
-
-			// Materials
-			var material = new ElasticMaterial2D(StressState2D.PlaneStress)
-			{
-				YoungModulus = this.YoungModulus,
-				PoissonRatio = 0.3
+			builder.MaterialHomogeneous = new ElasticMaterial2D(StressState2D.PlaneStress) 
+			{ 
+				YoungModulus = this.YoungModulus, PoissonRatio = 0.3
 			};
-			var dynamicProperties = new DynamicMaterial(1.0, 1.0, 1.0);
+			builder.Thickness = 1.0;
 
-			// Elements
-			double thickness = 1.0;
-			var elemFactory = new ContinuumElement2DFactory(thickness, material, dynamicProperties);
-			foreach ((int elementID, int[] nodeIDs) in mesh.EnumerateElements())
-			{
-				Node[] nodes = nodeIDs.Select(n => model.NodesDictionary[n]).ToArray();
-				var elementType = elemFactory.CreateElement(mesh.CellType, nodes);
-				var element = new Element() { ID = elementID, ElementType = elementType };
-				foreach (var node in nodes) element.AddNode(node);
-				model.ElementsDictionary[element.ID] = element;
-				model.SubdomainsDictionary[0].Elements.Add(element);
-			}
+			builder.PrescribeDisplacement(UniformDdmModelBuilder2D.BoundaryRegion.LeftSide, StructuralDof.TranslationX, 0.0);
+			builder.PrescribeDisplacement(UniformDdmModelBuilder2D.BoundaryRegion.LeftSide, StructuralDof.TranslationY, 0.0);
+			builder.DistributeLoadAtNodes(
+				UniformDdmModelBuilder2D.BoundaryRegion.RightSide, StructuralDof.TranslationY, EndPointLoad);
 
-			// Boundary conditions
-			double dx = DomainLengthPerAxis[0] / NumElementsPerAxis[0];
-			double meshTol = 1E-6 * dx;
-			Node[] leftNodes = model.NodesDictionary.Values.Where(n => n.X < meshTol).ToArray();
-			foreach (Node node in leftNodes)
-			{
-				node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-				node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
-			}
-
-			Node[] rightNodes = model.NodesDictionary.Values.Where(n => n.X > DomainLengthPerAxis[0] - meshTol).ToArray();
-			foreach (Node node in rightNodes)
-			{
-				model.Loads.Add(new Load()
-				{
-					Node = node,
-					DOF = StructuralDof.TranslationY,
-					Amount = EndPointLoad / rightNodes.Length
-				});
-			}
-
-			return model;
-		}
-
-		private ICornerDofSelection GetCornerDofs(Model model)
-		{
-			var cornerNodes = new HashSet<int>();
-			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
-			{
-				INode[] subdomainCorners = CornerNodeUtilities.FindCornersOfRectangle2D(subdomain);
-				foreach (INode node in subdomainCorners)
-				{
-					if (node.Constraints.Count > 0)
-					{
-						continue;
-					}
-
-					if (node.Subdomains.Count > 1) //TODO for some reason this does not work if > 2. One Krr is singular.
-					{
-						cornerNodes.Add(node.ID);
-					}
-				}
-			}
-
-			var cornerDofs = new UserDefinedCornerDofSelection();
-			foreach (int node in cornerNodes)
-			{
-				cornerDofs.AddCornerNode(node);
-			}
-			return cornerDofs;
+			return builder;
 		}
 	}
 }

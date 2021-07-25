@@ -23,7 +23,7 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 	{
 		private static readonly IComputeEnvironment environment = new SequentialSharedEnvironment();
 
-		//[Fact]
+		[Fact]
 		public static void RunFullScalabilityAnalysisCantilever2D()
 		{
 			string outputDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\results\cantilever2D\";
@@ -52,19 +52,19 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 		//	scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
 		//}
 
-		//[Fact]
+		[Fact]
 		public static void RunFullScalabilityAnalysisRve2D()
 		{
 			IComputeEnvironment environment = new SequentialSharedEnvironment();
 			string outputDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\results\rve2D\";
 			var scalabilityAnalysis = new ScalabilityAnalysisPFetiDP();
 			scalabilityAnalysis.ModelBuilder = new Rve2D();
-			scalabilityAnalysis.EnableNativeDlls = true;
+			scalabilityAnalysis.EnableNativeDlls = false;
 			scalabilityAnalysis.IterativeResidualTolerance = 1E-6;
 
 			scalabilityAnalysis.RunParametricConstNumSubdomains(outputDirectory);
-			scalabilityAnalysis.RunParametricConstNumElements(outputDirectory);
-			scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
+			//scalabilityAnalysis.RunParametricConstNumElements(outputDirectory);
+			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(outputDirectory);
 		}
 
 		//[Fact]
@@ -83,8 +83,9 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 		//}
 
 		public override (ISolver solver, IAlgebraicModel algebraicModel) CreateSolver(
-			IModel model, ICornerDofSelection cornerDofs, ComputeNodeTopology nodeTopology)
+			IModel model, ComputeNodeTopology nodeTopology)
 		{
+			ICornerDofSelection cornerDofs = ModelBuilder.GetCornerDofs(model);
 			environment.Initialize(nodeTopology);
 
 			// Specify the format of matrices

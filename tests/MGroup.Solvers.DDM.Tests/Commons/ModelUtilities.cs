@@ -6,7 +6,7 @@ using MGroup.MSolve.Discretization;
 using MGroup.Solvers.DofOrdering;
 using MGroup.Solvers.DofOrdering.Reordering;
 
-namespace MGroup.Solvers.DDM.Tests.ExampleModels
+namespace MGroup.Solvers.DDM.Tests.Commons
 {
 	public static class ModelUtilities
 	{

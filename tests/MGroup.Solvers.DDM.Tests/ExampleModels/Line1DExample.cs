@@ -11,6 +11,7 @@ using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.Solvers;
+using MGroup.Solvers.DDM.Tests.Commons;
 using MGroup.Solvers.Results;
 using Xunit;
 

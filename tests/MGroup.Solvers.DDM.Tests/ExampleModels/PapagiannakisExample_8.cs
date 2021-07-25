@@ -1,25 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using MGroup.Constitutive.Structural;
 using MGroup.Constitutive.Structural.PlanarElements;
 using MGroup.Environments;
 using MGroup.FEM.Entities;
-using MGroup.FEM.Interfaces;
-using MGroup.FEM.Structural.Elements;
 using MGroup.LinearAlgebra.Matrices;
-using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Discretization.Loads;
-using MGroup.MSolve.Meshes.Structured;
 using MGroup.NumericalAnalyzers;
 using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
-using MGroup.Solvers.DDM.Partitioning;
+using MGroup.Solvers.DDM.Tests.Commons;
 using MGroup.Solvers.Direct;
-using MGroup.Solvers.DofOrdering;
 using MGroup.Solvers.Results;
 
 // Subdomains:
@@ -56,113 +47,24 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 
 		public static Model CreateSingleSubdomainModel(double stiffnessRatio)
 		{
-			var model = new Model();
-			model.AllDofs.AddDof(StructuralDof.TranslationX);
-			model.AllDofs.AddDof(StructuralDof.TranslationY);
-			model.SubdomainsDictionary[0] = new Subdomain(0);
-
-			var mesh = new UniformCartesianMesh2D.Builder(MinCoords, MaxCoords, NumElements).SetMajorAxis(0).BuildMesh();
-
-			// Nodes
-			foreach ((int id, double[] coords) in mesh.EnumerateNodes())
-			{
-				model.NodesDictionary[id] = new Node(id, coords[0], coords[1]);
-			}
-
-			// Materials
-			var material0 = new ElasticMaterial2D(StressState2D.PlaneStress) { YoungModulus = E0, PoissonRatio = v };
-			var material1 = new ElasticMaterial2D(StressState2D.PlaneStress) { YoungModulus = stiffnessRatio * E0, PoissonRatio = v };
-			var dynamicProperties = new DynamicMaterial(1.0, 1.0, 1.0);
-
-			// Elements
-			var elemFactory0 = new ContinuumElement2DFactory(thickness, material0, dynamicProperties);
-			var elemFactory1 = new ContinuumElement2DFactory(thickness, material1, dynamicProperties);
-			double dx = (MaxCoords[0] - MinCoords[0]) / NumElements[0];
-			double meshTol = 1E-6 * dx;
-			double xSeparator = MinCoords[0] + 0.25 * (MaxCoords[0] - MinCoords[0]) + meshTol;
-			foreach ((int elementID, int[] nodeIDs) in mesh.EnumerateElements())
-			{
-				Node[] nodes = nodeIDs.Select(n => model.NodesDictionary[n]).ToArray();
-				IFiniteElement elementType;
-				if (nodes.All(n => n.X < xSeparator))
-				{
-					elementType = elemFactory1.CreateElement(mesh.CellType, nodes);
-				}
-				else
-				{
-					elementType = elemFactory0.CreateElement(mesh.CellType, nodes);
-				}
-				var element = new Element() { ID = elementID, ElementType = elementType };
-				foreach (var node in nodes) element.AddNode(node);
-				model.ElementsDictionary[element.ID] = element;
-				model.SubdomainsDictionary[0].Elements.Add(element);
-			}
-
-			// Boundary conditions
-			Node[] leftNodes = model.NodesDictionary.Values.Where(n => n.X < MinCoords[0] + meshTol).ToArray();
-			foreach (Node node in leftNodes)
-			{
-				node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-				node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
-			}
-
-			Node[] rightNodes = model.NodesDictionary.Values.Where(n => n.X > MaxCoords[0] - meshTol).ToArray();
-			foreach (Node node in rightNodes)
-			{
-				model.Loads.Add(new Load() { Node = node, DOF = StructuralDof.TranslationY, Amount = load / rightNodes.Length });
-			}
-
-			return model;
+			UniformDdmModelBuilder2D builder = CreateDefaultModelBuilder(stiffnessRatio);
+			builder.NumSubdomains = new int[] { 1, 1 };
+			builder.NumClusters = new int[] { 1, 1 };
+			return builder.BuildSingleSubdomainModel();
 		}
 
 		public static (Model model, ComputeNodeTopology topology) CreateMultiSubdomainModel(double stiffnessRatio)
 		{
-			var model = CreateSingleSubdomainModel(stiffnessRatio);
-			var mesh = new UniformCartesianMesh2D.Builder(MinCoords, MaxCoords, NumElements).SetMajorAxis(0).BuildMesh();
-			var partitioner = new UniformMeshPartitioner2D(mesh, NumSubdomains, NumClusters);
-			partitioner.Partition(model);
-			ModelUtilities.DecomposeIntoSubdomains(model, partitioner.NumSubdomainsTotal, partitioner.GetSubdomainOfElement);
-
-			var topology = new ComputeNodeTopology();
-			for (int s = 0; s < partitioner.NumSubdomainsTotal; ++s)
-			{
-				topology.AddNode(s, partitioner.GetNeighboringSubdomains(s), partitioner.GetClusterOfSubdomain(s));
-			}
-
-			return (model, topology);
+			UniformDdmModelBuilder2D builder = CreateDefaultModelBuilder(stiffnessRatio);
+			builder.NumSubdomains = NumSubdomains;
+			builder.NumClusters = NumClusters;
+			return builder.BuildMultiSubdomainModel();
 		}
 
-		public static ICornerDofSelection GetCornerDofs(IModel model)
+		public static ICornerDofSelection GetCornerDofs(IModel model) => UniformDdmModelBuilder2D.FindCornerDofs(model, 2);
+
+		public static NodalResults SolveWithSkylineSolver(Model model)
 		{
-			var cornerNodes = new HashSet<int>();
-			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
-			{
-				INode[] subdomainCorners = CornerNodeUtilities.FindCornersOfRectangle2D(subdomain);
-				foreach (INode node in subdomainCorners)
-				{
-					if (node.Constraints.Count > 0)
-					{
-						continue;
-					}
-
-					if (node.Subdomains.Count > 1) //TODO for some reason this does not work if > 2. One Krr is singular.
-					{
-						cornerNodes.Add(node.ID);
-					}
-				}
-			}
-
-			var cornerDofs = new UserDefinedCornerDofSelection();
-			foreach (int node in cornerNodes)
-			{
-				cornerDofs.AddCornerNode(node);
-			}
-			return cornerDofs;
-		}
-
-		public static NodalResults SolveWithSkylineSolver(double stiffnessRatio)
-		{
-			Model model = CreateSingleSubdomainModel(stiffnessRatio);
 			model.ConnectDataStructures();
 
 			// Solver
@@ -180,8 +82,35 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			parentAnalyzer.Solve();
 
 			NodalResults nodalDisplacements = algebraicModel.ExtractAllResults(solver.LinearSystem.Solution);
-			Debug.Assert(nodalDisplacements.Data.EntryCount == NumTotalDofs);
 			return nodalDisplacements;
+		}
+
+		private static UniformDdmModelBuilder2D CreateDefaultModelBuilder(double stiffnessRatio)
+		{
+			var builder = new UniformDdmModelBuilder2D();
+			builder.MinCoords = MinCoords;
+			builder.MaxCoords = MaxCoords;
+			builder.NumElementsTotal = NumElements;
+
+			double E1 = stiffnessRatio * E0;
+			builder.GetMaterialPerElementIndex = elementIdx =>
+			{
+				if (elementIdx[0] < 3)
+				{
+					return new ElasticMaterial2D(StressState2D.PlaneStress) { YoungModulus = E1, PoissonRatio = v };
+				}
+				else
+				{
+					return new ElasticMaterial2D(StressState2D.PlaneStress) { YoungModulus = E0, PoissonRatio = v };
+				}
+			};
+			builder.Thickness = thickness;
+
+			builder.PrescribeDisplacement(UniformDdmModelBuilder2D.BoundaryRegion.LeftSide, StructuralDof.TranslationX, 0.0);
+			builder.PrescribeDisplacement(UniformDdmModelBuilder2D.BoundaryRegion.LeftSide, StructuralDof.TranslationY, 0.0);
+			builder.DistributeLoadAtNodes(UniformDdmModelBuilder2D.BoundaryRegion.RightSide, StructuralDof.TranslationY, load);
+
+			return builder;
 		}
 	}
 }

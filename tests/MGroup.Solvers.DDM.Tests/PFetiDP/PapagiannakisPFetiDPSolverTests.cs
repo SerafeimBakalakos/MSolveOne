@@ -91,7 +91,9 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			Assert.InRange(stats.NumIterationsRequired, 1, numIterationsExpected);
 
 			// Check results
-			NodalResults expectedResults = PapagiannakisExample_8.SolveWithSkylineSolver(stiffnessRatio);
+			NodalResults expectedResults = PapagiannakisExample_8.SolveWithSkylineSolver(
+				PapagiannakisExample_8.CreateSingleSubdomainModel(stiffnessRatio));
+			Assert.Equal(PapagiannakisExample_8.NumTotalDofs, expectedResults.Data.EntryCount);
 			NodalResults globalComputedResults = algebraicModel.ExtractGlobalResults(solver.LinearSystem.Solution, 1E-6);
 			double error = expectedResults.Subtract(globalComputedResults).Norm2() / expectedResults.Norm2();
 
@@ -161,7 +163,9 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			Assert.InRange(stats.NumIterationsRequired, 1, numIterationsExpected);
 
 			// Check results
-			NodalResults expectedResults = PapagiannakisExample_9_1.SolveWithSkylineSolver(stiffnessRatio);
+			NodalResults expectedResults = PapagiannakisExample_9_1.SolveWithSkylineSolver(
+				PapagiannakisExample_9_1.CreateSingleSubdomainModel(stiffnessRatio));
+			Assert.Equal(PapagiannakisExample_9_1.NumTotalDofs, expectedResults.Data.EntryCount);
 			NodalResults globalComputedResults = algebraicModel.ExtractGlobalResults(solver.LinearSystem.Solution, 1E-6);
 			double error = expectedResults.Subtract(globalComputedResults).Norm2() / expectedResults.Norm2();
 
@@ -232,7 +236,9 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			Assert.InRange(stats.NumIterationsRequired, 1, relaxedIterationsExpected);
 
 			// Check results
-			NodalResults expectedResults = PapagiannakisExample_9_2.SolveWithSkylineSolver(stiffnessRatio);
+			NodalResults expectedResults = PapagiannakisExample_9_2.SolveWithSkylineSolver(
+				PapagiannakisExample_9_2.CreateSingleSubdomainModel(stiffnessRatio));
+			Assert.Equal(PapagiannakisExample_9_2.NumTotalDofs, expectedResults.Data.EntryCount);
 			NodalResults globalComputedResults = algebraicModel.ExtractGlobalResults(solver.LinearSystem.Solution, 1E-6);
 			double error = expectedResults.Subtract(globalComputedResults).Norm2() / expectedResults.Norm2();
 
