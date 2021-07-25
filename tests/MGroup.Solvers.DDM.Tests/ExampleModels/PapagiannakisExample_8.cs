@@ -92,7 +92,7 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			builder.MaxCoords = MaxCoords;
 			builder.NumElementsTotal = NumElements;
 
-			double E1 = stiffnessRatio * E0;
+			double E1 = E0 / stiffnessRatio;
 			builder.GetMaterialPerElementIndex = elementIdx =>
 			{
 				if (elementIdx[0] < 3)

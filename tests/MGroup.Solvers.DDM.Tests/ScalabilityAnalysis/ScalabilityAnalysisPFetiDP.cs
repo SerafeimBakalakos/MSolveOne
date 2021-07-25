@@ -24,9 +24,9 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 	{
 		private const string workingDirectory = @"C:\Users\Serafeim\Desktop\PFETIDP\scalability\";
 
-		[Theory]
-		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
+		//[Theory]
+		//[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
+		//[InlineData(EnvironmentChoice.TplSharedEnvironment)]
 		public static void RunFullScalabilityAnalysisCantilever2D(EnvironmentChoice environmentChoice)
 			=> RunFullScalabilityAnalysisCantilever2DInternal(environmentChoice.CreateEnvironment());
 
@@ -43,9 +43,9 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(environment, outputDirectory);
 		}
 
-		[Theory]
-		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
+		//[Theory]
+		//[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
+		//[InlineData(EnvironmentChoice.TplSharedEnvironment)]
 		public static void RunFullScalabilityAnalysisCantilever3D(EnvironmentChoice environmentChoice)
 			=> RunFullScalabilityAnalysisCantilever3DInternal(environmentChoice.CreateEnvironment());
 
@@ -62,9 +62,9 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(environment, outputDirectory);
 		}
 
-		[Theory]
-		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
+		//[Theory]
+		//[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
+		//[InlineData(EnvironmentChoice.TplSharedEnvironment)]
 		public static void RunFullScalabilityAnalysisRve2D(EnvironmentChoice environmentChoice)
 			=> RunFullScalabilityAnalysisRve2DInternal(environmentChoice.CreateEnvironment());
 
@@ -81,9 +81,9 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 			//scalabilityAnalysis.RunParametricConstSubdomainPerElementSize(environment, outputDirectory);
 		}
 
-		[Theory]
-		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
+		//[Theory]
+		//[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
+		//[InlineData(EnvironmentChoice.TplSharedEnvironment)]
 		public static void RunFullScalabilityAnalysisRve3D(EnvironmentChoice environmentChoice)
 			=> RunFullScalabilityAnalysisRve3DInternal(environmentChoice.CreateEnvironment());
 
