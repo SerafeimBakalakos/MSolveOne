@@ -71,7 +71,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			else 
 			{
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
-				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobalShared.Factory(coarseProblemMatrix);
 			}
 
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
@@ -149,7 +149,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			else 
 			{
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
-				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobalShared.Factory(coarseProblemMatrix);
 			}
 
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);

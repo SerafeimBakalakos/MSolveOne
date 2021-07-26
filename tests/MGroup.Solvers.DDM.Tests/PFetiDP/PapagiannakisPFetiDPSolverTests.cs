@@ -86,7 +86,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			else
 			{
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
-				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobalShared.Factory(coarseProblemMatrix);
 			}
 
 			solverFactory.IsHomogeneousProblem = ignoreHeterogenity || (stiffnessRatio == 1.0);
@@ -168,7 +168,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			else
 			{
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
-				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobalShared.Factory(coarseProblemMatrix);
 			}
 			solverFactory.IsHomogeneousProblem = stiffnessRatio == 1.0;
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
@@ -250,7 +250,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			else
 			{
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
-				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobalShared.Factory(coarseProblemMatrix);
 			}
 
 			solverFactory.IsHomogeneousProblem = stiffnessRatio == 1.0;

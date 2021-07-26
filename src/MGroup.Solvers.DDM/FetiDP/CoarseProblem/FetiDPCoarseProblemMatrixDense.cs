@@ -8,7 +8,7 @@ using MGroup.Solvers.DDM.Commons;
 
 namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 {
-	public class FetiDPCoarseProblemMatrixDense : IFetiDPCoarseProblemMatrix
+	public class FetiDPCoarseProblemMatrixDense : IFetiDPCoarseProblemGlobalMatrix
 	{
 		private readonly DenseMatrixAssembler assembler = new DenseMatrixAssembler();
 		private Matrix inverseSccGlobal;

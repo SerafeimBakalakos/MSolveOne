@@ -92,7 +92,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 				this.cornerDofs = cornerDofs;
 				this.FetiDPMatricesFactory = fetiDPMatricesFactory;
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
-				this.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+				this.CoarseProblemFactory = new FetiDPCoarseProblemGlobalShared.Factory(coarseProblemMatrix);
 			}
 
 			public IFetiDPCoarseProblemFactory CoarseProblemFactory { get; set; }

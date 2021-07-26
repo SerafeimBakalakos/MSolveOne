@@ -10,7 +10,7 @@ using MGroup.Solvers.DDM.Commons;
 
 namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 {
-	public class FetiDPCoarseProblemMatrixSymmetricSuiteSparse : IFetiDPCoarseProblemMatrix
+	public class FetiDPCoarseProblemMatrixSymmetricSuiteSparse : IFetiDPCoarseProblemGlobalMatrix
 	{
 		private readonly SymmetricCscMatrixAssembler assembler = new SymmetricCscMatrixAssembler(true);
 		private readonly OrderingAmdSuiteSparse reordering = new OrderingAmdSuiteSparse();

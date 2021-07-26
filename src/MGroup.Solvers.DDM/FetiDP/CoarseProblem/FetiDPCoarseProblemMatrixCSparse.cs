@@ -9,7 +9,7 @@ using MGroup.Solvers.DDM.Commons;
 
 namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 {
-	public class FetiDPCoarseProblemMatrixCSparse : IFetiDPCoarseProblemMatrix
+	public class FetiDPCoarseProblemMatrixCSparse : IFetiDPCoarseProblemGlobalMatrix
 	{
 		private readonly CscMatrixAssembler assembler = new CscMatrixAssembler(false, true);
 		private LUCSparseNet inverseSccGlobal;

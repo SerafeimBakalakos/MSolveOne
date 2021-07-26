@@ -7,7 +7,7 @@ using MGroup.Solvers.DDM.Commons;
 
 namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 {
-	public interface IFetiDPCoarseProblemMatrix
+	public interface IFetiDPCoarseProblemGlobalMatrix
 	{
 		void InvertGlobalScc(int numGlobalCornerDofs, IDictionary<int, int[]> subdomainToGlobalCornerDofs,
 			IDictionary<int, IMatrix> subdomainMatricesScc);

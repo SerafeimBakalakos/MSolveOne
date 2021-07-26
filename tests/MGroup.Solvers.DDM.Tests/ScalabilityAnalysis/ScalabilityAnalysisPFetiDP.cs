@@ -116,14 +116,14 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 				psmMatricesFactory = new PsmSubdomainMatrixManagerSymmetricSuiteSparse.Factory();
 				fetiDPMatricesFactory = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse.Factory();
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricSuiteSparse();
-				fetiDPCoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+				fetiDPCoarseProblemFactory = new FetiDPCoarseProblemGlobalShared.Factory(coarseProblemMatrix);
 			}
 			else
 			{
 				psmMatricesFactory = new PsmSubdomainMatrixManagerSymmetricCSparse.Factory();
 				fetiDPMatricesFactory = new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory();
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
-				fetiDPCoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+				fetiDPCoarseProblemFactory = new FetiDPCoarseProblemGlobalShared.Factory(coarseProblemMatrix);
 			}
 
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
