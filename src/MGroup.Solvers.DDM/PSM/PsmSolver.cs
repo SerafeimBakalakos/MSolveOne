@@ -5,9 +5,9 @@ using System.Diagnostics;
 
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods;
+using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Iterative;
-using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
@@ -49,7 +49,7 @@ namespace MGroup.Solvers.DDM.Psm
 		protected PsmSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel, 
 			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory, 
 			bool explicitSubdomainMatrices, IPsmPreconditioner preconditioner,
-			IDistributedIterativeMethod interfaceProblemSolver, bool isHomogeneous, string name = "PSM Solver")
+			IPsmInterfaceProblemSolverFactory interfaceProblemSolverFactory, bool isHomogeneous, string name = "PSM Solver")
 		{
 			this.name = name;
 			this.environment = environment;
@@ -58,7 +58,6 @@ namespace MGroup.Solvers.DDM.Psm
 			this.subdomainTopology = algebraicModel.SubdomainTopology;
 			this.LinearSystem = algebraicModel.LinearSystem;
 			this.preconditioner = preconditioner;
-			this.interfaceProblemSolver = interfaceProblemSolver;
 
 			this.subdomainDofsPsm = new ConcurrentDictionary<int, PsmSubdomainDofs>();
 			this.subdomainMatricesPsm = new ConcurrentDictionary<int, IPsmSubdomainMatrixManager>();
@@ -95,6 +94,18 @@ namespace MGroup.Solvers.DDM.Psm
 				this.interfaceProblemMatrix = new PsmInterfaceProblemMatrixImplicit(environment, 
 					s => subdomainDofsPsm[s], s => subdomainMatricesPsm[s]);
 			}
+
+			IPcgResidualConvergence convergenceCriterion;
+			if (interfaceProblemSolverFactory.UseObjectiveConvergenceCriterion)
+			{
+				convergenceCriterion = new ObjectiveConvergenceCriterion<TMatrix>(
+					environment, algebraicModel, s => subdomainVectors[s]);
+			}
+			else
+			{
+				convergenceCriterion = new RegularPcgConvergence();
+			}
+			this.interfaceProblemSolver = interfaceProblemSolverFactory.BuildIterativeMethod(convergenceCriterion);
 
 			Logger = new SolverLogger(name);
 		}
@@ -153,7 +164,7 @@ namespace MGroup.Solvers.DDM.Psm
 			environment.DoPerNode(subdomainID =>
 			{
 				Vector subdomainBoundarySolution = interfaceProblemVectors.InterfaceProblemSolution.LocalVectors[subdomainID];
-				subdomainVectors[subdomainID].CalcSubdomainFreeSolution(subdomainBoundarySolution);
+				subdomainVectors[subdomainID].CalcStoreSubdomainFreeSolution(subdomainBoundarySolution);
 			});
 
 			Logger.IncrementAnalysisStep();
@@ -176,11 +187,6 @@ namespace MGroup.Solvers.DDM.Psm
 			IterativeStatistics stats = interfaceProblemSolver.Solve(
 				interfaceProblemMatrix.Matrix, preconditioner.Preconditioner, interfaceProblemVectors.InterfaceProblemRhs,
 				interfaceProblemVectors.InterfaceProblemSolution, initalGuessIsZero);
-			if (!stats.HasConverged)
-			{
-				throw new SolverDidNotConvergeException($"{stats.NumIterationsRequired} iterations were run and the residual " +
-					$"norm is approximately {stats.ResidualNormRatioEstimation}");
-			}
 
 			InterfaceProblemSolutionStats = stats;
 			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
@@ -193,26 +199,20 @@ namespace MGroup.Solvers.DDM.Psm
 
 			public Factory(IComputeEnvironment environment, IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory)
 			{
+				this.environment = environment;
 				DofOrderer = new DofOrderer(new NodeMajorDofOrderingStrategy(), new NullReordering());
 				ExplicitSubdomainMatrices = false;
-
-				//TODO: perhaps use a custom convergence check like in FETI
-				var pcgBuilder = new PcgAlgorithm.Builder();
-				pcgBuilder.ResidualTolerance = 1E-6;
-				pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(100);
-				InterfaceProblemSolver = pcgBuilder.Build();
+				InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg();
 				IsHomogeneousProblem = true;
-
 				PsmMatricesFactory = matrixManagerFactory; //new PsmSubdomainMatrixManagerSymmetricCSparse.Factory();
 				Preconditioner = new PsmPreconditionerIdentity();
-				this.environment = environment;
 			}
 
 			public IDofOrderer DofOrderer { get; set; }
 
 			public bool ExplicitSubdomainMatrices { get; set; }
 
-			public IDistributedIterativeMethod InterfaceProblemSolver { get; set; }
+			public IPsmInterfaceProblemSolverFactory InterfaceProblemSolverFactory { get; set; }
 
 			public bool IsHomogeneousProblem { get; set; }
 
@@ -226,7 +226,7 @@ namespace MGroup.Solvers.DDM.Psm
 			public virtual PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
 			{
 				return new PsmSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
-					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolver, IsHomogeneousProblem);
+					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolverFactory, IsHomogeneousProblem);
 			}
 		}
 	}

@@ -52,7 +52,7 @@ namespace MGroup.Solvers.DDM.PSM.Vectors
 			scaleBoundaryVector(vectorFb);
 		}
 
-		public void CalcSubdomainFreeSolution(Vector subdomainBoundarySolution)
+		public Vector CalcSubdomainFreeSolution(Vector subdomainBoundarySolution)
 		{
 			int numFreeDofs = linearSystem.DofOrdering.NumFreeDofs;
 			int[] boundaryDofs = subdomainDofs.DofsBoundaryToFree;
@@ -69,7 +69,12 @@ namespace MGroup.Solvers.DDM.PSM.Vectors
 			uf.CopyNonContiguouslyFrom(boundaryDofs, subdomainBoundarySolution);
 			uf.CopyNonContiguouslyFrom(internalDofs, ui);
 
-			linearSystem.Solution = uf;
+			return uf;
+		}
+
+		public void CalcStoreSubdomainFreeSolution(Vector subdomainBoundarySolution)
+		{
+			linearSystem.Solution = CalcSubdomainFreeSolution(subdomainBoundarySolution);
 		}
 	}
 }

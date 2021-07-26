@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+//TODO: Delete this class and use the corresponding one in LinearAlgebra for the iterative algorithm
 namespace MGroup.Solvers.Exceptions
 {
 	/// <summary>

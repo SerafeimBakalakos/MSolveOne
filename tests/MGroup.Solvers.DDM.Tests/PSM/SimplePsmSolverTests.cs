@@ -14,6 +14,7 @@ using MGroup.NumericalAnalyzers;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.Psm;
 using MGroup.Solvers.DDM.PSM.Dofs;
+using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.DDM.Tests.ExampleModels;
 using MGroup.Solvers.DofOrdering;
@@ -42,12 +43,13 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			model.ConnectDataStructures(); //TODOMPI: this is also done in the analyzer
 
 			// Solver
-			var pcgBuilder = new PcgAlgorithm.Builder();
-			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-			pcgBuilder.ResidualTolerance = 1E-10;
 			var solverFactory = new PsmSolver<SymmetricCscMatrix>.Factory(
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory());
-			solverFactory.InterfaceProblemSolver = pcgBuilder.Build();
+			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
+			{
+				MaxIterations = 200,
+				ResidualTolerance = 1E-10
+			};
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 
@@ -150,12 +152,13 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			model.ConnectDataStructures(); //TODOMPI: this is also done in the analyzer
 
 			// Solver
-			var pcgBuilder = new PcgAlgorithm.Builder();
-			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-			pcgBuilder.ResidualTolerance = 1E-10;
 			var solverFactory = new PsmSolver<SymmetricCscMatrix>.Factory(
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory());
-			solverFactory.InterfaceProblemSolver = pcgBuilder.Build();
+			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
+			{
+				MaxIterations = 200,
+				ResidualTolerance = 1E-10
+			};
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 

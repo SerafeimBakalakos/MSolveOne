@@ -14,6 +14,7 @@ using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PFetiDP.Dofs;
 using MGroup.Solvers.DDM.PFetiDP.Preconditioner;
 using MGroup.Solvers.DDM.Psm;
+using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.Preconditioning;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 
@@ -30,11 +31,11 @@ namespace MGroup.Solvers.DDM.PFetiDP
 
 		public PFetiDPSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel,
 			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixFactoryPsm, bool explicitSubdomainMatrices,
-			IPsmPreconditioner preconditioner, IDistributedIterativeMethod interfaceProblemSolver, bool isHomogeneous,
+			IPsmPreconditioner preconditioner, IPsmInterfaceProblemSolverFactory interfaceProblemSolverFactory, bool isHomogeneous,
 			ICornerDofSelection cornerDofs, IFetiDPCoarseProblemFactory coarseProblemFactory, 
 			IFetiDPSubdomainMatrixManagerFactory<TMatrix> matrixFactoryFetiDP)
 			: base(environment, model, algebraicModel, matrixFactoryPsm, explicitSubdomainMatrices, preconditioner,
-				  interfaceProblemSolver, isHomogeneous, "PFETI-DP solver")
+				  interfaceProblemSolverFactory, isHomogeneous, "PFETI-DP solver")
 		{
 			this.cornerDofs = cornerDofs;
 
@@ -101,7 +102,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			public override PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
 			{
 				return new PFetiDPSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
-					ExplicitSubdomainMatrices, null, InterfaceProblemSolver, IsHomogeneousProblem,
+					ExplicitSubdomainMatrices, null, InterfaceProblemSolverFactory, IsHomogeneousProblem,
 					cornerDofs, CoarseProblemFactory, FetiDPMatricesFactory);
 			}
 		}

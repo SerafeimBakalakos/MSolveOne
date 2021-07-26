@@ -15,6 +15,7 @@ using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PFetiDP;
 using MGroup.Solvers.DDM.Psm;
+using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using Xunit;
 
@@ -128,6 +129,12 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, psmMatricesFactory, cornerDofs, fetiDPMatricesFactory);
 
+			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
+			{
+				MaxIterations = 200,
+				ResidualTolerance = 1E-7
+			};
+
 			if (environment is MpiEnvironment)
 			{
 				var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
@@ -139,12 +146,7 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 			}
 			solverFactory.CoarseProblemFactory = fetiDPCoarseProblemFactory;
 
-			var interfaceProblemPcgBuilder = new PcgAlgorithm.Builder();
-			interfaceProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-			interfaceProblemPcgBuilder.ResidualTolerance = 1E-7;
-			solverFactory.InterfaceProblemSolver = interfaceProblemPcgBuilder.Build();
 			solverFactory.IsHomogeneousProblem = true;
-
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 
