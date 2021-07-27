@@ -11,13 +11,15 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 	public class FetiDPSubdomainDofs
 	{
 		private readonly ISubdomainLinearSystem linearSystem;
+		private readonly ActiveDofs allDofs;
 
-		public FetiDPSubdomainDofs(ISubdomainLinearSystem linearSystem)
+		public FetiDPSubdomainDofs(ISubdomainLinearSystem linearSystem, ActiveDofs allDofs)
 		{
 			this.linearSystem = linearSystem;
+			this.allDofs = allDofs;
 		}
 
-		public DofTable DofOrderingCorner { get; private set; }
+		public IntDofTable DofOrderingCorner { get; private set; }
 
 		public int[] DofsBoundaryRemainderToRemainder { get; private set; }
 
@@ -39,7 +41,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 
 		public void SeparateFreeDofsIntoCornerAndRemainder(ICornerDofSelection cornerDofSelection)
 		{
-			var cornerDofOrdering = new DofTable();
+			var cornerDofOrdering = new IntDofTable();
 			var cornerToFree = new List<int>();
 			var remainderToFree = new HashSet<int>();
 			int numCornerDofs = 0;
@@ -53,7 +55,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 					IDofType dof = dofIdxPair.Key;
 					if (cornerDofSelection.IsCornerDof(node, dof))
 					{
-						cornerDofOrdering[node, dof] = numCornerDofs++;
+						cornerDofOrdering[node.ID, allDofs.GetIdOfDof(dof)] = numCornerDofs++;
 						cornerToFree.Add(dofIdxPair.Value);
 					}
 					else

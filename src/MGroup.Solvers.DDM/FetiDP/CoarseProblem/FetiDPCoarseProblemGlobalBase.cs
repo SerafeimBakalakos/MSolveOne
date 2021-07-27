@@ -36,7 +36,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 		public void FindCoarseProblemDofs()
 		{
-			Dictionary<int, DofTable> subdomainCornerDofs = GatherSubdomainCornerDofs();
+			Dictionary<int, IntDofTable> subdomainCornerDofs = GatherSubdomainCornerDofs();
 			environment.DoMasterNode(() =>
 			{
 				coarseProblemDofs.FindGlobalCornerDofs(subdomainCornerDofs);
@@ -69,7 +69,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			ScatterSubdomainVectors(subdomainSolutionVectors, coarseProblemSolution);
 		}
 
-		protected abstract Dictionary<int, DofTable> GatherSubdomainCornerDofs();
+		protected abstract Dictionary<int, IntDofTable> GatherSubdomainCornerDofs();
 
 		protected abstract Dictionary<int, IMatrix> GatherSubdomainMatricesScc();
 

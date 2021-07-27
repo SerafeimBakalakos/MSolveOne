@@ -45,7 +45,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			environment.DoPerNode(subdomainID =>
 			{
 				SubdomainLinearSystem<TMatrix> linearSystem = algebraicModel.SubdomainLinearSystems[subdomainID];
-				var dofsFetiDP = new FetiDPSubdomainDofs(linearSystem);
+				var dofsFetiDP = new FetiDPSubdomainDofs(linearSystem, model.AllDofs);
 				var dofsPFetiDP = new PFetiDPSubdomainDofs(subdomainDofsPsm[subdomainID], dofsFetiDP);
 				IFetiDPSubdomainMatrixManager matricesFetiDP = matrixFactoryFetiDP.CreateMatrixManager(linearSystem, dofsFetiDP);
 

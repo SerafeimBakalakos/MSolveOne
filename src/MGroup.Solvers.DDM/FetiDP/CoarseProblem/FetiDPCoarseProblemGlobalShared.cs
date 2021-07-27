@@ -24,9 +24,9 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			this.getSubdomainDofs = getSubdomainDofs;
 		}
 
-		protected override Dictionary<int, DofTable> GatherSubdomainCornerDofs()
+		protected override Dictionary<int, IntDofTable> GatherSubdomainCornerDofs()
 		{
-			var subdomainCornerDofs = new Dictionary<int, DofTable>();
+			var subdomainCornerDofs = new Dictionary<int, IntDofTable>();
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
 				subdomainCornerDofs[subdomain.ID] = getSubdomainDofs(subdomain.ID).DofOrderingCorner;

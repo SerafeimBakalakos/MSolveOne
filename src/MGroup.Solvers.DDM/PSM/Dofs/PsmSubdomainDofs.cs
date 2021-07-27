@@ -30,7 +30,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 			this.sortDofsWhenPossible = sortDofsWhenPossible;
 		}
 
-		public DofTable DofOrderingBoundary { get; private set; }
+		public IntDofTable DofOrderingBoundary { get; private set; }
 
 		public int[] DofsBoundaryToFree { get; private set; }
 
@@ -52,7 +52,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 		public void SeparateFreeDofsIntoBoundaryAndInternal()
 		{
 			//TODOMPI: force sorting per node and dof
-			var boundaryDofOrdering = new DofTable();
+			var boundaryDofOrdering = new IntDofTable();
 			var boundaryToFree = new List<int>();
 			var internalToFree = new HashSet<int>();
 			int subdomainBoundaryIdx = 0;
@@ -81,7 +81,8 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 				{
 					foreach (var dofTypeIdxPair in dofsOfNode)
 					{
-						boundaryDofOrdering[node, dofTypeIdxPair.Key] = subdomainBoundaryIdx++;
+						int dofID = allDofs.GetIdOfDof(dofTypeIdxPair.Key);
+						boundaryDofOrdering[node.ID, dofID] = subdomainBoundaryIdx++;
 						boundaryToFree.Add(dofTypeIdxPair.Value);
 					}
 				}

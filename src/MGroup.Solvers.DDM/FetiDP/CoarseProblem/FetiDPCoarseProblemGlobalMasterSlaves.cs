@@ -22,7 +22,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			this.getSubdomainDofs = getSubdomainDofs;
 		}
 
-		protected override Dictionary<int, DofTable> GatherSubdomainCornerDofs()
+		protected override Dictionary<int, IntDofTable> GatherSubdomainCornerDofs()
 		{
 			return environment.GatherToMasterNode(subdomainID => getSubdomainDofs(subdomainID).DofOrderingCorner);
 		}

@@ -280,7 +280,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				SubdomainFreeDofOrderings[subdomainID] = dofOrderer.OrderFreeDofs(subdomain);
 			});
 			SubdomainTopology.FindCommonDofsBetweenSubdomains();
-			FreeDofIndexer = SubdomainTopology.CreateDistributedVectorIndexer(s => SubdomainFreeDofOrderings[s].FreeDofs);
+			FreeDofIndexer = SubdomainTopology.CreateDistributedVectorIndexer_OLD(s => SubdomainFreeDofOrderings[s].FreeDofs);
 			foreach (IAlgebraicModelObserver observer in Observers)
 			{
 				observer.HandleDofOrderWasModified();
