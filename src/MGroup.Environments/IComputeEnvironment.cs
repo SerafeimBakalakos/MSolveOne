@@ -30,7 +30,14 @@ namespace MGroup.Environments
 
 		void DoPerNode(Action<int> actionPerNode);
 
-		void DoSingle(Action action);
+		void DoMasterNode(Action action);
+
+		/// <summary>
+		/// Return null for all nodes other than the master.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="getDataPerNode"></param>
+		Dictionary<int, T> GatherToMasterNode<T>(Func<int, T> getDataPerNode);
 
 		//TODOMPI: Its most common use is weird: An Action<int> is called by the environment. The environment passes the id of 
 		//      each ComputeNode it manages. Then the Action<int> requests from the environment to provide the ComputeNode for
@@ -57,6 +64,15 @@ namespace MGroup.Environments
 		//      delegates for creating the data (before send) and processing them (after recv) and by helping them to ensure 
 		//      termination per node.
 		void NeighborhoodAllToAll<T>(Dictionary<int, AllToAllNodeData<T>> dataPerNode, bool areRecvBuffersKnown);
+
+		/// <summary>
+		/// Returns a Dictionary with the data corresponding to local nodes, which were originally a subset of 
+		/// <paramref name="allNodesData"/>.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="allNodesData">Only relevant in master process. Otherwise it will be ignored and can be null.</param>
+		/// <returns></returns>
+		Dictionary<int, T> ScatterFromMasterNode<T>(Dictionary<int, T> allNodesData);
 	}
 
 	//TODOMPI: Clients are forced to initialize sendValues and recvValues right now, which means client code is coupled with 

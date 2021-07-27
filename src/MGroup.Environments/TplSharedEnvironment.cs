@@ -58,14 +58,25 @@ namespace MGroup.Environments
 			return result;
 		}
 
+		public void DoMasterNode(Action action)
+		{
+			action();
+		}
+
 		public void DoPerNode(Action<int> actionPerNode)
 		{
 			Parallel.ForEach(nodeTopology.Nodes.Keys, actionPerNode);
 		}
 
-		public void DoSingle(Action action)
+		public Dictionary<int, T> GatherToMasterNode<T>(Func<int, T> getDataPerNode)
 		{
-			action();
+			// No parallelism here, since getDataPerNode is not meant to do expensive stuff.
+			var result = new Dictionary<int, T>();
+			foreach (int nodeID in nodeTopology.Nodes.Keys)
+			{
+				result[nodeID] = getDataPerNode(nodeID);
+			}
+			return result;
 		}
 
 		public ComputeNode GetComputeNode(int nodeID) => nodeTopology.Nodes[nodeID];
@@ -107,5 +118,8 @@ namespace MGroup.Environments
 				}
 			});
 		}
+
+		public Dictionary<int, T> ScatterFromMasterNode<T>(Dictionary<int, T> allNodesData)
+			=> new Dictionary<int, T>(allNodesData); 
 	}
 }

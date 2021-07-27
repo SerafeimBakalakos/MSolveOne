@@ -1,14 +1,11 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.Environments;
-using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
 using MGroup.Solvers.DDM.Commons;
-using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 
 //TODOMPI: This base -> derived class design (Template Method) uses inheritance. Replace it with a design that uses composition.
@@ -40,26 +37,35 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		public void FindCoarseProblemDofs()
 		{
 			Dictionary<int, DofTable> subdomainCornerDofs = GatherSubdomainCornerDofs();
-			coarseProblemDofs.FindGlobalCornerDofs(subdomainCornerDofs);
-			coarseProblemDofs.CalcSubdomainGlobalCornerDofMaps();
-			DofPermutation permutation = coarseProblemMatrix.ReorderGlobalCornerDofs(
+			environment.DoMasterNode(() =>
+			{
+				coarseProblemDofs.FindGlobalCornerDofs(subdomainCornerDofs);
+				coarseProblemDofs.CalcSubdomainGlobalCornerDofMaps();
+				DofPermutation permutation = coarseProblemMatrix.ReorderGlobalCornerDofs(
 				coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs);
-			coarseProblemDofs.ReorderGlobalCornerDofs(permutation);
+				coarseProblemDofs.ReorderGlobalCornerDofs(permutation);
+			});
 		}
 
 		public void PrepareMatricesForSolution()
 		{
 			environment.DoPerNode(subdomainID => getSubdomainMatrices(subdomainID).CalcSchurComplementOfRemainderDofs());
 			Dictionary<int, IMatrix> subdomainMatricesScc = GatherSubdomainMatricesScc();
-			coarseProblemMatrix.InvertGlobalScc(
-				coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs, subdomainMatricesScc);
+			environment.DoMasterNode(() =>
+			{
+				coarseProblemMatrix.InvertGlobalScc(
+					coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs, subdomainMatricesScc);
+			});
 		}
 
 		public void SolveCoarseProblem(IDictionary<int, Vector> coarseProblemRhs, IDictionary<int, Vector> coarseProblemSolution)
 		{
 			Dictionary<int, Vector> subdomainRhsVectors = GatherSubdomainVectors(coarseProblemRhs);
 			var subdomainSolutionVectors = new Dictionary<int, Vector>(); //TODO: These should be cached and cleared somehow
-			coarseProblemSolver.SolveCoarseProblem(subdomainRhsVectors, subdomainSolutionVectors);
+			environment.DoMasterNode(() =>
+			{
+				coarseProblemSolver.SolveCoarseProblem(subdomainRhsVectors, subdomainSolutionVectors);
+			});
 			ScatterSubdomainVectors(subdomainSolutionVectors, coarseProblemSolution);
 		}
 

@@ -96,16 +96,50 @@ namespace MGroup.Environments.Mpi
 			GC.SuppressFinalize(this);
 		}
 
+		public void DoMasterNode(Action action)
+		{
+			if (commWorld.Rank == 0)
+			{
+				action();
+			}
+		}
+
 		public void DoPerNode(Action<int> actionPerNode)
 		{
 			Parallel.ForEach(localNodes.Keys, actionPerNode);
 		}
 
-		public void DoSingle(Action action)
+		public Dictionary<int, T> GatherToMasterNode<T>(Func<int, T> getDataPerNode)
 		{
-			if (commWorld.Rank == 0)
+			//TODO Optim: these can be done once when specifying the topology and remain cached.
+			int[] localNodeIDs = nodeTopology.Clusters[commWorld.Rank].Nodes.Keys.ToArray();
+			Array.Sort(localNodeIDs); // Use the same order in all machines, instead of depending on the order of Dictionary.
+			var localData = new T[localNodeIDs.Length];
+			for (int n = 0; n < localNodeIDs.Length; ++n)
 			{
-				action();
+				localData[n] = getDataPerNode(localNodeIDs[n]);
+			}
+
+			if (commWorld.Rank == 0) // Master process gathers data
+			{
+				int[] counts = GetCollectiveNodeCounts();
+
+				//TODO Optim: have a cached buffer to write data into (use the overload with ref parameter)
+				T[] allData = commWorld.GatherFlattened(localData, counts, 0);
+
+				int[] indicesToIDs = GetCollectiveArrayIndicesToNodeIds();
+				var result = new Dictionary<int, T>();
+				Debug.Assert(indicesToIDs.Length == allData.Length);
+				for (int n = 0; n < indicesToIDs.Length; ++n)
+				{
+					result[indicesToIDs[n]] = allData[n];
+				}
+				return result;
+			}
+			else // Slave processes send data to master process
+			{
+				commWorld.GatherFlattened(localData, null, 0);
+				return null;
 			}
 		}
 
@@ -245,6 +279,73 @@ namespace MGroup.Environments.Mpi
 			// Wait for MPI requests to end 
 			recvRequests.WaitAll();
 			sendRequests.WaitAll();
+		}
+
+		public Dictionary<int, T> ScatterFromMasterNode<T>(Dictionary<int, T> dataPerNode)
+		{
+			T[] localData;
+			int[] counts = GetCollectiveNodeCounts();
+			if (commWorld.Rank == 0) // Master process gathers data
+			{
+
+				int[] indicesToIDs = GetCollectiveArrayIndicesToNodeIds();
+				var allData = new T[indicesToIDs.Length];
+				for (int n = 0; n < indicesToIDs.Length; ++n)
+				{
+					allData[n] = dataPerNode[indicesToIDs[n]];
+				}
+
+				//TODO Optim: have a cached buffer to write data into (use the overload with ref parameter)
+				localData = commWorld.ScatterFromFlattened(allData, counts, 0);
+			}
+			else // Slave processes send data to master process
+			{
+				localData = commWorld.ScatterFromFlattened(new T[0], counts, 0);
+			}
+
+			int[] localNodeIDs = nodeTopology.Clusters[commWorld.Rank].Nodes.Keys.ToArray();
+			Array.Sort(localNodeIDs); // Use the same order in all machines, instead of depending on the order of Dictionary.
+
+			var result = new Dictionary<int, T>();
+			for (int n = 0; n < localNodeIDs.Length; ++n)
+			{
+				result[localNodeIDs[n]] = localData[n];
+			}
+			return result;
+		}
+
+		//TODO Optim: perhaps only the root process needs to know all the counts. The rest of the processes only need to
+		//		know their local count. 
+		//TODO Optim: This can be cached safely.
+		private int[] GetCollectiveNodeCounts()
+		{
+			var counts = new int[commWorld.Size];
+			for (int c = 0; c < commWorld.Size; ++c)
+			{
+				counts[c] = nodeTopology.Clusters[c].Nodes.Count;
+			}
+			return counts;
+		}
+
+		/// <summary>
+		/// In a collective array (e.g after gather, before scatter/broadcast) each entry corresponds to a 
+		/// <see cref="ComputeNode"/>, but they are not placed in order. In fact the nodes of a <see cref="ComputeNodeCluster"/>
+		/// are placed contiguously and in order, but these nodes do not have consecutive IDs in general. This method maps
+		/// the indices of node data in a collective array to the IDs of the corresponding nodes.
+		/// </summary>
+		private int[] GetCollectiveArrayIndicesToNodeIds()
+		{
+			//int[] counts = GetCollectiveNodeCounts();
+			var result = new int[nodeTopology.Nodes.Count];
+			int clusterOffset = 0;
+			for (int c = 0; c < commWorld.Size; ++c)
+			{
+				int[] clusterNodeIDs = nodeTopology.Clusters[commWorld.Rank].Nodes.Keys.ToArray();
+				Array.Sort(clusterNodeIDs); // Use the same order in all machines, instead of depending on the order of Dictionary.
+				Array.Copy(clusterNodeIDs, 0, result, clusterOffset, clusterNodeIDs.Length);
+				clusterOffset += clusterNodeIDs.Length;
+			}
+			return result;
 		}
 
 		private void Dispose(bool disposing)
