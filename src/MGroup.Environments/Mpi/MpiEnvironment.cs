@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MGroup.Environments.Tasks;
 using MpiNet = MPI;
 
 //WARNING: MPI.NET (on windows) does not support MPI calls from multiple threads. Therefore exposing send and receive methods
@@ -40,6 +41,7 @@ namespace MGroup.Environments.Mpi
 		private Dictionary<int, ComputeNode> localNodes;
 		private ComputeNodeTopology nodeTopology;
 		private MpiP2PTransfers p2pTransfers;
+		private MpiCollectivesHelper collectivesHelper;
 
 		public MpiEnvironment()
 		{
@@ -95,6 +97,10 @@ namespace MGroup.Environments.Mpi
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
+		//public void DoGlobalTask<TInput>(GlobalTask<TInput> task)
+		//{
+		//	throw new NotImplementedException();
+		//}
 
 		public void DoMasterNode(Action action)
 		{
@@ -111,30 +117,14 @@ namespace MGroup.Environments.Mpi
 
 		public Dictionary<int, T> GatherToMasterNode<T>(Func<int, T> getDataPerNode)
 		{
-			//TODO Optim: these can be done once when specifying the topology and remain cached.
-			int[] localNodeIDs = nodeTopology.Clusters[commWorld.Rank].Nodes.Keys.ToArray();
-			Array.Sort(localNodeIDs); // Use the same order in all machines, instead of depending on the order of Dictionary.
-			var localData = new T[localNodeIDs.Length];
-			for (int n = 0; n < localNodeIDs.Length; ++n)
-			{
-				localData[n] = getDataPerNode(localNodeIDs[n]);
-			}
-
+			T[] localData = collectivesHelper.LocalNodesDataToArray(commWorld.Rank, getDataPerNode);
 			if (commWorld.Rank == 0) // Master process gathers data
 			{
-				int[] counts = GetCollectiveNodeCounts();
+				int[] counts = collectivesHelper.NodeCounts;
 
 				//TODO Optim: have a cached buffer to write data into (use the overload with ref parameter)
 				T[] allData = commWorld.GatherFlattened(localData, counts, 0);
-
-				int[] indicesToIDs = GetCollectiveArrayIndicesToNodeIds();
-				var result = new Dictionary<int, T>();
-				Debug.Assert(indicesToIDs.Length == allData.Length);
-				for (int n = 0; n < indicesToIDs.Length; ++n)
-				{
-					result[indicesToIDs[n]] = allData[n];
-				}
-				return result;
+				return collectivesHelper.AllNodesDataToDictionary(allData);
 			}
 			else // Slave processes send data to master process
 			{
@@ -182,6 +172,9 @@ namespace MGroup.Environments.Mpi
 
 			// Analyze local and remote communication cases
 			this.p2pTransfers = new MpiP2PTransfers(nodeTopology, localCluster);
+
+			// Prevaluate data used in collective communications
+			this.collectivesHelper = new MpiCollectivesHelper(nodeTopology);
 		}
 
 		public void NeighborhoodAllToAll<T>(Dictionary<int, AllToAllNodeData<T>> dataPerNode, bool areRecvBuffersKnown)
@@ -284,16 +277,10 @@ namespace MGroup.Environments.Mpi
 		public Dictionary<int, T> ScatterFromMasterNode<T>(Dictionary<int, T> dataPerNode)
 		{
 			T[] localData;
-			int[] counts = GetCollectiveNodeCounts();
+			int[] counts = collectivesHelper.NodeCounts;
 			if (commWorld.Rank == 0) // Master process gathers data
 			{
-
-				int[] indicesToIDs = GetCollectiveArrayIndicesToNodeIds();
-				var allData = new T[indicesToIDs.Length];
-				for (int n = 0; n < indicesToIDs.Length; ++n)
-				{
-					allData[n] = dataPerNode[indicesToIDs[n]];
-				}
+				T[] allData = collectivesHelper.AllNodesDataToArray(dataPerNode);
 
 				//TODO Optim: have a cached buffer to write data into (use the overload with ref parameter)
 				localData = commWorld.ScatterFromFlattened(allData, counts, 0);
@@ -303,48 +290,7 @@ namespace MGroup.Environments.Mpi
 				localData = commWorld.ScatterFromFlattened(new T[0], counts, 0);
 			}
 
-			int[] localNodeIDs = nodeTopology.Clusters[commWorld.Rank].Nodes.Keys.ToArray();
-			Array.Sort(localNodeIDs); // Use the same order in all machines, instead of depending on the order of Dictionary.
-
-			var result = new Dictionary<int, T>();
-			for (int n = 0; n < localNodeIDs.Length; ++n)
-			{
-				result[localNodeIDs[n]] = localData[n];
-			}
-			return result;
-		}
-
-		//TODO Optim: perhaps only the root process needs to know all the counts. The rest of the processes only need to
-		//		know their local count. 
-		//TODO Optim: This can be cached safely.
-		private int[] GetCollectiveNodeCounts()
-		{
-			var counts = new int[commWorld.Size];
-			for (int c = 0; c < commWorld.Size; ++c)
-			{
-				counts[c] = nodeTopology.Clusters[c].Nodes.Count;
-			}
-			return counts;
-		}
-
-		/// <summary>
-		/// In a collective array (e.g after gather, before scatter/broadcast) each entry corresponds to a 
-		/// <see cref="ComputeNode"/>, but they are not placed in order. In fact the nodes of a <see cref="ComputeNodeCluster"/>
-		/// are placed contiguously and in order, but these nodes do not have consecutive IDs in general. This method maps
-		/// the indices of node data in a collective array to the IDs of the corresponding nodes.
-		/// </summary>
-		private int[] GetCollectiveArrayIndicesToNodeIds()
-		{
-			//int[] counts = GetCollectiveNodeCounts();
-			var result = new int[nodeTopology.Nodes.Count];
-			int clusterOffset = 0;
-			for (int c = 0; c < commWorld.Size; ++c)
-			{
-				int[] clusterNodeIDs = nodeTopology.Clusters[c].Nodes.Keys.ToArray();
-				Array.Sort(clusterNodeIDs); // Use the same order in all machines, instead of depending on the order of Dictionary.
-				Array.Copy(clusterNodeIDs, 0, result, clusterOffset, clusterNodeIDs.Length);
-				clusterOffset += clusterNodeIDs.Length;
-			}
+			Dictionary<int, T> result = collectivesHelper.LocalNodesDataToDictionary(commWorld.Rank, localData);
 			return result;
 		}
 

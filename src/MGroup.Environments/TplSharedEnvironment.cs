@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
+using MGroup.Environments.Tasks;
 
 namespace MGroup.Environments
 {
@@ -57,6 +58,11 @@ namespace MGroup.Environments
 
 			return result;
 		}
+
+		//public void DoGlobalTask<TInput>(GlobalTask<TInput> task)
+		//{
+		//	task.Operation(task.GetLocalInput);
+		//}
 
 		public void DoMasterNode(Action action)
 		{

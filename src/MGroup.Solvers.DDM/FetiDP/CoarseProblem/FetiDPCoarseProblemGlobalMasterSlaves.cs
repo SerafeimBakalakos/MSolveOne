@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.Environments;
+using MGroup.Environments.Tasks;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
+using MGroup.Solvers.DDM.Commons;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 
@@ -22,6 +24,21 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		{
 			this.getSubdomainDofs = getSubdomainDofs;
 		}
+
+		//public override void FindCoarseProblemDofs()
+		//{
+		//	var task = new GlobalTask<IntDofTable>();
+		//	task.GetLocalInput = subdomainID => getSubdomainDofs(subdomainID).DofOrderingCorner;
+		//	task.Operation = (Dictionary<int, IntDofTable> allSubdomainCornerDofs) =>
+		//	{
+		//		coarseProblemDofs.FindGlobalCornerDofs(allSubdomainCornerDofs);
+		//		coarseProblemDofs.CalcSubdomainGlobalCornerDofMaps();
+		//		DofPermutation permutation = coarseProblemMatrix.ReorderGlobalCornerDofs(
+		//		coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs);
+		//		coarseProblemDofs.ReorderGlobalCornerDofs(permutation);
+		//	};
+		//	environment.DoGlobalTask(task);
+		//}
 
 		protected override Dictionary<int, IntDofTable> GatherSubdomainCornerDofs()
 		{

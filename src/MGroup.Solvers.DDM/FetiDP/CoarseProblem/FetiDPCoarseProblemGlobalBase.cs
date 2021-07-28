@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.Environments;
+using MGroup.Environments.Tasks;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
@@ -35,7 +36,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			this.coarseProblemSolver = new FetiDPCoarseProblemGlobalSolver(coarseProblemDofs, coarseProblemMatrix);
 		}
 
-		public void FindCoarseProblemDofs()
+		public virtual void FindCoarseProblemDofs()
 		{
 			Dictionary<int, IntDofTable> subdomainCornerDofs = GatherSubdomainCornerDofs();
 			environment.DoMasterNode(() =>

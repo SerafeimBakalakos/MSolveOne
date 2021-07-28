@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
+using MGroup.Environments.Tasks;
 
 //TODOMPI: Use Func<int, T> instead of Dictionary<int, T> as parameter. It will also allow lazy calculation fo subdomain data.
 //      If I need the semantics of "already calculated data are passed into the environment" then I could have extension methods
@@ -27,6 +28,8 @@ namespace MGroup.Environments
 		/// <typeparam name="T"></typeparam>
 		/// <param name="createPerNode"></param>
 		Dictionary<int, T> CreateDictionaryPerNode<T>(Func<int, T> createDataPerNode);
+
+		//void DoGlobalTask<TInput>(GlobalTask<TInput> task);
 
 		void DoPerNode(Action<int> actionPerNode);
 

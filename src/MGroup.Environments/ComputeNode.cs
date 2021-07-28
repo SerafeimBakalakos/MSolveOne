@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -12,7 +12,6 @@ namespace MGroup.Environments
         }
 
         public ComputeNodeCluster Cluster { get; set; }
-
 
         public int ID { get; }
 
