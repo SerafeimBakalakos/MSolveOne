@@ -131,8 +131,6 @@ namespace MGroup.Solvers.Tests
 
 				// Model with 1 subdomain
 				var model = new Model();
-				model.AllDofs.AddDof(StructuralDof.TranslationX);
-				model.AllDofs.AddDof(StructuralDof.TranslationY);
 				model.SubdomainsDictionary.Add(subdomainID, new Subdomain(subdomainID));
 
 				// Generate mesh

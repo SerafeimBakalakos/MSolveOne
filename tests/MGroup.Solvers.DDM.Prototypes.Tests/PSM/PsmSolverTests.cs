@@ -50,7 +50,7 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PSM
 			parentAnalyzer.Solve();
 
 			// Check results
-			NodalResults expectedResults = Brick3DExample.GetExpectedNodalValues();
+			NodalResults expectedResults = Brick3DExample.GetExpectedNodalValues(model.AllDofs);
 			double tolerance = 1E-7;
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
@@ -98,7 +98,7 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PSM
 			parentAnalyzer.Solve();
 
 			// Check results
-			NodalResults expectedResults = Line1DExample.GetExpectedNodalValues();
+			NodalResults expectedResults = Line1DExample.GetExpectedNodalValues(model.AllDofs);
 			double tolerance = 1E-7;
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
@@ -146,7 +146,7 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PSM
 			parentAnalyzer.Solve();
 
 			// Check results
-			NodalResults expectedResults = Plane2DExample.GetExpectedNodalValues();
+			NodalResults expectedResults = Plane2DExample.GetExpectedNodalValues(model.AllDofs);
 			double tolerance = 1E-7;
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{

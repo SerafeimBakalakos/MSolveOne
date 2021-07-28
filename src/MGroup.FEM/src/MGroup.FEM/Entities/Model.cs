@@ -18,6 +18,18 @@ namespace MGroup.FEM.Entities
 {
 	public class Model : IModel, ITransientModel
 	{
+		public Model()
+		{
+			AllDofs.AddDof(StructuralDof.TranslationX);
+			AllDofs.AddDof(StructuralDof.TranslationY);
+			AllDofs.AddDof(StructuralDof.TranslationZ);
+			AllDofs.AddDof(StructuralDof.RotationX);
+			AllDofs.AddDof(StructuralDof.RotationY);
+			AllDofs.AddDof(StructuralDof.RotationZ);
+			AllDofs.AddDof(ThermalDof.Temperature);
+			AllDofs.AddDof(PorousMediaDof.Pressure);
+		}
+
 		//public IList<EmbeddedNode> EmbeddedNodes { get; } = new List<EmbeddedNode>();
 
 		public ActiveDofs AllDofs { get; } = new ActiveDofs();

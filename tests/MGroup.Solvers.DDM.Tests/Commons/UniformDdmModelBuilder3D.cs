@@ -55,9 +55,6 @@ namespace MGroup.Solvers.DDM.Tests.Commons
 		public Model BuildSingleSubdomainModel()
 		{
 			var model = new Model();
-			model.AllDofs.AddDof(StructuralDof.TranslationX);
-			model.AllDofs.AddDof(StructuralDof.TranslationY);
-			model.AllDofs.AddDof(StructuralDof.TranslationZ);
 			model.SubdomainsDictionary[0] = new Subdomain(0);
 
 			UniformCartesianMesh3D mesh = BuildMesh();

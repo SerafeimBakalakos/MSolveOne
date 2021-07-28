@@ -87,7 +87,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			parentAnalyzer.Solve();
 
 			// Check results
-			NodalResults expectedResults = Brick3DExample.GetExpectedNodalValues();
+			NodalResults expectedResults = Brick3DExample.GetExpectedNodalValues(model.AllDofs);
 			double tolerance = 1E-7;
 			environment.DoPerNode(subdomainID =>
 			{
@@ -165,7 +165,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			parentAnalyzer.Solve();
 
 			// Check results
-			NodalResults expectedResults = Plane2DExample.GetExpectedNodalValues();
+			NodalResults expectedResults = Plane2DExample.GetExpectedNodalValues(model.AllDofs);
 			double tolerance = 1E-7;
 			environment.DoPerNode(subdomainID =>
 			{

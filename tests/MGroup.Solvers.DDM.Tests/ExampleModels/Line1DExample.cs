@@ -130,7 +130,6 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 		public static Model CreateSingleSubdomainModel()
 		{
 			var model = new Model();
-			model.AllDofs.AddDof(ThermalDof.Temperature);
 			model.SubdomainsDictionary[0] = new Subdomain(0);
 
 			// Nodes
@@ -186,7 +185,7 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			return model;
 		}
 
-		public static NodalResults GetExpectedNodalValues()
+		public static NodalResults GetExpectedNodalValues(ActiveDofs allDofs)
 		{
 			//var model = Line1DExample.CreateSingleSubdomainModel();
 			//var solver = new ISAAR.MSolve.Solvers.Direct.SkylineSolver.Builder().BuildSolver(model);
@@ -198,24 +197,25 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 			//Table<int, int, double> result =
 			//    Utilities.FindNodalFieldValues(model.Subdomains.First(), solver.LinearSystems.First().Value.Solution);
 
+			int dofID = allDofs.GetIdOfDof(ThermalDof.Temperature);
 			var results = new Table<int, int, double>();
-			results[0, 0] = 32;
-			results[1, 0] = 30;
-			results[2, 0] = 28;
-			results[3, 0] = 26;
-			results[4, 0] = 24;
-			results[5, 0] = 22;
-			results[6, 0] = 20;
-			results[7, 0] = 18;
-			results[8, 0] = 16;
-			results[9, 0] = 14;
-			results[10, 0] = 12;
-			results[11, 0] = 10;
-			results[12, 0] = 8;
-			results[13, 0] = 6;
-			results[14, 0] = 4;
-			results[15, 0] = 2;
-			results[16, 0] = 0;
+			results[0, dofID] = 32;
+			results[1, dofID] = 30;
+			results[2, dofID] = 28;
+			results[3, dofID] = 26;
+			results[4, dofID] = 24;
+			results[5, dofID] = 22;
+			results[6, dofID] = 20;
+			results[7, dofID] = 18;
+			results[8, dofID] = 16;
+			results[9, dofID] = 14;
+			results[10, dofID] = 12;
+			results[11, dofID] = 10;
+			results[12, dofID] = 8;
+			results[13, dofID] = 6;
+			results[14, dofID] = 4;
+			results[15, dofID] = 2;
+			results[16, dofID] = 0;
 
 			return new NodalResults(results);
 		}
