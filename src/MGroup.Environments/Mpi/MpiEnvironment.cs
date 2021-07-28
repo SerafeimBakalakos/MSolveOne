@@ -340,7 +340,7 @@ namespace MGroup.Environments.Mpi
 			int clusterOffset = 0;
 			for (int c = 0; c < commWorld.Size; ++c)
 			{
-				int[] clusterNodeIDs = nodeTopology.Clusters[commWorld.Rank].Nodes.Keys.ToArray();
+				int[] clusterNodeIDs = nodeTopology.Clusters[c].Nodes.Keys.ToArray();
 				Array.Sort(clusterNodeIDs); // Use the same order in all machines, instead of depending on the order of Dictionary.
 				Array.Copy(clusterNodeIDs, 0, result, clusterOffset, clusterNodeIDs.Length);
 				clusterOffset += clusterNodeIDs.Length;

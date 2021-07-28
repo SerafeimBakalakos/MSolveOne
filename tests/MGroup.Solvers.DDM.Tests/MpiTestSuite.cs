@@ -55,15 +55,15 @@ namespace MGroup.Solvers.DDM.Tests
 				//		$"Process {MPI.Communicator.world.Rank}: Now running SimplePFetiDPSolverTests.TestForBrick3DInternal with distributed coarse problem."));
 				//SimplePFetiDPSolverTests.TestForBrick3DInternal(mpiEnvironment, true);
 
-				MpiDebugUtilities.DoSerially(MPI.Communicator.world,
-					() => Console.WriteLine(
-						$"Process {MPI.Communicator.world.Rank}: Now running SimplePFetiDPSolverTests.TestForPlane2DInternal with global coarse problem."));
-				SimplePFetiDPSolverTests.TestForPlane2DInternal(mpiEnvironment, false);
-
 				//MpiDebugUtilities.DoSerially(MPI.Communicator.world,
 				//	() => Console.WriteLine(
-				//		$"Process {MPI.Communicator.world.Rank}: Now running SimplePFetiDPSolverTests.TestForBrick3DInternal with global coarse problem."));
-				//SimplePFetiDPSolverTests.TestForBrick3DInternal(mpiEnvironment, false);
+				//		$"Process {MPI.Communicator.world.Rank}: Now running SimplePFetiDPSolverTests.TestForPlane2DInternal with global coarse problem."));
+				//SimplePFetiDPSolverTests.TestForPlane2DInternal(mpiEnvironment, false);
+
+				MpiDebugUtilities.DoSerially(MPI.Communicator.world,
+					() => Console.WriteLine(
+						$"Process {MPI.Communicator.world.Rank}: Now running SimplePFetiDPSolverTests.TestForBrick3DInternal with global coarse problem."));
+				SimplePFetiDPSolverTests.TestForBrick3DInternal(mpiEnvironment, false);
 
 				MpiDebugUtilities.DoSerially(MPI.Communicator.world,
 					() => Console.WriteLine($"Process {MPI.Communicator.world.Rank}: All tests passed"));

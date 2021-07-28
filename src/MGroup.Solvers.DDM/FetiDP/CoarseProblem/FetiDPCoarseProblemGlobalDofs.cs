@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
