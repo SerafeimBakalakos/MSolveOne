@@ -23,7 +23,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			this.dofs = dofs;
 		}
 
-		public DofTable GlobalDofOrderingBoundary { get; set; }
+		public IntDofTable GlobalDofOrderingBoundary { get; set; }
 
 		public BlockMatrix MatrixLbe { get; set; }
 
@@ -75,9 +75,9 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			int numBoundaryDofs = 0;
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
-				foreach ((INode node, IDofType dof, int idx) in dofs.SubdomainDofOrderingBoundary[subdomain.ID])
+				foreach ((int node, int dof, int idx) in dofs.SubdomainDofOrderingBoundary[subdomain.ID])
 				{
-					bool didNotExist = globalBoundaryDofs.TryAdd(node.ID, model.AllDofs.GetIdOfDof(dof), numBoundaryDofs);
+					bool didNotExist = globalBoundaryDofs.TryAdd(node, dof, numBoundaryDofs);
 					if (didNotExist)
 					{
 						numBoundaryDofs++;
@@ -85,10 +85,10 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 				}
 			}
 
-			var boundaryDofOrdering = new DofTable();
+			var boundaryDofOrdering = new IntDofTable();
 			foreach ((int nodeID, int dofID, int idx) in globalBoundaryDofs)
 			{
-				boundaryDofOrdering[model.GetNode(nodeID), model.AllDofs.GetDofWithId(dofID)] = idx;
+				boundaryDofOrdering[nodeID, dofID] = idx;
 			}
 
 			GlobalDofOrderingBoundary = boundaryDofOrdering;
@@ -99,9 +99,9 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 		{
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
-				DofTable subdomainDofs = dofs.SubdomainDofOrderingBoundary[subdomain.ID];
+				IntDofTable subdomainDofs = dofs.SubdomainDofOrderingBoundary[subdomain.ID];
 				var Lb = Matrix.CreateZero(dofs.NumSubdomainDofsBoundary[subdomain.ID], NumGlobalDofsBoundary);
-				foreach ((INode node, IDofType dof, int subdomainIdx) in subdomainDofs)
+				foreach ((int node, int dof, int subdomainIdx) in subdomainDofs)
 				{
 					int globalIdx = GlobalDofOrderingBoundary[node, dof];
 					Lb[subdomainIdx, globalIdx] = 1.0;

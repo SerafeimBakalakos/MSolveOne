@@ -14,12 +14,13 @@ namespace MGroup.Solvers.DofOrdering
 	/// </summary>
 	public class NodeMajorDofOrderingStrategy : IFreeDofOrderingStrategy
 	{
-		public (int numSubdomainFreeDofs, DofTable subdomainFreeDofs) OrderSubdomainDofs(ISubdomain subdomain)
-			=> OrderFreeDofsOfElementSet(subdomain.Elements, subdomain.Nodes);
+		public (int numSubdomainFreeDofs, IntDofTable subdomainFreeDofs) OrderSubdomainDofs(ISubdomain subdomain, 
+			ActiveDofs allDofs)
+			=> OrderFreeDofsOfElementSet(subdomain.Elements, subdomain.Nodes, allDofs);
 
 		// Copied from the methods used by Subdomain and Model previously.
-		private static (int numFreeDofs, DofTable freeDofs) OrderFreeDofsOfElementSet(IEnumerable<IElement> elements,
-			IEnumerable<INode> sortedNodes)
+		private static (int numFreeDofs, IntDofTable freeDofs) OrderFreeDofsOfElementSet(IEnumerable<IElement> elements,
+			IEnumerable<INode> sortedNodes, ActiveDofs allDofs)
 		{
 			int totalDOFs = 0;
 			Dictionary<int, List<IDofType>> nodalDOFTypesDictionary = new Dictionary<int, List<IDofType>>(); //TODO: use Set instead of List
@@ -33,7 +34,7 @@ namespace MGroup.Solvers.DofOrdering
 				}
 			}
 
-			var freeDofs = new DofTable();
+			var freeDofs = new IntDofTable();
 			foreach (INode node in sortedNodes)
 			{
 				//List<DOFType> dofTypes = new List<DOFType>();
@@ -50,7 +51,7 @@ namespace MGroup.Solvers.DofOrdering
 				//foreach (DOFType dofType in dofTypes.Distinct<DOFType>())
 				foreach (IDofType dofType in nodalDOFTypesDictionary[node.ID].Distinct())
 				{
-					int dofID = 0;
+					int dofIdx = 0;
 					#region removeMaria
 					//foreach (DOFType constraint in node.Constraints)
 					//{
@@ -66,7 +67,7 @@ namespace MGroup.Solvers.DofOrdering
 					{
 						if (constraint.DOF == dofType)
 						{
-							dofID = -1;
+							dofIdx = -1;
 							break;
 						}
 					}
@@ -79,10 +80,10 @@ namespace MGroup.Solvers.DofOrdering
 					//    .SelectMany(d => d).Count(d => d == dofType) > 0)
 					//    dofID = -1;
 
-					if (dofID == 0)
+					if (dofIdx == 0)
 					{
-						dofID = totalDOFs;
-						freeDofs[node, dofType] = dofID;
+						dofIdx = totalDOFs;
+						freeDofs[node.ID, allDofs.GetIdOfDof(dofType)] = dofIdx;
 						totalDOFs++;
 					}
 				}

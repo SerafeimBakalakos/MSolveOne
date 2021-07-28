@@ -30,11 +30,11 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
 				int s = subdomain.ID;
-				DofTable boundaryDofs = dofs.SubdomainDofOrderingBoundary[s];
+				IntDofTable boundaryDofs = dofs.SubdomainDofOrderingBoundary[s];
 				var inverseMultiplicities = new double[dofs.NumSubdomainDofsBoundary[s]];
-				foreach ((INode node, _, int idx) in boundaryDofs)
+				foreach ((int node, _, int idx) in boundaryDofs)
 				{
-					inverseMultiplicities[idx] = 1.0 / node.Subdomains.Count;
+					inverseMultiplicities[idx] = 1.0 / model.GetNode(node).Subdomains.Count;
 				}
 				this.SudomainInverseMultiplicities[s] = inverseMultiplicities;
 			}

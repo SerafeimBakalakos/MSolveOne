@@ -85,39 +85,6 @@ namespace MGroup.Solvers.DDM
 			return indexer;
 		}
 
-		public DistributedOverlappingIndexer CreateDistributedVectorIndexer_OLD(Func<int, DofTable> getSubdomainDofs)
-		{
-			var indexer = new DistributedOverlappingIndexer(environment);
-			environment.DoPerNode(subdomainID =>
-			{
-				DofTable subdomainDofs = getSubdomainDofs(subdomainID);
-
-				var allCommonDofIndices = new Dictionary<int, int[]>();
-				foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
-				{
-					DofSet commonDofs = GetCommonDofsOfSubdomains(subdomainID, neighborID);
-					var commonDofIndices = new List<int>(commonDofs.Count());
-					foreach ((int nodeID, int dofID) in commonDofs.EnumerateNodesDofs())
-					{
-						//TODO: It would be faster to iterate each node and then its dofs. Same for DofTable. 
-						//		Even better let DofTable take DofSet as argument and return the indices.
-						INode node = model.GetNode(nodeID);
-						IDofType dof = model.AllDofs.GetDofWithId(dofID);
-
-						bool isRelevant = subdomainDofs.TryGetValue(node, dof, out int subdomainIdx);
-						if (isRelevant)
-						{
-							commonDofIndices.Add(subdomainIdx);
-						}
-					}
-					allCommonDofIndices[neighborID] = commonDofIndices.ToArray();
-				}
-
-				indexer.GetLocalComponent(subdomainID).Initialize(subdomainDofs.EntryCount, allCommonDofIndices);
-			});
-			return indexer;
-		}
-
 		//TODOMPI: this is not very safe. It is easy to mix up the two subdomains, which will lead to NullReferenceException if
 		//      they belong to different clusters/MPI processes. Perhaps this info should be given together with neighborsPerSubdomain
 		//      to avoid such cases. Or ISubdomain could contain both of these data.
@@ -175,7 +142,7 @@ namespace MGroup.Solvers.DDM
 				AllToAllNodeData<int> transferData = transferDataPerSubdomain[subdomainID];
 				foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
 				{
-					DofSet receivedDofs = DofSet.Deserialize(model.AllDofs, transferData.recvValues[neighborID]);
+					DofSet receivedDofs = DofSet.Deserialize(transferData.recvValues[neighborID]);
 					commonDofsBetweenSubdomains[subdomainID][neighborID] =
 						commonDofsBetweenSubdomains[subdomainID][neighborID].IntersectionWith(receivedDofs);
 				}
@@ -217,14 +184,13 @@ namespace MGroup.Solvers.DDM
 		private Dictionary<int, DofSet> FindLocalSubdomainDofsAtCommonNodes(int subdomainID)
 		{
 			var commonDofsOfSubdomain = new Dictionary<int, DofSet>();
-			DofTable freeDofs = getSubdomainFreeDofs(subdomainID).FreeDofs;
+			IntDofTable freeDofs = getSubdomainFreeDofs(subdomainID).FreeDofs;
 			foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
 			{
-				var dofSet = new DofSet(model.AllDofs);
+				var dofSet = new DofSet();
 				foreach (int nodeID in GetCommonNodesOfSubdomains(subdomainID, neighborID))
 				{
-					INode node = model.GetNode(nodeID);
-					dofSet.AddDofs(node, freeDofs.GetColumnsOfRow(node));
+					dofSet.AddDofs(nodeID, freeDofs.GetColumnsOfRow(nodeID));
 				}
 				commonDofsOfSubdomain[neighborID] = dofSet;
 			}

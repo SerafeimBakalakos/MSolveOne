@@ -23,7 +23,7 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 			this.stiffnesses = stiffnesses;
 		}
 
-		public DofTable GlobalDofOrderingCorner { get; set; }
+		public IntDofTable GlobalDofOrderingCorner { get; set; }
 
 		public Matrix InvScc { get; set; }
 
@@ -69,9 +69,9 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 			int numCornerDofs = 0;
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
-				foreach ((INode node, IDofType dof, int idx) in dofs.SubdomainDofOrderingCorner[subdomain.ID])
+				foreach ((int node, int dof, int idx) in dofs.SubdomainDofOrderingCorner[subdomain.ID])
 				{
-					bool didNotExist = globalCornerDofs.TryAdd(node.ID, model.AllDofs.GetIdOfDof(dof), numCornerDofs);
+					bool didNotExist = globalCornerDofs.TryAdd(node, dof, numCornerDofs);
 					if (didNotExist)
 					{
 						numCornerDofs++;
@@ -79,10 +79,10 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 				}
 			}
 
-			var cornerDofOrdering = new DofTable();
-			foreach ((int nodeID, int dofID, int idx) in globalCornerDofs)
+			var cornerDofOrdering = new IntDofTable();
+			foreach ((int node, int dof, int idx) in globalCornerDofs)
 			{
-				cornerDofOrdering[model.GetNode(nodeID), model.AllDofs.GetDofWithId(dofID)] = idx;
+				cornerDofOrdering[node, dof] = idx;
 			}
 
 			GlobalDofOrderingCorner = cornerDofOrdering;
@@ -93,9 +93,9 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 		{
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
-				DofTable subdomainDofs = dofs.SubdomainDofOrderingCorner[subdomain.ID];
+				IntDofTable subdomainDofs = dofs.SubdomainDofOrderingCorner[subdomain.ID];
 				var Lc = Matrix.CreateZero(dofs.NumSubdomainDofsCorner[subdomain.ID], NumGlobalDofsCorner);
-				foreach ((INode node, IDofType dof, int subdomainIdx) in subdomainDofs)
+				foreach ((int node, int dof, int subdomainIdx) in subdomainDofs)
 				{
 					int globalIdx = GlobalDofOrderingCorner[node, dof];
 					Lc[subdomainIdx, globalIdx] = 1.0;

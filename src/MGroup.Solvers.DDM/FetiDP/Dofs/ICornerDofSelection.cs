@@ -9,6 +9,6 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 	{
 		int[] CornerNodeIDs { get; }
 
-		bool IsCornerDof(INode node, IDofType type);
+		bool IsCornerDof(int nodeID, int dofID);
 	}
 }

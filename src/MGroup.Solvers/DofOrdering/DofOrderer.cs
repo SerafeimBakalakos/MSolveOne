@@ -24,16 +24,20 @@ namespace MGroup.Solvers.DofOrdering
 			this.cacheElementToSubdomainDofMaps = cacheElementToSubdomainDofMaps;
 		}
 
-		public ISubdomainFreeDofOrdering OrderFreeDofs(ISubdomain subdomain)
+		public ISubdomainFreeDofOrdering OrderFreeDofs(ISubdomain subdomain, ActiveDofs allDofs)
 		{
 			// Order subdomain dofs
-			(int numSubdomainFreeDofs, DofTable subdomainFreeDofs) = freeOrderingStrategy.OrderSubdomainDofs(subdomain);
+			(int numSubdomainFreeDofs, IntDofTable subdomainFreeDofs) = 
+				freeOrderingStrategy.OrderSubdomainDofs(subdomain, allDofs);
 			ISubdomainFreeDofOrdering subdomainOrdering;
 			if (cacheElementToSubdomainDofMaps)
 			{
-				subdomainOrdering = new SubdomainFreeDofOrderingCaching(numSubdomainFreeDofs, subdomainFreeDofs);
+				subdomainOrdering = new SubdomainFreeDofOrderingCaching(numSubdomainFreeDofs, subdomainFreeDofs, allDofs);
 			}
-			else subdomainOrdering = new SubdomainFreeDofOrderingGeneral(numSubdomainFreeDofs, subdomainFreeDofs);
+			else
+			{
+				subdomainOrdering = new SubdomainFreeDofOrderingGeneral(numSubdomainFreeDofs, subdomainFreeDofs, allDofs);
+			}
 
 			// Reorder subdomain dofs
 			reorderingStrategy.ReorderDofs(subdomain, subdomainOrdering);

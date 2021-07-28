@@ -17,15 +17,15 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 {
 	public class PsmSubdomainDofs
 	{
-		private readonly ActiveDofs allDofs;
+		private readonly IModel model;
 		private readonly ISubdomainLinearSystem linearSystem;
 
 		//TODO: This is essential for testing and very useful for debugging, but not production code. Should I remove it?
 		private readonly bool sortDofsWhenPossible;
 
-		public PsmSubdomainDofs(ActiveDofs allDofs, ISubdomainLinearSystem linearSystem, bool sortDofsWhenPossible = false)
+		public PsmSubdomainDofs(IModel model, ISubdomainLinearSystem linearSystem, bool sortDofsWhenPossible = false)
 		{
-			this.allDofs = allDofs;
+			this.model = model;
 			this.linearSystem = linearSystem;
 			this.sortDofsWhenPossible = sortDofsWhenPossible;
 		}
@@ -57,19 +57,19 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 			var internalToFree = new HashSet<int>();
 			int subdomainBoundaryIdx = 0;
 
-			DofTable freeDofs = linearSystem.DofOrdering.FreeDofs;
-			IEnumerable<INode> nodes = freeDofs.GetRows();
+			IntDofTable freeDofs = linearSystem.DofOrdering.FreeDofs;
+			IEnumerable<int> nodes = freeDofs.GetRows();
 			if (sortDofsWhenPossible)
 			{
-				nodes = nodes.OrderBy(node => node.ID);
+				nodes = nodes.OrderBy(node => node);
 			}
 
-			foreach (INode node in nodes) //TODO: Optimize access: Directly get INode, Dictionary<IDof, int>
+			foreach (int node in nodes) //TODO: Optimize access: Directly get INode, Dictionary<IDof, int>
 			{
-				IReadOnlyDictionary<IDofType, int> dofsOfNode = freeDofs.GetDataOfRow(node);
+				IReadOnlyDictionary<int, int> dofsOfNode = freeDofs.GetDataOfRow(node);
 				if (sortDofsWhenPossible)
 				{
-					var sortedDofsOfNode = new SortedDictionary<IDofType, int>(new DofTypeComparer(allDofs));
+					var sortedDofsOfNode = new SortedDictionary<int, int>();
 					foreach (var dofTypeIdxPair in dofsOfNode)
 					{
 						sortedDofsOfNode[dofTypeIdxPair.Key] = dofTypeIdxPair.Value;
@@ -77,12 +77,12 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 					dofsOfNode = sortedDofsOfNode;
 				}
 
-				if (node.Subdomains.Count > 1)
+				if (model.GetNode(node).Subdomains.Count > 1)
 				{
 					foreach (var dofTypeIdxPair in dofsOfNode)
 					{
-						int dofID = allDofs.GetIdOfDof(dofTypeIdxPair.Key);
-						boundaryDofOrdering[node.ID, dofID] = subdomainBoundaryIdx++;
+						int dofID = dofTypeIdxPair.Key;
+						boundaryDofOrdering[node, dofID] = subdomainBoundaryIdx++;
 						boundaryToFree.Add(dofTypeIdxPair.Value);
 					}
 				}
@@ -98,21 +98,6 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 			this.DofOrderingBoundary = boundaryDofOrdering;
 			this.DofsBoundaryToFree = boundaryToFree.ToArray();
 			this.DofsInternalToFree = internalToFree.ToArray();
-		}
-
-		private class DofTypeComparer : IComparer<IDofType>
-		{
-			private readonly ActiveDofs allDofs;
-
-			public DofTypeComparer(ActiveDofs allDofs)
-			{
-				this.allDofs = allDofs;
-			}
-
-			public int Compare(IDofType x, IDofType y)
-			{
-				return allDofs.GetIdOfDof(x) - allDofs.GetIdOfDof(y);
-			}
 		}
 	}
 }

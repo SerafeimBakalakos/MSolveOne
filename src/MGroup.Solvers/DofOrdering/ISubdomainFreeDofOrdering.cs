@@ -10,27 +10,27 @@ using MGroup.MSolve.Discretization;
 //      stiffness matrix.
 namespace MGroup.Solvers.DofOrdering
 {
-    public interface ISubdomainFreeDofOrdering
-    {
-        DofTable FreeDofs { get; }
+	public interface ISubdomainFreeDofOrdering
+	{
+		IntDofTable FreeDofs { get; }
 
-        int NumFreeDofs { get; }
+		int NumFreeDofs { get; }
 
-        //TODO: What should it contain for constrained dofs?
-        void AddVectorElementToSubdomain(IElement element, double[] elementVector, IVector subdomainVector);
+		//TODO: What should it contain for constrained dofs?
+		void AddVectorElementToSubdomain(IElement element, double[] elementVector, IVector subdomainVector);
 
-        int CountElementDofs(IElement element);
+		int CountElementDofs(IElement element);
 
-        //TODO: What should it contain for constrained dofs?
-        //TODO: Should the element vector be passed in and modified instead. So far in all usecases the vector was created by 
-        //      the client using CountElementDofs() immediately before passing it to this method.
-        double[] ExtractVectorElementFromSubdomain(IElement element, IVectorView subdomainVector); 
+		//TODO: What should it contain for constrained dofs?
+		//TODO: Should the element vector be passed in and modified instead. So far in all usecases the vector was created by 
+		//      the client using CountElementDofs() immediately before passing it to this method.
+		double[] ExtractVectorElementFromSubdomain(IElement element, IVectorView subdomainVector); 
 
-        (int[] elementDofIndices, int[] subdomainDofIndices) MapFreeDofsElementToSubdomain(IElement element);
+		(int[] elementDofIndices, int[] subdomainDofIndices) MapFreeDofsElementToSubdomain(IElement element);
 
-        //TODO: perhaps the subdomain should be passed in the constructor.
-        void Reorder(IReorderingAlgorithm reorderingAlgorithm, ISubdomain subdomain);
+		//TODO: perhaps the subdomain should be passed in the constructor.
+		void Reorder(IReorderingAlgorithm reorderingAlgorithm, ISubdomain subdomain);
 
-        void ReorderNodeMajor(IReadOnlyList<INode> sortedNodes);
-    }
+		void ReorderNodeMajor(IReadOnlyList<INode> sortedNodes);
+	}
 }

@@ -11,12 +11,10 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 	public class FetiDPSubdomainDofs
 	{
 		private readonly ISubdomainLinearSystem linearSystem;
-		private readonly ActiveDofs allDofs;
 
-		public FetiDPSubdomainDofs(ISubdomainLinearSystem linearSystem, ActiveDofs allDofs)
+		public FetiDPSubdomainDofs(ISubdomainLinearSystem linearSystem)
 		{
 			this.linearSystem = linearSystem;
-			this.allDofs = allDofs;
 		}
 
 		public IntDofTable DofOrderingCorner { get; private set; }
@@ -45,17 +43,17 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 			var cornerToFree = new List<int>();
 			var remainderToFree = new HashSet<int>();
 			int numCornerDofs = 0;
-			DofTable freeDofs = linearSystem.DofOrdering.FreeDofs;
-			IEnumerable<INode> nodes = freeDofs.GetRows(); //TODO: Optimize access: Directly get INode, Dictionary<IDof, int>
-			foreach (INode node in nodes)
+			IntDofTable freeDofs = linearSystem.DofOrdering.FreeDofs;
+			IEnumerable<int> nodes = freeDofs.GetRows(); //TODO: Optimize access: Directly get INode, Dictionary<IDof, int>
+			foreach (int node in nodes)
 			{
-				IReadOnlyDictionary<IDofType, int> dofsOfNode = freeDofs.GetDataOfRow(node);
+				IReadOnlyDictionary<int, int> dofsOfNode = freeDofs.GetDataOfRow(node);
 				foreach (var dofIdxPair in dofsOfNode)
 				{
-					IDofType dof = dofIdxPair.Key;
+					int dof = dofIdxPair.Key;
 					if (cornerDofSelection.IsCornerDof(node, dof))
 					{
-						cornerDofOrdering[node.ID, allDofs.GetIdOfDof(dof)] = numCornerDofs++;
+						cornerDofOrdering[node, dof] = numCornerDofs++;
 						cornerToFree.Add(dofIdxPair.Value);
 					}
 					else

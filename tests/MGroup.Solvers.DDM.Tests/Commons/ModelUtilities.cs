@@ -10,11 +10,11 @@ namespace MGroup.Solvers.DDM.Tests.Commons
 {
 	public static class ModelUtilities
 	{
-		public static ISubdomainFreeDofOrdering OrderDofs(ISubdomain subdomain)
+		public static ISubdomainFreeDofOrdering OrderDofs(ISubdomain subdomain, ActiveDofs allDofs)
 		{
 			var dofOrderer = new NodeMajorDofOrderingStrategy();
-			(int numSubdomainFreeDofs, DofTable subdomainFreeDofs) = dofOrderer.OrderSubdomainDofs(subdomain);
-			var dofOrdering = new SubdomainFreeDofOrderingCaching(numSubdomainFreeDofs, subdomainFreeDofs);
+			(int numSubdomainFreeDofs, IntDofTable subdomainFreeDofs) = dofOrderer.OrderSubdomainDofs(subdomain, allDofs);
+			var dofOrdering = new SubdomainFreeDofOrderingCaching(numSubdomainFreeDofs, subdomainFreeDofs, allDofs);
 			return dofOrdering;
 		}
 

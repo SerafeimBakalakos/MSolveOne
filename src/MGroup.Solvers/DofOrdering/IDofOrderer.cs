@@ -16,6 +16,7 @@ namespace MGroup.Solvers.DofOrdering
 		/// Finds an ordering for the unconstrained freedom degrees of one of the physical model's subdomains.
 		/// </summary>
 		/// <param name="subdomain">A subdomain consisting of a subset of the nodes and elements of the total model.</param>
-		ISubdomainFreeDofOrdering OrderFreeDofs(ISubdomain subdomain);
+		/// <param name="allDofs">All freedom degrees used by the whole model.</param>
+		ISubdomainFreeDofOrdering OrderFreeDofs(ISubdomain subdomain, ActiveDofs allDofs);
 	}
 }

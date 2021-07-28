@@ -10,8 +10,14 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 {
 	public class PFetiDPHomogeneousScalingOriginal : IPFetiDPScaling
 	{
+		private readonly IModel model;
 		protected PsmInterfaceProblemOriginal interfaceProblem;
 		protected PFetiDPSubdomainDofs pfetiDPDofs;
+
+		public PFetiDPHomogeneousScalingOriginal(IModel model)
+		{
+			this.model = model;
+		}
 
 		public Matrix MatrixLpre { get; set;  }
 
@@ -40,9 +46,9 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 		private void CalcWb()
 		{
 			MatrixWb = Matrix.CreateZero(interfaceProblem.NumGlobalDofsBoundary, interfaceProblem.NumGlobalDofsBoundary);
-			foreach ((INode node, _, int idx) in interfaceProblem.GlobalDofOrderingBoundary)
+			foreach ((int node, _, int idx) in interfaceProblem.GlobalDofOrderingBoundary)
 			{
-				MatrixWb[idx, idx] = 1.0 / node.Subdomains.Count;
+				MatrixWb[idx, idx] = 1.0 / model.GetNode(node).Subdomains.Count;
 			}
 		}
 	}

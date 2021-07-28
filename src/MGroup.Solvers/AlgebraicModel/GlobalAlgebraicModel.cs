@@ -26,7 +26,7 @@ namespace MGroup.Solvers.AlgebraicModel
 		private readonly IModel model;
 		private readonly IDofOrderer dofOrderer;
 		private readonly ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler;
-		private readonly SubdomainVectorAssembler subdomainVectorAssembler = new SubdomainVectorAssembler();
+		private readonly SubdomainVectorAssembler subdomainVectorAssembler;
 
 		public GlobalAlgebraicModel(IModel model, IDofOrderer dofOrderer,
 			ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler)
@@ -34,6 +34,7 @@ namespace MGroup.Solvers.AlgebraicModel
 			this.model = model;
 			this.dofOrderer = dofOrderer;
 			this.subdomainMatrixAssembler = subdomainMatrixAssembler;
+			this.subdomainVectorAssembler = new SubdomainVectorAssembler(model.AllDofs);
 			subdomain = model.EnumerateSubdomains().First();
 			this.LinearSystem = new GlobalLinearSystem<TMatrix>(CheckCompatibleVector, CheckCompatibleMatrix);
 			Observers = new HashSet<IAlgebraicModelObserver>();
@@ -117,9 +118,9 @@ namespace MGroup.Solvers.AlgebraicModel
 
 			// Free dofs
 			GlobalVector globalVector = CheckCompatibleVector(vector);
-			foreach ((INode node, IDofType dof, int freeDofIdx) in SubdomainFreeDofOrdering.FreeDofs)
+			foreach ((int node, int dof, int freeDofIdx) in SubdomainFreeDofOrdering.FreeDofs)
 			{
-				results[node.ID, model.AllDofs.GetIdOfDof(dof)] = globalVector.SingleVector[freeDofIdx];
+				results[node, dof] = globalVector.SingleVector[freeDofIdx];
 			}
 
 			// Constrained dofs
@@ -145,7 +146,8 @@ namespace MGroup.Solvers.AlgebraicModel
 		{
 			GlobalVector globalVector = CheckCompatibleVector(vector);
 			ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrdering;
-			bool dofExists = subdomainDofs.FreeDofs.TryGetValue(node, dof, out int dofIdx);
+			int dofID = model.AllDofs.GetIdOfDof(dof);
+			bool dofExists = subdomainDofs.FreeDofs.TryGetValue(node.ID, dofID, out int dofIdx);
 			if (dofExists)
 			{
 				return globalVector.SingleVector[dofIdx];
@@ -158,7 +160,7 @@ namespace MGroup.Solvers.AlgebraicModel
 
 		public void OrderDofs()
 		{
-			SubdomainFreeDofOrdering = dofOrderer.OrderFreeDofs(subdomain);
+			SubdomainFreeDofOrdering = dofOrderer.OrderFreeDofs(subdomain, model.AllDofs);
 			foreach (IAlgebraicModelObserver observer in Observers)
 			{
 				observer.HandleDofOrderWasModified();

@@ -104,7 +104,7 @@ namespace MGroup.Solvers.Assemblers
 		// are not dependent from the rest. This method assumes dependency for all dofs of the same node. This is a rare occasion 
 		// though.
 		private static int[] FindSkylineColumnHeights(IEnumerable<IElement> elements,
-			int numFreeDofs, DofTable freeDofs)
+			int numFreeDofs, IntDofTable freeDofs)
 		{
 			int[] colHeights = new int[numFreeDofs]; //only entries above the diagonal count towards the column height
 			foreach (IElement element in elements)
@@ -123,14 +123,14 @@ namespace MGroup.Solvers.Assemblers
 				int minDof = Int32.MaxValue;
 				foreach (var node in elementNodes)
 				{
-					foreach (int dof in freeDofs.GetValuesOfRow(node)) minDof = Math.Min(dof, minDof);
+					foreach (int dof in freeDofs.GetValuesOfRow(node.ID)) minDof = Math.Min(dof, minDof);
 				}
 
 				// The height of each col is updated for all elements that engage the corresponding dof. 
 				// The max height is stored.
 				foreach (var node in elementNodes)
 				{
-					foreach (int dof in freeDofs.GetValuesOfRow(node))
+					foreach (int dof in freeDofs.GetValuesOfRow(node.ID))
 					{
 						colHeights[dof] = Math.Max(colHeights[dof], dof - minDof);
 					}

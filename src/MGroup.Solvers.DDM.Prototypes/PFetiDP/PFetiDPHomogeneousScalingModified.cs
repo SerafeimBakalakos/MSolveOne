@@ -15,7 +15,13 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 	/// </summary>
 	public class PFetiDPHomogeneousScalingModified : PFetiDPHomogeneousScalingOriginal
 	{
+		private readonly IModel model;
 		private PsmSubdomainDofs psmDofs;
+
+		public PFetiDPHomogeneousScalingModified(IModel model) : base(model)
+		{
+			this.model = model;
+		}
 
 		private BlockMatrix MatrixWbe { get; set; }
 
@@ -49,10 +55,10 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 			{
 				int nbs = psmDofs.NumSubdomainDofsBoundary[s];
 				var Ws = Matrix.CreateZero(nbs, nbs);
-				DofTable boundaryDofs = psmDofs.SubdomainDofOrderingBoundary[s];
-				foreach ((INode node, _, int idx) in boundaryDofs)
+				IntDofTable boundaryDofs = psmDofs.SubdomainDofOrderingBoundary[s];
+				foreach ((int node, _, int idx) in boundaryDofs)
 				{
-					Ws[idx, idx] = 1.0 / node.Subdomains.Count;
+					Ws[idx, idx] = 1.0 / model.GetNode(node).Subdomains.Count;
 				}
 				this.SudomainMatricesWb[s] = Ws;
 				this.MatrixWbe.AddBlock(s, s, Ws);

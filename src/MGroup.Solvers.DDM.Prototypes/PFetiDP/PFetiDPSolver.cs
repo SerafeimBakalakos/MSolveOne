@@ -60,15 +60,15 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 
 			if (scalingChoice == PFetiDPScaling.HomogeneousOriginal)
 			{
-				this.pfetiDPScaling = new PFetiDPHomogeneousScalingOriginal();
+				this.pfetiDPScaling = new PFetiDPHomogeneousScalingOriginal(model);
 			}
 			else if (scalingChoice == PFetiDPScaling.HomogeneousModified)
 			{
-				this.pfetiDPScaling = new PFetiDPHomogeneousScalingModified();
+				this.pfetiDPScaling = new PFetiDPHomogeneousScalingModified(model);
 			}
 			else if (scalingChoice == PFetiDPScaling.HomogeneousDistributed)
 			{
-				this.pfetiDPScaling = new PFetiDPHomogeneousScalingDistributed();
+				this.pfetiDPScaling = new PFetiDPHomogeneousScalingDistributed(model);
 			}
 			else
 			{

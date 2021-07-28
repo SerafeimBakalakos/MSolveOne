@@ -10,6 +10,13 @@ namespace MGroup.Solvers.Assemblers
 {
 	public class SubdomainVectorAssembler
 	{
+		private readonly ActiveDofs allDofs;
+
+		public SubdomainVectorAssembler(ActiveDofs allDofs)
+		{
+			this.allDofs = allDofs;
+		}
+
 		public void AddToSubdomainVector(IEnumerable<IElement> elements, Vector subdomainVector,
 			IElementVectorProvider vectorProvider, ISubdomainFreeDofOrdering dofOrdering)
 		{
@@ -37,7 +44,7 @@ namespace MGroup.Solvers.Assemblers
 		{
 			foreach (INodalLoad load in loads)
 			{
-				int dofIdx = dofOrdering.FreeDofs[load.Node, load.DOF];
+				int dofIdx = dofOrdering.FreeDofs[load.Node.ID, allDofs.GetIdOfDof(load.DOF)];
 				subdomainVector[dofIdx] += load.Amount;
 			}
 		}
@@ -45,16 +52,16 @@ namespace MGroup.Solvers.Assemblers
 		public void AddToSubdomainVector(IEnumerable<IAllNodeLoad> loads, Vector subdomainVector,
 			ISubdomainFreeDofOrdering dofOrdering)
 		{
-			foreach (INode node in dofOrdering.FreeDofs.GetRows())
+			foreach (int node in dofOrdering.FreeDofs.GetRows())
 			{
 				foreach (var dofIdxPair in dofOrdering.FreeDofs.GetDataOfRow(node))
 				{
-					IDofType dof = dofIdxPair.Key;
+					int dof = dofIdxPair.Key;
 					int idx = dofIdxPair.Value;
 
 					foreach (IAllNodeLoad load in loads)
 					{
-						if (load.DOF == dof)
+						if (allDofs.GetIdOfDof(load.DOF) == dof)
 						{
 							subdomainVector[idx] = load.Amount;
 						}

@@ -11,16 +11,14 @@ namespace MGroup.Solvers.Commons
 	{
 		//TODO: Perhaps I should use HashSets and order them, when I actually need to number the dofs
 		private SortedDictionary<int, SortedSet<int>> data = new SortedDictionary<int, SortedSet<int>>();
-		private readonly ActiveDofs allDofs;
 
-		public DofSet(ActiveDofs allDofs)
+		public DofSet()
 		{
-			this.allDofs = allDofs;
 		}
 
-		public static DofSet Deserialize(ActiveDofs allDofs, int[] serializedData)
+		public static DofSet Deserialize(int[] serializedData)
 		{
-			var dofSet = new DofSet(allDofs);
+			var dofSet = new DofSet();
 			int i = 0;
 			while (i < serializedData.Length)
 			{
@@ -43,7 +41,6 @@ namespace MGroup.Solvers.Commons
 			return dofSet;
 		}
 
-		public void AddDof(INode node, IDofType dof) => AddDof(node.ID, allDofs.GetIdOfDof(dof));
 
 		public void AddDof(int nodeID, int dofID)
 		{
@@ -55,9 +52,6 @@ namespace MGroup.Solvers.Commons
 			}
 			dofsOfThisNode.Add(dofID);
 		}
-
-		public void AddDofs(INode node, IEnumerable<IDofType> dofs) 
-			=> AddDofs(node.ID, dofs.Select(dof => allDofs.GetIdOfDof(dof)));
 
 		public void AddDofs(int nodeID, IEnumerable<int> dofIDs)
 		{
@@ -105,7 +99,7 @@ namespace MGroup.Solvers.Commons
 			//TODO: Lookups (log(n)) in other.data can be avoided by working with the enumerators of this.data and other.data
 			//TODO: Nodes that are not in common or do not have common dofs will be left with empty sets of dofs (int). 
 			//		Perhaps they should be cleaned up.
-			var result = new DofSet(allDofs);
+			var result = new DofSet();
 			result.data = this.data;
 			this.data = null;
 			foreach (var nodeDofsPair in result.data)
@@ -141,17 +135,16 @@ namespace MGroup.Solvers.Commons
 			return list.ToArray();
 		}
 
-		public (int numDofs, DofTable dofOrdering) OrderDofs(Func<int, INode> getNodeFromID) 
+		public (int numDofs, IntDofTable dofOrdering) OrderDofs(Func<int, INode> getNodeFromID) 
 		{
-			var dofTable = new DofTable();
+			var dofTable = new IntDofTable();
 			int numDofs = 0;
 			foreach (var nodeDofPair in data)
 			{
-				INode node = getNodeFromID(nodeDofPair.Key);
+				int nodeID = nodeDofPair.Key;
 				foreach (int dofID in nodeDofPair.Value)
 				{
-					IDofType dof = allDofs.GetDofWithId(dofID);
-					dofTable[node, dof] = numDofs++;
+					dofTable[nodeID, dofID] = numDofs++;
 				}
 			}
 			return (numDofs, dofTable);

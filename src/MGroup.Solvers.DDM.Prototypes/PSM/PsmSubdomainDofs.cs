@@ -25,7 +25,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 
 		public Dictionary<int, int> NumSubdomainDofsInternal { get; } = new Dictionary<int, int>();
 
-		public Dictionary<int, DofTable> SubdomainDofOrderingBoundary { get; } = new Dictionary<int, DofTable>();
+		public Dictionary<int, IntDofTable> SubdomainDofOrderingBoundary { get; } = new Dictionary<int, IntDofTable>();
 
 		public Dictionary<int, int[]> SubdomainDofsBoundaryToFree { get; } = new Dictionary<int, int[]>();
 
@@ -41,26 +41,26 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 
 		protected void SeparateFreeDofsIntoBoundaryAndInternal(ISubdomain subdomain)
 		{
-			var boundaryDofOrdering = new DofTable();
+			var boundaryDofOrdering = new IntDofTable();
 			var boundaryToFree = new List<int>();
 			var internalToFree = new HashSet<int>();
 			int subdomainBoundaryIdx = 0;
 
-			DofTable freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID].FreeDofs;
-			IEnumerable<INode> nodes = freeDofs.GetRows();
-			nodes = nodes.OrderBy(node => node.ID);
+			IntDofTable freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID].FreeDofs;
+			IEnumerable<int> nodes = freeDofs.GetRows();
+			nodes = nodes.OrderBy(node => node);
 
-			foreach (INode node in nodes)
+			foreach (int node in nodes)
 			{
-				IReadOnlyDictionary<IDofType, int> dofsOfNode = freeDofs.GetDataOfRow(node);
-				var sortedDofsOfNode = new SortedDictionary<IDofType, int>(new DofTypeComparer(model.AllDofs));
+				IReadOnlyDictionary<int, int> dofsOfNode = freeDofs.GetDataOfRow(node);
+				var sortedDofsOfNode = new SortedDictionary<int, int>();
 				foreach (var dofTypeIdxPair in dofsOfNode)
 				{
 					sortedDofsOfNode[dofTypeIdxPair.Key] = dofTypeIdxPair.Value;
 				}
 				dofsOfNode = sortedDofsOfNode;
 
-				if (node.Subdomains.Count > 1)
+				if (model.GetNode(node).Subdomains.Count > 1)
 				{
 					foreach (var dofTypeIdxPair in dofsOfNode)
 					{
@@ -84,21 +84,6 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			NumSubdomainDofsFree[s] = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID].NumFreeDofs;
 			SubdomainDofsBoundaryToFree[s] = boundaryToFree.ToArray();
 			SubdomainDofsInternalToFree[s] = internalToFree.ToArray();
-		}
-
-		private class DofTypeComparer : IComparer<IDofType>
-		{
-			private readonly ActiveDofs allDofs;
-
-			public DofTypeComparer(ActiveDofs allDofs)
-			{
-				this.allDofs = allDofs;
-			}
-
-			public int Compare(IDofType x, IDofType y)
-			{
-				return allDofs.GetIdOfDof(x) - allDofs.GetIdOfDof(y);
-			}
 		}
 	}
 }

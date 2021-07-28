@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
+//TODO: replace this by an option for DofTable (or IntDofTable, whichever sticks)
 namespace MGroup.MSolve.DataStructures
 {
     public class SortedDofTable : IEnumerable<(int row, int dof, int idx)>

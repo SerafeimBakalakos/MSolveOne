@@ -23,10 +23,10 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 
 		public void LinkInterfaceCoarseProblems()
 		{
-			DofTable boundaryDofs = interfaceProblem.GlobalDofOrderingBoundary;
-			DofTable cornerDofs = coarseProblem.GlobalDofOrderingCorner;
+			IntDofTable boundaryDofs = interfaceProblem.GlobalDofOrderingBoundary;
+			IntDofTable cornerDofs = coarseProblem.GlobalDofOrderingCorner;
 			GlobalMatrixNcb = Matrix.CreateZero(coarseProblem.NumGlobalDofsCorner, interfaceProblem.NumGlobalDofsBoundary);
-			foreach ((INode node, IDofType dof, int c) in cornerDofs)
+			foreach ((int node, int dof, int c) in cornerDofs)
 			{
 				int b = boundaryDofs[node, dof];
 				GlobalMatrixNcb[c, b] = 1.0;

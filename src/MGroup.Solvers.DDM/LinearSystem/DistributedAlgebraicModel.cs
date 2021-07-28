@@ -27,7 +27,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		private readonly IModel model;
 		private readonly IDofOrderer dofOrderer;
 		private readonly Dictionary<int, ISubdomainMatrixAssembler<TMatrix>> subdomainMatrixAssemblers;
-		private readonly SubdomainVectorAssembler subdomainVectorAssembler = new SubdomainVectorAssembler();
+		private readonly SubdomainVectorAssembler subdomainVectorAssembler;
 
 		public DistributedAlgebraicModel(IComputeEnvironment environment, IModel model, IDofOrderer dofOrderer,
 			ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler)
@@ -37,6 +37,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			this.dofOrderer = dofOrderer;
 
 			this.subdomainMatrixAssemblers = environment.CreateDictionaryPerNode(subdomainID => subdomainMatrixAssembler.Clone());
+			this.subdomainVectorAssembler = new SubdomainVectorAssembler(model.AllDofs);
 
 			this.LinearSystem = new DistributedLinearSystem<TMatrix>(CheckCompatibleVector, CheckCompatibleMatrix);
 			this.SubdomainLinearSystems = environment.CreateDictionaryPerNode(
@@ -166,9 +167,9 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
 			Vector subdomainVector = distributedVector.LocalVectors[subdomainID];
 			ISubdomainFreeDofOrdering subdomainFreeDofs = SubdomainFreeDofOrderings[subdomainID];
-			foreach ((INode node, IDofType dof, int freeDofIdx) in subdomainFreeDofs.FreeDofs)
+			foreach ((int node, int dof, int freeDofIdx) in subdomainFreeDofs.FreeDofs)
 			{
-				results[node.ID, model.AllDofs.GetIdOfDof(dof)] = subdomainVector[freeDofIdx];
+				results[node, dof] = subdomainVector[freeDofIdx];
 			}
 
 			// Constrained dofs
@@ -222,7 +223,8 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			{
 				int s = node.Subdomains.First();
 				ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[s];
-				bool dofExists = subdomainDofs.FreeDofs.TryGetValue(node, dof, out int dofIdx);
+				int dofID = model.AllDofs.GetIdOfDof(dof);
+				bool dofExists = subdomainDofs.FreeDofs.TryGetValue(node.ID, dofID, out int dofIdx);
 				if (dofExists)
 				{
 					return distributedVector.LocalVectors[s][dofIdx];
@@ -240,7 +242,8 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				foreach (int s in node.Subdomains)
 				{
 					ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[s];
-					bool dofExists = subdomainDofs.FreeDofs.TryGetValue(node, dof, out int dofIdx);
+					int dofID = model.AllDofs.GetIdOfDof(dof);
+					bool dofExists = subdomainDofs.FreeDofs.TryGetValue(node.ID, dofID, out int dofIdx);
 					if (dofExists)
 					{
 						// It is possible that this dof is activated by the elements of only 1 subdomain
@@ -277,10 +280,10 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			environment.DoPerNode(subdomainID =>
 			{
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
-				SubdomainFreeDofOrderings[subdomainID] = dofOrderer.OrderFreeDofs(subdomain);
+				SubdomainFreeDofOrderings[subdomainID] = dofOrderer.OrderFreeDofs(subdomain, model.AllDofs);
 			});
 			SubdomainTopology.FindCommonDofsBetweenSubdomains();
-			FreeDofIndexer = SubdomainTopology.CreateDistributedVectorIndexer_OLD(s => SubdomainFreeDofOrderings[s].FreeDofs);
+			FreeDofIndexer = SubdomainTopology.CreateDistributedVectorIndexer(s => SubdomainFreeDofOrderings[s].FreeDofs);
 			foreach (IAlgebraicModelObserver observer in Observers)
 			{
 				observer.HandleDofOrderWasModified();

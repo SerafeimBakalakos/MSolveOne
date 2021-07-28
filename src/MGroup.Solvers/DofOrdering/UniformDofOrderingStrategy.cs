@@ -19,13 +19,14 @@ namespace MGroup.Solvers.DofOrdering
 			this.dofsPerNode = dofsPerNode;
 		}
 
-		public (int numSubdomainFreeDofs, DofTable subdomainFreeDofs) OrderSubdomainDofs(ISubdomain subdomain)
-			=> OrderFreeDofsOfNodeSet(subdomain.Nodes);
+		public (int numSubdomainFreeDofs, IntDofTable subdomainFreeDofs) OrderSubdomainDofs(
+			ISubdomain subdomain, ActiveDofs allDofs)
+			=> OrderFreeDofsOfNodeSet(subdomain.Nodes, allDofs);
 
-		private (int numFreeDofs, DofTable freeDofs) OrderFreeDofsOfNodeSet(IEnumerable<INode> sortedNodes)
+		private (int numFreeDofs, IntDofTable freeDofs) OrderFreeDofsOfNodeSet(IEnumerable<INode> sortedNodes, ActiveDofs allDofs)
 		{
-			var freeDofs = new DofTable();
-			int dofCounter = 0;
+			var freeDofs = new IntDofTable();
+			int dofIdx = 0;
 			foreach (INode node in sortedNodes)
 			{
 				var constrainedDofs = new HashSet<IDofType>();
@@ -38,11 +39,11 @@ namespace MGroup.Solvers.DofOrdering
 				{
 					if (!constrainedDofs.Contains(dof))
 					{
-						freeDofs[node, dof] = dofCounter++;
+						freeDofs[node.ID, allDofs.GetIdOfDof(dof)] = dofIdx++;
 					}
 				}
 			}
-			return (dofCounter, freeDofs);
+			return (dofIdx, freeDofs);
 		}
 	}
 }

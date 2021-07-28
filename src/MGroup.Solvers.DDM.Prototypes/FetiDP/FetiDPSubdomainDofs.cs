@@ -26,7 +26,7 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 
 		public Dictionary<int, int> NumSubdomainDofsRemainder { get; } = new Dictionary<int, int>();
 
-		public Dictionary<int, DofTable> SubdomainDofOrderingCorner { get; } = new Dictionary<int, DofTable>();
+		public Dictionary<int, IntDofTable> SubdomainDofOrderingCorner { get; } = new Dictionary<int, IntDofTable>();
 
 		public Dictionary<int, int[]> SubdomainDofsCornerToFree { get; } = new Dictionary<int, int[]>();
 
@@ -42,19 +42,19 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 
 		protected void SeparateFreeDofsIntoCornerAndRemainder(ISubdomain subdomain)
 		{
-			var cornerDofOrdering = new DofTable();
+			var cornerDofOrdering = new IntDofTable();
 			var cornerToFree = new List<int>();
 			var remainderToFree = new HashSet<int>();
 			int subdomainCornerIdx = 0;
 
-			DofTable freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID].FreeDofs;
-			IEnumerable<INode> nodes = freeDofs.GetRows();
-			nodes = nodes.OrderBy(node => node.ID);
+			IntDofTable freeDofs = algebraicModel.SubdomainFreeDofOrderings[subdomain.ID].FreeDofs;
+			IEnumerable<int> nodes = freeDofs.GetRows();
+			nodes = nodes.OrderBy(node => node);
 
-			foreach (INode node in nodes)
+			foreach (int node in nodes)
 			{
-				IReadOnlyDictionary<IDofType, int> dofsOfNode = freeDofs.GetDataOfRow(node);
-				var sortedDofsOfNode = new SortedDictionary<IDofType, int>(new DofTypeComparer(model.AllDofs));
+				IReadOnlyDictionary<int, int> dofsOfNode = freeDofs.GetDataOfRow(node);
+				var sortedDofsOfNode = new SortedDictionary<int, int>();
 				foreach (var dofTypeIdxPair in dofsOfNode)
 				{
 					sortedDofsOfNode[dofTypeIdxPair.Key] = dofTypeIdxPair.Value;
@@ -63,7 +63,7 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 
 				foreach (var pair in dofsOfNode)
 				{
-					IDofType dof = pair.Key;
+					int dof = pair.Key;
 					int freeDofIdx = pair.Value;
 					if (cornerDofs.IsCornerDof(node, dof))
 					{

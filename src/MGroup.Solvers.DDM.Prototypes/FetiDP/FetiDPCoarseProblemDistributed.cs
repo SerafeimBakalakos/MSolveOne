@@ -90,9 +90,9 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 		private int[] FindCornerDofMultiplicities(ISubdomain subdomain)
 		{
 			var result = new int[dofs.NumSubdomainDofsCorner[subdomain.ID]];
-			foreach ((INode node, IDofType dof, int idx) in dofs.SubdomainDofOrderingCorner[subdomain.ID])
+			foreach ((int node, int dof, int idx) in dofs.SubdomainDofOrderingCorner[subdomain.ID])
 			{
-				result[idx] = node.Subdomains.Count;
+				result[idx] = model.GetNode(node).Subdomains.Count;
 			}
 			return result;
 		}
@@ -102,9 +102,9 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 			int sR = rowSubdomain.ID;
 			int sC = colSubdomain.ID;
 			var result = Matrix.CreateZero(dofs.NumSubdomainDofsCorner[sR], dofs.NumSubdomainDofsCorner[sC]);
-			DofTable rowCornerDofs = dofs.SubdomainDofOrderingCorner[sR];
-			DofTable colCornerDofs = dofs.SubdomainDofOrderingCorner[sC];
-			foreach ((INode node, IDofType dof, int row) in rowCornerDofs)
+			IntDofTable rowCornerDofs = dofs.SubdomainDofOrderingCorner[sR];
+			IntDofTable colCornerDofs = dofs.SubdomainDofOrderingCorner[sC];
+			foreach ((int node, int dof, int row) in rowCornerDofs)
 			{
 				bool isCommonDof = colCornerDofs.TryGetValue(node, dof, out int col);
 				if (isCommonDof)

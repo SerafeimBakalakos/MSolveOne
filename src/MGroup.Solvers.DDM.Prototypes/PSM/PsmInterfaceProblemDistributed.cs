@@ -73,9 +73,9 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 		private int[] FindBoundaryDofMultiplicities(ISubdomain subdomain)
 		{
 			var result = new int[dofs.NumSubdomainDofsBoundary[subdomain.ID]];
-			foreach ((INode node, IDofType dof, int idx) in dofs.SubdomainDofOrderingBoundary[subdomain.ID])
+			foreach ((int node, int dof, int idx) in dofs.SubdomainDofOrderingBoundary[subdomain.ID])
 			{
-				result[idx] = node.Subdomains.Count;
+				result[idx] = model.GetNode(node).Subdomains.Count;
 			}
 			return result;
 		}
@@ -85,9 +85,9 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			int sR = rowSubdomain.ID;
 			int sC = colSubdomain.ID;
 			var result = Matrix.CreateZero(dofs.NumSubdomainDofsBoundary[sR], dofs.NumSubdomainDofsBoundary[sC]);
-			DofTable rowBoundaryDofs = dofs.SubdomainDofOrderingBoundary[sR];
-			DofTable colBoundaryDofs = dofs.SubdomainDofOrderingBoundary[sC];
-			foreach ((INode node, IDofType dof, int row) in rowBoundaryDofs)
+			IntDofTable rowBoundaryDofs = dofs.SubdomainDofOrderingBoundary[sR];
+			IntDofTable colBoundaryDofs = dofs.SubdomainDofOrderingBoundary[sC];
+			foreach ((int node, int dof, int row) in rowBoundaryDofs)
 			{
 				bool isCommonDof = colBoundaryDofs.TryGetValue(node, dof, out int col);
 				if (isCommonDof)

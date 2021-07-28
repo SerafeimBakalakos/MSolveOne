@@ -12,6 +12,6 @@ namespace MGroup.Solvers.DofOrdering
         /// Orders the unconstrained freedom degrees of one of the model's subdomains.
         /// </summary>
         /// <param name="subdomain">A subdomain of the whole model.</param>
-        (int numSubdomainFreeDofs, DofTable subdomainFreeDofs) OrderSubdomainDofs(ISubdomain subdomain);
+        (int numSubdomainFreeDofs, IntDofTable subdomainFreeDofs) OrderSubdomainDofs(ISubdomain subdomain, ActiveDofs allDofs);
     }
 }
