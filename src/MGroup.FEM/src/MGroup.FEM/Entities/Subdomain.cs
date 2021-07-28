@@ -9,22 +9,18 @@ namespace MGroup.FEM.Entities
 {
 	public class Subdomain : ISubdomain
 	{
-		private readonly List<Node> nodes = new List<Node>();
+		private readonly SortedDictionary<int, Node> nodes = new SortedDictionary<int, Node>();
 
 		public Subdomain(int id)
 		{
 			this.ID = id;
 		}
 
-		IEnumerable<IElement> ISubdomain.Elements => Elements;
 		public List<Element> Elements { get; } = new List<Element>();
 
 		//public IList<EmbeddedNode> EmbeddedNodes { get; } = new List<EmbeddedNode>();
 
 		public int ID { get; }
-
-		IReadOnlyList<INode> ISubdomain.Nodes => nodes;
-		public IReadOnlyList<Node> Nodes => nodes;
 
 		//public bool MaterialsModified
 		//{
@@ -50,17 +46,24 @@ namespace MGroup.FEM.Entities
 		public void DefineNodesFromElements()
 		{
 			nodes.Clear();
-			var nodeComparer = Comparer<Node>.Create((Node node1, Node node2) => node1.ID - node2.ID);
-			var nodeSet = new SortedSet<Node>(nodeComparer);
 			foreach (Element element in Elements)
 			{
-				foreach (Node node in element.Nodes) nodeSet.Add(node);
+				foreach (Node node in element.Nodes)
+				{
+					nodes[node.ID] = node;
+				}
 			}
-			nodes.AddRange(nodeSet);
 
 			//foreach (var e in modelEmbeddedNodes.Where(x => nodeIDs.IndexOf(x.Node.ID) >= 0))
 			//    EmbeddedNodes.Add(e);
 		}
+
+		public IEnumerable<IElement> EnumerateElements() => Elements;
+
+		public IEnumerable<INode> EnumerateNodes() => nodes.Values;
+
+		//TODO: This should be faster than looking up a SortedDictionary
+		public int GetMultiplicityOfNode(int nodeID) => nodes[nodeID].Subdomains.Count;
 
 		public void ResetMaterialsModifiedProperty()
 		{

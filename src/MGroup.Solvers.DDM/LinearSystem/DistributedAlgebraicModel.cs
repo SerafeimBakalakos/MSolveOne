@@ -175,7 +175,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 			// Constrained dofs
 			ISubdomain subdomain = model.GetSubdomain(subdomainID);
-			foreach (INode node in subdomain.Nodes)
+			foreach (INode node in subdomain.EnumerateNodes())
 			{
 				foreach (Constraint dirichlet in node.Constraints)
 				{

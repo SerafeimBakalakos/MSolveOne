@@ -130,7 +130,7 @@ namespace MGroup.Solvers.DofOrdering
 		public void Reorder(IReorderingAlgorithm reorderingAlgorithm, ISubdomain subdomain)
 		{
 			var pattern = SparsityPatternSymmetric.CreateEmpty(NumFreeDofs);
-			foreach (var element in subdomain.Elements)
+			foreach (var element in subdomain.EnumerateElements())
 			{
 				(int[] elementDofIndices, int[] subdomainDofIndices) = MapFreeDofsElementToSubdomain(element);
 
@@ -141,7 +141,7 @@ namespace MGroup.Solvers.DofOrdering
 			FreeDofs.Reorder(permutation, oldToNew);
 		}
 
-		public void ReorderNodeMajor(IReadOnlyList<INode> sortedNodes) 
+		public void ReorderNodeMajor(IEnumerable<INode> sortedNodes) 
 			=> FreeDofs.ReorderNodeMajor(sortedNodes.Select(n => n.ID).ToList());
 
 		//public IReadOnlyDictionary<int, int> MapFreeDofsElementToSubdomain(IElement element)

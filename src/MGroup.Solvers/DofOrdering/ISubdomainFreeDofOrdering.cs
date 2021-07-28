@@ -32,6 +32,6 @@ namespace MGroup.Solvers.DofOrdering
 		//TODO: perhaps the subdomain should be passed in the constructor.
 		void Reorder(IReorderingAlgorithm reorderingAlgorithm, ISubdomain subdomain);
 
-		void ReorderNodeMajor(IReadOnlyList<INode> sortedNodes);
+		void ReorderNodeMajor(IEnumerable<INode> sortedNodes);
 	}
 }

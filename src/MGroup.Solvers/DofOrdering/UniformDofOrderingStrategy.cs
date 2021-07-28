@@ -22,7 +22,7 @@ namespace MGroup.Solvers.DofOrdering
 
 		public (int numSubdomainFreeDofs, IntDofTable subdomainFreeDofs) OrderSubdomainDofs(
 			ISubdomain subdomain, ActiveDofs allDofs)
-			=> OrderFreeDofsOfNodeSet(subdomain.Nodes, allDofs);
+			=> OrderFreeDofsOfNodeSet(subdomain.EnumerateNodes(), allDofs);
 
 		private (int numFreeDofs, IntDofTable freeDofs) OrderFreeDofsOfNodeSet(IEnumerable<INode> sortedNodes, ActiveDofs allDofs)
 		{

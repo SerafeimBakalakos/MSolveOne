@@ -17,15 +17,15 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 {
 	public class PsmSubdomainDofs
 	{
-		private readonly IModel model;
+		private readonly ISubdomain subdomain;
 		private readonly ISubdomainLinearSystem linearSystem;
 
 		//TODO: This is essential for testing and very useful for debugging, but not production code. Should I remove it?
 		private readonly bool sortDofsWhenPossible;
 
-		public PsmSubdomainDofs(IModel model, ISubdomainLinearSystem linearSystem, bool sortDofsWhenPossible = false)
+		public PsmSubdomainDofs(ISubdomain subdomain, ISubdomainLinearSystem linearSystem, bool sortDofsWhenPossible = false)
 		{
-			this.model = model;
+			this.subdomain = subdomain;
 			this.linearSystem = linearSystem;
 			this.sortDofsWhenPossible = sortDofsWhenPossible;
 		}
@@ -77,7 +77,7 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 					dofsOfNode = sortedDofsOfNode;
 				}
 
-				if (model.GetNode(node).Subdomains.Count > 1)
+				if (subdomain.GetMultiplicityOfNode(node) > 1)
 				{
 					foreach (var dofTypeIdxPair in dofsOfNode)
 					{

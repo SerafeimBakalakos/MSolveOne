@@ -1,3 +1,4 @@
+using System.Linq;
 using MGroup.MSolve.Discretization;
 
 
@@ -11,6 +12,6 @@ namespace MGroup.Solvers.DofOrdering.Reordering
     public class NodeMajorReordering : IDofReorderingStrategy
     {
         public void ReorderDofs(ISubdomain subdomain, ISubdomainFreeDofOrdering originalOrdering)
-            => originalOrdering.ReorderNodeMajor(subdomain.Nodes);
+            => originalOrdering.ReorderNodeMajor(subdomain.EnumerateNodes().OrderBy(n => n.ID));
     }
 }

@@ -4,18 +4,20 @@ using MGroup.MSolve.DataStructures;
 //TODO: tidy up the methods that concern material state
 namespace MGroup.MSolve.Discretization
 {
-    public interface ISubdomain
-    {
-		IEnumerable<IElement> Elements { get; }
+	public interface ISubdomain
+	{
+		int ID { get; }
 
-        int ID { get; }
+		bool LinearSystemModified { get; set; }
 
-        bool LinearSystemModified { get; set; }
+		IEnumerable<IElement> EnumerateElements();
 
-        IReadOnlyList<INode> Nodes { get; } 
+		IEnumerable<INode> EnumerateNodes();
 
-        void ResetMaterialsModifiedProperty();
+		int GetMultiplicityOfNode(int nodeID);
 
-        void SaveMaterialState();
-    }
+		void ResetMaterialsModifiedProperty();
+
+		void SaveMaterialState();
+	}
 }

@@ -125,7 +125,7 @@ namespace MGroup.Solvers.AlgebraicModel
 			}
 
 			// Constrained dofs
-			foreach (INode node in subdomain.Nodes)
+			foreach (INode node in subdomain.EnumerateNodes())
 			{
 				foreach (Constraint dirichlet in node.Constraints)
 				{

@@ -155,7 +155,7 @@ namespace MGroup.Solvers.DDM
 			{
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
 				var commonNodesOfThisSubdomain = new Dictionary<int, SortedSet<int>>();
-				foreach (INode node in subdomain.Nodes)
+				foreach (INode node in subdomain.EnumerateNodes())
 				{
 					if (node.Subdomains.Count == 1) continue; // internal node
 

@@ -67,7 +67,7 @@ namespace MGroup.Solvers.DofOrdering
 		{
 			elementDofsCache.Clear();
 			var pattern = SparsityPatternSymmetric.CreateEmpty(NumFreeDofs);
-			foreach (var element in subdomain.Elements)
+			foreach (var element in subdomain.EnumerateElements())
 			{
 				// Do not cache anything at this point
 				(int numAllElementDofs, int[] elementDofIndices, int[] subdomainDofIndices) = ProcessElement(element);
@@ -79,7 +79,7 @@ namespace MGroup.Solvers.DofOrdering
 			FreeDofs.Reorder(permutation, oldToNew);
 		}
 
-		public void ReorderNodeMajor(IReadOnlyList<INode> sortedNodes)
+		public void ReorderNodeMajor(IEnumerable<INode> sortedNodes)
 		{
 			elementDofsCache.Clear();
 			FreeDofs.ReorderNodeMajor(sortedNodes.Select(n => n.ID).ToList());

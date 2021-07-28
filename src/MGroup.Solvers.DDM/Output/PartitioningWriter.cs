@@ -26,7 +26,7 @@ namespace MGroup.Solvers.DDM.Output
 			var allElements = new HashSet<IElement>();
 			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
 			{
-				allElements.UnionWith(subdomain.Elements);
+				allElements.UnionWith(subdomain.EnumerateElements());
 			}
 			var outputMesh = new VtkMeshDiscontinuous(nodes, allElements.ToList());
 			var subdomainIDs = new double[outputMesh.VtkPoints.Count];

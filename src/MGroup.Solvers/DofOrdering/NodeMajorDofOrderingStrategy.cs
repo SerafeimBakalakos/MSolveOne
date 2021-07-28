@@ -17,7 +17,7 @@ namespace MGroup.Solvers.DofOrdering
 	{
 		public (int numSubdomainFreeDofs, IntDofTable subdomainFreeDofs) OrderSubdomainDofs(ISubdomain subdomain, 
 			ActiveDofs allDofs)
-			=> OrderFreeDofsOfElementSet(subdomain.Elements, subdomain.Nodes, allDofs);
+			=> OrderFreeDofsOfElementSet(subdomain.EnumerateElements(), subdomain.EnumerateNodes(), allDofs);
 
 		// Copied from the methods used by Subdomain and Model previously.
 		private static (int numFreeDofs, IntDofTable freeDofs) OrderFreeDofsOfElementSet(IEnumerable<IElement> elements,

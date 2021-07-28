@@ -22,7 +22,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 			double zmin = double.MaxValue;
 			double zmax = double.MinValue;
 
-			foreach (INode node in subdomain.Nodes)
+			foreach (INode node in subdomain.EnumerateNodes())
 			{
 				if (node.X < xmin) xmin = node.X;
 				if (node.X > xmax) xmax = node.X;
@@ -59,7 +59,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 			double ymin = double.MaxValue;
 			double ymax = double.MinValue;
 
-			foreach (INode node in subdomain.Nodes)
+			foreach (INode node in subdomain.EnumerateNodes())
 			{
 				if (node.X < xmin) xmin = node.X;
 				if (node.X > xmax) xmax = node.X;
