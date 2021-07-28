@@ -7,6 +7,7 @@ using MGroup.LinearAlgebra.Iterative.PreconditionedConjugateGradient;
 using MGroup.LinearAlgebra.Iterative.Preconditioning;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.Solvers.DDM.Prototypes.LinearAlgebraExtensions;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.Solvers.DDM.Prototypes.PSM
 {

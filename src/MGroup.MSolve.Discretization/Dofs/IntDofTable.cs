@@ -9,7 +9,7 @@ using MGroup.MSolve.DataStructures;
 //		DofTable is more expressive and does not require node and dof ids. IntDofTable is more flexible, especially in complex 
 //		DDM solvers, and serializable, which is essential for MPI implementations, although converting from/to INode, IDofType
 //		is not impossible. Since keys are integers, optimizations concerning storage, retrieval and creation are possible
-namespace MGroup.MSolve.Discretization
+namespace MGroup.MSolve.Discretization.Dofs
 {
 	/// <summary>
 	/// A <see cref="ITable{int, int, int}"/> that associates the freedom degrees of nodes with their ordinal number.

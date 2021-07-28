@@ -15,6 +15,7 @@ using MGroup.MSolve.Discretization.Mesh;
 using MGroup.MSolve.Geometry.Coordinates;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.FEM.Structural.Elements
 {

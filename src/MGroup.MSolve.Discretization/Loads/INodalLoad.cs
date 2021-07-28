@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.MSolve.Discretization.Loads
 {

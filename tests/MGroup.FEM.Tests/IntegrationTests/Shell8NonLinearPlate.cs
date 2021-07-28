@@ -10,6 +10,7 @@ namespace MGroup.FEM.Tests.IntegrationTests
 {
 	using Constitutive.Structural;
 	using Constitutive.Structural.ShellElements;
+	using MGroup.MSolve.Discretization.Dofs;
 	using MSolve.Solution;
 	using NumericalAnalyzers;
 	using NumericalAnalyzers.Logging;

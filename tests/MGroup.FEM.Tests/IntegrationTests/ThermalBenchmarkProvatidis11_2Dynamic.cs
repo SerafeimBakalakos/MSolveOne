@@ -9,7 +9,7 @@ using Xunit;
 namespace MGroup.FEM.Tests.IntegrationTests
 {
 	using Constitutive.Thermal;
-
+	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.MSolve.Solution.LinearSystem;
 
 	using NumericalAnalyzers;

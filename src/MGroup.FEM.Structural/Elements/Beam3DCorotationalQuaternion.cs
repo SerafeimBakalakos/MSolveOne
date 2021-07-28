@@ -23,17 +23,17 @@ namespace MGroup.FEM.Structural.Elements
 		private Quaternion quaternionLastNodeB;
 
 		/**
-         * Creates a new instance of {@link Beam3DCorotationalIncremental} class.
-         *
-         * @param nodes
-         *            The element nodes
-         * @param material
-         *            The element material
-         * @param density
-         *            The element density
-         * @param beamSection
-         *            The beam section.
-         */
+		 * Creates a new instance of {@link Beam3DCorotationalIncremental} class.
+		 *
+		 * @param nodes
+		 *            The element nodes
+		 * @param material
+		 *            The element material
+		 * @param density
+		 *            The element density
+		 * @param beamSection
+		 *            The beam section.
+		 */
 		public Beam3DCorotationalQuaternion(IList<Node> nodes, double youngModulus, double poissonRatio, double density, BeamSection3D beamSection)
 			: base(nodes, youngModulus, poissonRatio, density, beamSection)
 		{

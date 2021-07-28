@@ -10,6 +10,7 @@ using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.Solvers.DDM.Prototypes.LinearAlgebraExtensions;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 {

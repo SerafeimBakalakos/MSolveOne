@@ -6,7 +6,7 @@ using System.Text;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.MSolve.Discretization;
-using MGroup.Solvers.Commons;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.Solvers.DofOrdering;
 
 //TODO: Perhaps the common nodes and common dofs should be calculated and handled by different classes. Common dofs must be created

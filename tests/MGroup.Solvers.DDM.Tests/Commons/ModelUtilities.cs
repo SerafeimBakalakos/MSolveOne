@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.FEM.Entities;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.Solvers.DofOrdering;
-using MGroup.Solvers.DofOrdering.Reordering;
 
 namespace MGroup.Solvers.DDM.Tests.Commons
 {

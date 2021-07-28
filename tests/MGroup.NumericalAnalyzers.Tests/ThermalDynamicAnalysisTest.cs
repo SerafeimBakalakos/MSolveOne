@@ -13,6 +13,7 @@ namespace MGroup.Analyzers.Tests
 	using MGroup.NumericalAnalyzers;
 	using MGroup.FEM.Thermal.Elements;
 	using MGroup.MSolve.Solution.LinearSystem;
+	using MGroup.MSolve.Discretization.Dofs;
 
 	public class ThermalDynamicAnalysisTest
 	{

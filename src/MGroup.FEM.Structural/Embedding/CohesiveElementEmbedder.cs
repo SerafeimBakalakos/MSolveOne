@@ -7,6 +7,7 @@ using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Matrices.Builders;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.DataStructures;
+using MGroup.MSolve.Discretization.Dofs;
 
 //TODO: All these casting should be avoided by injecting the correct type in the constructor.
 namespace MGroup.FEM.Structural.Embedding

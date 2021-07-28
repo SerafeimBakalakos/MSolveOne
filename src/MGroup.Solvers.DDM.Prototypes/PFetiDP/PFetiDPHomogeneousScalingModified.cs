@@ -6,6 +6,7 @@ using MGroup.MSolve.Discretization;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.Solvers.DDM.Prototypes.LinearAlgebraExtensions;
 using MGroup.Solvers.DDM.Prototypes.PSM;
+using MGroup.MSolve.Discretization.Dofs;
 
 //TODO: Merge this with the original. Use a flag to choose which way to calculate Lpbe
 namespace MGroup.Solvers.DDM.Prototypes.PFetiDP

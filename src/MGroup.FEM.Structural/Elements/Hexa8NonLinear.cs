@@ -14,6 +14,7 @@ using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Numerics.Integration.Quadratures;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Discretization.Mesh;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.FEM.Structural.Elements
 {

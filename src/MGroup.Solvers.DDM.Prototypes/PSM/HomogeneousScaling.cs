@@ -5,6 +5,7 @@ using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DofOrdering;
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using MGroup.FEM.Embedding;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.FEM.Interfaces
 {

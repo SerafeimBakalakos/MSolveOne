@@ -1,21 +1,17 @@
 using System.Collections.Generic;
+using MGroup.Constitutive.Structural;
 using MGroup.FEM.Entities;
+using MGroup.FEM.Structural.Elements;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Loads;
+using MGroup.NumericalAnalyzers;
+using MGroup.NumericalAnalyzers.Dynamic;
+using MGroup.Solvers.Direct;
 using Xunit;
 
 namespace MGroup.FEM.Tests.IntegrationTests
 {
-	using Constitutive.Structural;
-
-	using MGroup.MSolve.Solution.LinearSystem;
-
-	using MSolve.Solution;
-	using NumericalAnalyzers;
-	using NumericalAnalyzers.Dynamic;
-	using Solvers.Direct;
-	using Structural.Elements;
-
 	public class Beam2DNewmarkDynamicAanalysisTest
 	{
 		public void LinearElasticBeam2DNewmarkDynamicAnalysisTest()

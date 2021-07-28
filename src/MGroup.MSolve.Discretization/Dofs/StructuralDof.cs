@@ -1,7 +1,6 @@
 //TODO: implement a dynamic ordinal numbering that will change depending what dofs are used .
-using MGroup.MSolve.Discretization;
 
-namespace MGroup.Constitutive.Structural
+namespace MGroup.MSolve.Discretization.Dofs
 {
     /// <summary>
     /// Degrees of freedom corresponding to the movement of a point/body along or around the 3 possible axes. Implements enum 

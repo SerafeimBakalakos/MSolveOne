@@ -12,6 +12,7 @@ using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Discretization.Mesh;
 using MGroup.MSolve.Numerics.Interpolation;
 using MGroup.MSolve.Numerics.Integration.Quadratures;
+using MGroup.MSolve.Discretization.Dofs;
 
 //TODO: current nodal coordinates should be managed by the analyzer, instead of each element calculting and storing them independently. The same applies for direction vectors of shells. 
 //TODO: direction vectors creation and update could be handled by a dedicated class that will be composed into this element. Which element would update them then?

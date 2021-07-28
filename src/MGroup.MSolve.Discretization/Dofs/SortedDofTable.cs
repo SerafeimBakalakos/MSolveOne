@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 
 //TODO: replace this by an option for DofTable (or IntDofTable, whichever sticks)
-namespace MGroup.MSolve.DataStructures
+namespace MGroup.MSolve.Discretization.Dofs
 {
     public class SortedDofTable : IEnumerable<(int row, int dof, int idx)>
     {

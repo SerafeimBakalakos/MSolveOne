@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using MGroup.MSolve.Discretization;
-using MGroup.Solvers.Commons;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.Solvers.DDM.Commons;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DofOrdering;

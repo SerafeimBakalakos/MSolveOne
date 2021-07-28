@@ -16,6 +16,7 @@ namespace MGroup.Analyzers.Tests
 	using MGroup.NumericalAnalyzers;
 	using MGroup.FEM.Structural.Elements;
 	using System.Linq;
+	using MGroup.MSolve.Discretization.Dofs;
 
 	public class Beam3DQuaternionNonlinearTest
 	{

@@ -11,6 +11,7 @@ namespace MGroup.FEM.Tests.IntegrationTests
 	using System.Collections.Generic;
 	using Constitutive.Structural;
 	using Constitutive.Structural.PlanarElements;
+	using MGroup.MSolve.Discretization.Dofs;
 	//using MSolve.Constitutive;
 	using MGroup.NumericalAnalyzers;
 	using MGroup.NumericalAnalyzers.Logging;

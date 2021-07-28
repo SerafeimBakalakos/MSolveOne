@@ -17,6 +17,7 @@ using MGroup.MSolve.Solution;
 using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.MSolve.Discretization.Dofs;
 
 // Geometry:
 //             | 

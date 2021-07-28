@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
-
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.Constitutive.PorousMedia
 {

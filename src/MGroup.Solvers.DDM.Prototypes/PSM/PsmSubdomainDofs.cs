@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.Solvers.DDM.LinearSystem;
 
 namespace MGroup.Solvers.DDM.Prototypes.PSM

@@ -9,6 +9,7 @@ using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.DataStructures;
 using MGroup.Solvers.DDM.Prototypes.LinearAlgebraExtensions;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.Solvers.DDM.Prototypes.PSM
 {

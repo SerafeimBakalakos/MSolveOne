@@ -17,6 +17,7 @@ using MGroup.NumericalAnalyzers.Logging;
 using MGroup.NumericalAnalyzers.NonLinear;
 using MGroup.Solvers.Direct;
 using Xunit;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace ISAAR.MSolve.Tests.FEM
 {

@@ -9,7 +9,7 @@ namespace MGroup.FEM.Tests.IntegrationTests
 {
 	using Constitutive.Structural;
 	using Constitutive.Structural.PlanarElements;
-
+	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.MSolve.Solution.LinearSystem;
 	//using MGroup.FEM.Tests.IntegrationTests.Supportive_Classes;
 	using MSolve.Constitutive;

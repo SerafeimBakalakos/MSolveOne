@@ -1,23 +1,19 @@
 using System.Collections.Generic;
+using MGroup.Constitutive.Structural;
+using MGroup.Constitutive.Structural.ContinuumElements;
 using MGroup.FEM.Elements.SupportiveClasses;
 using MGroup.FEM.Entities;
+using MGroup.FEM.Structural.Elements;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Loads;
+using MGroup.NumericalAnalyzers.Dynamic;
+using MGroup.NumericalAnalyzers.NonLinear;
+using MGroup.Solvers.Direct;
 using Xunit;
 
 namespace MGroup.FEM.Tests.IntegrationTests
 {
-	using Constitutive.Structural;
-	using Constitutive.Structural.ContinuumElements;
-	using MGroup.MSolve.Solution;
-	using MGroup.MSolve.Solution.LinearSystem;
-
-	using MSolve.Constitutive;
-	using NumericalAnalyzers.Dynamic;
-	using NumericalAnalyzers.NonLinear;
-	using Solvers.Direct;
-	using Structural.Elements;
-
 	public class Beam3DElasticNonlinearNewmarkDynamicAnalysisTest
 	{
 		private static void TestBeam3DElasticNonlinearNewmarkDynamicAnalysisExample()

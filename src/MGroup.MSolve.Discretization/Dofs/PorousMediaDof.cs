@@ -1,6 +1,5 @@
-using MGroup.MSolve.Discretization;
 
-namespace MGroup.Constitutive.PorousMedia
+namespace MGroup.MSolve.Discretization.Dofs
 {
     /// <summary>
     /// Degree of freedom corresponding to the pore pressure at a single point. Implements enum pattern.

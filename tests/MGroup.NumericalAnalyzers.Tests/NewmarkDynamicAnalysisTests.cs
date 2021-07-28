@@ -15,6 +15,7 @@ namespace MGroup.Analyzers.Tests
 	using Xunit;
 	using MGroup.Constitutive.Structural;
 	using MGroup.NumericalAnalyzers;
+	using MGroup.MSolve.Discretization.Dofs;
 
 	public static class NewmarkDynamicAnalysisTests
 	{

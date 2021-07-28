@@ -7,7 +7,7 @@ using Xunit;
 namespace MGroup.FEM.Tests.IntegrationTests
 {
 	using Constitutive.Structural;
-
+	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.MSolve.Solution.LinearSystem;
 
 	using MSolve.Solution;

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 using MGroup.MSolve.DataStructures;
 
-namespace MGroup.MSolve.Discretization
+namespace MGroup.MSolve.Discretization.Dofs
 {
 	/// <summary>
 	/// A <see cref="ITable{TRow, TColumn, TValue}"/> that associates the freedom degrees of nodes with their ordinal number.

@@ -15,6 +15,7 @@ namespace MGroup.Analyzers.Tests
 	using MGroup.Constitutive.Structural.ContinuumElements;
 	using MGroup.FEM.Structural.Elements;
 	using MGroup.Solvers.AlgebraicModel;
+	using MGroup.MSolve.Discretization.Dofs;
 
 	public class Beam2DCorotationalNonLinearTest
 	{

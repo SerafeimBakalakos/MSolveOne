@@ -1,3 +1,5 @@
+using MGroup.MSolve.Discretization.Dofs;
+
 namespace MGroup.MSolve.Discretization
 {
     public class Constraint

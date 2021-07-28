@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using MGroup.MSolve.Discretization;
-
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.Solvers.DofOrdering.Reordering;
 
 namespace MGroup.Solvers.DofOrdering

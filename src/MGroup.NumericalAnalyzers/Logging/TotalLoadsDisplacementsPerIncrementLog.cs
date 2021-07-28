@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using MGroup.LinearAlgebra.Distributed;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.MSolve.Solution.LinearSystem;
 

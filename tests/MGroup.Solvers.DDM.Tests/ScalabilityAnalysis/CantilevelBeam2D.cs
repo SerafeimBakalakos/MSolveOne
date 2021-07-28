@@ -5,6 +5,7 @@ using MGroup.Constitutive.Structural;
 using MGroup.Constitutive.Structural.PlanarElements;
 using MGroup.Environments;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.Tests.Commons;
 

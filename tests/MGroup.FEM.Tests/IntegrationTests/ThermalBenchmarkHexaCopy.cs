@@ -13,6 +13,7 @@ namespace MGroup.FEM.Tests.IntegrationTests
 	using Constitutive.Thermal;
 	using MGroup.FEM.Structural.Elements.supportiveClasses;
 	using MGroup.FEM.Thermal.Elements;
+	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.MSolve.Solution.LinearSystem;
 
 	using NumericalAnalyzers;

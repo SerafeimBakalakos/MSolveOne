@@ -6,6 +6,7 @@ using MGroup.Environments;
 using MGroup.FEM.Entities;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.NumericalAnalyzers;
 using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.DDM.FetiDP.Dofs;

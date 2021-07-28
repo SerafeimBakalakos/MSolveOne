@@ -1,12 +1,11 @@
 using System;
 using MGroup.MSolve.DataStructures;
 using Xunit;
+using MGroup.Constitutive.Structural;
+using MGroup.MSolve.Constitutive;
 
 namespace MGroup.FEM.Tests.IntegrationTests
 {
-	using Constitutive.Structural;
-	using MSolve.Constitutive;
-
 	public static class BondSlipTest
 	{
 		[Fact]

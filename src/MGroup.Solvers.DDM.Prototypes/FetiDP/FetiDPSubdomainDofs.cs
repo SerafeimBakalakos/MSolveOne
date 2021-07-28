@@ -5,6 +5,8 @@ using System.Text;
 using MGroup.MSolve.Discretization;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.Solvers.DDM.LinearSystem;
+using MGroup.MSolve.Discretization.Dofs;
+using MGroup.Solvers.DDM.FetiDP.Dofs;
 
 namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 {
@@ -12,10 +14,10 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 	{
 		protected readonly IModel model;
 		private readonly DistributedAlgebraicModel<Matrix> algebraicModel;
-		private readonly DDM.FetiDP.Dofs.ICornerDofSelection cornerDofs;
+		private readonly ICornerDofSelection cornerDofs;
 
 		public FetiDPSubdomainDofs(IModel model, DistributedAlgebraicModel<Matrix> algebraicModel,
-			DDM.FetiDP.Dofs.ICornerDofSelection cornerDofs)
+			ICornerDofSelection cornerDofs)
 		{
 			this.model = model;
 			this.algebraicModel = algebraicModel;

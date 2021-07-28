@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MGroup.FEM.Interfaces;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 
 //TODO: Delete this ASAP. 1) Its purpose is element-node connectivity, which should be done through interfaces and inheritance,
 //      2) The order of the nodes should be defined by what is now called ElementType

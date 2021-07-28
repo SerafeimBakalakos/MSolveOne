@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using MGroup.MSolve.Discretization;
 
-namespace MGroup.Solvers.Commons
+namespace MGroup.MSolve.Discretization.Dofs
 {
 	public class DofSet
 	{

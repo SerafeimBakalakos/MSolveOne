@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MGroup.MSolve.Discretization
+namespace MGroup.MSolve.Discretization.Dofs
 {
 	public class ActiveDofs
 	{

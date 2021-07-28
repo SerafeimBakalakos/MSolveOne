@@ -5,7 +5,7 @@ using MGroup.Solvers.Direct;
 namespace MGroup.Solvers.Tests
 {
 	public class SolverBenchmarks
-    {
+	{
 		public static void SuiteSparseMemoryConsumptionDebugging()
 		{
 			for (int rep = 0; rep < 10; ++rep)

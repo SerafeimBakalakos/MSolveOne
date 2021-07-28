@@ -3,6 +3,7 @@ using System.Linq;
 using MGroup.LinearAlgebra.Reordering;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 
 
 //TODO: This should be thread safe.

@@ -15,6 +15,7 @@ using MGroup.MSolve.Numerics.Integration.Quadratures;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Discretization.Mesh;
 using MGroup.MSolve.Geometry.Coordinates;
+using MGroup.MSolve.Discretization.Dofs;
 
 //TODO: Is there any point in having different material properties per Gauss point?
 namespace MGroup.FEM.Thermal.Elements

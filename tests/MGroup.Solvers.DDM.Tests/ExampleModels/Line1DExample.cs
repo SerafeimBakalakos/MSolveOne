@@ -9,6 +9,7 @@ using MGroup.FEM.Thermal.Elements;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.MSolve.DataStructures;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.Solvers;
 using MGroup.Solvers.DDM.Tests.Commons;

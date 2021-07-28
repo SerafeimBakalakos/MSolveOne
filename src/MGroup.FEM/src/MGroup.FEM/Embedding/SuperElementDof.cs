@@ -1,6 +1,7 @@
 using System;
 using MGroup.FEM.Entities;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.FEM.Embedding
 {

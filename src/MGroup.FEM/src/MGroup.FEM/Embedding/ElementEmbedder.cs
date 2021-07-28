@@ -5,6 +5,7 @@ using MGroup.FEM.Entities;
 using MGroup.FEM.Interfaces;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.FEM.Embedding
 {

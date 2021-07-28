@@ -3,6 +3,7 @@ using MGroup.Constitutive.Thermal;
 using MGroup.FEM.Embedding;
 using MGroup.FEM.Interfaces;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.FEM.Thermal.Embedding
 {

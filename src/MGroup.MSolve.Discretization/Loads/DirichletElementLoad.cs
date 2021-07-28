@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using MGroup.LinearAlgebra.Matrices;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.MSolve.Discretization.Loads
 {

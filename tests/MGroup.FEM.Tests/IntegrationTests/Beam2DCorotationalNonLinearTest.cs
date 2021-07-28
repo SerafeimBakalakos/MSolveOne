@@ -1,20 +1,20 @@
 using System.Collections.Generic;
+using MGroup.Constitutive.Structural;
 using MGroup.FEM.Elements.SupportiveClasses;
 using MGroup.FEM.Entities;
+using MGroup.FEM.Structural.Elements;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Loads;
+using MGroup.MSolve.Solution;
+using MGroup.NumericalAnalyzers;
+using MGroup.NumericalAnalyzers.Logging;
+using MGroup.NumericalAnalyzers.NonLinear;
+using MGroup.Solvers.Direct;
 using Xunit;
 
 namespace MGroup.FEM.Tests.IntegrationTests
 {
-	using Constitutive.Structural;
-	using MSolve.Solution;
-	using NumericalAnalyzers;
-	using NumericalAnalyzers.Logging;
-	using NumericalAnalyzers.NonLinear;
-	using Solvers.Direct;
-	using Structural.Elements;
-
 	public class Beam2DCorotationalNonLinearTest
 	{
 		private const int subdomainID = 0;

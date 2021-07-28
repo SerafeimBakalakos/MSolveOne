@@ -6,6 +6,7 @@ using MGroup.FEM.Embedding;
 using MGroup.FEM.Interfaces;
 using MGroup.FEM.Structural.Elements;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Mesh;
 
 namespace MGroup.FEM.Structural.Embedding

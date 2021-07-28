@@ -4,6 +4,7 @@ using MGroup.MSolve.Discretization;
 using MGroup.MSolve.DataStructures;
 using System;
 using System.Runtime.InteropServices;
+using MGroup.MSolve.Discretization.Dofs;
 
 //TODO: benchmark this against simple ordering + node major reordering
 namespace MGroup.Solvers.DofOrdering

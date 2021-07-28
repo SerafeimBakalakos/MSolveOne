@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.DataStructures;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Loads;
 
 namespace MGroup.MSolve.Discretization

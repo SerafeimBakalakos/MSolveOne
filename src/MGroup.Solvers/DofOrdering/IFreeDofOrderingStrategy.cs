@@ -1,4 +1,5 @@
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.Solvers.DofOrdering
 {

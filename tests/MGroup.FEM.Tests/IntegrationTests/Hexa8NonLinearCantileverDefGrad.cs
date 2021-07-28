@@ -12,6 +12,7 @@ namespace MGroup.FEM.Tests.IntegrationTests
 	using Constitutive.Structural.ContinuumElements;
 	using ISAAR.MSolve.FEM.Elements;
 	using ISAAR.MSolve.FEM.Interpolation;
+	using MGroup.MSolve.Discretization.Dofs;
 	using MSolve.Constitutive;
 	using MSolve.Solution;
 	using NumericalAnalyzers;

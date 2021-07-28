@@ -10,11 +10,12 @@ using MGroup.Constitutive.Structural;
 using MGroup.NumericalAnalyzers;
 using MGroup.FEM.Structural.Elements;
 using MGroup.MSolve.Solution.LinearSystem;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.Analyzers.Tests
 {
-    public class Beam2DNewmarkDynamicAanalysisTest
-    {
+	public class Beam2DNewmarkDynamicAanalysisTest
+	{
 		public void LinearElasticBeam2DNewmarkDynamicAnalysisTest()
 		{
 			double youngModulus = 21000;

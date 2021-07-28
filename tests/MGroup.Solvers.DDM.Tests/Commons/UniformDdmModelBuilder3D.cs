@@ -9,6 +9,7 @@ using MGroup.FEM.Entities;
 using MGroup.FEM.Structural.Elements;
 using MGroup.MSolve.Constitutive;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Geometry.Coordinates;
 using MGroup.MSolve.Meshes.Structured;

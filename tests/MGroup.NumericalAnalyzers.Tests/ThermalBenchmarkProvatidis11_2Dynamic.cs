@@ -13,9 +13,10 @@ namespace MGroup.Analyzers.Tests
 	using MGroup.Solvers.Direct;
 	using Xunit;
 	using MGroup.MSolve.Solution.LinearSystem;
+	using MGroup.MSolve.Discretization.Dofs;
 
 	public class ThermalBenchmarkProvatidis11_2Dynamic
-    {
+	{
 		private const int subdomainID = 0;
 
 		[Fact]

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 using MGroup.MSolve.AnalysisWorkflow.Logging;
 using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Solution.AlgebraicModel;
 
 namespace MGroup.NumericalAnalyzers.Logging

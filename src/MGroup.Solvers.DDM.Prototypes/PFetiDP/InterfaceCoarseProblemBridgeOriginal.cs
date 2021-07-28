@@ -5,6 +5,7 @@ using MGroup.MSolve.Discretization;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.Solvers.DDM.Prototypes.FetiDP;
 using MGroup.Solvers.DDM.Prototypes.PSM;
+using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 {

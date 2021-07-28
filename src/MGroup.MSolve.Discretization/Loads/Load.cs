@@ -1,3 +1,5 @@
+using MGroup.MSolve.Discretization.Dofs;
+
 namespace MGroup.MSolve.Discretization.Loads
 {
 	public class Load : INodalLoad

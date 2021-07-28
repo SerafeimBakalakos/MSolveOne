@@ -11,6 +11,7 @@ namespace MGroup.Analyzers.Tests
 	using MGroup.NumericalAnalyzers;
 	using MGroup.FEM.Structural.Elements;
 	using MGroup.MSolve.Solution.LinearSystem;
+	using MGroup.MSolve.Discretization.Dofs;
 
 	public class EulerBeam2DLinearTest
 	{
