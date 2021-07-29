@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MPI;
 using MpiNet = MPI;
 
 //WARNING: MPI.NET (on windows) does not support MPI calls from multiple threads. Therefore exposing send and receive methods
@@ -33,7 +34,7 @@ namespace MGroup.Environments.Mpi
 	/// </remarks>
 	public sealed class MpiEnvironment : IComputeEnvironment, IDisposable
 	{
-		private readonly MpiNet.Intracommunicator commWorld;
+		private readonly IMpiGlobalOperationStrategy globalOperationStrategy;
 		private readonly MpiNet.Environment mpiEnvironment;
 
 		private bool disposed = false;
@@ -42,17 +43,32 @@ namespace MGroup.Environments.Mpi
 		private MpiP2PTransfers p2pTransfers;
 		private MpiCollectivesHelper collectivesHelper;
 
-		public MpiEnvironment()
+		public MpiEnvironment(IMpiGlobalOperationStrategy globalOperationStrategy)
 		{
+			this.globalOperationStrategy = globalOperationStrategy;
+
 			//TODOMPI: See Threading param. In multithreaded programs, I must specify that to MPI.NET.
 			string[] args = Array.Empty<string>();
 			this.mpiEnvironment = new MpiNet.Environment(ref args);
-			this.commWorld = MpiNet.Communicator.world;
+			this.CommWorld = MpiNet.Communicator.world;
 		}
 
 		~MpiEnvironment()
 		{
 			Dispose(false);
+		}
+
+		public Intracommunicator CommWorld { get; }
+
+		public Dictionary<int, T> AllGather<T>(Func<int, T> getDataPerNode)
+		{
+			T[] localData = collectivesHelper.LocalNodesDataToArray(CommWorld.Rank, getDataPerNode);
+			int[] counts = collectivesHelper.NodeCounts;
+
+			//TODO Optim: have a cached buffer to write data into (use the overload with ref parameter)
+			T[] allData = CommWorld.AllgatherFlattened(localData, counts); // All processes gather the data
+
+			return collectivesHelper.AllNodesDataToDictionary(allData);
 		}
 
 		public bool AllReduceAnd(Dictionary<int, bool> valuePerNode)
@@ -62,7 +78,7 @@ namespace MGroup.Environments.Mpi
 			{
 				localValue &= valuePerNode[nodeID];
 			}
-			return commWorld.Allreduce(localValue, MpiNet.Operation<bool>.LogicalAnd);
+			return CommWorld.Allreduce(localValue, MpiNet.Operation<bool>.LogicalAnd);
 		}
 
 		public double AllReduceSum(Dictionary<int, double> valuePerNode)
@@ -73,7 +89,7 @@ namespace MGroup.Environments.Mpi
 			{
 				localValue += valuePerNode[nodeID];
 			}
-			return commWorld.Allreduce(localValue, MpiNet.Operation<double>.Add);
+			return CommWorld.Allreduce(localValue, MpiNet.Operation<double>.Add);
 		}
 
 		public Dictionary<int, T> CreateDictionaryPerNode<T>(Func<int, T> createDataPerNode)
@@ -97,33 +113,28 @@ namespace MGroup.Environments.Mpi
 			GC.SuppressFinalize(this);
 		}
 
-		public void DoGlobalOperation(Action globalOperation)
-		{
-			if (commWorld.Rank == 0)
-			{
-				globalOperation();
-			}
-		}
+		public void DoGlobalOperation(Action globalOperation) 
+			=> globalOperationStrategy.DoGlobalOperation(this, globalOperation);
 
 		public void DoPerNode(Action<int> actionPerNode)
 		{
 			Parallel.ForEach(localNodes.Keys, actionPerNode);
 		}
 
-		public Dictionary<int, T> GatherToMasterProcess<T>(Func<int, T> getDataPerNode)
+		public Dictionary<int, T> GatherToRootProcess<T>(Func<int, T> getDataPerNode, int rootProcessRank)
 		{
-			T[] localData = collectivesHelper.LocalNodesDataToArray(commWorld.Rank, getDataPerNode);
-			if (commWorld.Rank == 0) // Master process gathers data
+			T[] localData = collectivesHelper.LocalNodesDataToArray(CommWorld.Rank, getDataPerNode);
+			if (CommWorld.Rank == rootProcessRank) // Master process gathers data
 			{
 				int[] counts = collectivesHelper.NodeCounts;
 
 				//TODO Optim: have a cached buffer to write data into (use the overload with ref parameter)
-				T[] allData = commWorld.GatherFlattened(localData, counts, 0);
+				T[] allData = CommWorld.GatherFlattened(localData, counts, 0);
 				return collectivesHelper.AllNodesDataToDictionary(allData);
 			}
 			else // Slave processes send data to master process
 			{
-				commWorld.GatherFlattened(localData, null, 0);
+				CommWorld.GatherFlattened(localData, null, 0);
 				return null;
 			}
 		}
@@ -136,13 +147,13 @@ namespace MGroup.Environments.Mpi
 		{
 			//TODOMPI: Perhaps this validation is useful for more than just the MpiEnvironment and should be done elsewhere.
 			// Check cluster IDs
-			if (nodeTopology.Clusters.Count != commWorld.Size)
+			if (nodeTopology.Clusters.Count != CommWorld.Size)
 			{
 				throw new ArgumentException(
 					$"There number of compute node clusters ({nodeTopology.Clusters.Count}) does not match"
-					+ $" the actual number of processes launched ({commWorld.Size})");
+					+ $" the actual number of processes launched ({CommWorld.Size})");
 			}
-			for (int p = 0; p < commWorld.Size; ++p)
+			for (int p = 0; p < CommWorld.Size; ++p)
 			{
 				if (!nodeTopology.Clusters.ContainsKey(p))
 				{
@@ -161,7 +172,7 @@ namespace MGroup.Environments.Mpi
 			}
 
 			// Store the topology and nodes belonging to the cluster with the same ID as this MPI process.
-			ComputeNodeCluster localCluster = nodeTopology.Clusters[commWorld.Rank];
+			ComputeNodeCluster localCluster = nodeTopology.Clusters[CommWorld.Rank];
 			this.localNodes = new Dictionary<int, ComputeNode>(localCluster.Nodes);
 			this.nodeTopology = nodeTopology;
 
@@ -195,10 +206,10 @@ namespace MGroup.Environments.Mpi
 							MpiJob.TransferBufferLengthDuringNeighborhoodAllToAll, node.ID, neighborID);
 
 						Action<int> allocateBuffer = length => data.recvValues[neighborID] = new T[length];
-						recvLengthRequests.Add(commWorld.ImmediateReceive<int>(remoteProcess, tag, allocateBuffer));
+						recvLengthRequests.Add(CommWorld.ImmediateReceive<int>(remoteProcess, tag, allocateBuffer));
 
 						int bufferLength = data.sendValues[neighborID].Length;
-						sendLengthRequests.Add(commWorld.ImmediateSend(bufferLength, remoteProcess, tag));
+						sendLengthRequests.Add(CommWorld.ImmediateSend(bufferLength, remoteProcess, tag));
 					}
 				}
 
@@ -226,10 +237,10 @@ namespace MGroup.Environments.Mpi
 					int tag = p2pTransfers.GetSendRecvTag(MpiJob.TransferBufferDuringNeighborhoodAllToAll, node.ID, neighborID);
 
 					T[] recvBuffer = data.recvValues[neighborID];
-					recvRequests.Add(commWorld.ImmediateReceive(remoteProcess, tag, recvBuffer));
+					recvRequests.Add(CommWorld.ImmediateReceive(remoteProcess, tag, recvBuffer));
 
 					T[] sendBuffer = data.sendValues[neighborID];
-					sendRequests.Add(commWorld.ImmediateSend(sendBuffer, remoteProcess, tag));
+					sendRequests.Add(CommWorld.ImmediateSend(sendBuffer, remoteProcess, tag));
 				}
 			}
 
@@ -269,31 +280,31 @@ namespace MGroup.Environments.Mpi
 			sendRequests.WaitAll();
 		}
 
-		public Dictionary<int, T> ScatterFromMasterProcess<T>(Dictionary<int, T> dataPerNode)
+		public Dictionary<int, T> ScatterFromRootProcess<T>(Dictionary<int, T> dataPerNode, int rootProcessRank)
 		{
 			T[] localData;
 			int[] counts = collectivesHelper.NodeCounts;
-			if (commWorld.Rank == 0) // Master process gathers data
+			if (CommWorld.Rank == 0) // Master process gathers data
 			{
 				T[] allData = collectivesHelper.AllNodesDataToArray(dataPerNode);
 
 				//TODO Optim: have a cached buffer to write data into (use the overload with ref parameter)
-				localData = commWorld.ScatterFromFlattened(allData, counts, 0);
+				localData = CommWorld.ScatterFromFlattened(allData, counts, 0);
 			}
 			else // Slave processes send data to master process
 			{
-				localData = commWorld.ScatterFromFlattened(new T[0], counts, 0);
+				localData = CommWorld.ScatterFromFlattened(new T[0], counts, 0);
 			}
 
-			Dictionary<int, T> result = collectivesHelper.LocalNodesDataToDictionary(commWorld.Rank, localData);
+			Dictionary<int, T> result = collectivesHelper.LocalNodesDataToDictionary(CommWorld.Rank, localData);
 			return result;
 		}
 
 		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(Func<int, T> getLocalNodeData)
-			=> GatherToMasterProcess(getLocalNodeData);
+			=> globalOperationStrategy.TransferNodeDataToGlobalMemory(this, getLocalNodeData);
 
 		public Dictionary<int, T> TransferNodeDataToLocalMemories<T>(Dictionary<int, T> globalNodeDataStorage)
-			=> ScatterFromMasterProcess(globalNodeDataStorage);
+			=> globalOperationStrategy.TransferNodeDataToLocalMemories(this, globalNodeDataStorage);
 
 		private void Dispose(bool disposing)
 		{

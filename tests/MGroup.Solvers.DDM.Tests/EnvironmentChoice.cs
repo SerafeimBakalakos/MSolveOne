@@ -15,10 +15,22 @@ namespace MGroup.Solvers.DDM.Tests
 	{
 		public static IComputeEnvironment CreateEnvironment(this EnvironmentChoice environmentChoice)
 		{
-			if (environmentChoice == EnvironmentChoice.SequentialSharedEnvironment) return new SequentialSharedEnvironment();
-			else if (environmentChoice == EnvironmentChoice.TplSharedEnvironment) return new TplSharedEnvironment();
-			else if (environmentChoice == EnvironmentChoice.MklEnvironment) return new MpiEnvironment();
-			else throw new NotImplementedException();
+			if (environmentChoice == EnvironmentChoice.SequentialSharedEnvironment)
+			{
+				return new SequentialSharedEnvironment();
+			}
+			else if (environmentChoice == EnvironmentChoice.TplSharedEnvironment)
+			{
+				return new TplSharedEnvironment();
+			}
+			else if (environmentChoice == EnvironmentChoice.MklEnvironment)
+			{
+				return new MpiEnvironment(new MasterSlavesGlobalOperationStrategy());
+			}
+			else
+			{
+				throw new NotImplementedException();
+			}
 		}
 	}
 }

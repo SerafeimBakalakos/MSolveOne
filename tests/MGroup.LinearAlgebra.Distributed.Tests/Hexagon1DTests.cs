@@ -242,7 +242,7 @@ namespace MGroup.LinearAlgebra.Distributed.Tests
 		public static void RunMpiTests()
 		{
 			// Launch 3 processes
-			using (var mpiEnvironment = new MpiEnvironment())
+			using (var mpiEnvironment = new MpiEnvironment(new MasterSlavesGlobalOperationStrategy()))
 			{
 				MpiDebugUtilities.AssistDebuggerAttachment();
 

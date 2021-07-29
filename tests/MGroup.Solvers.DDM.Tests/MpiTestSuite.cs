@@ -16,7 +16,7 @@ namespace MGroup.Solvers.DDM.Tests
 	{
 		public static void RunTestsWith4Processes()
 		{
-			using (var mpiEnvironment = new MpiEnvironment())
+			using (var mpiEnvironment = new MpiEnvironment(new MasterSlavesGlobalOperationStrategy()))
 			{
 				MpiDebugUtilities.AssistDebuggerAttachment();
 
