@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using MGroup.Environments.Tasks;
 
 namespace MGroup.Environments
 {
@@ -48,14 +47,9 @@ namespace MGroup.Environments
 			return result;
 		}
 
-		//public void DoGlobalTask<TInput>(GlobalTask<TInput> task)
-		//{
-		//	task.Operation(task.GetLocalInput);
-		//}
-
-		public void DoMasterNode(Action action)
+		public void DoGlobalOperation(Action globalOperation)
 		{
-			action();
+			globalOperation();
 		}
 
 		public void DoPerNode(Action<int> actionPerNode)
@@ -64,16 +58,6 @@ namespace MGroup.Environments
 			{
 				actionPerNode(nodeID);
 			}
-		}
-
-		public Dictionary<int, T> GatherToMasterNode<T>(Func<int, T> getDataPerNode)
-		{
-			var result = new Dictionary<int, T>();
-			foreach (int nodeID in nodeTopology.Nodes.Keys)
-			{
-				result[nodeID] = getDataPerNode(nodeID);
-			}
-			return result;
 		}
 
 		public ComputeNode GetComputeNode(int nodeID) => nodeTopology.Nodes[nodeID];
@@ -116,7 +100,17 @@ namespace MGroup.Environments
 			}
 		}
 
-		public Dictionary<int, T> ScatterFromMasterNode<T>(Dictionary<int, T> allNodesData)
-			=> new Dictionary<int, T>(allNodesData);
+		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(Func<int, T> getLocalNodeData)
+		{
+			var result = new Dictionary<int, T>();
+			foreach (int nodeID in nodeTopology.Nodes.Keys)
+			{
+				result[nodeID] = getLocalNodeData(nodeID);
+			}
+			return result;
+		}
+
+		public Dictionary<int, T> TransferNodeDataToLocalMemories<T>(Dictionary<int, T> globalNodeDataStorage)
+			=> new Dictionary<int, T>(globalNodeDataStorage);
 	}
 }

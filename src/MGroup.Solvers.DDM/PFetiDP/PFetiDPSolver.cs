@@ -54,8 +54,8 @@ namespace MGroup.Solvers.DDM.PFetiDP
 				subdomainMatricesFetiDP[subdomainID] = matricesFetiDP;
 			});
 
-			this.coarseProblemFetiDP = coarseProblemFactory.CreateCoarseProblem(environment, model, 
-				algebraicModel.SubdomainTopology, s => subdomainDofsFetiDP[s], s => subdomainMatricesFetiDP[s]);
+			this.coarseProblemFetiDP = coarseProblemFactory.CreateCoarseProblem(environment, algebraicModel.SubdomainTopology, 
+				s => subdomainDofsFetiDP[s], s => subdomainMatricesFetiDP[s]);
 			this.preconditioner = new PFetiDPPreconditioner(environment, () => base.boundaryDofIndexer, scaling,
 				s => subdomainMatricesFetiDP[s], coarseProblemFetiDP, s => subdomainDofsPFetiDP[s]);
 		}
@@ -92,7 +92,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 				this.cornerDofs = cornerDofs;
 				this.FetiDPMatricesFactory = fetiDPMatricesFactory;
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
-				this.CoarseProblemFactory = new FetiDPCoarseProblemGlobalShared.Factory(coarseProblemMatrix);
+				this.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
 			}
 
 			public IFetiDPCoarseProblemFactory CoarseProblemFactory { get; set; }

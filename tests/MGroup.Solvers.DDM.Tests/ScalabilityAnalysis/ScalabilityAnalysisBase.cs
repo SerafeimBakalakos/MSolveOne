@@ -37,7 +37,7 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 		public void RunParametricConstNumSubdomains(IComputeEnvironment environment, string outputDirectory)
 		{
 			string path = outputDirectory + "results_const_subdomains.txt";
-			environment.DoMasterNode(() => RenewFile(path));
+			environment.DoGlobalOperation(() => RenewFile(path));
 
 			(List<int[]> numElements, int[] numSubdomains) = ModelBuilder.GetParametricConfigConstNumSubdomains();
 			for (int i = 0; i < numElements.Count; i++)
@@ -46,14 +46,14 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 				ModelBuilder.NumElementsPerAxis = numElements[i];
 				ModelBuilder.NumSubdomainsPerAxis = numSubdomains;
 				RunSingleAnalysis(environment);
-				environment.DoMasterNode(() => PrintAnalysisData(path));
+				environment.DoGlobalOperation(() => PrintAnalysisData(path));
 			}
 		}
 
 		public void RunParametricConstNumElements(IComputeEnvironment environment, string outputDirectory)
 		{
 			string path = outputDirectory + "results_const_elements.txt";
-			environment.DoMasterNode(() => RenewFile(path));
+			environment.DoGlobalOperation(() => RenewFile(path));
 
 			(int[] numElements, List<int[]> numSubdomains) = ModelBuilder.GetParametricConfigConstNumElements();
 			for (int i = 0; i < numSubdomains.Count; i++)
@@ -62,7 +62,7 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 				ModelBuilder.NumElementsPerAxis = numElements;
 				ModelBuilder.NumSubdomainsPerAxis = numSubdomains[i];
 				RunSingleAnalysis(environment);
-				environment.DoMasterNode(() => PrintAnalysisData(path));
+				environment.DoGlobalOperation(() => PrintAnalysisData(path));
 			}
 		}
 
@@ -70,7 +70,7 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 		{
 
 			string path = outputDirectory + "results_const_subdomain_per_element_size.txt";
-			environment.DoMasterNode(() => RenewFile(path));
+			environment.DoGlobalOperation(() => RenewFile(path));
 
 			(List<int[]> numElements, List<int[]> numSubdomains) = ModelBuilder.GetParametricConfigConstSubdomainPerElementSize();
 			for (int i = 0; i < numSubdomains.Count; i++)
@@ -79,7 +79,7 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 				ModelBuilder.NumElementsPerAxis = numElements[i];
 				ModelBuilder.NumSubdomainsPerAxis = numSubdomains[i];
 				RunSingleAnalysis(environment);
-				environment.DoMasterNode(() => PrintAnalysisData(path));
+				environment.DoGlobalOperation(() => PrintAnalysisData(path));
 			}
 		}
 

@@ -116,14 +116,14 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 				psmMatricesFactory = new PsmSubdomainMatrixManagerSymmetricSuiteSparse.Factory();
 				fetiDPMatricesFactory = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse.Factory();
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricSuiteSparse();
-				fetiDPCoarseProblemFactory = new FetiDPCoarseProblemGlobalShared.Factory(coarseProblemMatrix);
+				fetiDPCoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
 			}
 			else
 			{
 				psmMatricesFactory = new PsmSubdomainMatrixManagerSymmetricCSparse.Factory();
 				fetiDPMatricesFactory = new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory();
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
-				fetiDPCoarseProblemFactory = new FetiDPCoarseProblemGlobalShared.Factory(coarseProblemMatrix);
+				fetiDPCoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
 			}
 
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
@@ -135,7 +135,9 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 				ResidualTolerance = 1E-7
 			};
 
-			if (environment is MpiEnvironment)
+			//TODOMPI: This was written before global coarse problem was implemented for MPI. 
+			//		I should probably use that instead of distributed coarse problem.
+			if (environment is MpiEnvironment) 
 			{
 				var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
 				coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);

@@ -18,7 +18,6 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 	public class FetiDPCoarseProblemDistributed : IFetiDPCoarseProblem
 	{
 		private readonly IComputeEnvironment environment;
-		private readonly IModel model;
 		private readonly SubdomainTopology subdomainTopology;
 		private readonly Func<int, FetiDPSubdomainDofs> getSubdomainDofs;
 		private readonly Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices;
@@ -28,12 +27,11 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		private DistributedOverlappingIndexer cornerDofIndexer;
 		private DistributedOverlappingTransformation coarseProblemMatrix;
 
-		public FetiDPCoarseProblemDistributed(IComputeEnvironment environment, IModel model, SubdomainTopology subdomainTopology,
+		public FetiDPCoarseProblemDistributed(IComputeEnvironment environment, SubdomainTopology subdomainTopology,
 			Func<int, FetiDPSubdomainDofs> getSubdomainDofs, Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices,
 			IDistributedIterativeMethod coarseProblemSolver, bool areSchurComplementsExplicit)
 		{
 			this.environment = environment;
-			this.model = model;
 			this.subdomainTopology = subdomainTopology;
 			this.getSubdomainDofs = getSubdomainDofs;
 			this.getSubdomainMatrices = getSubdomainMatrices;
@@ -92,10 +90,10 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			public IDistributedIterativeMethod CoarseProblemSolver { get; set; }
 
 			public IFetiDPCoarseProblem CreateCoarseProblem(
-				IComputeEnvironment environment, IModel model, SubdomainTopology subdomainTopology, 
+				IComputeEnvironment environment, SubdomainTopology subdomainTopology, 
 				Func<int, FetiDPSubdomainDofs> getSubdomainDofs, Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices)
 			{
-				return new FetiDPCoarseProblemDistributed(environment, model, subdomainTopology, getSubdomainDofs,
+				return new FetiDPCoarseProblemDistributed(environment, subdomainTopology, getSubdomainDofs,
 					getSubdomainMatrices, CoarseProblemSolver, AreSchurComplementsExplicit);
 			}
 		}

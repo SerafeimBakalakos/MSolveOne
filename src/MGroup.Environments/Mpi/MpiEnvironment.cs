@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MGroup.Environments.Tasks;
 using MpiNet = MPI;
 
 //WARNING: MPI.NET (on windows) does not support MPI calls from multiple threads. Therefore exposing send and receive methods
@@ -97,16 +96,12 @@ namespace MGroup.Environments.Mpi
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
-		//public void DoGlobalTask<TInput>(GlobalTask<TInput> task)
-		//{
-		//	throw new NotImplementedException();
-		//}
 
-		public void DoMasterNode(Action action)
+		public void DoGlobalOperation(Action globalOperation)
 		{
 			if (commWorld.Rank == 0)
 			{
-				action();
+				globalOperation();
 			}
 		}
 
@@ -115,7 +110,7 @@ namespace MGroup.Environments.Mpi
 			Parallel.ForEach(localNodes.Keys, actionPerNode);
 		}
 
-		public Dictionary<int, T> GatherToMasterNode<T>(Func<int, T> getDataPerNode)
+		public Dictionary<int, T> GatherToMasterProcess<T>(Func<int, T> getDataPerNode)
 		{
 			T[] localData = collectivesHelper.LocalNodesDataToArray(commWorld.Rank, getDataPerNode);
 			if (commWorld.Rank == 0) // Master process gathers data
@@ -274,7 +269,7 @@ namespace MGroup.Environments.Mpi
 			sendRequests.WaitAll();
 		}
 
-		public Dictionary<int, T> ScatterFromMasterNode<T>(Dictionary<int, T> dataPerNode)
+		public Dictionary<int, T> ScatterFromMasterProcess<T>(Dictionary<int, T> dataPerNode)
 		{
 			T[] localData;
 			int[] counts = collectivesHelper.NodeCounts;
@@ -293,6 +288,12 @@ namespace MGroup.Environments.Mpi
 			Dictionary<int, T> result = collectivesHelper.LocalNodesDataToDictionary(commWorld.Rank, localData);
 			return result;
 		}
+
+		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(Func<int, T> getLocalNodeData)
+			=> GatherToMasterProcess(getLocalNodeData);
+
+		public Dictionary<int, T> TransferNodeDataToLocalMemories<T>(Dictionary<int, T> globalNodeDataStorage)
+			=> ScatterFromMasterProcess(globalNodeDataStorage);
 
 		private void Dispose(bool disposing)
 		{
