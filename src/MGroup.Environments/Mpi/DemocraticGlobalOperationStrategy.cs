@@ -5,31 +5,24 @@ using System.Text;
 namespace MGroup.Environments.Mpi
 {
 	/// <summary>
-	/// One of the MPI processes acts a master. Global data are stored in this process only. Global operations are executed in this 
-	/// in this process only.
+	/// All MPI processes store the same global data and execute the same global operations.
 	/// </summary>
-	public class MasterSlavesGlobalOperationStrategy : IMpiGlobalOperationStrategy
+	public class DemocraticGlobalOperationStrategy : IMpiGlobalOperationStrategy
 	{
-		private readonly int masterProcessRank;
-
-		public MasterSlavesGlobalOperationStrategy(int masterProcessRank = 0)
+		public DemocraticGlobalOperationStrategy()
 		{
-			this.masterProcessRank = masterProcessRank;
 		}
 
 		public void DoGlobalOperation(MpiEnvironment environment, Action globalOperation)
 		{
-			if (environment.CommWorld.Rank == masterProcessRank)
-			{
-				//Console.WriteLine($"Process {environment.CommWorld.Rank}: Executing the global operation");
-				globalOperation();
-			}
+			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Executing the global operation");
 			//environment.CommWorld.Barrier();
+			globalOperation();
 		}
 
 		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(MpiEnvironment environment, Func<int, T> getLocalNodeData)
 		{
-			Dictionary<int, T> globalNodeDataStorage = environment.GatherToRootProcess(getLocalNodeData, masterProcessRank);
+			Dictionary<int, T> globalNodeDataStorage = environment.AllGather(getLocalNodeData);
 			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Global data from gather is null = {globalNodeDataStorage == null}");
 			//environment.CommWorld.Barrier();
 			return globalNodeDataStorage;
@@ -40,8 +33,17 @@ namespace MGroup.Environments.Mpi
 		{
 			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Global data to scatter is null = {globalNodeDataStorage == null}");
 			//environment.CommWorld.Barrier();
-			Dictionary<int, T> localNodeData = environment.ScatterFromRootProcess(globalNodeDataStorage, masterProcessRank);
+
+			// No need to scatter anything, since global memory is the same as process memory
+			int clusterID = environment.CommWorld.Rank;
+			ComputeNodeCluster cluster = environment.NodeTopology.Clusters[clusterID];
+			var localNodeData = new Dictionary<int, T>(cluster.Nodes.Count);
+			foreach (int n in cluster.Nodes.Keys)
+			{
+				localNodeData[n] = globalNodeDataStorage[n];
+			}
 			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Count of local data from scatter = {localNodeData.Count}");
+			//environment.CommWorld.Barrier();
 			return localNodeData;
 		}
 	}

@@ -39,7 +39,6 @@ namespace MGroup.Environments.Mpi
 
 		private bool disposed = false;
 		private Dictionary<int, ComputeNode> localNodes;
-		private ComputeNodeTopology nodeTopology;
 		private MpiP2PTransfers p2pTransfers;
 		private MpiCollectivesHelper collectivesHelper;
 
@@ -59,6 +58,8 @@ namespace MGroup.Environments.Mpi
 		}
 
 		public Intracommunicator CommWorld { get; }
+
+		public ComputeNodeTopology NodeTopology { get ; private set; }
 
 		public Dictionary<int, T> AllGather<T>(Func<int, T> getDataPerNode)
 		{
@@ -174,7 +175,7 @@ namespace MGroup.Environments.Mpi
 			// Store the topology and nodes belonging to the cluster with the same ID as this MPI process.
 			ComputeNodeCluster localCluster = nodeTopology.Clusters[CommWorld.Rank];
 			this.localNodes = new Dictionary<int, ComputeNode>(localCluster.Nodes);
-			this.nodeTopology = nodeTopology;
+			this.NodeTopology = nodeTopology;
 
 			// Analyze local and remote communication cases
 			this.p2pTransfers = new MpiP2PTransfers(nodeTopology, localCluster);
@@ -200,7 +201,7 @@ namespace MGroup.Environments.Mpi
 					AllToAllNodeData<T> data = dataPerNode[node.ID];
 					foreach (int neighborID in p2pTransfers.GetRemoteNeighborsOf(node.ID))
 					{
-						ComputeNodeCluster remoteCluster = nodeTopology.Nodes[neighborID].Cluster;
+						ComputeNodeCluster remoteCluster = NodeTopology.Nodes[neighborID].Cluster;
 						int remoteProcess = remoteCluster.ID;
 						int tag = p2pTransfers.GetSendRecvTag(
 							MpiJob.TransferBufferLengthDuringNeighborhoodAllToAll, node.ID, neighborID);
@@ -232,7 +233,7 @@ namespace MGroup.Environments.Mpi
 				
 				foreach (int neighborID in p2pTransfers.GetRemoteNeighborsOf(node.ID))
 				{
-					ComputeNodeCluster remoteCluster = nodeTopology.Nodes[neighborID].Cluster;
+					ComputeNodeCluster remoteCluster = NodeTopology.Nodes[neighborID].Cluster;
 					int remoteProcess = remoteCluster.ID;
 					int tag = p2pTransfers.GetSendRecvTag(MpiJob.TransferBufferDuringNeighborhoodAllToAll, node.ID, neighborID);
 
@@ -252,7 +253,7 @@ namespace MGroup.Environments.Mpi
 				foreach (int neighborID in p2pTransfers.GetLocalNeighborsOf(thisNodeID))
 				{
 					// Receive data from each other node, by just copying the corresponding array segments.
-					ComputeNode otherNode = nodeTopology.Nodes[neighborID];
+					ComputeNode otherNode = NodeTopology.Nodes[neighborID];
 					AllToAllNodeData<T> otherData = dataPerNode[neighborID];
 					int bufferLength = otherData.sendValues[thisNodeID].Length;
 

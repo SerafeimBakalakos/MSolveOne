@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Text;
 using MGroup.Environments.Mpi;
 using MGroup.Solvers.DDM.Tests.PFetiDP;
@@ -16,7 +17,9 @@ namespace MGroup.Solvers.DDM.Tests
 	{
 		public static void RunTestsWith4Processes()
 		{
-			using (var mpiEnvironment = new MpiEnvironment(new MasterSlavesGlobalOperationStrategy()))
+			//IMpiGlobalOperationStrategy globalOperationStrategy = new MasterSlavesGlobalOperationStrategy();
+			IMpiGlobalOperationStrategy globalOperationStrategy = new DemocraticGlobalOperationStrategy();
+			using (var mpiEnvironment = new MpiEnvironment(globalOperationStrategy))
 			{
 				MpiDebugUtilities.AssistDebuggerAttachment();
 
