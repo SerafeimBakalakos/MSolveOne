@@ -40,6 +40,10 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 			{
 				this.coarseProblem = new FetiDPCoarseProblemDistributed(model, fetiDPDofs, fetiDPStiffnesses, pcgTolerance);
 			}
+			else if (coarseProblemChoice == FetiDPCoarseProblem.DistributedJacobi)
+			{
+				this.coarseProblem = new FetiDPCoarseProblemDistributedJacobi(model, fetiDPDofs, fetiDPStiffnesses, pcgTolerance);
+			}
 			else
 			{
 				throw new NotImplementedException();

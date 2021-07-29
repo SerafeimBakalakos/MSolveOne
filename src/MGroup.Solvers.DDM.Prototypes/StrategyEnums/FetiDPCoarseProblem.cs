@@ -7,6 +7,7 @@ namespace MGroup.Solvers.DDM.Prototypes.StrategyEnums
 	public enum FetiDPCoarseProblem
 	{
 		Original,
-		Distributed
+		Distributed,
+		DistributedJacobi
 	}
 }

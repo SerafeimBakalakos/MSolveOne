@@ -30,6 +30,10 @@ namespace MGroup.Environments
 
 		void DoGlobalOperation(Action globalOperation);
 
+		//Tout DoGlobalOperation<Tin, Tout>(Dictionary<int, Tin> nodeDataInGlobalMemory, Func<Dictionary<int, Tin>, Tout> globalOperation);
+
+		//Dictionary<int, Tout> DoGlobalOperation<Tin, Tout>(Tin globalDataInGlobalMemory, Func<Tin, Dictionary<int, Tout>> globalOperation);
+
 		void DoPerNode(Action<int> actionPerNode);
 
 		//TODOMPI: Its most common use is weird: An Action<int> is called by the environment. The environment passes the id of 

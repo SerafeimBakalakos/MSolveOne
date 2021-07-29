@@ -50,5 +50,28 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 				coarseProblemSolution[s] = subdomainSolution; //TODO: write into the existing vector directly during GetSubvector()
 			}
 		}
+
+		//public Vector SolveCoarseProblem(IDictionary<int, Vector> coarseProblemRhs)
+		//{
+		//	// Map reduce subdomain vectors to global
+		//	var globalRhs = Vector.CreateZero(coarseProblemDofs.NumGlobalCornerDofs);
+		//	foreach (int s in coarseProblemRhs.Keys)
+		//	{
+		//		Vector subdomainRhs = coarseProblemRhs[s];
+
+		//		int[] subdomainToGlobalDofs = coarseProblemDofs.SubdomainToGlobalCornerDofs[s];
+		//		globalRhs.AddIntoThisNonContiguouslyFrom(subdomainToGlobalDofs, subdomainRhs);
+
+		//		//TODOMPI: delete this and the Lc matrices. They are used below, but this is not faster than the code above.
+		//		//Mappings.IMappingMatrix Lc = coarseProblemDofs.SubdomainMatricesLc[s];
+		//		//globalRhs.AddIntoThis(Lc.Multiply(subdomainRhs, true));
+		//	}
+
+		//	// Solve global problem
+		//	var globalSolution = Vector.CreateZero(coarseProblemDofs.NumGlobalCornerDofs);
+		//	coarseProblemMatrix.MultiplyInverseScc(globalRhs, globalSolution);
+
+		//	return globalSolution;
+		//}
 	}
 }

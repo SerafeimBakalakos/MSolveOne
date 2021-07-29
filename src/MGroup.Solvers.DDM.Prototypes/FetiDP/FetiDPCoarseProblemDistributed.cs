@@ -16,11 +16,11 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 {
 	public class FetiDPCoarseProblemDistributed : IFetiDPCoarseProblem
 	{
-		private readonly FetiDPSubdomainDofs dofs;
-		private readonly IModel model;
-		private readonly FetiDPSubdomainStiffnesses stiffnesses;
+		protected readonly FetiDPSubdomainDofs dofs;
+		protected readonly IModel model;
+		protected readonly FetiDPSubdomainStiffnesses stiffnesses;
 
-		private IVectorMultipliable coarseProblemMatrix;
+		protected IVectorMultipliable coarseProblemMatrix;
 
 		public FetiDPCoarseProblemDistributed(IModel model, FetiDPSubdomainDofs dofs, 
 			FetiDPSubdomainStiffnesses stiffnesses, double pcgResidualTolerance)
@@ -77,7 +77,7 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 
 		public IVector Solve(IVector expandedDomainRhs)
 		{
-			var preconditioner = new IdentityPreconditioner();
+			IPreconditioner preconditioner = CreatePreconditioner();
 			IVector coarseProblemRhs = MatrixMce.Multiply(expandedDomainRhs);
 			IVector coarseProblemSolution = coarseProblemRhs.CreateZeroVectorWithSameFormat();
 			IterativeSolverStats = IterativeSolver.Solve(coarseProblemMatrix, preconditioner, coarseProblemRhs,
@@ -127,6 +127,6 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 			return multiplicities;
 		}
 
-		
+		protected virtual IPreconditioner CreatePreconditioner() => new IdentityPreconditioner();
 	}
 }
