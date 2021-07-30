@@ -22,7 +22,7 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 			: base(model, dofs, stiffnesses, pcgResidualTolerance)
 
 		{
-			var iterativeSolverBuilder = new ReorthogonalizedPcg.Builder();
+			var iterativeSolverBuilder = new LinearAlgebraExtensions.ReorthogonalizedPcg.Builder();
 			iterativeSolverBuilder.MaxIterationsProvider = new PercentageMaxIterationsProvider(1.0);
 			iterativeSolverBuilder.ResidualTolerance = 0.02 * pcgResidualTolerance; // HERE: Let user define this.
 			IterativeSolver = iterativeSolverBuilder.Build();

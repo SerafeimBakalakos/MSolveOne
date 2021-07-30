@@ -6,6 +6,7 @@ using MGroup.Constitutive.Thermal;
 using MGroup.Environments;
 using MGroup.FEM.Entities;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods;
+using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG;
 using MGroup.LinearAlgebra.Iterative;
 using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;

@@ -80,12 +80,12 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PFetiDP
 		}
 
 		[Theory]
-		[InlineData(PsmInterfaceProblem.Original, FetiDPCoarseProblem.Original, PFetiDPScaling.HomogeneousOriginal, PFetiDPPreconditioner.OriginalMonolithic)]
-		[InlineData(PsmInterfaceProblem.Original, FetiDPCoarseProblem.Original, PFetiDPScaling.HomogeneousModified, PFetiDPPreconditioner.OriginalMonolithic)]
-		[InlineData(PsmInterfaceProblem.Original, FetiDPCoarseProblem.Original, PFetiDPScaling.HomogeneousOriginal, PFetiDPPreconditioner.OriginalDistributive)]
-		[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.Original, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedInterfaceOriginalCoarse)]
-		[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.Distributed, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedAll)]
-		[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.DistributedJacobi, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedAll)]
+		//[InlineData(PsmInterfaceProblem.Original, FetiDPCoarseProblem.Original, PFetiDPScaling.HomogeneousOriginal, PFetiDPPreconditioner.OriginalMonolithic)]
+		//[InlineData(PsmInterfaceProblem.Original, FetiDPCoarseProblem.Original, PFetiDPScaling.HomogeneousModified, PFetiDPPreconditioner.OriginalMonolithic)]
+		//[InlineData(PsmInterfaceProblem.Original, FetiDPCoarseProblem.Original, PFetiDPScaling.HomogeneousOriginal, PFetiDPPreconditioner.OriginalDistributive)]
+		//[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.Original, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedInterfaceOriginalCoarse)]
+		//[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.Distributed, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedAll)]
+		//[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.DistributedJacobi, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedAll)]
 		[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.DistributedJacobiReortho, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedAll)]
 		public static void TestForPlane2D(PsmInterfaceProblem interfaceProblem, FetiDPCoarseProblem coarseProblem,
 			PFetiDPScaling scaling, PFetiDPPreconditioner preconditioner)

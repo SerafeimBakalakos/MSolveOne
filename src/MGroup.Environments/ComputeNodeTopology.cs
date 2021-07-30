@@ -13,6 +13,9 @@ namespace MGroup.Environments
 	/// </summary>
 	public class ComputeNodeTopology
 	{
+		#region debug reortho - remake them regular dictionaries instead of sorted.
+		//public SortedDictionary<int, ComputeNode> Nodes { get; } = new SortedDictionary<int, ComputeNode>();
+		#endregion
 		public Dictionary<int, ComputeNode> Nodes { get; } = new Dictionary<int, ComputeNode>();
 
 		public Dictionary<int, ComputeNodeCluster> Clusters { get; } = new Dictionary<int, ComputeNodeCluster>();

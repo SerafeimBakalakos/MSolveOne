@@ -5,6 +5,7 @@ using System.Text;
 using MGroup.Constitutive.Thermal;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods;
+using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG;
 using MGroup.LinearAlgebra.Iterative;
 using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;
@@ -68,12 +69,29 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 
 			if (isCoarseProblemDistributed)
 			{
-				var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
-				coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-				coarseProblemPcgBuilder.ResidualTolerance = 2E-12;
 				var coarseProblemFactory = new FetiDPCoarseProblemDistributed.Factory();
+				if (useReorthogonalizedPcg)
+				{
+					var coarseProblemPcgBuilder = new ReorthogonalizedPcg.Builder();
+					coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+					coarseProblemPcgBuilder.ResidualTolerance = 2E-12;
+					#region debug reortho
+					// This relaxation is important, to avoid stagnation and divergence of reortho-PCG.
+					// However it may result in reduced accuracy in the coarse problem solution and then more iterations of the 
+					// interface problem PCG.
+					coarseProblemPcgBuilder.ResidualTolerance = 1E-7;
+					#endregion
+					coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
+				}
+				else
+				{
+					var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
+					coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+					coarseProblemPcgBuilder.ResidualTolerance = 2E-12;
+					coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
+				}
+
 				coarseProblemFactory.UseJacobiPreconditioner = useCoarseJacobiPreconditioner;
-				coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
 				solverFactory.CoarseProblemFactory = coarseProblemFactory;
 			}
 			else 
@@ -146,6 +164,12 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
 				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
 
+			#region debug reortho
+			//var solverFactory = new PFetiDPSolver<Matrix>.Factory(
+			//	environment, new PsmSubdomainMatrixManagerDense.Factory(),
+			//	cornerDofs, new FetiDPSubdomainMatrixManagerDense.Factory());
+			#endregion
+
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
 			{
 				MaxIterations = 200,
@@ -154,22 +178,48 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 
 			if (isCoarseProblemDistributed)
 			{
-				var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
-				coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-				coarseProblemPcgBuilder.ResidualTolerance = 2E-12;
 				var coarseProblemFactory = new FetiDPCoarseProblemDistributed.Factory();
+				if (useReorthogonalizedPcg)
+				{
+					var coarseProblemPcgBuilder = new ReorthogonalizedPcg.Builder();
+					coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+					coarseProblemPcgBuilder.ResidualTolerance = 2E-12;
+					#region debug reortho
+					// This relaxation is important, to avoid stagnation and divergence of reortho-PCG.
+					// However it may result in reduced accuracy in the coarse problem solution and then more iterations of the 
+					// interface problem PCG.
+					coarseProblemPcgBuilder.ResidualTolerance = 1E-7;
+					#endregion
+					coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
+				}
+				else
+				{
+					var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
+					coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+					coarseProblemPcgBuilder.ResidualTolerance = 2E-12;
+					coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
+				}
+				
 				coarseProblemFactory.UseJacobiPreconditioner = useCoarseJacobiPreconditioner;
-				coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
 				solverFactory.CoarseProblemFactory = coarseProblemFactory;
 			}
 			else 
 			{
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
 				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+				#region debug reortho
+				//var coarseProblemMatrix = new FetiDPCoarseProblemMatrixDense();
+				//solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+				#endregion
 			}
 
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
+
+			#region debug reortho
+			//DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			//PsmSolver<Matrix> solver = solverFactory.BuildSolver(model, algebraicModel);
+			#endregion
 
 			// Linear static analysis
 			var problem = new ProblemThermal(model, algebraicModel, solver);

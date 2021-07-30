@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods;
+using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Iterative;

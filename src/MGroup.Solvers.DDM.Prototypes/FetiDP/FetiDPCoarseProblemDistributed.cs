@@ -70,6 +70,8 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 
 		public void Prepare()
 		{
+			stiffnesses.Scce.RowMultiplicities = MatrixMce.RowMultiplicities;
+			stiffnesses.Scce.ColMultiplicities = MatrixMce.ColMultiplicities;
 			coarseProblemMatrix = new MatrixProduct(MatrixMce, stiffnesses.Scce);
 			IterativeSolver.Clear();
 			IterativeSolverStats = null;

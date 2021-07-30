@@ -4,6 +4,7 @@ using System.Text;
 using MGroup.Environments;
 using MGroup.Environments.Mpi;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods;
+using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG;
 using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
