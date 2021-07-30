@@ -8,22 +8,22 @@ namespace MGroup.Solvers.DDM.Tests
 {
 	public enum EnvironmentChoice
 	{
-		SequentialSharedEnvironment, TplSharedEnvironment, MklEnvironment
+		SequentialShared, TplShared, Mpi
 	}
 
 	public static class EnvironmentChoiceExtensions
 	{
 		public static IComputeEnvironment CreateEnvironment(this EnvironmentChoice environmentChoice)
 		{
-			if (environmentChoice == EnvironmentChoice.SequentialSharedEnvironment)
+			if (environmentChoice == EnvironmentChoice.SequentialShared)
 			{
 				return new SequentialSharedEnvironment();
 			}
-			else if (environmentChoice == EnvironmentChoice.TplSharedEnvironment)
+			else if (environmentChoice == EnvironmentChoice.TplShared)
 			{
 				return new TplSharedEnvironment();
 			}
-			else if (environmentChoice == EnvironmentChoice.MklEnvironment)
+			else if (environmentChoice == EnvironmentChoice.Mpi)
 			{
 				return new MpiEnvironment(new MasterSlavesGlobalOperationStrategy());
 			}

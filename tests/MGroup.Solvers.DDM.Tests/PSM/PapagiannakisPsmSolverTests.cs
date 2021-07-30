@@ -28,7 +28,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 	public static class PapagiannakisPsmSolverTests
 	{
 		[Theory]
-		[InlineData(1.0, 26, 5.51E-10, EnvironmentChoice.SequentialSharedEnvironment)]
+		[InlineData(1.0, 26, 5.51E-10, EnvironmentChoice.SequentialShared)]
 		//[InlineData(1E3, 44, 2.59E-10, EnvironmentChoice.SequentialSharedEnvironment)] // In heterogeneous problems, PSM takes a lot longer to converge to the correct solution.
 		//[InlineData(1E4, 61, 2.56E-10, EnvironmentChoice.SequentialSharedEnvironment)]
 		//[InlineData(1E5, 73, 4.89E-9, EnvironmentChoice.SequentialSharedEnvironment)]
@@ -90,7 +90,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 		}
 
 		[Theory]
-		[InlineData(1.0, 50, 4E-9 /*relaxed from 9.91E-10*/, EnvironmentChoice.SequentialSharedEnvironment)]
+		[InlineData(1.0, 50, 4E-9 /*relaxed from 9.91E-10*/, EnvironmentChoice.SequentialShared)]
 		//[InlineData(1E2, 94, 5.01E-12, EnvironmentChoice.SequentialSharedEnvironment)] // In heterogeneous problems, PSM takes a lot longer to converge to the correct solution.
 		//[InlineData(1E3, 120, 2.87E-11, EnvironmentChoice.SequentialSharedEnvironment)]
 		//[InlineData(1E4, 163, 1.03E-9, EnvironmentChoice.SequentialSharedEnvironment)]
@@ -153,7 +153,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 		}
 
 		[Theory]
-		[InlineData(1.0, 19,  6E-4/*relaxed from 1.15E-12*/, EnvironmentChoice.SequentialSharedEnvironment)]
+		[InlineData(1.0, 19,  6E-4/*relaxed from 1.15E-12*/, EnvironmentChoice.SequentialShared)]
 		//[InlineData(1E2, 48, 8.49E-11, EnvironmentChoice.SequentialSharedEnvironment)] // In heterogeneous problems, PSM takes a lot longer to converge to the correct solution.
 		//[InlineData(1E3, 85, 3.88E-10, EnvironmentChoice.SequentialSharedEnvironment)]
 		//[InlineData(1E4, 99, 3.92E-8, EnvironmentChoice.SequentialSharedEnvironment)]

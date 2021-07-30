@@ -19,7 +19,7 @@ namespace MGroup.Solvers.DDM.PSM.Preconditioning
 
 		public IPreconditioner Preconditioner { get; private set; }
 
-		public void Calculate(IComputeEnvironment environment, DistributedOverlappingIndexer indexer,
+		public void Calculate(IComputeEnvironment environment, DistributedOverlappingIndexer boundaryDofIndexer,
 			IPsmInterfaceProblemMatrix interfaceProblemMatrix) 
 		{
 			Preconditioner = new IdentityPreconditioner();

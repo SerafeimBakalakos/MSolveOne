@@ -21,8 +21,8 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 	public class PsmInterfaceProblemDofsTests
 	{
 		[Theory]
-		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
+		[InlineData(EnvironmentChoice.SequentialShared)]
+		[InlineData(EnvironmentChoice.TplShared)]
 		public static void TestForLine1D(EnvironmentChoice environmentChoice) 
 			=> TestForLine1DInternal(environmentChoice.CreateEnvironment());
 
@@ -39,8 +39,8 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 		}
 
 		[Theory]
-		[InlineData(EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(EnvironmentChoice.TplSharedEnvironment)]
+		[InlineData(EnvironmentChoice.SequentialShared)]
+		[InlineData(EnvironmentChoice.TplShared)]
 		public static void TestForPlane2D(EnvironmentChoice environmentChoice)
 			=> TestForPlane2DInternal(environmentChoice.CreateEnvironment());
 

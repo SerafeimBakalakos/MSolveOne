@@ -30,14 +30,21 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 	public static class SimplePFetiDPSolverTests
 	{
 		[Theory]
-		[InlineData(EnvironmentChoice.SequentialSharedEnvironment, false)]
-		[InlineData(EnvironmentChoice.SequentialSharedEnvironment, true)]
-		[InlineData(EnvironmentChoice.TplSharedEnvironment, false)]
-		[InlineData(EnvironmentChoice.TplSharedEnvironment, true)]
-		public static void TestForBrick3D(EnvironmentChoice environmentChoice, bool isCoarseProblemDistributed)
-			=> TestForBrick3DInternal(environmentChoice.CreateEnvironment(), isCoarseProblemDistributed);
+		[InlineData(EnvironmentChoice.SequentialShared, false, false, false)]
+		[InlineData(EnvironmentChoice.SequentialShared, true, false, false)]
+		[InlineData(EnvironmentChoice.SequentialShared, true, true, false)]
+		[InlineData(EnvironmentChoice.SequentialShared, true, false, true)]
+		[InlineData(EnvironmentChoice.SequentialShared, true, true, true)]
+		[InlineData(EnvironmentChoice.TplShared, false, false, false)]
+		[InlineData(EnvironmentChoice.TplShared, true, false, false)]
+		[InlineData(EnvironmentChoice.TplShared, true, true, false)]
+		[InlineData(EnvironmentChoice.TplShared, true, false, true)]
+		[InlineData(EnvironmentChoice.TplShared, true, true, true)]
+		public static void TestForBrick3D(EnvironmentChoice env, bool coarseDistributed, bool coarseJacobi, bool coarseReortho)
+			=> TestForBrick3DInternal(env.CreateEnvironment(), coarseDistributed, coarseJacobi, coarseReortho);
 
-		internal static void TestForBrick3DInternal(IComputeEnvironment environment, bool isCoarseProblemDistributed)
+		internal static void TestForBrick3DInternal(IComputeEnvironment environment, bool isCoarseProblemDistributed,
+			bool useCoarseJacobiPreconditioner, bool useReorthogonalizedPcg)
 		{
 			// Environment
 			ComputeNodeTopology nodeTopology = Brick3DExample.CreateNodeTopology();
@@ -63,8 +70,9 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			{
 				var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
 				coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-				coarseProblemPcgBuilder.ResidualTolerance = 1E-12;
+				coarseProblemPcgBuilder.ResidualTolerance = 2E-12;
 				var coarseProblemFactory = new FetiDPCoarseProblemDistributed.Factory();
+				coarseProblemFactory.UseJacobiPreconditioner = useCoarseJacobiPreconditioner;
 				coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
 				solverFactory.CoarseProblemFactory = coarseProblemFactory;
 			}
@@ -108,14 +116,21 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 		}
 
 		[Theory]
-		[InlineData(EnvironmentChoice.SequentialSharedEnvironment, false)]
-		[InlineData(EnvironmentChoice.SequentialSharedEnvironment, true)]
-		[InlineData(EnvironmentChoice.TplSharedEnvironment, false)]
-		[InlineData(EnvironmentChoice.TplSharedEnvironment, true)]
-		public static void TestForPlane2D(EnvironmentChoice environmentChoice, bool isCoarseProblemDistributed)
-			=> TestForPlane2DInternal(environmentChoice.CreateEnvironment(), isCoarseProblemDistributed);
+		[InlineData(EnvironmentChoice.SequentialShared, false, false, false)]
+		[InlineData(EnvironmentChoice.SequentialShared, true, false, false)]
+		[InlineData(EnvironmentChoice.SequentialShared, true, true, false)]
+		[InlineData(EnvironmentChoice.SequentialShared, true, false, true)]
+		[InlineData(EnvironmentChoice.SequentialShared, true, true, true)]
+		[InlineData(EnvironmentChoice.TplShared, false, false, false)]
+		[InlineData(EnvironmentChoice.TplShared, true, false, false)]
+		[InlineData(EnvironmentChoice.TplShared, true, true, false)]
+		[InlineData(EnvironmentChoice.TplShared, true, false, true)]
+		[InlineData(EnvironmentChoice.TplShared, true, true, true)]
+		public static void TestForPlane2D(EnvironmentChoice env, bool coarseDistributed, bool coarseJacobi, bool coarseReortho)
+			=> TestForPlane2DInternal(env.CreateEnvironment(), coarseDistributed, coarseJacobi, coarseReortho);
 
-		internal static void TestForPlane2DInternal(IComputeEnvironment environment, bool isCoarseProblemDistributed)
+		internal static void TestForPlane2DInternal(IComputeEnvironment environment, bool isCoarseProblemDistributed,
+			bool useCoarseJacobiPreconditioner, bool useReorthogonalizedPcg)
 		{
 			// Environment
 			ComputeNodeTopology nodeTopology = Plane2DExample.CreateNodeTopology();
@@ -141,8 +156,9 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			{
 				var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
 				coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
-				coarseProblemPcgBuilder.ResidualTolerance = 1E-12;
+				coarseProblemPcgBuilder.ResidualTolerance = 2E-12;
 				var coarseProblemFactory = new FetiDPCoarseProblemDistributed.Factory();
+				coarseProblemFactory.UseJacobiPreconditioner = useCoarseJacobiPreconditioner;
 				coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
 				solverFactory.CoarseProblemFactory = coarseProblemFactory;
 			}

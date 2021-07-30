@@ -30,15 +30,15 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 	public static class PapagiannakisPFetiDPSolverTests
 	{
 		[Theory]
-		[InlineData(1.0, true, 10, 1.53E-9, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E3, false, 11, 2.32E-10, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E3, true, 25, 2.86E-10, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E4, false, 11, 3E-10 /*relaxed from 1.73E-10*/, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E4, true, 33, 1.46E-9, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E5, false, 11, 4E-9 /*relaxed from  1.05E-9*/, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E5, true, 38, 3E-9 /*relaxed from 5.9E-10*/, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E6, false, 11, 2.00E-7, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E6, true, 53, 2.24E-7, EnvironmentChoice.SequentialSharedEnvironment)]
+		[InlineData(1.0, true, 10, 1.53E-9, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E3, false, 11, 2.32E-10, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E3, true, 25, 2.86E-10, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E4, false, 11, 3E-10 /*relaxed from 1.73E-10*/, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E4, true, 33, 1.46E-9, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E5, false, 11, 4E-9 /*relaxed from  1.05E-9*/, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E5, true, 38, 3E-9 /*relaxed from 5.9E-10*/, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E6, false, 11, 2.00E-7, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E6, true, 53, 2.24E-7, EnvironmentChoice.SequentialShared)]
 		public static void RunTest_8(double stiffnessRatio, bool ignoreHeterogenity, int numIterationsExpected, 
 			double errorExpected, EnvironmentChoice environmentChoice)
 			=> RunTest_8_Internal(stiffnessRatio, ignoreHeterogenity, numIterationsExpected, errorExpected, 
@@ -116,12 +116,12 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 		}
 
 		[Theory]
-		[InlineData(1.0, 11, 2E-8 /*relaxed from 4.94E-9*/, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E2, 11, 7E-10 /*relaxed from 3.06E-10*/, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E3, 12, 5E-11 /*relaxed from 1.14E-11*/, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E4, 12, 9.92E-10, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E5, 12, 7.76E-9, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E6, 13, 1E-7 /*relaxed from 2.97E-8*/, EnvironmentChoice.SequentialSharedEnvironment)]
+		[InlineData(1.0, 11, 2E-8 /*relaxed from 4.94E-9*/, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E2, 11, 7E-10 /*relaxed from 3.06E-10*/, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E3, 12, 5E-11 /*relaxed from 1.14E-11*/, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E4, 12, 9.92E-10, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E5, 12, 7.76E-9, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E6, 13, 1E-7 /*relaxed from 2.97E-8*/, EnvironmentChoice.SequentialShared)]
 		public static void RunTest_9_1(
 			double stiffnessRatio, int numIterationsExpected, double errorExpected, EnvironmentChoice environmentChoice)
 			=> RunTest_9_1_Internal(
@@ -197,12 +197,12 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 		}
 
 		[Theory]
-		[InlineData(1.0, 7, 1E-7 /*relaxed from 1.09E-10*/, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E2, 8, 2E-7 /*relaxed from 8.43E-10*/, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E3, 7, 6E-7 /*relaxed from 4.74E-8*/, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E4, 7, 5E-7 /*relaxed from 4.96E-8*/, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E5, 7, 5E-7 /*relaxed from 5.14E-8*/, EnvironmentChoice.SequentialSharedEnvironment)]
-		[InlineData(1E6, 7, 5E-7 /*relaxed from 5.20E-8*/, EnvironmentChoice.SequentialSharedEnvironment)]
+		[InlineData(1.0, 7, 1E-7 /*relaxed from 1.09E-10*/, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E2, 8, 2E-7 /*relaxed from 8.43E-10*/, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E3, 7, 6E-7 /*relaxed from 4.74E-8*/, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E4, 7, 5E-7 /*relaxed from 4.96E-8*/, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E5, 7, 5E-7 /*relaxed from 5.14E-8*/, EnvironmentChoice.SequentialShared)]
+		[InlineData(1E6, 7, 5E-7 /*relaxed from 5.20E-8*/, EnvironmentChoice.SequentialShared)]
 		public static void RunTest_9_2(
 			double stiffnessRatio, int numIterationsExpected, double errorExpected, EnvironmentChoice environmentChoice)
 			=> RunTest_9_2_Internal(
