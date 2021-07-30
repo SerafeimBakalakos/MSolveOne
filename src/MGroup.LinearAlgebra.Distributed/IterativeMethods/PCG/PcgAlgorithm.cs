@@ -79,7 +79,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods
 				// At this point we can check if CG has converged and exit, thus avoiding the uneccesary operations that follow.
 				residualNormRatio = convergence.EstimateResidualNormRatio(this);
 				//Debug.WriteLine($"PCG Iteration = {iteration}: residual norm ratio = {residualNormRatio}");
-				if (residualNormRatio <= residualTolerance)
+				if (residualNormRatio <= ResidualTolerance)
 				{
 					return new IterativeStatistics
 					{
@@ -104,7 +104,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods
 			if (throwIfNotConvergence)
 			{
 				throw new IterativeMethodDidNotConvergeException("PCG terminated after the max allowable number of iterations =" +
-					$" {maxIterations}, without reaching the required residual norm ratio tolerance = {residualTolerance}." +
+					$" {maxIterations}, without reaching the required residual norm ratio tolerance = {ResidualTolerance}." +
 					$" In contrast the final residual norm ratio is {residualNormRatio}. To accept solutions without convergence" +
 					$" set PcgAlgorithm.Builder.ThrowExceptionIfNotConvergence = false");
 			}

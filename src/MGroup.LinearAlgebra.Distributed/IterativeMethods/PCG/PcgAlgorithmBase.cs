@@ -15,8 +15,6 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
 	public abstract class PcgAlgorithmBase : IDistributedIterativeMethod
 	{
 		protected readonly IPcgResidualConvergence convergence;
-		protected readonly IMaxIterationsProvider maxIterationsProvider;
-		protected readonly double residualTolerance;
 		protected readonly IPcgResidualUpdater residualUpdater;
 		protected readonly bool throwIfNotConvergence;
 
@@ -34,12 +32,16 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
 		protected PcgAlgorithmBase(double residualTolerance, IMaxIterationsProvider maxIterationsProvider,
 			IPcgResidualConvergence convergence, IPcgResidualUpdater residualUpdater, bool throwIfNotConvergence)
 		{
-			this.residualTolerance = residualTolerance;
-			this.maxIterationsProvider = maxIterationsProvider;
+			this.ResidualTolerance = residualTolerance;
+			this.MaxIterationsProvider = maxIterationsProvider;
 			this.convergence = convergence;
 			this.residualUpdater = residualUpdater;
 			this.throwIfNotConvergence = throwIfNotConvergence;
 		}
+
+		public IMaxIterationsProvider MaxIterationsProvider { get; set; }
+
+		public double ResidualTolerance { get; set; }
 
 		/// <summary>
 		/// The direction vector d, used to update the solution vector: x = x + α * d
@@ -54,7 +56,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
 		/// <summary>
 		/// The matrix A of the linear system or another object that implements matrix-vector multiplications.
 		/// </summary>
-		public ILinearTransformation Matrix { get; private set; }
+		public ILinearTransformation Matrix { get; protected set; }
 
 		/// <summary>
 		/// The vector that results from <see cref="Matrix"/> * <see cref="Direction"/>.
@@ -69,7 +71,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
 		/// <summary>
 		/// The preconditioner M, such that inv(M) ~= inv(A).
 		/// </summary>
-		public IPreconditioner Preconditioner { get; private set; }
+		public IPreconditioner Preconditioner { get; protected set; }
 
 		/// <summary>
 		/// The vector s = inv(M) * r
@@ -94,7 +96,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
 		/// <summary>
 		/// The right hand side of the linear system b = A * x.
 		/// </summary>
-		public IGlobalVector Rhs { get; private set; }
+		public IGlobalVector Rhs { get; protected set; }
 
 		/// <summary>
 		/// The current approximation to the solution of the linear system A * x = b
@@ -153,7 +155,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
 		/// <exception cref="NonMatchingDimensionsException">
 		/// Thrown if <paramref name="rhs"/> or <paramref name="solution"/> violate the described constraints.
 		/// </exception>
-		public IterativeStatistics Solve(ILinearTransformation matrix, IPreconditioner preconditioner,
+		public virtual IterativeStatistics Solve(ILinearTransformation matrix, IPreconditioner preconditioner,
 			IGlobalVector rhs, IGlobalVector solution, bool initialGuessIsZero) //TODO: find a better way to handle the case x0=0
 		{
 			this.Matrix = matrix;
@@ -165,7 +167,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
 			//      may not be necessary in order to get the max iterations. E.g. In FETI methods, max iterations do not depend
 			//      on the size of the global matrix of the interface problem, but are user defined usually.
 			//int maxIterations = maxIterationsProvider.GetMaxIterations(matrix.NumColumns); 
-			int maxIterations = ((FixedMaxIterationsProvider)maxIterationsProvider).GetMaxIterations(-1);
+			int maxIterations = ((FixedMaxIterationsProvider)MaxIterationsProvider).GetMaxIterations(-1);
 
 			// r = b - A * x
 			if (initialGuessIsZero) residual = rhs.Copy();
