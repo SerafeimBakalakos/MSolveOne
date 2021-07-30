@@ -31,11 +31,11 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 
 			var iterativeSolverBuilder = new PcgAlgorithm.Builder();
 			iterativeSolverBuilder.MaxIterationsProvider = new PercentageMaxIterationsProvider(1.0);
-			iterativeSolverBuilder.ResidualTolerance = 0.01 * pcgResidualTolerance; // HERE: Let user define this.
+			iterativeSolverBuilder.ResidualTolerance = 0.02 * pcgResidualTolerance; // HERE: Let user define this.
 			IterativeSolver = iterativeSolverBuilder.Build();
 		}
 
-		public PcgAlgorithm IterativeSolver { get; }
+		public PcgAlgorithmBase IterativeSolver { get; protected set; }
 
 		public IterativeStatistics IterativeSolverStats { get; set; }
 

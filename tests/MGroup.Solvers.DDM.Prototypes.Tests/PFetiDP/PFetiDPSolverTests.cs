@@ -30,6 +30,7 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PFetiDP
 		[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.Original, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedInterfaceOriginalCoarse)]
 		[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.Distributed, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedAll)]
 		[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.DistributedJacobi, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedAll)]
+		[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.DistributedJacobiReortho, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedAll)]
 		public static void TestForBrick3D(PsmInterfaceProblem interfaceProblem, FetiDPCoarseProblem coarseProblem,
 			PFetiDPScaling scaling, PFetiDPPreconditioner preconditioner)
 		{
@@ -85,6 +86,7 @@ namespace MGroup.Solvers.DDM.Prototypes.Tests.PFetiDP
 		[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.Original, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedInterfaceOriginalCoarse)]
 		[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.Distributed, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedAll)]
 		[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.DistributedJacobi, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedAll)]
+		[InlineData(PsmInterfaceProblem.Distributed, FetiDPCoarseProblem.DistributedJacobiReortho, PFetiDPScaling.HomogeneousDistributed, PFetiDPPreconditioner.DistributedAll)]
 		public static void TestForPlane2D(PsmInterfaceProblem interfaceProblem, FetiDPCoarseProblem coarseProblem,
 			PFetiDPScaling scaling, PFetiDPPreconditioner preconditioner)
 		{
