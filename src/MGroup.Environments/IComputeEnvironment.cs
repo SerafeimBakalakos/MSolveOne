@@ -30,11 +30,10 @@ namespace MGroup.Environments
 
 		void DoGlobalOperation(Action globalOperation);
 
-		//Tout DoGlobalOperation<Tin, Tout>(Dictionary<int, Tin> nodeDataInGlobalMemory, Func<Dictionary<int, Tin>, Tout> globalOperation);
-
-		//Dictionary<int, Tout> DoGlobalOperation<Tin, Tout>(Tin globalDataInGlobalMemory, Func<Tin, Dictionary<int, Tout>> globalOperation);
-
 		void DoPerNode(Action<int> actionPerNode);
+
+		// Similar to CreateDictionaryPerNode, but now the data belong to global memory space.
+		Dictionary<int, T> ExtractNodeDataFromGlobalToLocalMemories<T>(Func<int, T> subdomainOperation);
 
 		//TODOMPI: Its most common use is weird: An Action<int> is called by the environment. The environment passes the id of 
 		//      each ComputeNode it manages. Then the Action<int> requests from the environment to provide the ComputeNode for
@@ -102,98 +101,5 @@ namespace MGroup.Environments
 		/// will be stored in <see cref="sendValues"/>[j]. 
 		/// </summary>
 		public ConcurrentDictionary<int, T[]> sendValues;
-	}
-
-	//TODOMPI: Make these default interface methods
-	//TODOMPI: I can also use overloaded GlobalOperation<> classes to hold the params and returned objects. It might be clearer 
-	//		to describe each item there.
-	public static class EnvironmentExtensions 
-	{
-		public static void DoGlobalOperation<Tin>(this IComputeEnvironment environment, 
-			Func<int, Tin> getLocalNodeInput, Action<Dictionary<int, Tin>> globalOperation)
-		{
-			Dictionary<int, Tin> globalNodeInput = environment.TransferNodeDataToGlobalMemory(getLocalNodeInput);
-			environment.DoGlobalOperation(() => globalOperation(globalNodeInput));
-		}
-
-		public static void DoGlobalOperation<Tin0, Tin1>(this IComputeEnvironment environment,
-			Func<int, Tin0> getLocalNodeInput0, Func<int, Tin1> getLocalNodeInput1, 
-			Action<Dictionary<int, Tin0>, Dictionary<int, Tin1>> globalOperation)
-		{
-			Dictionary<int, Tin0> globalNodeInput0 = environment.TransferNodeDataToGlobalMemory(getLocalNodeInput0);
-			Dictionary<int, Tin1> globalNodeInput1 = environment.TransferNodeDataToGlobalMemory(getLocalNodeInput1);
-			environment.DoGlobalOperation(() => globalOperation(globalNodeInput0, globalNodeInput1));
-		}
-
-		public static Dictionary<int, Tout> DoGlobalOperation<Tout>(this IComputeEnvironment environment,
-			Func<Dictionary<int, Tout>> globalOperation)
-		{
-			Dictionary<int, Tout> globalNodeOutput = null;
-			environment.DoGlobalOperation(() => globalNodeOutput = globalOperation());
-			return environment.TransferNodeDataToLocalMemories(globalNodeOutput);
-		}
-
-		public static (Dictionary<int, Tout0> localNodeOutput0, Dictionary<int, Tout1> localNodeOutput1) 
-			DoGlobalOperation<Tout0, Tout1>(this IComputeEnvironment environment,
-			Func<(Dictionary<int, Tout0>, Dictionary<int, Tout1>)> globalOperation)
-		{
-			Dictionary<int, Tout0> globalNodeOutput0 = null;
-			Dictionary<int, Tout1> globalNodeOutput1 = null;
-			environment.DoGlobalOperation(() => (globalNodeOutput0, globalNodeOutput1) = globalOperation());
-			Dictionary<int, Tout0> localNodeOutput0 = environment.TransferNodeDataToLocalMemories(globalNodeOutput0);
-			Dictionary<int, Tout1> localNodeOutput1 = environment.TransferNodeDataToLocalMemories(globalNodeOutput1);
-			return (localNodeOutput0, localNodeOutput1);
-		}
-
-		public static Dictionary<int, Tout> DoGlobalOperation<Tin, Tout>(this IComputeEnvironment environment,
-			Func<int, Tin> getLocalNodeInput, Func<Dictionary<int, Tin>, Dictionary<int, Tout>> globalOperation)
-		{
-			Dictionary<int, Tin> globalNodeInput = environment.TransferNodeDataToGlobalMemory(getLocalNodeInput);
-			Dictionary<int, Tout> globalNodeOutput = null;
-			environment.DoGlobalOperation(() => globalNodeOutput = globalOperation(globalNodeInput));
-			return environment.TransferNodeDataToLocalMemories(globalNodeOutput);
-		}
-
-		public static Dictionary<int, Tout> DoGlobalOperation<Tin0, Tin1, Tout>(this IComputeEnvironment environment,
-			Func<int, Tin0> getLocalNodeInput0, Func<int, Tin1> getLocalNodeInput1, 
-			Func<Dictionary<int, Tin0>, Dictionary<int, Tin1>, Dictionary<int, Tout>> globalOperation)
-		{
-			Dictionary<int, Tin0> globalNodeInput0 = environment.TransferNodeDataToGlobalMemory(getLocalNodeInput0);
-			Dictionary<int, Tin1> globalNodeInput1 = environment.TransferNodeDataToGlobalMemory(getLocalNodeInput1);
-			Dictionary<int, Tout> globalNodeOutput = null;
-			environment.DoGlobalOperation(() => globalNodeOutput = globalOperation(globalNodeInput0, globalNodeInput1));
-			return environment.TransferNodeDataToLocalMemories(globalNodeOutput);
-		}
-
-		public static (Dictionary<int, Tout0> localNodeOutput0, Dictionary<int, Tout1> localNodeOutput1) 
-			DoGlobalOperation<Tin, Tout0, Tout1>(this IComputeEnvironment environment,
-			Func<int, Tin> getLocalNodeInput, 
-			Func<Dictionary<int, Tin>, (Dictionary<int, Tout0>, Dictionary<int, Tout1>)> globalOperation)
-		{
-			Dictionary<int, Tin> globalNodeInput = environment.TransferNodeDataToGlobalMemory(getLocalNodeInput);
-			Dictionary<int, Tout0> globalNodeOutput0 = null;
-			Dictionary<int, Tout1> globalNodeOutput1 = null;
-			environment.DoGlobalOperation(() => (globalNodeOutput0, globalNodeOutput1) = globalOperation(globalNodeInput));
-			Dictionary<int, Tout0> localNodeOutput0 = environment.TransferNodeDataToLocalMemories(globalNodeOutput0);
-			Dictionary<int, Tout1> localNodeOutput1 = environment.TransferNodeDataToLocalMemories(globalNodeOutput1);
-			return (localNodeOutput0, localNodeOutput1);
-		}
-
-		public static (Dictionary<int, Tout0> localNodeOutput0, Dictionary<int, Tout1> localNodeOutput1) 
-			DoGlobalOperation<Tin0, Tin1, Tout0, Tout1>(this IComputeEnvironment environment,
-			Func<int, Tin0> getLocalNodeInput0, Func<int, Tin1> getLocalNodeInput1,
-			Func<Dictionary<int, Tin0>, Dictionary<int, Tin1>, (Dictionary<int, Tout0>, Dictionary<int, Tout1>)> globalOperation)
-		{
-			Dictionary<int, Tin0> globalNodeInput0 = environment.TransferNodeDataToGlobalMemory(getLocalNodeInput0);
-			Dictionary<int, Tin1> globalNodeInput1 = environment.TransferNodeDataToGlobalMemory(getLocalNodeInput1);
-			Dictionary<int, Tout0> globalNodeOutput0 = null;
-			Dictionary<int, Tout1> globalNodeOutput1 = null;
-			environment.DoGlobalOperation(
-				() => (globalNodeOutput0, globalNodeOutput1) = globalOperation(globalNodeInput0, globalNodeInput1));
-			Dictionary<int, Tout0> localNodeOutput0 = environment.TransferNodeDataToLocalMemories(globalNodeOutput0);
-			Dictionary<int, Tout1> localNodeOutput1 = environment.TransferNodeDataToLocalMemories(globalNodeOutput1);
-			return (localNodeOutput0, localNodeOutput1);
-		}
-
 	}
 }

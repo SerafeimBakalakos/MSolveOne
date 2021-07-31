@@ -34,78 +34,48 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 		public virtual void FindCoarseProblemDofs()
 		{
-			environment.DoGlobalOperation(
-				getLocalNodeInput: s => getSubdomainDofs(s).DofOrderingCorner,
-				globalOperation: subdomainCornerDofsInGlobalMem =>
-				{
-					coarseProblemDofs.FindGlobalCornerDofs(subdomainCornerDofsInGlobalMem);
-					coarseProblemDofs.CalcSubdomainGlobalCornerDofMaps();
-					DofPermutation permutation = coarseProblemMatrix.ReorderGlobalCornerDofs(
-					coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs);
-					coarseProblemDofs.ReorderGlobalCornerDofs(permutation);
-				});
+			Dictionary<int, IntDofTable> subdomainCornerDofs =
+				environment.TransferNodeDataToGlobalMemory(s => getSubdomainDofs(s).DofOrderingCorner);
 
-			//TODOMPI: delete these
-			//Dictionary<int, IntDofTable> subdomainCornerDofs =
-			//	environment.TransferNodeDataToGlobalMemory(s => getSubdomainDofs(s).DofOrderingCorner);
-			//environment.DoGlobalOperation(() =>
-			//{
-			//	coarseProblemDofs.FindGlobalCornerDofs(subdomainCornerDofs);
-			//	coarseProblemDofs.CalcSubdomainGlobalCornerDofMaps();
-			//	DofPermutation permutation = coarseProblemMatrix.ReorderGlobalCornerDofs(
-			//	coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs);
-			//	coarseProblemDofs.ReorderGlobalCornerDofs(permutation);
-			//});
+			environment.DoGlobalOperation(() =>
+			{
+				coarseProblemDofs.FindGlobalCornerDofs(subdomainCornerDofs);
+				coarseProblemDofs.CalcSubdomainGlobalCornerDofMaps();
+				DofPermutation permutation = coarseProblemMatrix.ReorderGlobalCornerDofs(
+				coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs);
+				coarseProblemDofs.ReorderGlobalCornerDofs(permutation);
+			});
 		}
 
 		public virtual void PrepareMatricesForSolution()
 		{
 			environment.DoPerNode(subdomainID => getSubdomainMatrices(subdomainID).CalcSchurComplementOfRemainderDofs());
 
-			environment.DoGlobalOperation(
-				getLocalNodeInput: s => getSubdomainMatrices(s).SchurComplementOfRemainderDofs,
-				globalOperation: subdomainMatricesSccInGlobalMem =>
-				{
-					coarseProblemMatrix.InvertGlobalScc(coarseProblemDofs.NumGlobalCornerDofs,
-						coarseProblemDofs.SubdomainToGlobalCornerDofs, subdomainMatricesSccInGlobalMem);
-				});
+			Dictionary<int, IMatrix> subdomainMatricesScc =
+				environment.TransferNodeDataToGlobalMemory(s => getSubdomainMatrices(s).SchurComplementOfRemainderDofs);
 
-			//TODOMPI: delete these
-			//Dictionary<int, IMatrix> subdomainMatricesScc =
-			//	environment.TransferNodeDataToGlobalMemory(s => getSubdomainMatrices(s).SchurComplementOfRemainderDofs);
-			//environment.DoGlobalOperation(() =>
-			//{
-			//	coarseProblemMatrix.InvertGlobalScc(
-			//		coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs, subdomainMatricesScc);
-			//});
+			environment.DoGlobalOperation(() =>
+			{
+				coarseProblemMatrix.InvertGlobalScc(
+					coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs, subdomainMatricesScc);
+			});
 		}
 
 		public virtual void SolveCoarseProblem(
 			IDictionary<int, Vector> coarseProblemRhs, IDictionary<int, Vector> coarseProblemSolution)
 		{
-			Dictionary<int, Vector> subdomainSolutionVectorsLocal = environment.DoGlobalOperation(
-				getLocalNodeInput: s => coarseProblemRhs[s],
-				globalOperation: subdomainRhsVectorsInGlobalMem =>
-				{
-					//TODO: These should be cached and cleared somehow, as should the vectors in coarseProblemSolution
-					var subdomainSolutionVectorsGlobal = new Dictionary<int, Vector>();
-					coarseProblemSolver.SolveCoarseProblem(subdomainRhsVectorsInGlobalMem, subdomainSolutionVectorsGlobal);
-					return subdomainSolutionVectorsGlobal;
-				});
+			Dictionary<int, Vector> subdomainRhsGlobal = environment.TransferNodeDataToGlobalMemory(s => coarseProblemRhs[s]);
 
-			//TODOMPI: delete these
-			//Dictionary<int, Vector> subdomainRhsVectors = environment.TransferNodeDataToGlobalMemory(s => coarseProblemRhs[s]);
-			//Dictionary<int, Vector> subdomainSolutionVectorsGlobal = null;
-			//environment.DoGlobalOperation(() =>
-			//{
-			//	//TODO: These should be cached and cleared somehow, as should the vectors in coarseProblemSolution
-			//	subdomainSolutionVectorsGlobal = new Dictionary<int, Vector>(); 
-			//	coarseProblemSolver.SolveCoarseProblem(subdomainRhsVectors, subdomainSolutionVectorsGlobal);
-			//});
-			//Dictionary<int, Vector> subdomainSolutionVectorsLocal = 
-			//	environment.TransferNodeDataToLocalMemories(subdomainSolutionVectorsGlobal);
+			Vector globalSolution = null;
+			environment.DoGlobalOperation(() =>
+				globalSolution = coarseProblemSolver.SolveCoarseProblem(subdomainRhsGlobal)
+			);
 
-			environment.DoPerNode(s => coarseProblemSolution[s].CopyFrom(subdomainSolutionVectorsLocal[s]));
+			//TODOMPI: write directly into vectors of coarseProblemSolution
+			Dictionary<int, Vector> subdomainSolutionsLocal = environment.ExtractNodeDataFromGlobalToLocalMemories(
+				s => coarseProblemSolver.ExtractCoarseProblemSolutionForSubdomain(s, globalSolution));
+
+			environment.DoPerNode(s => coarseProblemSolution[s].CopyFrom(subdomainSolutionsLocal[s]));
 		}
 
 		public class Factory : IFetiDPCoarseProblemFactory

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MGroup.Environments.Mpi
 {
@@ -21,20 +22,48 @@ namespace MGroup.Environments.Mpi
 		public void DoGlobalOperation(MpiEnvironment environment, Action globalOperation)
 		{
 			CheckMasterProcessRank(environment);
+
+			// The global operation is run only on master process.
 			if (environment.CommWorld.Rank == masterProcessRank)
 			{
-				//Console.WriteLine($"Process {environment.CommWorld.Rank}: Executing the global operation");
 				globalOperation();
 			}
-			//environment.CommWorld.Barrier();
+		}
+
+		public Dictionary<int, T> ExtractNodeDataFromGlobalToLocalMemories<T>(
+			MpiEnvironment environment, Func<int, T> subdomainOperation)
+		{
+			CheckMasterProcessRank(environment);
+
+			// Step 1: Calculate data for all nodes, but only in master process, where the callbacks are defined
+			Dictionary<int, T> nodeDataInGlobal = null;
+			if (environment.CommWorld.Rank == masterProcessRank)
+			{
+				// On master process we will deal with all nodes.
+				Dictionary<int, ComputeNode> nodes = environment.NodeTopology.Nodes;
+
+				// Add the keys first to avoid race conditions.
+				nodeDataInGlobal = new Dictionary<int, T>(nodes.Count);
+				foreach (int nodeID in nodes.Keys)
+				{
+					nodeDataInGlobal[nodeID] = default;
+				}
+
+				// Calculate data of each node in parallel.
+				Parallel.ForEach(nodes.Keys, nodeID => nodeDataInGlobal[nodeID] = subdomainOperation(nodeID));
+			}
+
+			// Step 2: Scatter the node data from master process to their corresponding local processes.
+			Dictionary<int, T> nodeDataInLocal = environment.ScatterFromRootProcess(nodeDataInGlobal, masterProcessRank);
+			return nodeDataInLocal;
 		}
 
 		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(MpiEnvironment environment, Func<int, T> getLocalNodeData)
 		{
 			CheckMasterProcessRank(environment);
+
+			// Only the master process gathers data corresponding to all compute nodes.
 			Dictionary<int, T> globalNodeDataStorage = environment.GatherToRootProcess(getLocalNodeData, masterProcessRank);
-			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Global data from gather is null = {globalNodeDataStorage == null}");
-			//environment.CommWorld.Barrier();
 			return globalNodeDataStorage;
 		}
 
@@ -42,10 +71,7 @@ namespace MGroup.Environments.Mpi
 			MpiEnvironment environment, Dictionary<int, T> globalNodeDataStorage)
 		{
 			CheckMasterProcessRank(environment);
-			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Global data to scatter is null = {globalNodeDataStorage == null}");
-			//environment.CommWorld.Barrier();
 			Dictionary<int, T> localNodeData = environment.ScatterFromRootProcess(globalNodeDataStorage, masterProcessRank);
-			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Count of local data from scatter = {localNodeData.Count}");
 			return localNodeData;
 		}
 

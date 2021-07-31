@@ -123,7 +123,7 @@ namespace MGroup.Environments.Mpi
 			}
 
 			// Add the keys first to avoid race conditions
-			var result = new Dictionary<int, T>();
+			var result = new Dictionary<int, T>(localNodes.Count);
 			foreach (int nodeID in localNodes.Keys)
 			{
 				result[nodeID] = default;
@@ -152,6 +152,9 @@ namespace MGroup.Environments.Mpi
 
 			Parallel.ForEach(localNodes.Keys, actionPerNode);
 		}
+
+		public Dictionary<int, T> ExtractNodeDataFromGlobalToLocalMemories<T>(Func<int, T> subdomainOperation)
+			=> globalOperationStrategy.ExtractNodeDataFromGlobalToLocalMemories(this, subdomainOperation);
 
 		public Dictionary<int, T> GatherToRootProcess<T>(Func<int, T> getDataPerNode, int rootProcessRank)
 		{

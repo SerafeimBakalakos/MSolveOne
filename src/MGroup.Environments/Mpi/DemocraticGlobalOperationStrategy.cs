@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MGroup.Environments.Mpi
 {
@@ -16,39 +17,64 @@ namespace MGroup.Environments.Mpi
 
 		public void DoGlobalOperation(MpiEnvironment environment, Action globalOperation)
 		{
+			// Extra processes, if any, do not take part in global operations.
 			if (environment.CommNodes == null)
 			{
 				return;
 			}
 
-			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Executing the global operation");
-			//environment.CommWorld.Barrier();
+			// The global operation is run on all processes.
 			globalOperation();
 		}
 
-		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(MpiEnvironment environment, Func<int, T> getLocalNodeData)
+		public Dictionary<int, T> ExtractNodeDataFromGlobalToLocalMemories<T>(
+			MpiEnvironment environment, Func<int, T> subdomainOperation)
 		{
+			// Extra processes, if any, do not take part in global operations.
 			if (environment.CommNodes == null)
 			{
 				return null;
 			}
 
+			// On each process, we will only deal with the local nodes.
+			int clusterID = environment.CommNodes.Rank;
+			Dictionary<int, ComputeNode> nodes = environment.NodeTopology.Clusters[clusterID].Nodes;
+
+			// Add the keys first to avoid race conditions.
+			var nodeData = new Dictionary<int, T>(nodes.Count);
+			foreach (int nodeID in nodes.Keys)
+			{
+				nodeData[nodeID] = default;
+			}
+
+			// Calculate data of each local node in parallel.
+			Parallel.ForEach(nodes.Keys, nodeID => nodeData[nodeID] = subdomainOperation(nodeID));
+
+			// No need to scatter anything, since everything done so far was on the memory of the appropriate process.
+			return nodeData;
+		}
+
+		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(MpiEnvironment environment, Func<int, T> getLocalNodeData)
+		{
+			// Extra processes, if any, do not take part in global operations.
+			if (environment.CommNodes == null)
+			{
+				return null;
+			}
+
+			// Each process gathers data corresponding to all compute nodes.
 			Dictionary<int, T> globalNodeDataStorage = environment.AllGather(getLocalNodeData);
-			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Global data from gather is null = {globalNodeDataStorage == null}");
-			//environment.CommWorld.Barrier();
 			return globalNodeDataStorage;
 		}
 
 		public Dictionary<int, T> TransferNodeDataToLocalMemories<T>(
 			MpiEnvironment environment, Dictionary<int, T> globalNodeDataStorage)
 		{
+			// Extra processes, if any, do not take part in global operations.
 			if (environment.CommNodes == null)
 			{
 				return null;
 			}
-
-			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Global data to scatter is null = {globalNodeDataStorage == null}");
-			//environment.CommNodes.Barrier();
 
 			// No need to scatter anything, since global memory is the same as process memory. On the other hand,
 			// process memory contains data for all nodes. Return only the data that correspond to local nodes of the process. 
@@ -59,8 +85,7 @@ namespace MGroup.Environments.Mpi
 			{
 				localNodeData[n] = globalNodeDataStorage[n];
 			}
-			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Count of local data from scatter = {localNodeData.Count}");
-			//environment.CommNodes.Barrier();
+
 			return localNodeData;
 		}
 	}

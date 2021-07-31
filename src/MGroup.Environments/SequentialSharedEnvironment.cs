@@ -39,7 +39,7 @@ namespace MGroup.Environments
 
 		public Dictionary<int, T> CreateDictionaryPerNode<T>(Func<int, T> createDataPerNode)
 		{
-			var result = new Dictionary<int, T>();
+			var result = new Dictionary<int, T>(nodeTopology.Nodes.Count);
 			foreach (int nodeID in nodeTopology.Nodes.Keys)
 			{
 				result[nodeID] = createDataPerNode(nodeID);
@@ -51,6 +51,9 @@ namespace MGroup.Environments
 		{
 			globalOperation();
 		}
+
+		public Dictionary<int, T> ExtractNodeDataFromGlobalToLocalMemories<T>(Func<int, T> subdomainOperation)
+			=> CreateDictionaryPerNode(subdomainOperation);
 
 		public void DoPerNode(Action<int> actionPerNode)
 		{

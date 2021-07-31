@@ -8,6 +8,9 @@ namespace MGroup.Environments.Mpi
 	{
 		void DoGlobalOperation(MpiEnvironment environment, Action globalOperation);
 
+		Dictionary<int, T> ExtractNodeDataFromGlobalToLocalMemories<T>(
+			MpiEnvironment environment, Func<int, T> subdomainOperation);
+
 		Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(MpiEnvironment environment, Func<int, T> getLocalNodeData);
 
 		Dictionary<int, T> TransferNodeDataToLocalMemories<T>(
