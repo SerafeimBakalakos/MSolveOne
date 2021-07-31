@@ -7,7 +7,7 @@ namespace MGroup.Solvers.DDM.Tests
 	{
 		static void Main(string[] args)
 		{
-			MpiTestSuite.RunTestsWith4Processes();
+			MpiTestSuite.RunTestsWith5Processes();
 			//MpiScalabilityAnalysisRunner.RunScalabilityAnalysesWith4Processes();
 		}
 	}

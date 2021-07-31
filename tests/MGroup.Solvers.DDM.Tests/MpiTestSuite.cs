@@ -15,10 +15,13 @@ namespace MGroup.Solvers.DDM.Tests
 {
 	public static class MpiTestSuite
 	{
-		public static void RunTestsWith4Processes()
+		public static void RunTestsWith5Processes()
 		{
-			//IMpiGlobalOperationStrategy globalOperationStrategy = new MasterSlavesGlobalOperationStrategy();
-			IMpiGlobalOperationStrategy globalOperationStrategy = new DedicatedProcessGlobalOperationStrategy();
+			IMpiGlobalOperationStrategy globalOperationStrategy = new MasterSlavesGlobalOperationStrategy(0);
+
+			// Process 4 will be used only for global operations
+			//IMpiGlobalOperationStrategy globalOperationStrategy = new MasterSlavesGlobalOperationStrategy(4); 
+
 			//IMpiGlobalOperationStrategy globalOperationStrategy = new DemocraticGlobalOperationStrategy();
 			using (var mpiEnvironment = new MpiEnvironment(globalOperationStrategy))
 			{

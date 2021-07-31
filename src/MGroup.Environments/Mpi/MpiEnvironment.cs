@@ -64,21 +64,20 @@ namespace MGroup.Environments.Mpi
 
 		public ComputeNodeTopology NodeTopology { get ; private set; }
 
-		public Dictionary<int, T> AllGather<T>(Func<int, T> getDataPerNode, Intracommunicator comm)
+		public Dictionary<int, T> AllGather<T>(Func<int, T> getDataPerNode)
 		{
-			if (comm == null)
+			if (CommNodes == null)
 			{
 				return null;
 			}
 
-			var collectivesHelper = FindCollectivesHelper(comm);
-			T[] localData = collectivesHelper.LocalNodesDataToArray(comm.Rank, getDataPerNode);
-			int[] counts = collectivesHelper.NodeCounts;
+			T[] localData = collectivesHelperNodes.LocalNodesDataToArray(CommNodes.Rank, getDataPerNode);
+			int[] counts = collectivesHelperNodes.NodeCounts;
 
 			//TODO Optim: have a cached buffer to write data into (use the overload with ref parameter)
-			T[] allData = comm.AllgatherFlattened(localData, counts); // All processes gather the data
+			T[] allData = CommNodes.AllgatherFlattened(localData, counts); // All processes gather the data
 
-			return collectivesHelper.AllNodesDataToDictionary(allData);
+			return collectivesHelperNodes.AllNodesDataToDictionary(allData);
 		}
 
 		public bool AllReduceAnd(Dictionary<int, bool> valuePerNode)
@@ -142,7 +141,7 @@ namespace MGroup.Environments.Mpi
 		}
 
 		public void DoGlobalOperation(Action globalOperation) 
-			=> globalOperationStrategy.DoGlobalOperation(globalOperation);
+			=> globalOperationStrategy.DoGlobalOperation(this, globalOperation);
 
 		public void DoPerNode(Action<int> actionPerNode)
 		{
@@ -164,18 +163,17 @@ namespace MGroup.Environments.Mpi
 			else
 			{
 				localData = collectivesHelperWorld.LocalNodesDataToArray(CommWorld.Rank, getDataPerNode);
-
 			}
 
 			int[] counts = collectivesHelperWorld.NodeCounts;
-			if (CommWorld.Rank == rootProcessRank) // Master process gathers data
+			if (CommWorld.Rank == rootProcessRank) // Root process gathers data
 			{
 				//TODO Optim: have a cached buffer to write data into (use the overload with ref parameter)
 				T[] allData = CommWorld.GatherFlattened(localData, counts, rootProcessRank);
 				return collectivesHelperWorld.AllNodesDataToDictionary(allData);
 
 			}
-			else // Slave processes send data to master process
+			else // Other processes send data to root process
 			{
 				CommWorld.GatherFlattened(localData, counts, rootProcessRank);
 				return null;
@@ -225,8 +223,6 @@ namespace MGroup.Environments.Mpi
 			int numExtraProcesses = CommWorld.Size - nodeTopology.Clusters.Count;
 			this.collectivesHelperWorld = new MpiCollectivesHelper(nodeTopology, numExtraProcesses);
 			this.collectivesHelperNodes = new MpiCollectivesHelper(nodeTopology, 0);
-
-			this.globalOperationStrategy.Environment = this;
 		}
 
 		public void NeighborhoodAllToAll<T>(Dictionary<int, AllToAllNodeData<T>> dataPerNode, bool areRecvBuffersKnown)
@@ -353,16 +349,15 @@ namespace MGroup.Environments.Mpi
 			}
 			else
 			{
-				Dictionary<int, T> result = collectivesHelperWorld.LocalNodesDataToDictionary(CommWorld.Rank, localData);
-				return result;
+				return collectivesHelperWorld.LocalNodesDataToDictionary(CommWorld.Rank, localData);
 			}
 		}
 
 		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(Func<int, T> getLocalNodeData)
-			=> globalOperationStrategy.TransferNodeDataToGlobalMemory(getLocalNodeData);
+			=> globalOperationStrategy.TransferNodeDataToGlobalMemory(this, getLocalNodeData);
 
 		public Dictionary<int, T> TransferNodeDataToLocalMemories<T>(Dictionary<int, T> globalNodeDataStorage)
-			=> globalOperationStrategy.TransferNodeDataToLocalMemories(globalNodeDataStorage);
+			=> globalOperationStrategy.TransferNodeDataToLocalMemories(this, globalNodeDataStorage);
 
 		private void Dispose(bool disposing)
 		{
