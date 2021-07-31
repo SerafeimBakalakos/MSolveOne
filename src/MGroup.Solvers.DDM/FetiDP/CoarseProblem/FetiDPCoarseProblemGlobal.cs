@@ -105,10 +105,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			//Dictionary<int, Vector> subdomainSolutionVectorsLocal = 
 			//	environment.TransferNodeDataToLocalMemories(subdomainSolutionVectorsGlobal);
 
-			foreach (int s in subdomainSolutionVectorsLocal.Keys)
-			{
-				coarseProblemSolution[s] = subdomainSolutionVectorsLocal[s];
-			}
+			environment.DoPerNode(s => coarseProblemSolution[s].CopyFrom(subdomainSolutionVectorsLocal[s]));
 		}
 
 		public class Factory : IFetiDPCoarseProblemFactory

@@ -15,6 +15,11 @@ namespace MGroup.Environments.Mpi
 
 		public void DoGlobalOperation(MpiEnvironment environment, Action globalOperation)
 		{
+			if (environment.CommNodes == null)
+			{
+				return;
+			}
+
 			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Executing the global operation");
 			//environment.CommWorld.Barrier();
 			globalOperation();
@@ -22,6 +27,11 @@ namespace MGroup.Environments.Mpi
 
 		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(MpiEnvironment environment, Func<int, T> getLocalNodeData)
 		{
+			if (environment.CommNodes == null)
+			{
+				return null;
+			}
+
 			Dictionary<int, T> globalNodeDataStorage = environment.AllGather(getLocalNodeData);
 			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Global data from gather is null = {globalNodeDataStorage == null}");
 			//environment.CommWorld.Barrier();
@@ -31,11 +41,16 @@ namespace MGroup.Environments.Mpi
 		public Dictionary<int, T> TransferNodeDataToLocalMemories<T>(
 			MpiEnvironment environment, Dictionary<int, T> globalNodeDataStorage)
 		{
+			if (environment.CommNodes == null)
+			{
+				return null;
+			}
+
 			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Global data to scatter is null = {globalNodeDataStorage == null}");
 			//environment.CommWorld.Barrier();
 
 			// No need to scatter anything, since global memory is the same as process memory
-			int clusterID = environment.CommWorld.Rank;
+			int clusterID = environment.CommNodes.Rank;
 			ComputeNodeCluster cluster = environment.NodeTopology.Clusters[clusterID];
 			var localNodeData = new Dictionary<int, T>(cluster.Nodes.Count);
 			foreach (int n in cluster.Nodes.Keys)

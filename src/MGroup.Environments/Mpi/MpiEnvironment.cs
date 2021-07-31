@@ -59,42 +59,68 @@ namespace MGroup.Environments.Mpi
 
 		public Intracommunicator CommWorld { get; }
 
+		public Intracommunicator CommNodes { get; private set; }
+
 		public ComputeNodeTopology NodeTopology { get ; private set; }
 
 		public Dictionary<int, T> AllGather<T>(Func<int, T> getDataPerNode)
 		{
-			T[] localData = collectivesHelper.LocalNodesDataToArray(CommWorld.Rank, getDataPerNode);
+			if (CommNodes == null)
+			{
+				return null;
+			}
+
+			T[] localData = collectivesHelper.LocalNodesDataToArray(CommNodes.Rank, getDataPerNode);
 			int[] counts = collectivesHelper.NodeCounts;
 
 			//TODO Optim: have a cached buffer to write data into (use the overload with ref parameter)
-			T[] allData = CommWorld.AllgatherFlattened(localData, counts); // All processes gather the data
+			T[] allData = CommNodes.AllgatherFlattened(localData, counts); // All processes gather the data
 
 			return collectivesHelper.AllNodesDataToDictionary(allData);
 		}
 
 		public bool AllReduceAnd(Dictionary<int, bool> valuePerNode)
 		{
-			bool localValue = true;
-			foreach (int nodeID in localNodes.Keys)
+			if (CommNodes != null)
 			{
-				localValue &= valuePerNode[nodeID];
+				bool localValue = true;
+				foreach (int nodeID in localNodes.Keys)
+				{
+					localValue &= valuePerNode[nodeID];
+				}
+				return CommWorld.Allreduce(localValue, MpiNet.Operation<bool>.LogicalAnd);
 			}
-			return CommWorld.Allreduce(localValue, MpiNet.Operation<bool>.LogicalAnd);
+			else
+			{
+				return CommWorld.Allreduce(default(bool), MpiNet.Operation<bool>.LogicalAnd);
+			}
 		}
 
 		public double AllReduceSum(Dictionary<int, double> valuePerNode)
 		{
-			//TODOMPI: reductions for local nodes can be done more efficiently. See TplSharedEnvironment
-			double localValue = 0.0;
-			foreach (int nodeID in localNodes.Keys) 
+			if (CommNodes != null)
 			{
-				localValue += valuePerNode[nodeID];
+				//TODOMPI: reductions for local nodes can be done more efficiently. See TplSharedEnvironment
+				double localValue = 0.0;
+				foreach (int nodeID in localNodes.Keys)
+				{
+					localValue += valuePerNode[nodeID];
+				}
+				return CommWorld.Allreduce(localValue, MpiNet.Operation<double>.Add);
 			}
-			return CommWorld.Allreduce(localValue, MpiNet.Operation<double>.Add);
+			else
+			{
+				return CommWorld.Allreduce(default(double), MpiNet.Operation<double>.Add);
+			}
 		}
 
 		public Dictionary<int, T> CreateDictionaryPerNode<T>(Func<int, T> createDataPerNode)
 		{
+			if (CommNodes == null)
+			{
+				return null;
+			}
+
 			// Add the keys first to avoid race conditions
 			var result = new Dictionary<int, T>();
 			foreach (int nodeID in localNodes.Keys)
@@ -104,7 +130,6 @@ namespace MGroup.Environments.Mpi
 
 			// Run the operation per local node in parallel and store the individual results.
 			Parallel.ForEach(localNodes.Keys, nodeID => result[nodeID] = createDataPerNode(nodeID));
-
 			return result;
 		}
 
@@ -119,23 +144,33 @@ namespace MGroup.Environments.Mpi
 
 		public void DoPerNode(Action<int> actionPerNode)
 		{
+			if (CommNodes == null)
+			{
+				return;
+			}
+
 			Parallel.ForEach(localNodes.Keys, actionPerNode);
 		}
 
 		public Dictionary<int, T> GatherToRootProcess<T>(Func<int, T> getDataPerNode, int rootProcessRank)
 		{
-			T[] localData = collectivesHelper.LocalNodesDataToArray(CommWorld.Rank, getDataPerNode);
-			if (CommWorld.Rank == rootProcessRank) // Master process gathers data
+			if (CommNodes == null)
+			{
+				return null;
+			}
+
+			T[] localData = collectivesHelper.LocalNodesDataToArray(CommNodes.Rank, getDataPerNode);
+			if (CommNodes.Rank == rootProcessRank) // Master process gathers data
 			{
 				int[] counts = collectivesHelper.NodeCounts;
 
 				//TODO Optim: have a cached buffer to write data into (use the overload with ref parameter)
-				T[] allData = CommWorld.GatherFlattened(localData, counts, 0);
+				T[] allData = CommNodes.GatherFlattened(localData, counts, 0);
 				return collectivesHelper.AllNodesDataToDictionary(allData);
 			}
 			else // Slave processes send data to master process
 			{
-				CommWorld.GatherFlattened(localData, null, 0);
+				CommNodes.GatherFlattened(localData, null, 0);
 				return null;
 			}
 		}
@@ -146,39 +181,37 @@ namespace MGroup.Environments.Mpi
 
 		public void Initialize(ComputeNodeTopology nodeTopology)
 		{
+			nodeTopology.CheckSanity();
+
 			//TODOMPI: Perhaps this validation is useful for more than just the MpiEnvironment and should be done elsewhere.
 			// Check cluster IDs
-			if (nodeTopology.Clusters.Count != CommWorld.Size)
+			if (nodeTopology.Clusters.Count > CommWorld.Size)
 			{
 				throw new ArgumentException(
-					$"There number of compute node clusters ({nodeTopology.Clusters.Count}) does not match"
+					$"The number of compute node clusters ({nodeTopology.Clusters.Count}) exceeds"
 					+ $" the actual number of processes launched ({CommWorld.Size})");
-			}
-			for (int p = 0; p < CommWorld.Size; ++p)
-			{
-				if (!nodeTopology.Clusters.ContainsKey(p))
-				{
-					throw new ArgumentException("Cluster IDs must be numbered contiguously in [0, numClusters)");
-				}
-			}
-
-			// Check that each cluster contains at least 1 node
-			foreach (ComputeNodeCluster cluster in nodeTopology.Clusters.Values)
-			{
-				if (cluster.Nodes.Count < 1)
-				{
-					throw new ArgumentException(
-						$"Each cluster most contain at least 1 compute node, but cluster {cluster.ID} contains none.");
-				}
 			}
 
 			// Store the topology and nodes belonging to the cluster with the same ID as this MPI process.
-			ComputeNodeCluster localCluster = nodeTopology.Clusters[CommWorld.Rank];
-			this.localNodes = new Dictionary<int, ComputeNode>(localCluster.Nodes);
 			this.NodeTopology = nodeTopology;
+			if (CommWorld.Rank < nodeTopology.Clusters.Count) // Only for processes that accommodate compute nodes 
+			{
+				ComputeNodeCluster localCluster = nodeTopology.Clusters[CommWorld.Rank];
+				this.localNodes = new Dictionary<int, ComputeNode>(localCluster.Nodes);
 
-			// Analyze local and remote communication cases
-			this.p2pTransfers = new MpiP2PTransfers(nodeTopology, localCluster);
+				// Analyze local and remote communication cases between nodes
+				this.p2pTransfers = new MpiP2PTransfers(nodeTopology, localCluster);
+			}
+
+			// Create a subcommunicator only for processes that accommodate compute nodes
+			if (CommNodes != null)
+			{
+				CommNodes.Dispose();
+				CommNodes = null;
+			}
+			int[] mainProcesses = Enumerable.Range(0, nodeTopology.Clusters.Count).ToArray();
+			CommNodes =(Intracommunicator)CommWorld.Create(CommWorld.Group.IncludeOnly(mainProcesses));
+			Debug.Assert((CommNodes != null) == (CommWorld.Rank < nodeTopology.Clusters.Count));
 
 			// Prevaluate data used in collective communications
 			this.collectivesHelper = new MpiCollectivesHelper(nodeTopology);
@@ -186,6 +219,11 @@ namespace MGroup.Environments.Mpi
 
 		public void NeighborhoodAllToAll<T>(Dictionary<int, AllToAllNodeData<T>> dataPerNode, bool areRecvBuffersKnown)
 		{
+			if (CommNodes == null)
+			{
+				return;
+			}
+
 			//TODOMPI: This can be improved greatly. As soon as a process receives the length of its recv buffer, the actual data 
 			//      can be transfered between these 2 processes. There is no need to wait for the other p2p length communications.
 
@@ -207,10 +245,10 @@ namespace MGroup.Environments.Mpi
 							MpiJob.TransferBufferLengthDuringNeighborhoodAllToAll, node.ID, neighborID);
 
 						Action<int> allocateBuffer = length => data.recvValues[neighborID] = new T[length];
-						recvLengthRequests.Add(CommWorld.ImmediateReceive<int>(remoteProcess, tag, allocateBuffer));
+						recvLengthRequests.Add(CommNodes.ImmediateReceive<int>(remoteProcess, tag, allocateBuffer));
 
 						int bufferLength = data.sendValues[neighborID].Length;
-						sendLengthRequests.Add(CommWorld.ImmediateSend(bufferLength, remoteProcess, tag));
+						sendLengthRequests.Add(CommNodes.ImmediateSend(bufferLength, remoteProcess, tag));
 					}
 				}
 
@@ -238,10 +276,10 @@ namespace MGroup.Environments.Mpi
 					int tag = p2pTransfers.GetSendRecvTag(MpiJob.TransferBufferDuringNeighborhoodAllToAll, node.ID, neighborID);
 
 					T[] recvBuffer = data.recvValues[neighborID];
-					recvRequests.Add(CommWorld.ImmediateReceive(remoteProcess, tag, recvBuffer));
+					recvRequests.Add(CommNodes.ImmediateReceive(remoteProcess, tag, recvBuffer));
 
 					T[] sendBuffer = data.sendValues[neighborID];
-					sendRequests.Add(CommWorld.ImmediateSend(sendBuffer, remoteProcess, tag));
+					sendRequests.Add(CommNodes.ImmediateSend(sendBuffer, remoteProcess, tag));
 				}
 			}
 
@@ -283,21 +321,26 @@ namespace MGroup.Environments.Mpi
 
 		public Dictionary<int, T> ScatterFromRootProcess<T>(Dictionary<int, T> dataPerNode, int rootProcessRank)
 		{
+			if (CommNodes == null)
+			{
+				return null;
+			}
+
 			T[] localData;
 			int[] counts = collectivesHelper.NodeCounts;
-			if (CommWorld.Rank == 0) // Master process gathers data
+			if (CommNodes.Rank == rootProcessRank) // Master process gathers data
 			{
 				T[] allData = collectivesHelper.AllNodesDataToArray(dataPerNode);
 
 				//TODO Optim: have a cached buffer to write data into (use the overload with ref parameter)
-				localData = CommWorld.ScatterFromFlattened(allData, counts, 0);
+				localData = CommNodes.ScatterFromFlattened(allData, counts, 0);
 			}
 			else // Slave processes send data to master process
 			{
-				localData = CommWorld.ScatterFromFlattened(new T[0], counts, 0);
+				localData = CommNodes.ScatterFromFlattened(new T[0], counts, 0);
 			}
 
-			Dictionary<int, T> result = collectivesHelper.LocalNodesDataToDictionary(CommWorld.Rank, localData);
+			Dictionary<int, T> result = collectivesHelper.LocalNodesDataToDictionary(CommNodes.Rank, localData);
 			return result;
 		}
 
@@ -315,6 +358,10 @@ namespace MGroup.Environments.Mpi
 				{
 					// DO NOT DISPOSE Communicator.world here, since it is not owned by this class.
 					// DISPOSE other communicators here, e.g. GraphCommunicator for neighborhoods.
+					if (CommNodes != null)
+					{
+						CommNodes.Dispose();
+					}
 
 					if ((mpiEnvironment != null) && (MpiNet.Environment.Finalized == false))
 					{

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 //TODOMPI: Perhaps this should be exposed for IComputeEnvironment
@@ -22,8 +23,6 @@ namespace MGroup.Environments
 
 		public void AddNode(int nodeID, IEnumerable<int> neighborNodeIDs, int clusterIDOfNode)
 		{
-			//TODOMPI: check that nodeIDs and clusterIDs can be used as indices: [0, count). This is essential for MPI calls.
-
 			if (Nodes.ContainsKey(nodeID))
 			{
 				throw new ArgumentException($"A compute node with ID = {nodeID} already exists.");
@@ -41,6 +40,48 @@ namespace MGroup.Environments
 			}
 			cluster.Nodes[nodeID] = node;
 			node.Cluster = cluster;
+		}
+
+		public void CheckSanity()
+		{
+			int[] clusterIDs = Clusters.Keys.ToArray();
+			Array.Sort(clusterIDs);
+			int nextExpectedID = 0;
+			for (int c = 0; c < clusterIDs.Length; ++c)
+			{
+				if (clusterIDs[c] == nextExpectedID)
+				{
+					++nextExpectedID;
+				}
+				else
+				{
+					throw new Exception("Cluster ids must be consecutive integers starting from 0.");
+				}
+			}
+
+			int[] nodeIDs = Nodes.Keys.ToArray();
+			Array.Sort(nodeIDs);
+			nextExpectedID = 0;
+			for (int n = 0; n < nodeIDs.Length; ++n)
+			{
+				if (nodeIDs[n] == nextExpectedID)
+				{
+					++nextExpectedID;
+				}
+				else
+				{
+					throw new Exception("Node ids must be consecutive integers starting from 0.");
+				}
+			}
+
+			foreach (ComputeNodeCluster cluster in Clusters.Values)
+			{
+				if (cluster.Nodes.Count < 1)
+				{
+					throw new ArgumentException(
+						$"Each cluster most contain at least 1 compute node, but cluster {cluster.ID} contains none.");
+				}
+			}
 		}
 	}
 }
