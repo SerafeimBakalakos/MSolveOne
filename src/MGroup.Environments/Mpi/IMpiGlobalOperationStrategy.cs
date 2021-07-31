@@ -6,11 +6,12 @@ namespace MGroup.Environments.Mpi
 {
 	public interface IMpiGlobalOperationStrategy
 	{
-		void DoGlobalOperation(MpiEnvironment environment, Action globalOperation);
+		MpiEnvironment Environment { get; set; }
 
-		Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(MpiEnvironment environment, Func<int, T> getLocalNodeData);
+		void DoGlobalOperation(Action globalOperation);
 
-		Dictionary<int, T> TransferNodeDataToLocalMemories<T>(
-			MpiEnvironment environment, Dictionary<int, T> globalNodeDataStorage);
+		Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(Func<int, T> getLocalNodeData);
+
+		Dictionary<int, T> TransferNodeDataToLocalMemories<T>(Dictionary<int, T> globalNodeDataStorage);
 	}
 }

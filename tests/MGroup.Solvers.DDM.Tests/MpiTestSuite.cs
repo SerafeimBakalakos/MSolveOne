@@ -18,7 +18,8 @@ namespace MGroup.Solvers.DDM.Tests
 		public static void RunTestsWith4Processes()
 		{
 			//IMpiGlobalOperationStrategy globalOperationStrategy = new MasterSlavesGlobalOperationStrategy();
-			IMpiGlobalOperationStrategy globalOperationStrategy = new DemocraticGlobalOperationStrategy();
+			IMpiGlobalOperationStrategy globalOperationStrategy = new DedicatedProcessGlobalOperationStrategy();
+			//IMpiGlobalOperationStrategy globalOperationStrategy = new DemocraticGlobalOperationStrategy();
 			using (var mpiEnvironment = new MpiEnvironment(globalOperationStrategy))
 			{
 				MpiDebugUtilities.AssistDebuggerAttachment();

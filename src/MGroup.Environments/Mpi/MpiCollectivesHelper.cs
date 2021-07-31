@@ -20,10 +20,10 @@ namespace MGroup.Environments.Mpi
 		/// </summary>
 		private readonly int[] totalArrayIndicesToNodeIDs;
 
-		public MpiCollectivesHelper(ComputeNodeTopology nodeTopology)
+		public MpiCollectivesHelper(ComputeNodeTopology nodeTopology, int numExtraProcesses)
 		{
 			this.numNodes = nodeTopology.Nodes.Count;
-			this.NodeCounts = GetNodeCounts(nodeTopology);
+			this.NodeCounts = GetNodeCounts(nodeTopology, numExtraProcesses);
 			this.totalArrayIndicesToNodeIDs = GetTotalArrayIndicesToNodeIds(nodeTopology);
 			Debug.Assert(totalArrayIndicesToNodeIDs.Length == numNodes);
 			this.localArrayIndicesToNodeIDs = GetLocalArrayIndicesToNodeIds(nodeTopology);
@@ -89,13 +89,15 @@ namespace MGroup.Environments.Mpi
 			return result;
 		}
 
-		private static int[] GetNodeCounts(ComputeNodeTopology nodeTopology)
+		private static int[] GetNodeCounts(ComputeNodeTopology nodeTopology, int numExtraProcesses)
 		{
-			var counts = new int[nodeTopology.Clusters.Count];
-			for (int c = 0; c < counts.Length; ++c)
+			var counts = new int[nodeTopology.Clusters.Count + numExtraProcesses];
+			for (int c = 0; c < nodeTopology.Clusters.Count; ++c)
 			{
 				counts[c] = nodeTopology.Clusters[c].Nodes.Count;
 			}
+			// extra processes occupy 0 entries in total arrays
+
 			return counts;
 		}
 

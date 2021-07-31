@@ -13,52 +13,48 @@ namespace MGroup.Environments.Mpi
 		{
 		}
 
-		public void DoGlobalOperation(MpiEnvironment environment, Action globalOperation)
+		public MpiEnvironment Environment { get; set; }
+
+		public void DoGlobalOperation(Action globalOperation)
 		{
-			if (environment.CommNodes == null)
+			if (Environment.CommNodes == null)
 			{
 				return;
 			}
 
-			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Executing the global operation");
-			//environment.CommWorld.Barrier();
+			//Console.WriteLine($"Process {Environment.CommWorld.Rank}: Executing the global operation");
+			//Environment.CommWorld.Barrier();
 			globalOperation();
 		}
 
-		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(MpiEnvironment environment, Func<int, T> getLocalNodeData)
+		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(Func<int, T> getLocalNodeData)
 		{
-			if (environment.CommNodes == null)
-			{
-				return null;
-			}
-
-			Dictionary<int, T> globalNodeDataStorage = environment.AllGather(getLocalNodeData);
-			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Global data from gather is null = {globalNodeDataStorage == null}");
-			//environment.CommWorld.Barrier();
+			Dictionary<int, T> globalNodeDataStorage = Environment.AllGather(getLocalNodeData, Environment.CommNodes);
+			//Console.WriteLine($"Process {Environment.CommWorld.Rank}: Global data from gather is null = {globalNodeDataStorage == null}");
+			//Environment.CommWorld.Barrier();
 			return globalNodeDataStorage;
 		}
 
-		public Dictionary<int, T> TransferNodeDataToLocalMemories<T>(
-			MpiEnvironment environment, Dictionary<int, T> globalNodeDataStorage)
+		public Dictionary<int, T> TransferNodeDataToLocalMemories<T>(Dictionary<int, T> globalNodeDataStorage)
 		{
-			if (environment.CommNodes == null)
+			if (Environment.CommNodes == null)
 			{
 				return null;
 			}
 
-			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Global data to scatter is null = {globalNodeDataStorage == null}");
-			//environment.CommWorld.Barrier();
+			//Console.WriteLine($"Process {Environment.CommWorld.Rank}: Global data to scatter is null = {globalNodeDataStorage == null}");
+			//Environment.CommNodes.Barrier();
 
 			// No need to scatter anything, since global memory is the same as process memory
-			int clusterID = environment.CommNodes.Rank;
-			ComputeNodeCluster cluster = environment.NodeTopology.Clusters[clusterID];
+			int clusterID = Environment.CommNodes.Rank;
+			ComputeNodeCluster cluster = Environment.NodeTopology.Clusters[clusterID];
 			var localNodeData = new Dictionary<int, T>(cluster.Nodes.Count);
 			foreach (int n in cluster.Nodes.Keys)
 			{
 				localNodeData[n] = globalNodeDataStorage[n];
 			}
-			//Console.WriteLine($"Process {environment.CommWorld.Rank}: Count of local data from scatter = {localNodeData.Count}");
-			//environment.CommWorld.Barrier();
+			//Console.WriteLine($"Process {Environment.CommWorld.Rank}: Count of local data from scatter = {localNodeData.Count}");
+			//Environment.CommNodes.Barrier();
 			return localNodeData;
 		}
 	}
