@@ -32,7 +32,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning
 			this.Indexer = diagonal.Indexer;
 
 			Func<int, Vector> invertDiagonal = nodeID => diagonal.LocalVectors[nodeID].DoToAllEntries(x => 1 / x);
-			this.LocalInverseDiagonals = environment.CreateDictionaryPerNode(invertDiagonal);
+			this.LocalInverseDiagonals = environment.CalcNodeData(invertDiagonal);
 		}
 
 		public IDistributedIndexer Indexer { get; }

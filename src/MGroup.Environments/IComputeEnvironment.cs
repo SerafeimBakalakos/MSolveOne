@@ -22,18 +22,49 @@ namespace MGroup.Environments
 		double AllReduceSum(Dictionary<int, double> valuePerNode);
 
 		/// <summary>
-		/// Keys are the ids of the <see cref="ComputeNode"/> objects managed by this environment.
+		/// Performs <paramref name="calcNodeData"/> on each <see cref="ComputeNode"/> and returns a dictionary where 
+		/// keys are the ids of the nodes. 
+		/// <paramref name="calcNodeData"/> will be run on the memory space where each node is accommodated. 
+		/// Similarly, the resulting dictionary in each memory space will contain data for the nodes that are accommodated there. 
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
-		/// <param name="createPerNode"></param>
-		Dictionary<int, T> CreateDictionaryPerNode<T>(Func<int, T> createDataPerNode);
+		/// <param name="calcNodeData"></param>
+		Dictionary<int, T> CalcNodeData<T>(Func<int, T> calcNodeData);
 
+		/// <summary>
+		/// Performs <paramref name="calcNodeData"/> on each <see cref="ComputeNode"/> and returns a dictionary where 
+		/// keys are the ids of the nodes. <paramref name="calcNodeData"/> will be run on the memory space where each node
+		/// is accomodated. 
+		/// Then the data for each node will be transfered to the memory space that is assigned to global operations and placed
+		/// on the resulting dictionary. In all other memory spaces, null will be returned.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="calcNodeData"></param>
+		Dictionary<int, T> CalcNodeDataAndTransferToGlobalMemory<T>(Func<int, T> calcNodeData);
+
+		/// <summary>
+		/// Performs <paramref name="calcNodeData"/> on each <see cref="ComputeNode"/> and returns a dictionary where 
+		/// keys are the ids of the nodes. 
+		/// <paramref name="calcNodeData"/> will be run only on the memory space that is assigned to global operations. 
+		/// On all other memory spaces, it will be ignored. 
+		/// Then the data for each node will be transfered to the memory space that accommodates that node and placed in the
+		/// resulting dictionary that exists in that memory space. 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="calcNodeData"></param>
+		Dictionary<int, T> CalcNodeDataAndTransferToLocalMemory<T>(Func<int, T> calcNodeData);
+
+		/// <summary>
+		/// Executes <paramref name="globalOperation"/> only on the memory space that is assigned to global operations.
+		/// </summary>
+		/// <param name="globalOperation"></param>
 		void DoGlobalOperation(Action globalOperation);
 
+		/// <summary>
+		/// Executes <paramref name="actionPerNode"/> for each node on the memory space where that node is accommodated.
+		/// </summary>
+		/// <param name="actionPerNode"></param>
 		void DoPerNode(Action<int> actionPerNode);
-
-		// Similar to CreateDictionaryPerNode, but now the data belong to global memory space.
-		Dictionary<int, T> ExtractNodeDataFromGlobalToLocalMemories<T>(Func<int, T> subdomainOperation);
 
 		//TODOMPI: Its most common use is weird: An Action<int> is called by the environment. The environment passes the id of 
 		//      each ComputeNode it manages. Then the Action<int> requests from the environment to provide the ComputeNode for
@@ -60,29 +91,6 @@ namespace MGroup.Environments
 		//      delegates for creating the data (before send) and processing them (after recv) and by helping them to ensure 
 		//      termination per node.
 		void NeighborhoodAllToAll<T>(Dictionary<int, AllToAllNodeData<T>> dataPerNode, bool areRecvBuffersKnown);
-
-		/// <summary>
-		/// Transfers node data from local memory spaces to global memory space.
-		/// Input: In each memory space: data for each <see cref="ComputeNode"/> that is local to the memory space. 
-		/// Output: In global memory space, data for all <see cref="ComputeNode"/>s will be returned. 
-		/// In all other memory spaces, null will be returned.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="getLocalNodeData"></param>
-		Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(Func<int, T> getLocalNodeData);
-
-		/// <summary>
-		/// Transfers node data from global memory space to local memory spaces.
-		/// Input: In global memory space, data for all <see cref="ComputeNode"/>s. In all other memory spaces, input will be 
-		/// ignored.
-		/// Output: In each memory space: data for each <see cref="ComputeNode"/> that is local to the memory space. 
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="globalNodeDataStorage">
-		/// In the global memory address space, this containts the data for all nodes. In all other memory adress spaces, 
-		/// it will be ignored.
-		/// </param>
-		Dictionary<int, T> TransferNodeDataToLocalMemories<T>(Dictionary<int, T> globalNodeDataStorage);
 	}
 
 	//TODOMPI: Clients are forced to initialize sendValues and recvValues right now, which means client code is coupled with 

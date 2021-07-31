@@ -61,13 +61,13 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 		{
 			model.ConnectDataStructures();
 
-			Dictionary<int, ISubdomainFreeDofOrdering> dofOrderings = environment.CreateDictionaryPerNode(
+			Dictionary<int, ISubdomainFreeDofOrdering> dofOrderings = environment.CalcNodeData(
 				s => ModelUtilities.OrderDofs(model.GetSubdomain(s), model.AllDofs));
 			var subdomainTopology = new SubdomainTopology(environment, model, s => dofOrderings[s]);
 
-			Dictionary<int, MockSubdomainLinearSystem> linearSystems = environment.CreateDictionaryPerNode(
+			Dictionary<int, MockSubdomainLinearSystem> linearSystems = environment.CalcNodeData(
 				s => new MockSubdomainLinearSystem(dofOrderings[s]));
-			Dictionary<int, PsmSubdomainDofs> subdomainDofs = environment.CreateDictionaryPerNode(
+			Dictionary<int, PsmSubdomainDofs> subdomainDofs = environment.CalcNodeData(
 				s => new PsmSubdomainDofs(model.GetSubdomain(s), linearSystems[s], true));
 
 			subdomainTopology.FindCommonNodesBetweenSubdomains();

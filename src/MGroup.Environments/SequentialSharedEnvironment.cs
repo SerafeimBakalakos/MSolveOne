@@ -37,23 +37,26 @@ namespace MGroup.Environments
 			return sum;
 		}
 
-		public Dictionary<int, T> CreateDictionaryPerNode<T>(Func<int, T> createDataPerNode)
+		public Dictionary<int, T> CalcNodeData<T>(Func<int, T> calcNodeData)
 		{
 			var result = new Dictionary<int, T>(nodeTopology.Nodes.Count);
 			foreach (int nodeID in nodeTopology.Nodes.Keys)
 			{
-				result[nodeID] = createDataPerNode(nodeID);
+				result[nodeID] = calcNodeData(nodeID);
 			}
 			return result;
 		}
+
+		public Dictionary<int, T> CalcNodeDataAndTransferToGlobalMemory<T>(Func<int, T> calcNodeData)
+			=> CalcNodeData(calcNodeData);
+
+		public Dictionary<int, T> CalcNodeDataAndTransferToLocalMemory<T>(Func<int, T> calcNodeData)
+			=> CalcNodeData(calcNodeData);
 
 		public void DoGlobalOperation(Action globalOperation)
 		{
 			globalOperation();
 		}
-
-		public Dictionary<int, T> ExtractNodeDataFromGlobalToLocalMemories<T>(Func<int, T> subdomainOperation)
-			=> CreateDictionaryPerNode(subdomainOperation);
 
 		public void DoPerNode(Action<int> actionPerNode)
 		{
@@ -102,18 +105,5 @@ namespace MGroup.Environments
 				}
 			}
 		}
-
-		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(Func<int, T> getLocalNodeData)
-		{
-			var result = new Dictionary<int, T>();
-			foreach (int nodeID in nodeTopology.Nodes.Keys)
-			{
-				result[nodeID] = getLocalNodeData(nodeID);
-			}
-			return result;
-		}
-
-		public Dictionary<int, T> TransferNodeDataToLocalMemories<T>(Dictionary<int, T> globalNodeDataStorage)
-			=> new Dictionary<int, T>(globalNodeDataStorage);
 	}
 }

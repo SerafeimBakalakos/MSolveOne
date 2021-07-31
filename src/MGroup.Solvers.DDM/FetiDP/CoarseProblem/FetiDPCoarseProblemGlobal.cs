@@ -35,7 +35,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		public virtual void FindCoarseProblemDofs()
 		{
 			Dictionary<int, IntDofTable> subdomainCornerDofs =
-				environment.TransferNodeDataToGlobalMemory(s => getSubdomainDofs(s).DofOrderingCorner);
+				environment.CalcNodeDataAndTransferToGlobalMemory(s => getSubdomainDofs(s).DofOrderingCorner);
 
 			environment.DoGlobalOperation(() =>
 			{
@@ -52,7 +52,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			environment.DoPerNode(subdomainID => getSubdomainMatrices(subdomainID).CalcSchurComplementOfRemainderDofs());
 
 			Dictionary<int, IMatrix> subdomainMatricesScc =
-				environment.TransferNodeDataToGlobalMemory(s => getSubdomainMatrices(s).SchurComplementOfRemainderDofs);
+				environment.CalcNodeDataAndTransferToGlobalMemory(s => getSubdomainMatrices(s).SchurComplementOfRemainderDofs);
 
 			environment.DoGlobalOperation(() =>
 			{
@@ -64,7 +64,8 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		public virtual void SolveCoarseProblem(
 			IDictionary<int, Vector> coarseProblemRhs, IDictionary<int, Vector> coarseProblemSolution)
 		{
-			Dictionary<int, Vector> subdomainRhsGlobal = environment.TransferNodeDataToGlobalMemory(s => coarseProblemRhs[s]);
+			Dictionary<int, Vector> subdomainRhsGlobal = 
+				environment.CalcNodeDataAndTransferToGlobalMemory(s => coarseProblemRhs[s]);
 
 			Vector globalSolution = null;
 			environment.DoGlobalOperation(() =>
@@ -72,7 +73,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			);
 
 			//TODOMPI: write directly into vectors of coarseProblemSolution
-			Dictionary<int, Vector> subdomainSolutionsLocal = environment.ExtractNodeDataFromGlobalToLocalMemories(
+			Dictionary<int, Vector> subdomainSolutionsLocal = environment.CalcNodeDataAndTransferToLocalMemory(
 				s => coarseProblemSolver.ExtractCoarseProblemSolutionForSubdomain(s, globalSolution));
 
 			environment.DoPerNode(s => coarseProblemSolution[s].CopyFrom(subdomainSolutionsLocal[s]));

@@ -115,7 +115,7 @@ namespace MGroup.Environments.Mpi
 			}
 		}
 
-		public Dictionary<int, T> CreateDictionaryPerNode<T>(Func<int, T> createDataPerNode)
+		public Dictionary<int, T> CalcNodeData<T>(Func<int, T> calcNodeData)
 		{
 			if (CommNodes == null)
 			{
@@ -130,9 +130,15 @@ namespace MGroup.Environments.Mpi
 			}
 
 			// Run the operation per local node in parallel and store the individual results.
-			Parallel.ForEach(localNodes.Keys, nodeID => result[nodeID] = createDataPerNode(nodeID));
+			Parallel.ForEach(localNodes.Keys, nodeID => result[nodeID] = calcNodeData(nodeID));
 			return result;
 		}
+
+		public Dictionary<int, T> CalcNodeDataAndTransferToGlobalMemory<T>(Func<int, T> calcNodeData)
+			=> globalOperationStrategy.CalcNodeDataAndTransferToGlobalMemory(this, calcNodeData);
+
+		public Dictionary<int, T> CalcNodeDataAndTransferToLocalMemory<T>(Func<int, T> subdomainOperation)
+			=> globalOperationStrategy.CalcNodeDataAndTransferToLocalMemory(this, subdomainOperation);
 
 		public void Dispose()
 		{
@@ -152,9 +158,6 @@ namespace MGroup.Environments.Mpi
 
 			Parallel.ForEach(localNodes.Keys, actionPerNode);
 		}
-
-		public Dictionary<int, T> ExtractNodeDataFromGlobalToLocalMemories<T>(Func<int, T> subdomainOperation)
-			=> globalOperationStrategy.ExtractNodeDataFromGlobalToLocalMemories(this, subdomainOperation);
 
 		public Dictionary<int, T> GatherToRootProcess<T>(Func<int, T> getDataPerNode, int rootProcessRank)
 		{
@@ -355,12 +358,6 @@ namespace MGroup.Environments.Mpi
 				return collectivesHelperWorld.LocalNodesDataToDictionary(CommWorld.Rank, localData);
 			}
 		}
-
-		public Dictionary<int, T> TransferNodeDataToGlobalMemory<T>(Func<int, T> getLocalNodeData)
-			=> globalOperationStrategy.TransferNodeDataToGlobalMemory(this, getLocalNodeData);
-
-		public Dictionary<int, T> TransferNodeDataToLocalMemories<T>(Dictionary<int, T> globalNodeDataStorage)
-			=> globalOperationStrategy.TransferNodeDataToLocalMemories(this, globalNodeDataStorage);
 
 		private void Dispose(bool disposing)
 		{

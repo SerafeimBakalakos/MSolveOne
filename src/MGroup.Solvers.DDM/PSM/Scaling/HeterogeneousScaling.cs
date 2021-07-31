@@ -61,7 +61,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 
 				return Db;
 			};
-			Dictionary<int, Vector> diagonalStiffnesses = environment.CreateDictionaryPerNode(calcSubdomainDb);
+			Dictionary<int, Vector> diagonalStiffnesses = environment.CalcNodeData(calcSubdomainDb);
 
 			// Use distributed vectors to let each subdomain inform its neighbors about its stiffness at their common dofs
 			var distributedVector = new DistributedOverlappingVector(indexer, diagonalStiffnesses);

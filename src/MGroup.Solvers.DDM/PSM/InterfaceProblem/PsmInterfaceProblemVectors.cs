@@ -27,7 +27,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 		// globalF = sum {Lb[s]^T * (fb[s] - Kbi[s] * inv(Kii[s]) * fi[s]) }
 		public void CalcInterfaceRhsVector(DistributedOverlappingIndexer indexer)
 		{
-			Dictionary<int, Vector> fbCondensed = environment.CreateDictionaryPerNode(
+			Dictionary<int, Vector> fbCondensed = environment.CalcNodeData(
 				subdomainID => subdomainVectors[subdomainID].CalcCondensedRhsVector());
 			InterfaceProblemRhs = new DistributedOverlappingVector(indexer, fbCondensed);
 			InterfaceProblemRhs.SumOverlappingEntries();

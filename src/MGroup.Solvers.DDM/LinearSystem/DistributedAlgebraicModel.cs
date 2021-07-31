@@ -37,11 +37,11 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			this.model = model;
 			this.dofOrderer = dofOrderer;
 
-			this.subdomainMatrixAssemblers = environment.CreateDictionaryPerNode(subdomainID => subdomainMatrixAssembler.Clone());
+			this.subdomainMatrixAssemblers = environment.CalcNodeData(subdomainID => subdomainMatrixAssembler.Clone());
 			this.subdomainVectorAssembler = new SubdomainVectorAssembler(model.AllDofs);
 
 			this.LinearSystem = new DistributedLinearSystem<TMatrix>(CheckCompatibleVector, CheckCompatibleMatrix);
-			this.SubdomainLinearSystems = environment.CreateDictionaryPerNode(
+			this.SubdomainLinearSystems = environment.CalcNodeData(
 				subdomainID => new SubdomainLinearSystem<TMatrix>(this, subdomainID));
 
 			this.SubdomainTopology = new SubdomainTopology(environment, model, s => SubdomainFreeDofOrderings[s]);

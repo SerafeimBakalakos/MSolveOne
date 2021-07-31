@@ -46,7 +46,7 @@ namespace MGroup.Solvers.DDM
 			this.environment = environment;
 			this.model = model;
 			this.getSubdomainFreeDofs = getSubdomainFreeDofs;
-			this.neighborsPerSubdomain = environment.CreateDictionaryPerNode(subdomainID =>
+			this.neighborsPerSubdomain = environment.CalcNodeData(subdomainID =>
 			{
 				ComputeNode computeNode = environment.GetComputeNode(subdomainID);
 				var neighbors = new SortedSet<int>();
@@ -117,7 +117,7 @@ namespace MGroup.Solvers.DDM
 			});
 
 			// Send these dofs to the corresponding neighbors and receive theirs.
-			Dictionary<int, AllToAllNodeData<int>> transferDataPerSubdomain = environment.CreateDictionaryPerNode(subdomainID =>
+			Dictionary<int, AllToAllNodeData<int>> transferDataPerSubdomain = environment.CalcNodeData(subdomainID =>
 			{
 				var transferData = new AllToAllNodeData<int>();
 				transferData.sendValues = new ConcurrentDictionary<int, int[]>();

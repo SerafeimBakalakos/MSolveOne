@@ -28,7 +28,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 		{
 			this.Indexer = indexer;
 			this.Environment = indexer.Environment;
-			this.LocalVectors = Environment.CreateDictionaryPerNode(
+			this.LocalVectors = Environment.CalcNodeData(
 				node => Vector.CreateZero(indexer.GetLocalComponent(node).NumEntries));
 		}
 
@@ -69,7 +69,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 		public DistributedOverlappingVector Copy()
 		{
 			Dictionary<int, Vector> localVectorsCloned =
-				Environment.CreateDictionaryPerNode(node => LocalVectors[node].Copy());
+				Environment.CalcNodeData(node => LocalVectors[node].Copy());
 			return new DistributedOverlappingVector(Indexer, localVectorsCloned);
 		}
 
@@ -120,7 +120,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				return dotLocal;
 			};
 
-			Dictionary<int, double> dotPerNode = Environment.CreateDictionaryPerNode(calcLocalDot);
+			Dictionary<int, double> dotPerNode = Environment.CalcNodeData(calcLocalDot);
 			return Environment.AllReduceSum(dotPerNode);
 		}
 
@@ -130,7 +130,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			{
 				return false;
 			}
-			Dictionary<int, bool> flags = Environment.CreateDictionaryPerNode(
+			Dictionary<int, bool> flags = Environment.CalcNodeData(
 					node => this.LocalVectors[node].Equals(other.LocalVectors[node], tolerance));
 			return Environment.AllReduceAnd(flags);
 		}
@@ -168,7 +168,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				return dotLocal;
 			};
 
-			Dictionary<int, double> dotPerNode = Environment.CreateDictionaryPerNode(calcLocalDot);
+			Dictionary<int, double> dotPerNode = Environment.CalcNodeData(calcLocalDot);
 			return Math.Sqrt(Environment.AllReduceSum(dotPerNode));
 		}
 
@@ -257,7 +257,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				transferData.recvValues = localIndexer.CreateBuffersForAllToAllWithNeighbors();
 				return transferData;
 			};
-			var dataPerNode = Environment.CreateDictionaryPerNode(prepareLocalData);
+			var dataPerNode = Environment.CalcNodeData(prepareLocalData);
 
 			// Perform AllToAll to exchange the common boundary entries of each node with its neighbors.
 			Environment.NeighborhoodAllToAll(dataPerNode, true);

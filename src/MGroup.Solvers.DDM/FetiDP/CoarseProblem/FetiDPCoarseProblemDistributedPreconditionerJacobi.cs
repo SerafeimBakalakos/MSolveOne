@@ -28,7 +28,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		{
 			Func<int, Vector> extractDiagonal = subdomainID
 				=> getSubdomainMatrices(subdomainID).SchurComplementOfRemainderDofs.GetDiagonal();
-			Dictionary<int, Vector> localDiagonals = environment.CreateDictionaryPerNode(extractDiagonal);
+			Dictionary<int, Vector> localDiagonals = environment.CalcNodeData(extractDiagonal);
 			var distributedDiagonal = new DistributedOverlappingVector(cornerDofIndexer, localDiagonals);
 
 			// All dofs belong to 2 or more subdomains and must have the stiffness contributions from all these subdomains.

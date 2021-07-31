@@ -28,7 +28,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 
 		public DistributedOverlappingIndexer(IComputeEnvironment environment)
 		{
-			localIndexers = environment.CreateDictionaryPerNode(
+			localIndexers = environment.CalcNodeData(
 				n => new Local(environment.GetComputeNode(n)));
 			Environment = environment;
 		}

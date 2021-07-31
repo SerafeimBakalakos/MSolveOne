@@ -24,7 +24,7 @@ namespace MGroup.Solvers.DDM.PSM.Preconditioning
         {
             Func<int, Vector> extractDiagonal = subdomainID 
                 => Vector.CreateFromArray(interfaceProblemMatrix.ExtractDiagonal(subdomainID));
-            Dictionary<int, Vector> localDiagonals = environment.CreateDictionaryPerNode(extractDiagonal);
+            Dictionary<int, Vector> localDiagonals = environment.CalcNodeData(extractDiagonal);
             var distributedDiagonal = new DistributedOverlappingVector(boundaryDofIndexer, localDiagonals);
             
             // All dofs belong to 2 or more subdomains and must have the stiffness contributions from all these subdomains.
