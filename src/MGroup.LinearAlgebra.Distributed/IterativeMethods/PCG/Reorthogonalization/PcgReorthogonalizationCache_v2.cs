@@ -22,6 +22,13 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 		public List<double> DirectionsTimesMatrixTimesDirections { get; } = new List<double>();
 
 		/// <summary>
+		/// The index into <see cref="Directions"/> of the first vector of each generation. A generation is defined as all
+		/// direction vectors (and related data) stored when solving the linear system for a specific rhs. Thus solving for 2
+		/// consecutive rhs vectors will generate direction vectors belonging to 2 generations.
+		/// </summary>
+		public List<int> GenerationStartIndices { get; } = new List<int>();
+
+		/// <summary>
 		/// The products systemMatrix * <see cref="Directions"/> stored so far.
 		/// </summary>
 		public List<IGlobalVector> MatrixTimesDirections { get; } = new List<IGlobalVector>();
@@ -120,6 +127,11 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 				MatrixTimesDirections.RemoveRange(0, numOldVectorsToRemove);
 				DirectionsTimesMatrixTimesDirections.RemoveRange(0, numOldVectorsToRemove);
 			}
+		}
+
+		public void StartGeneration()
+		{
+			GenerationStartIndices.Add(Directions.Count);
 		}
 
 		/// <summary>

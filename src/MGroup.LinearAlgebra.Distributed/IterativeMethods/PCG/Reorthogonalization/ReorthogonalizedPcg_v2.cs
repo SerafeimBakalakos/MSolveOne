@@ -130,16 +130,17 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 			//      on the size of the global matrix of the interface problem, but are user defined usually.
 			//int maxIterations = maxIterationsProvider.GetMaxIterations(matrix.NumColumns); 
 			int maxIterations = ((FixedMaxIterationsProvider)MaxIterationsProvider).GetMaxIterations(-1);
+			ReorthoCache.StartGeneration();
 			DirectionVectorsRetention.Intialize(this);
 
 			IterativeStatistics stats = SolveInternal(maxIterations, solution.CreateZero);
 
 			#region debug
-			ReorthoCache.CalcMaxConjugacyFactorPerIteration();
-			ReorthoCache.Clear();
+			//ReorthoCache.CalcMaxConjugacyFactorPerIteration();
+			//ReorthoCache.Clear();
 			#endregion
 
-			//DirectionVectorsRetention.DiscardDirectionVectors();
+			DirectionVectorsRetention.DiscardDirectionVectors();
 			return stats;
 		}
 
