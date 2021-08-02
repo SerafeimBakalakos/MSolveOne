@@ -126,6 +126,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 			DirectionVectorsRetention.Intialize(this);
 
 			IterativeStatistics stats = SolveInternal(maxIterations, solution.CreateZero);
+
 			DirectionVectorsRetention.DiscardDirectionVectors();
 			return stats;
 		}

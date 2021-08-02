@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using MGroup.LinearAlgebra.Vectors;
 
 namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalization
@@ -23,6 +25,27 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 		/// The products systemMatrix * <see cref="Directions"/> stored so far.
 		/// </summary>
 		public List<IGlobalVector> MatrixTimesDirections { get; } = new List<IGlobalVector>();
+
+		public bool AreAllDirectionsConjugate(double tolerance)
+		{
+			int numVectors = Directions.Count;
+
+			// Examine the newest direction first, since it is the most probable to be affected by error build-up
+			for (int i = numVectors - 1; i >= 1; --i) 
+			{
+				for (int j = i - 1; j >= 0; --j)
+				{
+					// Conjugate if di * A * dj = 0.
+					double dot = Directions[i].DotProduct(MatrixTimesDirections[j]);
+					if (dot > tolerance)
+					{
+						return false;
+					}
+				}
+			}
+
+			return true;
+		}
 
 		public void Clear()
 		{
