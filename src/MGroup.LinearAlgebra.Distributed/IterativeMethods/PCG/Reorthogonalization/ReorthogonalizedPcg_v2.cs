@@ -19,15 +19,16 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 	public class ReorthogonalizedPcg_v2 : PcgAlgorithmBase
 	{
 		private const string name = "Reorthogonalized PCG";
-
+		private readonly bool useDirectionVectorsOnlyForInitialSolution;
 
 		private ReorthogonalizedPcg_v2(double residualTolerance, IMaxIterationsProvider maxIterationsProvider,
 			IPcgResidualConvergence residualConvergence, IPcgResidualUpdater residualCorrection, bool throwIfNotConvergence,
-			IDirectionVectorsRetention directionVectorsRetention) :
+			IDirectionVectorsRetention directionVectorsRetention, bool useDirectionVectorsOnlyForInitialSolution) :
 			base(residualTolerance, maxIterationsProvider, residualConvergence, residualCorrection, throwIfNotConvergence)
 		{
 			Convergence = residualConvergence; //TODO: Now there are 2 convergence properties. One here and one in base class. Fix it.
 			DirectionVectorsRetention = directionVectorsRetention;
+			this.useDirectionVectorsOnlyForInitialSolution = useDirectionVectorsOnlyForInitialSolution;
 		}
 
 		public IPcgResidualConvergence Convergence { get; set; }
@@ -102,7 +103,13 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 			if (ReorthoCache.Directions.Count > 0)
 			{
 				if (!initialGuessIsZero) solution.Clear();
+
 				CalculateInitialSolutionFromStoredDirections(rhs, solution);
+				if (useDirectionVectorsOnlyForInitialSolution)
+				{
+					ReorthoCache.Clear();
+				}
+
 				residual = ExactResidual.Calculate(matrix, rhs, solution);
 			}
 			else // preferably call base method
@@ -127,7 +134,12 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 
 			IterativeStatistics stats = SolveInternal(maxIterations, solution.CreateZero);
 
-			DirectionVectorsRetention.DiscardDirectionVectors();
+			#region debug
+			ReorthoCache.CalcMaxConjugacyFactorPerIteration();
+			ReorthoCache.Clear();
+			#endregion
+
+			//DirectionVectorsRetention.DiscardDirectionVectors();
 			return stats;
 		}
 
@@ -287,9 +299,12 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 			{
 				Convergence = new PureResidualConvergence();
 				DirectionVectorsRetention = new PercentageDirectionVectorsRetention(1.1);
+				UseDirectionVectorsOnlyForInitialSolution = false;
 			}
 
 			public IDirectionVectorsRetention DirectionVectorsRetention { get; set; }
+
+			public bool UseDirectionVectorsOnlyForInitialSolution { get; set; }
 
 			/// <summary>
 			/// Creates a new instance of <see cref="ReorthogonalizedPcg"/>.
@@ -297,7 +312,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 			public ReorthogonalizedPcg_v2 Build()
 			{
 				return new ReorthogonalizedPcg_v2(ResidualTolerance, MaxIterationsProvider, Convergence, ResidualUpdater,
-					ThrowExceptionIfNotConvergence, DirectionVectorsRetention);
+					ThrowExceptionIfNotConvergence, DirectionVectorsRetention, UseDirectionVectorsOnlyForInitialSolution);
 			}
 		}
 	}

@@ -47,6 +47,27 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 			return true;
 		}
 
+		public List<double> CalcMaxConjugacyFactorPerIteration()
+		{
+			int numVectors = Directions.Count;
+			var factors = new List<double>(numVectors);
+			factors.Add(double.NaN); // No other vector yet
+			for (int i = 1; i < numVectors; ++i)
+			{
+				double max = -1.0;
+				for (int j = i - 1; j >= 0; --j)
+				{
+					double dot = Math.Abs(Directions[i].DotProduct(MatrixTimesDirections[j]));
+					if (dot > max)
+					{
+						max = dot;
+					}
+				}
+				factors.Add(max);
+			}
+			return factors;
+		}
+
 		public void Clear()
 		{
 			Directions.Clear();
