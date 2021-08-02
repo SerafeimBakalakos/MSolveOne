@@ -8,7 +8,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 	{
 		private readonly double minResidualNormRatioToKeep;
 
-		private ReorthogonalizedPcg_v2 pcg;
+		private ReorthogonalizedPcg pcg;
 
 		public ResidualBasedDirectionVectorsRetentionNoRedundancy(double minResidualNormRatioToKeep)
 		{
@@ -17,7 +17,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 
 		public void DiscardDirectionVectors() { }
 
-		public void Intialize(ReorthogonalizedPcg_v2 pcg)
+		public void Intialize(ReorthogonalizedPcg pcg)
 		{
 			this.pcg = pcg;
 		}

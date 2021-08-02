@@ -166,7 +166,7 @@ namespace MGroup.Solvers.DDM.Prototypes.LinearAlgebraExtensions
 
 				/// At this point we can check if CG has converged and exit, thus avoiding the uneccesary operations that follow.
 				residualNormRatio = Convergence.EstimateResidualNormRatio(this);
-				Debug.WriteLine($"Reorthogonalized PCG iteration = {iteration}: residual norm ratio = {residualNormRatio}");
+				//Debug.WriteLine($"Reorthogonalized PCG iteration = {iteration}: residual norm ratio = {residualNormRatio}");
 				Stagnation.StoreNewError(residualNormRatio);
 				bool hasStagnated = Stagnation.HasStagnated();
 				if (residualNormRatio <= ResidualTolerance)

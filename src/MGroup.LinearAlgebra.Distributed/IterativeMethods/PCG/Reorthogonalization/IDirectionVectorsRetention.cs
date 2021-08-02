@@ -8,7 +8,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 	{
 		void DiscardDirectionVectors();
 
-		void Intialize(ReorthogonalizedPcg_v2 pcg);
+		void Intialize(ReorthogonalizedPcg pcg);
 
 		bool KeepUsingReorthogonalization();
 	}

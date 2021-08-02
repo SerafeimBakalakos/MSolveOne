@@ -9,7 +9,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 		private readonly double percentageOfVectorsToKeep;
 		private readonly bool keepFirstVectors;
 
-		private ReorthogonalizedPcg_v2 pcg;
+		private ReorthogonalizedPcg pcg;
 
 		public PercentageDirectionVectorsRetention(double percentageOfVectorsToKeep, bool keepOldestVectors = true)
 		{
@@ -42,7 +42,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 			}
 		}
 
-		public void Intialize(ReorthogonalizedPcg_v2 pcg)
+		public void Intialize(ReorthogonalizedPcg pcg)
 		{
 			this.pcg = pcg;
 		}
