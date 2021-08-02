@@ -31,6 +31,8 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
 		protected override IterativeStatistics SolveInternal(int maxIterations, 
 			Func<IGlobalVector> initializeZeroVector)
 		{
+			PrintResidual();
+
 			// In contrast to the source algorithm, we initialize s here. At each iteration it will be overwritten, 
 			// thus avoiding allocating & deallocating a new vector.
 			precondResidual = initializeZeroVector();
@@ -65,6 +67,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
 
 				// Normally the residual vector is updated as: r = r - α * q. However corrections might need to be applied.
 				residualUpdater.UpdateResidual(this, residual);
+				PrintResidual();
 
 				// s = inv(M) * r
 				Preconditioner.Apply(residual, precondResidual);
@@ -102,10 +105,19 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
 			// We reached the max iterations before PCG converged
 			if (throwIfNotConvergence)
 			{
-				throw new IterativeMethodDidNotConvergeException("PCG terminated after the max allowable number of iterations =" +
-					$" {maxIterations}, without reaching the required residual norm ratio tolerance = {ResidualTolerance}." +
-					$" In contrast the final residual norm ratio is {residualNormRatio}. To accept solutions without convergence" +
-					$" set PcgAlgorithm.Builder.ThrowExceptionIfNotConvergence = false");
+				#region debug
+				//throw new IterativeMethodDidNotConvergeException("PCG terminated after the max allowable number of iterations =" +
+				//	$" {maxIterations}, without reaching the required residual norm ratio tolerance = {ResidualTolerance}." +
+				//	$" In contrast the final residual norm ratio is {residualNormRatio}. To accept solutions without convergence" +
+				//	$" set PcgAlgorithm.Builder.ThrowExceptionIfNotConvergence = false");
+				return new IterativeStatistics
+				{
+					AlgorithmName = name,
+					HasConverged = false,
+					NumIterationsRequired = maxIterations,
+					ResidualNormRatioEstimation = residualNormRatio
+				};
+				#endregion
 			}
 			else
 			{
@@ -118,6 +130,20 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
 				};
 			}
 		}
+
+		#region debug
+		private void PrintResidual()
+		{
+			IGlobalVector Ax = Solution.CreateZero();
+			Matrix.MultiplyVector(Solution, Ax);
+			IGlobalVector r = Rhs.Subtract(Ax);
+
+			//IGlobalVector r = Residual;
+
+			double delta = r.Norm2() / Rhs.Norm2();
+			Debug.WriteLine($"norm(r)/norm(b) = {delta}");
+		}
+		#endregion
 
 		/// <summary>
 		/// Constructs <see cref="PcgAlgorithm"/> instances, allows the user to specify some or all of the required parameters 

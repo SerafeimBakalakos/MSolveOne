@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using MGroup.LinearAlgebra.Vectors;
 
-namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG
+namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalization
 {
 	/// <summary>
 	/// Manages the insertion and removal of PCG direction vectors and related data, that will be used for reorthogonalization.

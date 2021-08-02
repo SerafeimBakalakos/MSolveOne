@@ -37,7 +37,7 @@ namespace MGroup.Environments.Mpi
 			if (environment.CommWorld.Rank == masterProcessRank)
 			{
 				// On master process we will deal with all nodes.
-				Dictionary<int, ComputeNode> nodes = environment.NodeTopology.Nodes;
+				IDictionary<int, ComputeNode> nodes = environment.NodeTopology.Nodes;
 
 				// Add the keys first to avoid race conditions.
 				nodeDataInGlobal = new Dictionary<int, T>(nodes.Count);

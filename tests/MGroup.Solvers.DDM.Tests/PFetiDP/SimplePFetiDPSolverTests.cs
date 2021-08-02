@@ -6,6 +6,7 @@ using MGroup.Constitutive.Thermal;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG;
+using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalization;
 using MGroup.LinearAlgebra.Iterative;
 using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;
@@ -136,14 +137,14 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 		[Theory]
 		[InlineData(EnvironmentChoice.SequentialShared, false, false, false)]
 		[InlineData(EnvironmentChoice.SequentialShared, true, false, false)]
-		[InlineData(EnvironmentChoice.SequentialShared, true, true, false)]
+		//[InlineData(EnvironmentChoice.SequentialShared, true, true, false)]
 		[InlineData(EnvironmentChoice.SequentialShared, true, false, true)]
-		[InlineData(EnvironmentChoice.SequentialShared, true, true, true)]
-		[InlineData(EnvironmentChoice.TplShared, false, false, false)]
-		[InlineData(EnvironmentChoice.TplShared, true, false, false)]
-		[InlineData(EnvironmentChoice.TplShared, true, true, false)]
-		[InlineData(EnvironmentChoice.TplShared, true, false, true)]
-		[InlineData(EnvironmentChoice.TplShared, true, true, true)]
+		//[InlineData(EnvironmentChoice.SequentialShared, true, true, true)]
+		//[InlineData(EnvironmentChoice.TplShared, false, false, false)]
+		//[InlineData(EnvironmentChoice.TplShared, true, false, false)]
+		//[InlineData(EnvironmentChoice.TplShared, true, true, false)]
+		//[InlineData(EnvironmentChoice.TplShared, true, false, true)]
+		//[InlineData(EnvironmentChoice.TplShared, true, true, true)]
 		public static void TestForPlane2D(EnvironmentChoice env, bool coarseDistributed, bool coarseJacobi, bool coarseReortho)
 			=> TestForPlane2DInternal(env.CreateEnvironment(), coarseDistributed, coarseJacobi, coarseReortho);
 
@@ -160,14 +161,14 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			ICornerDofSelection cornerDofs = Plane2DExample.GetCornerDofs(model);
 
 			// Solver
-			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
-				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
-				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
+			//var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
+			//	environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
+			//	cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
 
 			#region debug reortho
-			//var solverFactory = new PFetiDPSolver<Matrix>.Factory(
-			//	environment, new PsmSubdomainMatrixManagerDense.Factory(),
-			//	cornerDofs, new FetiDPSubdomainMatrixManagerDense.Factory());
+			var solverFactory = new PFetiDPSolver<Matrix>.Factory(
+				environment, new PsmSubdomainMatrixManagerDense.Factory(),
+				cornerDofs, new FetiDPSubdomainMatrixManagerDense.Factory());
 			#endregion
 
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
@@ -181,21 +182,26 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 				var coarseProblemFactory = new FetiDPCoarseProblemDistributed.Factory();
 				if (useReorthogonalizedPcg)
 				{
-					var coarseProblemPcgBuilder = new ReorthogonalizedPcg.Builder();
-					coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+					var coarseProblemPcgBuilder = new ReorthogonalizedPcg_v2.Builder();
+					coarseProblemPcgBuilder.DirectionVectorsRetention = new FixedDirectionVectorsRetention(30, true);
+					//coarseProblemPcgBuilder.DirectionVectorsRetention = new FixedDirectionVectorsRetentionNoRedundancy(30);
+					//coarseProblemPcgBuilder.DirectionVectorsRetention = new ResidualBasedDirectionVectorsRetention(1E-4);
+					//coarseProblemPcgBuilder.DirectionVectorsRetention = new ResidualBasedDirectionVectorsRetentionNoRedundancy(1E-4);
+					//var coarseProblemPcgBuilder = new ReorthogonalizedPcg.Builder();
+					coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(100);
 					coarseProblemPcgBuilder.ResidualTolerance = 2E-12;
 					#region debug reortho
 					// This relaxation is important, to avoid stagnation and divergence of reortho-PCG.
 					// However it may result in reduced accuracy in the coarse problem solution and then more iterations of the 
 					// interface problem PCG.
-					coarseProblemPcgBuilder.ResidualTolerance = 1E-7;
+					//coarseProblemPcgBuilder.ResidualTolerance = 1E-7;
 					#endregion
 					coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
 				}
 				else
 				{
 					var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
-					coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(200);
+					coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(100);
 					coarseProblemPcgBuilder.ResidualTolerance = 2E-12;
 					coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
 				}
@@ -205,20 +211,20 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			}
 			else 
 			{
-				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
-				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
-				#region debug reortho
-				//var coarseProblemMatrix = new FetiDPCoarseProblemMatrixDense();
+				//var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
 				//solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
+				#region debug reortho
+				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixDense();
+				solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
 				#endregion
 			}
 
-			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
-			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
+			//DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			//PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 
 			#region debug reortho
-			//DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
-			//PsmSolver<Matrix> solver = solverFactory.BuildSolver(model, algebraicModel);
+			DistributedAlgebraicModel<Matrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			PsmSolver<Matrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 			#endregion
 
 			// Linear static analysis

@@ -5,6 +5,7 @@ using System.Text;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG;
+using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalization;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Iterative;
@@ -79,8 +80,64 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			var distributedSolution = new DistributedOverlappingVector(cornerDofIndexer, coarseProblemSolution);
 
 			distributedRhs.SumOverlappingEntries();
+
+
+			#region debug
+			//// First rhs
+			//var b0 = new DistributedOverlappingVector(cornerDofIndexer);
+			//var x0 = new DistributedOverlappingVector(cornerDofIndexer);
+			//foreach (int s in b0.LocalVectors.Keys)
+			//{
+			//	int[] multiplicities = cornerDofIndexer.GetLocalComponent(s).Multiplicities;
+			//	Vector v = b0.LocalVectors[s];
+			//	for (int i = 0; i < multiplicities.Length; ++i)
+			//	{
+			//		v[i] = multiplicities[i];
+			//	}
+			//}
+			//IterativeStatistics stats0 = coarseProblemSolver.Solve(
+			//	coarseProblemMatrix, coarseProblemPreconditioner.Preconditioner, b0, x0, true);
+
+			//// Second rhs
+			//double dx = 0.01;
+			//double a = 1.0;
+			//var b1 = new DistributedOverlappingVector(cornerDofIndexer);
+			//var x1 = new DistributedOverlappingVector(cornerDofIndexer);
+			//foreach (int s in b1.LocalVectors.Keys)
+			//{
+			//	int[] multiplicities = cornerDofIndexer.GetLocalComponent(s).Multiplicities;
+			//	Vector v = b1.LocalVectors[s];
+			//	for (int i = 0; i < multiplicities.Length; ++i)
+			//	{
+			//		v[i] = a * multiplicities[i] + dx;
+			//	}
+			//}
+
+			//Debug.WriteLine("Starting 2nd rhs");
+
+			//IterativeStatistics stats1 = coarseProblemSolver.Solve(
+			//	coarseProblemMatrix, coarseProblemPreconditioner.Preconditioner, b1, x1, true);
+			#endregion
+
+			if (coarseProblemSolver is PcgAlgorithmBase pcg)
+			{
+				//pcg.ResidualTolerance = 1E-20;
+				//pcgReortho.ReorthoCache.RemoveOldDirectionVectorData(5);
+				//pcgReortho.ReorthoCache.RemoveNewDirectionVectorData(5);
+			}
+
 			IterativeStatistics stats = coarseProblemSolver.Solve(
 				coarseProblemMatrix, coarseProblemPreconditioner.Preconditioner, distributedRhs, distributedSolution, true);
+
+			#region debug
+			if (coarseProblemSolver is ReorthogonalizedPcg pcgReortho)
+			{
+				//pcgReortho.ReorthoCache.Clear();
+				//pcgReortho.ReorthoCache.RemoveOldDirectionVectorData(5);
+				//pcgReortho.ReorthoCache.RemoveNewDirectionVectorData(5);
+			}
+			#endregion
+
 			Debug.WriteLine($"Coarse problem solution: iterations = {stats.NumIterationsRequired}, " +
 				$"residual norm ratio = {stats.ResidualNormRatioEstimation}");
 		}

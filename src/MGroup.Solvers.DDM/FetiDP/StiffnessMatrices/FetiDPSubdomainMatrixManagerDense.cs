@@ -32,7 +32,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		public void CalcSchurComplementOfRemainderDofs()
 		{
-			Scc = Kcc - (Kcr * (inverseKrr * Krc));
+			Scc = Kcc - Kcr * inverseKrr * Krc;
 		}
 
 		public void ClearSubMatrices()

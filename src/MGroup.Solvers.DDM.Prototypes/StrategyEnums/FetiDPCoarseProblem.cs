@@ -9,6 +9,7 @@ namespace MGroup.Solvers.DDM.Prototypes.StrategyEnums
 		Original,
 		Distributed,
 		DistributedJacobi,
+		DistributedReortho,
 		DistributedJacobiReortho
 	}
 }

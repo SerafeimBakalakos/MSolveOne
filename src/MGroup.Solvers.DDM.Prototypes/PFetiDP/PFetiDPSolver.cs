@@ -44,6 +44,10 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 			{
 				this.coarseProblem = new FetiDPCoarseProblemDistributedJacobi(model, fetiDPDofs, fetiDPStiffnesses, pcgTolerance);
 			}
+			else if (coarseProblemChoice == FetiDPCoarseProblem.DistributedReortho)
+			{
+				this.coarseProblem = new FetiDPCoarseProblemDistributedReortho(model, fetiDPDofs, fetiDPStiffnesses, pcgTolerance);
+			}
 			else if (coarseProblemChoice == FetiDPCoarseProblem.DistributedJacobiReortho)
 			{
 				this.coarseProblem = new FetiDPCoarseProblemDistributedJacobiReortho(model, fetiDPDofs, fetiDPStiffnesses, pcgTolerance);
