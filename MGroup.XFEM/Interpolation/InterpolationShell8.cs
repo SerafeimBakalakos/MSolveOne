@@ -1,0 +1,93 @@
+using System;
+using System.Collections.Generic;
+using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Mesh;
+using MGroup.LinearAlgebra.Matrices;
+using MGroup.XFEM.Interpolation.Inverse;
+
+//TODO: rename IsoparametricInterpolation3DBase. It works for shells as well.
+namespace MGroup.XFEM.Interpolation
+{
+    public class InterpolationShell8 : IsoparametricInterpolationBase
+    {
+        private static readonly InterpolationShell8 uniqueInstance = new InterpolationShell8();
+
+        private InterpolationShell8() : base(3, CellType.Quad8, 8)
+        {
+            NodalNaturalCoordinates = new double[][]
+            {
+                //TODO: validate this
+                new double[] { 1, 1, 0 },
+                new double[] { -1, 1, 0 },
+                new double[] { -1, -1, 0 },
+                new double[] { 1, -1, 0 },
+                new double[] { 0, 1, 0 },
+                new double[] { -1, 0, 0 },
+                new double[] { 0, -1, 0 },
+                new double[] { 1, 0, 0 }
+            };
+        }
+
+        public override IReadOnlyList<double[]> NodalNaturalCoordinates { get; }
+
+        public static InterpolationShell8 UniqueInstance => uniqueInstance;
+
+        /// <summary>
+        /// See <see cref="IIsoparametricInterpolation.CheckElementNodes(IReadOnlyList{INode})"/>
+        /// </summary>
+        public override void CheckElementNodes(IReadOnlyList<INode> nodes)
+        {
+            if (nodes.Count != 8) throw new ArgumentException(
+                $"A Shell8 finite element has 8 nodes, but {nodes.Count} nodes were provided.");
+            // TODO: Also check the order of the nodes too and perhaps even the shape
+        }
+
+        public override IInverseInterpolation CreateInverseMappingFor(IReadOnlyList<INode> nodes) 
+            => throw new NotImplementedException();
+
+        protected override double[] EvaluateAt(double[] naturalPoint)
+        {
+            double xi = naturalPoint[0];
+            double eta = naturalPoint[1];
+            var shapeFunctions = new double[8];
+            shapeFunctions[4] = 0.5 * (1 - Math.Pow(xi, 2)) * (1 + eta);
+            shapeFunctions[5] = 0.5 * (1 - Math.Pow(eta, 2)) * (1 - xi);
+            shapeFunctions[6] = 0.5 * (1 - Math.Pow(xi, 2)) * (1 - eta);
+            shapeFunctions[7] = 0.5 * (1 - Math.Pow(eta, 2)) * (1 + xi);
+            shapeFunctions[0] = 0.25 * (1 + xi) * (1 + eta) - 0.5 * shapeFunctions[4] - 0.5 * shapeFunctions[7];
+            shapeFunctions[1] = 0.25 * (1 - xi) * (1 + eta) - 0.5 * shapeFunctions[4] - 0.5 * shapeFunctions[5];
+            shapeFunctions[2] = 0.25 * (1 - xi) * (1 - eta) - 0.5 * shapeFunctions[5] - 0.5 * shapeFunctions[6];
+            shapeFunctions[3] = 0.25 * (1 + xi) * (1 - eta) - 0.5 * shapeFunctions[6] - 0.5 * shapeFunctions[7];
+            return shapeFunctions;
+        }
+
+        protected override Matrix EvaluateGradientsAt(double[] naturalPoint)
+        {
+            double xi = naturalPoint[0];
+            double eta = naturalPoint[1];
+            var naturalDerivatives = Matrix.CreateZero(8, 2);
+
+            // Derivatives with respect to Xi
+            naturalDerivatives[4, 0] = (-xi) * (1 + eta);
+            naturalDerivatives[5, 0] = -0.5 * (1 - Math.Pow(eta, 2));
+            naturalDerivatives[6, 0] = 0.5 * (-2 * xi) * (1 - eta);
+            naturalDerivatives[7, 0] = 0.5 * (1 - Math.Pow(eta, 2));
+            naturalDerivatives[0, 0] = +0.25 * (1 + eta) - 0.5 * naturalDerivatives[4, 0] - 0.5 * naturalDerivatives[7, 0];
+            naturalDerivatives[1, 0] = -0.25 * (1 + eta) - 0.5 * naturalDerivatives[4, 0] - 0.5 * naturalDerivatives[5, 0];
+            naturalDerivatives[2, 0] = -0.25 * (1 - eta) - 0.5 * naturalDerivatives[5, 0] - 0.5 * naturalDerivatives[6, 0];
+            naturalDerivatives[3, 0] = +0.25 * (1 - eta) - 0.5 * naturalDerivatives[6, 0] - 0.5 * naturalDerivatives[7, 0];
+
+            // Derivatives with respect to Eta
+            naturalDerivatives[4, 1] = 0.5 * (1 - Math.Pow(xi, 2));
+            naturalDerivatives[5, 1] = 0.5 * (-2 * eta) * (1 - xi);
+            naturalDerivatives[6, 1] = 0.5 * (1 - Math.Pow(xi, 2)) * (-1);
+            naturalDerivatives[7, 1] = 0.5 * (-2 * eta) * (1 + xi);
+            naturalDerivatives[0, 1] = +0.25 * (1 + xi) - 0.5 * naturalDerivatives[4, 1] - 0.5 * naturalDerivatives[7, 1];
+            naturalDerivatives[1, 1] = +0.25 * (1 - xi) - 0.5 * naturalDerivatives[4, 1] - 0.5 * naturalDerivatives[5, 1];
+            naturalDerivatives[2, 1] = -0.25 * (1 - xi) - 0.5 * naturalDerivatives[5, 1] - 0.5 * naturalDerivatives[6, 1];
+            naturalDerivatives[3, 1] = -0.25 * (1 + xi) - 0.5 * naturalDerivatives[6, 1] - 0.5 * naturalDerivatives[7, 1];
+
+            return naturalDerivatives;
+        }
+    }
+}

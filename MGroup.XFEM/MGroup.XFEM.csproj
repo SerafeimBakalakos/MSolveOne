@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MGroup.LinearAlgebra" Version="0.1.0-unstable.51" />
+    <PackageReference Include="MIConvexHull" Version="1.1.19.1019" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\MGroup.Constitutive.Structural\MGroup.Constitutive.Structural.csproj" />
+    <ProjectReference Include="..\src\MGroup.MSolve.Discretization\MGroup.MSolve.Discretization.csproj" />
+    <ProjectReference Include="..\src\MGroup.MSolve.Meshes\MGroup.MSolve.Meshes.csproj" />
+  </ItemGroup>
+
+</Project>
