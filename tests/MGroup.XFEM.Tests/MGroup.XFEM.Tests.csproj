@@ -14,6 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\MGroup.Constitutive.Thermal\MGroup.Constitutive.Thermal.csproj" />
+    <ProjectReference Include="..\..\src\MGroup.NumericalAnalyzers\MGroup.NumericalAnalyzers.csproj" />
     <ProjectReference Include="..\..\src\MGroup.XFEM\MGroup.XFEM.csproj" />
   </ItemGroup>
 

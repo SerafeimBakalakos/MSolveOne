@@ -1,0 +1,4 @@
+Total areas/volumes of each material phase:
+Phase Size
+0 3.2218653839332507
+1 0.7781346160667504
