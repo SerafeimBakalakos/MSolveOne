@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Geometry.LSM;
@@ -15,7 +15,7 @@ namespace MGroup.XFEM.Output.Fields
         public LevelSetField(IXModel model, IClosedGeometry levelSet)
         {
             this.levelSet = levelSet;
-            this.outMesh = new ContinuousOutputMesh(model.XNodes, model.EnumerateElements());
+            this.outMesh = new ContinuousOutputMesh(model.Nodes.Values, model.EnumerateElements());
         }
 
         public LevelSetField(IXModel model, IClosedGeometry levelSet, ContinuousOutputMesh outputMesh)

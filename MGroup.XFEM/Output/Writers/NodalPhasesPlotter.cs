@@ -42,7 +42,7 @@ namespace MGroup.XFEM.Output.Writers
             {
                 var nodalPhases = new Dictionary<INode, double>();
 
-                foreach (XNode node in model.XNodes)
+                foreach (XNode node in model.Nodes.Values)
                 {
                     double phaseID = node.PhaseID;
                     if (node.PhaseID == DefaultPhase.defaultPhaseID) phaseID = colorForDefaultPhase;

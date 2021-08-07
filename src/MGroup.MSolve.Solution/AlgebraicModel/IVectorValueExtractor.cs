@@ -18,7 +18,6 @@ namespace MGroup.MSolve.Solution.AlgebraicModel
 		/// <returns></returns>
 		double[] ExtractElementVector(IGlobalVector vector, IElement element);
 
-
 		/// <summary>
 		/// If the requested (<paramref name="node"/>, <paramref name="dof"/>) pair is not included in <paramref name="vector"/>,
 		/// then <see cref="KeyNotFoundException"/> will be thrown.
@@ -28,6 +27,5 @@ namespace MGroup.MSolve.Solution.AlgebraicModel
 		/// <param name="dof"></param>
 		/// <returns></returns>
 		double ExtractSingleValue(IGlobalVector vector, INode node, IDofType dof); //TODO: Also support batch requests
-
 	}
 }

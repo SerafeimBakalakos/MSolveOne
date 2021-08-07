@@ -15,7 +15,6 @@ namespace MGroup.XFEM.Elements
 {
     public interface IXCrackElement : IXFiniteElement
     {
-        
         Dictionary<ICrack, IElementDiscontinuityInteraction> InteractingCracks { get; }
 
         Matrix CalcDisplacementFieldGradient(XPoint point, Vector nodalDisplacements);

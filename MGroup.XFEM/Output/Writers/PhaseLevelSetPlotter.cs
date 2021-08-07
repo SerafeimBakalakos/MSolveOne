@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.XFEM.Entities;
@@ -26,7 +26,7 @@ namespace MGroup.XFEM.Output.Writers
 
         public void Update()
         {
-            var outMesh = new ContinuousOutputMesh(physicalModel.XNodes, physicalModel.EnumerateElements());
+            var outMesh = new ContinuousOutputMesh(physicalModel.Nodes.Values, physicalModel.EnumerateElements());
             foreach (IPhaseBoundary boundary in geometryModel.PhaseBoundaries.Values)
             {
                 string file = $"{directoryPath}\\level_set{boundary.ID}_t{iteration}.vtk";

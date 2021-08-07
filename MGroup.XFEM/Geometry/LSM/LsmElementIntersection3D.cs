@@ -8,6 +8,8 @@ using MGroup.MSolve.Discretization.Mesh;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Integration.Quadratures;
+using MGroup.LinearAlgebra.Matrices;
+using MGroup.MSolve.Discretization;
 
 namespace MGroup.XFEM.Geometry.LSM
 {

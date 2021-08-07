@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.XFEM.Integration;
@@ -43,7 +43,7 @@ namespace MGroup.XFEM.Output
         {
             string path = Path.Combine(outputDirectory, $"gauss_points_boundary_t{iteration}.vtk");
             var integrationPoints = new Dictionary<double[], double>();
-            foreach (IXMultiphaseElement element in model.Elements)
+            foreach (IXMultiphaseElement element in model.Elements.Values)
             {
                 foreach (GaussPoint gp in element.BoundaryIntegrationPoints)
                 {
@@ -61,7 +61,7 @@ namespace MGroup.XFEM.Output
         {
             string path = Path.Combine(outputDirectory, $"gauss_points_bulk_t{iteration}.vtk");
             var integrationPoints = new Dictionary<double[], double>();
-            foreach (IXMultiphaseElement element in model.Elements)
+            foreach (IXMultiphaseElement element in model.Elements.Values)
             {
                 foreach (GaussPoint gp in element.BulkIntegrationPoints)
                 {
@@ -79,7 +79,7 @@ namespace MGroup.XFEM.Output
         {
             string path = Path.Combine(outputDirectory, $"gauss_points_boundary_normals_t{iteration}.vtk");
             var normalVectors = new Dictionary<double[], double[]>();
-            foreach (IXMultiphaseElement element in model.Elements)
+            foreach (IXMultiphaseElement element in model.Elements.Values)
             {
                 IReadOnlyList<GaussPoint> boundaryPoints = element.BoundaryIntegrationPoints;
                 IReadOnlyList<double[]> boundaryPointNormals = element.BoundaryIntegrationPointNormals;

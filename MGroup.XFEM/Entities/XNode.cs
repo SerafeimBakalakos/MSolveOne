@@ -20,7 +20,20 @@ namespace MGroup.XFEM.Entities
 
 		public double[] Coordinates { get; }
 
-		public new Dictionary<int, IXFiniteElement> ElementsDictionary { get; } = new Dictionary<int, IXFiniteElement>();
+		Dictionary<int, IElement> INode.ElementsDictionary
+		{
+			get
+			{
+				var result = new Dictionary<int, IElement>();
+				foreach (var pair in ElementsDictionary)
+				{
+					result[pair.Key] = pair.Value;
+				}
+				return result;
+			}
+		}
+
+		public Dictionary<int, IXFiniteElement> ElementsDictionary { get; } = new Dictionary<int, IXFiniteElement>();
 
 		//TODO: Perhaps this should be a Dictionary<EnrichmentItem, double[]> instead of storing them in EnrichmentFuncs
 		public HashSet<EnrichmentItem> Enrichments { get; } = new HashSet<EnrichmentItem>();

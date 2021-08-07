@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -57,7 +57,7 @@ namespace MGroup.XFEM.Output.Writers
         private void PlotEnrichedNodesCategory(Func<EnrichmentItem, bool> predicate, string path, string categoryName)
         {
             var nodesToPlot = new Dictionary<double[], double>();
-            foreach (XNode node in model.XNodes)
+            foreach (XNode node in model.Nodes.Values)
             {
                 if (node.Enrichments.Count == 0) continue;
                 EnrichmentItem[] enrichments = node.Enrichments.Where(predicate).ToArray();

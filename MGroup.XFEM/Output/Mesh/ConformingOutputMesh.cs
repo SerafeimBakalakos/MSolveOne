@@ -26,11 +26,11 @@ namespace MGroup.XFEM.Output.Mesh
 
         public ConformingOutputMesh(IXModel model)
         {
-            List<XNode> originalVertices = model.XNodes;
+            List<XNode> originalVertices = model.Nodes.Values.ToList();
             List<IXFiniteElement> originalCells = model.EnumerateElements().ToList();
 
             this.outVertices = new List<VtkPoint>(model.Nodes.Count);
-            this.outCells = new List<VtkCell>(model.Elements.Count);
+            this.outCells = new List<VtkCell>(originalCells.Count);
             this.original2OutCells = new Dictionary<IXFiniteElement, HashSet<VtkCell>>();
             this.originalCells2Subcells = new Dictionary<IXFiniteElement, HashSet<Subcell>>();
 

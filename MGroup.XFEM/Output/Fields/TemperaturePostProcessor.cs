@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Meshes.Structured;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Enrichment;
 using MGroup.XFEM.Entities;
@@ -14,12 +16,14 @@ namespace MGroup.XFEM.Output.Fields
 	{
 		private readonly ICartesianMesh mesh;
 		private readonly XModel<IXMultiphaseElement> model;
+		private readonly IAlgebraicModel algebraicModel;
 		private readonly double[] dx;
 
-		public TemperaturePostProcessor(ICartesianMesh mesh, XModel<IXMultiphaseElement> model)
+		public TemperaturePostProcessor(ICartesianMesh mesh, XModel<IXMultiphaseElement> model, IAlgebraicModel algebraicModel)
 		{
 			this.mesh = mesh;
 			this.model = model;
+			this.algebraicModel = algebraicModel;
 			dx = new double[mesh.Dimension];
 			for (int d = 0; d < mesh.Dimension; ++d)
 			{
@@ -27,7 +31,7 @@ namespace MGroup.XFEM.Output.Fields
 			}
 		}
 
-		public List<double> CalcTemperatureAt(IList<double[]> cartesianPoints, IVectorView solution)
+		public List<double> CalcTemperatureAt(IList<double[]> cartesianPoints, IGlobalVector solution)
 		{
 			var results = new List<double>(cartesianPoints.Count); 
 			foreach (double[] cartesianPoint in cartesianPoints)
@@ -35,7 +39,7 @@ namespace MGroup.XFEM.Output.Fields
 				(int elementID, double[] naturalCoords) = FindElementContaining(cartesianPoint);
 				IXMultiphaseElement element = model.Elements[elementID]; 
 
-				double[] nodalTemperatures = Utilities.ExtractNodalTemperatures(element, element.Subdomain, solution);
+				double[] nodalTemperatures = Utilities.ExtractNodalTemperatures(algebraicModel, element, solution);
 				var point = new XPoint(naturalCoords.Length);
 				point.Element = element;
 				point.Coordinates[CoordinateSystem.ElementNatural] = naturalCoords;

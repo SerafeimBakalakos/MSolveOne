@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using MGroup.LinearAlgebra.Vectors;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.XFEM.Enrichment.Enrichers;
 
 namespace MGroup.XFEM.Entities
@@ -18,6 +18,6 @@ namespace MGroup.XFEM.Entities
 
         void InteractWithMesh();
 
-        void UpdateGeometry(Dictionary<int, Vector> subdomainFreeDisplacements);
+        void UpdateGeometry(IGlobalVector solutionFreeDofs);
     }
 }

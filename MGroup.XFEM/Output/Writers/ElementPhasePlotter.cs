@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -58,7 +58,7 @@ namespace MGroup.XFEM.Output.Writers
         private Dictionary<VtkPoint, double> FindPhasesOfElements(ConformingOutputMesh conformingMesh)
         {
             var field = new Dictionary<VtkPoint, double>();
-            foreach (IXMultiphaseElement element in physicalModel.Elements)
+            foreach (IXMultiphaseElement element in physicalModel.Elements.Values)
             {
                 var elementPhases = element.Phases;
                 if (elementPhases.Count == 1)

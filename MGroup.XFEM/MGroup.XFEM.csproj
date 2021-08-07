@@ -13,6 +13,7 @@
     <ProjectReference Include="..\src\MGroup.Constitutive.Structural\MGroup.Constitutive.Structural.csproj" />
     <ProjectReference Include="..\src\MGroup.MSolve.Discretization\MGroup.MSolve.Discretization.csproj" />
     <ProjectReference Include="..\src\MGroup.MSolve.Meshes\MGroup.MSolve.Meshes.csproj" />
+    <ProjectReference Include="..\src\MGroup.Solvers\MGroup.Solvers.csproj" />
   </ItemGroup>
 
 </Project>

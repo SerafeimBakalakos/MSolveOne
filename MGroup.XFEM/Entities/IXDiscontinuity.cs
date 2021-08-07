@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Enrichment;
 
@@ -19,10 +20,6 @@ namespace MGroup.XFEM.Entities
         //      the interactions are determined by the phases not the actual discontinuities (phase boundaries)
         // void InteractWithMesh();
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="subdomainFreeDisplacements">Total displacements of all dofs of each subdomain.</param>
-        void UpdateGeometry(Dictionary<int, Vector> subdomainFreeDisplacements);
+        void UpdateGeometry(IGlobalVector totalFreeDisplacements);
     }
 }

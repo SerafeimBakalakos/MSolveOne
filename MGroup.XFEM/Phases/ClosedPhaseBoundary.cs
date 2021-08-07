@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using MGroup.LinearAlgebra.Vectors;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.XFEM.Enrichment;
 using MGroup.XFEM.Geometry.LSM;
 
@@ -36,7 +36,7 @@ namespace MGroup.XFEM.Phases
             // Initialized in constructor
         }
 
-        public void UpdateGeometry(Dictionary<int, Vector> subdomainFreeDisplacements)
+        public void UpdateGeometry(IGlobalVector totalFreeDisplacements)
         {
             // This boundary does not move.
         }
