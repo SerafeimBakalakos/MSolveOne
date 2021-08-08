@@ -5,6 +5,7 @@ using System.Linq;
 using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization.Dofs;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Cracks.PropagationTermination;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Enrichment;
@@ -139,10 +140,10 @@ namespace MGroup.XFEM.Cracks.Geometry
 			foreach (ICrackObserver observer in Observers) observer.Update();
 		}
 
-		public void UpdateGeometry(IGlobalVector totalFreeDisplacements)
+		public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements)
 		{
 			(double growthAngle, double growthLength) = propagator.Propagate(
-				totalFreeDisplacements, lsmGeometry.Tip, lsmGeometry.TipSystem, TipElements);
+				algebraicModel, totalDisplacements, lsmGeometry.Tip, lsmGeometry.TipSystem, TipElements);
 			lsmGeometry.Update(model.Nodes.Values, growthAngle, growthLength);
 			crackPath.Add(lsmGeometry.Tip);
 		}

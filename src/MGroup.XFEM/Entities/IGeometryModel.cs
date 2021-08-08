@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Enrichment.Enrichers;
 
 namespace MGroup.XFEM.Entities
@@ -18,6 +19,6 @@ namespace MGroup.XFEM.Entities
 
         void InteractWithMesh();
 
-        void UpdateGeometry(IGlobalVector solutionFreeDofs);
+        void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs);
     }
 }

@@ -49,7 +49,7 @@ namespace MGroup.XFEM.Analysis
 				if (iteration == 0) model.Initialize();
 				else
 				{
-					model.Update(totalDisplacementsFreeDofs);
+					model.Update(algebraicModel, totalDisplacementsFreeDofs);
 					foreach (ICrack crack in model.GeometryModel.EnumerateDiscontinuities())
 					{
 						if (termination.MustTerminate(crack))

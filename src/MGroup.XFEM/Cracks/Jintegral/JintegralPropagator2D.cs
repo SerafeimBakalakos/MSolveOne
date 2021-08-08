@@ -23,7 +23,6 @@ namespace MGroup.XFEM.Cracks.Jintegral
 	/// </summary>
 	public class JintegralPropagator2D: IPropagator
 	{
-		private readonly IAlgebraicModel algebraicModel;
 		private readonly double magnificationOfJintegralRadius;
 		private readonly IBulkIntegration jIntegrationRule;
 		private readonly HomogeneousFractureMaterialField2D material;
@@ -42,11 +41,10 @@ namespace MGroup.XFEM.Cracks.Jintegral
 		///     It should be at least 1.5 (see "Modeling quasi-static crack growth with the extended finite element 
 		///     method Part II: Numerical applications, Huang et al, 2003" page 7546). Usually values 2-3 are selected 
 		///     (see Ahmed thesis, 2009).</param>
-		public JintegralPropagator2D(IAlgebraicModel algebraicModel, 
-			double magnificationOfJintegralRadius, IBulkIntegration jIntegrationRule, HomogeneousFractureMaterialField2D material,
+		public JintegralPropagator2D(double magnificationOfJintegralRadius, IBulkIntegration jIntegrationRule, 
+			HomogeneousFractureMaterialField2D material,
 			ICrackGrowthDirectionCriterion growthDirectionCriterion, ICrackGrowthLengthCriterion growthLengthCriterion)
 		{
-			this.algebraicModel = algebraicModel;
 			this.magnificationOfJintegralRadius = magnificationOfJintegralRadius;
 			this.jIntegrationRule = jIntegrationRule;
 			this.material = material;
@@ -57,11 +55,12 @@ namespace MGroup.XFEM.Cracks.Jintegral
 			this.Logger = new PropagationLogger();
 		}
 
-		public (double growthAngle, double growthLength) Propagate(IGlobalVector subdomainFreeDisplacements, 
+		public (double growthAngle, double growthLength) Propagate(
+			IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, 
 			double[] crackTipGlobal, TipCoordinateSystem tipSystem, IEnumerable<IXCrackElement> tipElements)
 		{
 			// TODO: Also check if the sifs do not violate the material toughness
-			double[] sifs = ComputeSIFS(subdomainFreeDisplacements, crackTipGlobal, tipSystem, tipElements);
+			double[] sifs = ComputeSIFS(algebraicModel, totalDisplacements, crackTipGlobal, tipSystem, tipElements);
 			double growthAngle = growthDirectionCriterion.ComputeGrowthAngle(sifs);
 			double growthLength = growthLengthCriterion.ComputeGrowthLength(sifs);
 			Logger.GrowthAngles.Add(growthAngle);
@@ -70,7 +69,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 
 		}
 
-		private double[] ComputeSIFS(IGlobalVector totalFreeDisplacements,
+		private double[] ComputeSIFS(IAlgebraicModel algebraicModel, IGlobalVector totalFreeDisplacements,
 			double[] crackTip, TipCoordinateSystem tipSystem, IEnumerable<IXCrackElement> tipElements)
 		{
 			double interactionIntegralMode1 = 0.0, interactionIntegralMode2 = 0.0;

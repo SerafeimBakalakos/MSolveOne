@@ -91,10 +91,9 @@ namespace MGroup.XFEM.Tests.Utilities
 		//    return conductivity;
 		//}
 
-		public static IGlobalVector RunThermalStaticAnalysis(IXModel model, SolverChoice solverChoice = SolverChoice.Skyline)
+		public static IGlobalVector RunThermalStaticAnalysis(IXModel model, IAlgebraicModel algebraicModel, ISolver solver)
 		{
 			Console.WriteLine("Starting analysis");
-			(IAlgebraicModel algebraicModel, ISolver solver) = solverChoice.Create(model);
 			var problem = new ProblemThermal(model, algebraicModel, solver);
 			var linearAnalyzer = new LinearAnalyzer(model, algebraicModel, solver, problem);
 			var staticAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, problem, linearAnalyzer);
@@ -106,10 +105,9 @@ namespace MGroup.XFEM.Tests.Utilities
 			return solver.LinearSystem.Solution;
 		}
 
-		public static IGlobalVector RunStructuralStaticAnalysis(IXModel model, SolverChoice solverChoice = SolverChoice.Skyline)
+		public static IGlobalVector RunStructuralStaticAnalysis(IXModel model, IAlgebraicModel algebraicModel, ISolver solver)
 		{
 			Console.WriteLine("Starting analysis");
-			(IAlgebraicModel algebraicModel, ISolver solver) = solverChoice.Create(model);
 			var problem = new ProblemStructural(model, algebraicModel, solver);
 			var linearAnalyzer = new LinearAnalyzer(model, algebraicModel, solver, problem);
 			var staticAnalyzer = new StaticAnalyzer(model, algebraicModel, solver, problem, linearAnalyzer);

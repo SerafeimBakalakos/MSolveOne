@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Enrichment;
 
 namespace MGroup.XFEM.Entities
@@ -20,6 +21,6 @@ namespace MGroup.XFEM.Entities
         //      the interactions are determined by the phases not the actual discontinuities (phase boundaries)
         // void InteractWithMesh();
 
-        void UpdateGeometry(IGlobalVector totalFreeDisplacements);
+        void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements);
     }
 }

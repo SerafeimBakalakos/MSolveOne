@@ -20,7 +20,9 @@ namespace MGroup.MSolve.Discretization
 		//		Same goes for all entities that are based on INode or IElement. We can have INodalVectorContributor: INodeBasedEntity
 		//		and IElementVectorContributor: IElementBasedEntity and always access them inside IEnumerable<>. 
 		//		This will completely decouple model from subdomains, at least when all entities live in the same machine.
-		IEnumerable<IElement> EnumerateElements(int subdomainID); 
+		IEnumerable<IElement> EnumerateElements(int subdomainID);
+
+		IEnumerable<Load> EnumerateNodalLoads(int subdomainID);
 
 		IEnumerable<INode> EnumerateNodes();
 

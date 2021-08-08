@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Enrichment.Enrichers;
 using MGroup.XFEM.Entities;
@@ -82,13 +83,13 @@ namespace MGroup.XFEM.Phases
 			}
 		}
 
-		public void UpdateGeometry(IGlobalVector solutionFreeDofs)
+		public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs)
 		{
 			calcPhasesNodesInteractions = true;
 
 			foreach (IPhaseBoundary boundary in PhaseBoundaries.Values)
 			{
-				boundary.UpdateGeometry(solutionFreeDofs);
+				boundary.UpdateGeometry(algebraicModel, solutionFreeDofs);
 			}
 
 			if (MergeOverlappingPhases)

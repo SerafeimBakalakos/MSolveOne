@@ -4,6 +4,7 @@ using System.Text;
 using MGroup.MSolve.Discretization;
 using MGroup.XFEM.Elements;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.MSolve.Solution.AlgebraicModel;
 
 namespace MGroup.XFEM.Entities
 {
@@ -15,6 +16,6 @@ namespace MGroup.XFEM.Entities
 
         void Initialize();
 
-        void Update(IGlobalVector solutionFreeDofs);
+        void Update(IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs);
     }
 }

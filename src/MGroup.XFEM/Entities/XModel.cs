@@ -10,6 +10,7 @@ using MGroup.XFEM.Geometry.Tolerances;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.MSolve.Solution.AlgebraicModel;
 
 //TODO: There is a lot of repetition between this FEM.Model and IGA.Model with regards to interconnection data. That code should 
 //      be moved to a common class. Same goes for the interconnection methods of XSubdomain.
@@ -24,6 +25,16 @@ namespace MGroup.XFEM.Entities
 		public XModel(int dimension)
 		{
 			Dimension = dimension;
+
+			// Standard dofs
+			AllDofs.AddDof(StructuralDof.TranslationX);
+			AllDofs.AddDof(StructuralDof.TranslationY);
+			AllDofs.AddDof(StructuralDof.TranslationZ);
+			AllDofs.AddDof(StructuralDof.RotationX);
+			AllDofs.AddDof(StructuralDof.RotationY);
+			AllDofs.AddDof(StructuralDof.RotationZ);
+			AllDofs.AddDof(ThermalDof.Temperature);
+			AllDofs.AddDof(PorousMediaDof.Pressure);
 		}
 
 		public ActiveDofs AllDofs { get; } = new ActiveDofs();
@@ -109,7 +120,7 @@ namespace MGroup.XFEM.Entities
 		public void Initialize()
 		{
 			ConnectDataStructures();
-			UpdateStatePrivate(true, null);
+			UpdateStatePrivate(true, null, null);
 		}
 
 		public void RegisterEnrichmentObserver(IEnrichmentObserver observer)
@@ -154,9 +165,9 @@ namespace MGroup.XFEM.Entities
 		/// 
 		/// </summary>
 		/// <param name="solutionFreeDofs">Total displacements of all dofs of each subdomain.</param>
-		public void Update(IGlobalVector solutionFreeDofs)
+		public void Update(IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs)
 		{
-			UpdateStatePrivate(false, solutionFreeDofs);
+			UpdateStatePrivate(false, algebraicModel, solutionFreeDofs);
 		}
 
 		private void BuildInterconnectionData()
@@ -238,11 +249,11 @@ namespace MGroup.XFEM.Entities
 		/// </summary>
 		/// <param name="firstAnalysis"></param>
 		/// <param name="subdomainFreeDisplacements">if <paramref name="firstAnalysis"/> == true, this can be null.</param>
-		private void UpdateStatePrivate(bool firstAnalysis, IGlobalVector solutionFreeDofs)
+		private void UpdateStatePrivate(bool firstAnalysis, IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs)
 		{
 			// Update the discontinuities
 			if (firstAnalysis) GeometryModel.InitializeGeometry();
-			else GeometryModel.UpdateGeometry(solutionFreeDofs);
+			else GeometryModel.UpdateGeometry(algebraicModel, solutionFreeDofs);
 			GeometryModel.InteractWithMesh();
 
 			// Optionally calculate conforming subcells for elements that interact with discontinuities
@@ -256,6 +267,10 @@ namespace MGroup.XFEM.Entities
 				foreach (EnrichmentItem enrichment in enrichments)
 				{
 					this.Enrichments[enrichment.ID] = enrichment;
+					foreach (IDofType dof in enrichment.EnrichedDofs)
+					{
+						AllDofs.AddDof(dof);
+					}
 				}
 			}
 

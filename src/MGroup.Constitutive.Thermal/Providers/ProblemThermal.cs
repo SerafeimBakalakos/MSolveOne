@@ -155,7 +155,7 @@ namespace MGroup.Constitutive.Thermal
 		public void AssignRhs()
 		{// TODO: Remove type casting
 			solver.LinearSystem.RhsVector.Clear();
-			algebraicModel.AddToGlobalVector(((Model)model).EnumerateNodalLoads, solver.LinearSystem.RhsVector);
+			algebraicModel.AddToGlobalVector(model.EnumerateNodalLoads, solver.LinearSystem.RhsVector);
 		}
 	}
 }

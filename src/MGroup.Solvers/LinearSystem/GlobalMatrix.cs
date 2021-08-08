@@ -29,7 +29,7 @@ namespace MGroup.Solvers.LinearSystem
 
 		internal Guid Format { get; }
 
-		internal TMatrix SingleMatrix { get; set; }
+		public TMatrix SingleMatrix { get; set; }
 
 		public void AxpyIntoThis(IGlobalMatrix otherMatrix, double otherCoefficient)
 		{

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Enrichment;
 using MGroup.XFEM.Geometry.LSM;
 
@@ -36,7 +37,7 @@ namespace MGroup.XFEM.Phases
             // Initialized in constructor
         }
 
-        public void UpdateGeometry(IGlobalVector totalFreeDisplacements)
+        public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements)
         {
             // This boundary does not move.
         }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Elements;
 
@@ -55,7 +56,8 @@ namespace MGroup.XFEM.Cracks
 		public PropagationLogger Logger { get; }
 
 		
-		public (double growthAngle, double growthLength) Propagate(IGlobalVector totalFreeDisplacements,
+		public (double growthAngle, double growthLength) Propagate(
+			IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements,
 			double[] crackTipGlobal, TipCoordinateSystem tipSystem, IEnumerable<IXCrackElement> tipElements)
 		{
 			if (iteration >= Logger.GrowthLengths.Count)

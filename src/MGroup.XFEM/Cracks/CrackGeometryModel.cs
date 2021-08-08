@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Enrichment.Enrichers;
@@ -42,11 +43,11 @@ namespace MGroup.XFEM.Cracks
 			}
 		}
 
-		public void UpdateGeometry(IGlobalVector solutionFreeDofs)
+		public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs)
 		{
 			foreach (ICrack crack in Cracks.Values)
 			{
-				crack.UpdateGeometry(solutionFreeDofs);
+				crack.UpdateGeometry(algebraicModel, solutionFreeDofs);
 			}
 		}
 	}
