@@ -7,8 +7,8 @@ using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Mesh;
-using MGroup.MSolve.Discretization.Mesh.Generation;
-using MGroup.MSolve.Discretization.Mesh.Generation.GMSH;
+using MGroup.MSolve.Meshes.Unstructured;
+using MGroup.MSolve.Meshes.Unstructured.Gmsh;
 using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.Direct;
 using MGroup.Solvers.DofOrdering;
@@ -236,14 +236,16 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 			model.FindConformingSubcells = true;
 
 			// Mesh generation
-			var reader = new GmshReader<XNode>(meshPath);
-			(IReadOnlyList<XNode> nodes, IReadOnlyList<CellConnectivity<XNode>> elementConnectivities) = reader.CreateMesh(
-				(id, x, y, z) => new XNode(id, x, y));
+			UnstructuredMesh mesh;
+			using (var reader = new GmshReader(2, meshPath))
+			{
+				mesh = reader.CreateMesh();
+			}
 
 			// Nodes
-			foreach (XNode node in nodes)
+			foreach ((int nodeID, double[] coords) in mesh.EnumerateNodes())
 			{
-				model.Nodes[node.ID] = node;
+				model.Nodes[nodeID] = new XNode(nodeID, coords);
 			}
 
 			// Elements
@@ -252,16 +254,21 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 			var tipIntegration = new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(2, 2));
 			var bulkIntegration = new CrackElementIntegrationStrategy(
 				cutIntegration, tipIntegration, tipIntegration);
-			var factory = new XCrackElementFactory2D(material, t, bulkIntegration);
+			var elemFactory = new XCrackElementFactory2D(material, t, bulkIntegration);
 
 			// Elements
-			for (int e = 0; e < elementConnectivities.Count; ++e)
+			foreach ((int elementID, CellType cellType, int[] connectivity) in mesh.EnumerateElements())
 			{
-				IXCrackElement element = factory.CreateElement(e, CellType.Quad4, elementConnectivities[e].Vertices);
-				model.Elements[e] = element;
-				model.Subdomains[subdomainID].Elements.Add(element);
+				var nodes = new XNode[connectivity.Length];
+				for (int n = 0; n < connectivity.Length; ++n)
+				{
+					nodes[n] = model.Nodes[connectivity[n]];
+				}
+				var element = elemFactory.CreateElement(elementID, cellType, nodes);
+				model.Elements[elementID] = element;
+				model.Subdomains[0].Elements.Add(element);
 			}
-
+			
 			ApplyBoundaryConditions(model);
 
 			// Cracks, enrichments

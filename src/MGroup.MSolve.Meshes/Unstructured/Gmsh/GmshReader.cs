@@ -61,6 +61,7 @@ namespace MGroup.MSolve.Meshes.Unstructured.Gmsh
 			}
 
 			// Read the vertices
+			int numVertices = int.Parse(reader.ReadLine()); // Read it to move forward.
 			while (true)
 			{
 				line = reader.ReadLine();
@@ -101,7 +102,7 @@ namespace MGroup.MSolve.Meshes.Unstructured.Gmsh
 			}
 
 			// Read the elements
-			//int numFauxCells = int.Parse(reader.ReadLine()); // not all of them are actual 2D cells
+			int numFauxCells = int.Parse(reader.ReadLine()); // Not all of them are actual 2D cells. Read it to move forward.
 			var cellFactory = new GmshCellFactory(mesh.Nodes);
 			while (true)
 			{
