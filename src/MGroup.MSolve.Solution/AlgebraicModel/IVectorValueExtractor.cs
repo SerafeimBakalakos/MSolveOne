@@ -18,9 +18,11 @@ namespace MGroup.MSolve.Solution.AlgebraicModel
 		/// <returns></returns>
 		double[] ExtractElementVector(IGlobalVector vector, IElement element);
 
+		double[] ExtractNodalValues(IGlobalVector vector, INode node, IDofType[] dofs);
+
 		/// <summary>
-		/// If the requested (<paramref name="node"/>, <paramref name="dof"/>) pair is not included in <paramref name="vector"/>,
-		/// then <see cref="KeyNotFoundException"/> will be thrown.
+		/// If the requested (<paramref name="node"/>, <paramref name="dof"/>) pair is not a free dof or otherwise not included 
+		/// in <paramref name="vector"/>, then <see cref="KeyNotFoundException"/> will be thrown.
 		/// </summary>
 		/// <param name="vector"></param>
 		/// <param name="node"></param>

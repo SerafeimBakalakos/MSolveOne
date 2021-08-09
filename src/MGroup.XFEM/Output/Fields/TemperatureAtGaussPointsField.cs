@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using MGroup.XFEM.Integration;
-using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Geometry.Primitives;
@@ -33,7 +32,7 @@ namespace MGroup.XFEM.Output.Fields
 			foreach (IXThermalElement element in model.Elements.Values)
 			{
 				(IReadOnlyList<GaussPoint> gaussPoints, _) = element.GetMaterialsForBulkIntegration();
-				double[] nodalTemperatures = Utilities.ExtractNodalTemperatures(algebraicModel, element, solution);
+				IList<double[]> nodalTemperatures = Utilities.ExtractNodalTemperatures(algebraicModel, element, solution);
 				foreach (GaussPoint pointNatural in gaussPoints)
 				{
 					var point = new XPoint(pointNatural.Coordinates.Length);
@@ -49,21 +48,23 @@ namespace MGroup.XFEM.Output.Fields
 		}
 
 		//TODO: Perhaps this should be implemented by the element itself, where a lot of optimizations can be employed.
-		public static double CalcTemperatureAt(XPoint point, IXFiniteElement element, double[] nodalTemperatures)
+		public static double CalcTemperatureAt(XPoint point, IXFiniteElement element, IList<double[]> nodalTemperatures)
 		{
 			double sum = 0.0;
-			int idx = 0;
 			for (int n = 0; n < element.Nodes.Count; ++n)
 			{
+				double[] Tn = nodalTemperatures[n];
+				int idx = 0;
+
 				// Standard temperatures
-				sum += point.ShapeFunctions[n] * nodalTemperatures[idx++];
+				sum += point.ShapeFunctions[n] * Tn[idx++];
 
 				// Eniched temperatures
 				foreach (IEnrichmentFunction enrichment in element.Nodes[n].EnrichmentFuncs.Keys)
 				{
 					double psiVertex = enrichment.EvaluateAt(point);
 					double psiNode = element.Nodes[n].EnrichmentFuncs[enrichment];
-					sum += point.ShapeFunctions[n] * (psiVertex - psiNode) * nodalTemperatures[idx++];
+					sum += point.ShapeFunctions[n] * (psiVertex - psiNode) * Tn[idx++];
 				}
 			}
 			return sum;

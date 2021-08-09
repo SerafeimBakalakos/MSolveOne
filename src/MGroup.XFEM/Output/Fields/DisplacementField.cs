@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using MGroup.LinearAlgebra.Distributed;
-using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Mesh;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Elements;
@@ -36,7 +34,7 @@ namespace MGroup.XFEM.Output.Fields
 			this.outMesh = outMesh;
 		}
 
-		public Dictionary<int, double[]> CalcValuesAtVertices(IGlobalVector systemSolution)
+		public Dictionary<int, double[]> CalcValuesAtVertices(IGlobalVector solution)
 		{
 			var outDisplacements = new Dictionary<int, double[]>();
 			foreach (IXFiniteElement element in model.Elements.Values)
@@ -49,7 +47,8 @@ namespace MGroup.XFEM.Output.Fields
 					//      calculate the displacement at their vertices and then let ParaView interpolate that (inaccurately).
 					//      However some enrichments (step, ridge) do not produce blending elements (although in code, there will
 					//      be elements where only some nodes are enriched). Thus the user should choose for now.
-					IList<double[]> elementDisplacements = ExtractElementDisplacementsStandard(element, systemSolution);
+					IList<double[]> elementDisplacements = Utilities.ElementVectorToNodalVectors(element,
+						algebraicModel.ExtractElementVector(solution, element));
 					Debug.Assert(outMesh.GetOutCellsForOriginal(element).Count() == 1);
 					VtkCell outCell = outMesh.GetOutCellsForOriginal(element).First();
 					for (int n = 0; n < element.Nodes.Count; ++n)
@@ -59,8 +58,8 @@ namespace MGroup.XFEM.Output.Fields
 				}
 				else
 				{
-					IList<double[]> elementDisplacements = 
-						Utilities.ExtractElementDisplacements(algebraicModel, element, systemSolution);
+					IList<double[]> elementDisplacements = Utilities.ElementVectorToNodalVectors(element, 
+						algebraicModel.ExtractElementVector(solution, element));
 					HashSet<IEnrichmentFunction> elementEnrichments = element.FindEnrichments();
 
 					foreach (ConformingOutputMesh.Subcell subcell in subtriangles)
@@ -95,42 +94,6 @@ namespace MGroup.XFEM.Output.Fields
 				}
 			}
 			return outDisplacements;
-		}
-
-		/// <summary>
-		/// Contrary to <see cref="Utilities.ExtractElementDisplacements(IXFiniteElement, XSubdomain, IVectorView)"/>, 
-		/// this method only finds the nodal temperatures of an element that correspond to standard dofs.
-		/// </summary>
-		/// <param name="element"></param>
-		/// <param name="solution"></param>
-		/// <returns></returns>
-		public IList<double[]> ExtractElementDisplacementsStandard(IXFiniteElement element, IGlobalVector solution)
-		{
-			int dimension = model.Dimension;
-			var dofsPerNode = new IDofType[dimension];
-			dofsPerNode[0] = StructuralDof.TranslationX;
-			if (dimension >= 2) dofsPerNode[1] = StructuralDof.TranslationY;
-			if (dimension == 3) dofsPerNode[2] = StructuralDof.TranslationZ;
-
-			var elementDisplacements = new List<double[]>(element.Nodes.Count);
-			for (int n = 0; n < element.Nodes.Count; ++n)
-			{
-				XNode node = element.Nodes[n];
-				var displacementsOfNode = new double[dimension];
-				for (int d = 0; d < dimension; ++d)
-				{
-					try
-					{
-						algebraicModel.ExtractSingleValue(solution, node, dofsPerNode[d]);
-					}
-					catch (KeyNotFoundException)
-					{
-						displacementsOfNode[d] = node.Constraints.Find(con => con.DOF == dofsPerNode[d]).Amount;
-					}
-				}
-				elementDisplacements.Add(displacementsOfNode);
-			}
-			return elementDisplacements;
 		}
 
 		//TODO: perhaps this can be in an element class

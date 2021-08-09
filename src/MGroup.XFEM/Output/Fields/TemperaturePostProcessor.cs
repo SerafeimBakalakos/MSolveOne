@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Distributed;
-using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Meshes.Structured;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Elements;
@@ -37,9 +36,9 @@ namespace MGroup.XFEM.Output.Fields
 			foreach (double[] cartesianPoint in cartesianPoints)
 			{
 				(int elementID, double[] naturalCoords) = FindElementContaining(cartesianPoint);
-				IXMultiphaseElement element = model.Elements[elementID]; 
+				IXMultiphaseElement element = model.Elements[elementID];
 
-				double[] nodalTemperatures = Utilities.ExtractNodalTemperatures(algebraicModel, element, solution);
+				IList<double[]> nodalTemperatures = Utilities.ExtractNodalTemperatures(algebraicModel, element, solution);
 				var point = new XPoint(naturalCoords.Length);
 				point.Element = element;
 				point.Coordinates[CoordinateSystem.ElementNatural] = naturalCoords;
@@ -50,21 +49,23 @@ namespace MGroup.XFEM.Output.Fields
 			return results;
 		}
 
-		public static double CalcTemperatureAt(XPoint point, IXFiniteElement element, double[] nodalTemperatures)
+		public static double CalcTemperatureAt(XPoint point, IXFiniteElement element, IList<double[]> nodalTemperatures)
 		{
 			double sum = 0.0;
-			int idx = 0;
 			for (int n = 0; n < element.Nodes.Count; ++n)
 			{
+				double[] Tn = nodalTemperatures[n];
+				int idx = 0;
+
 				// Standard temperatures
-				sum += point.ShapeFunctions[n] * nodalTemperatures[idx++];
+				sum += point.ShapeFunctions[n] * Tn[idx++];
 
 				// Eniched temperatures
 				foreach (IEnrichmentFunction enrichment in element.Nodes[n].EnrichmentFuncs.Keys)
 				{
 					double psiVertex = enrichment.EvaluateAt(point);
 					double psiNode = element.Nodes[n].EnrichmentFuncs[enrichment];
-					sum += point.ShapeFunctions[n] * (psiVertex - psiNode) * nodalTemperatures[idx++];
+					sum += point.ShapeFunctions[n] * (psiVertex - psiNode) * Tn[idx++];
 				}
 			}
 			return sum;

@@ -47,8 +47,8 @@ namespace MGroup.XFEM.Output.Fields
 			var outStressTensors = new Dictionary<int, double[]>();
 			foreach (IXStructuralMultiphaseElement element in subdomain.Elements)
 			{
-				IList<double[]> elementDisplacements =
-						Utilities.ExtractElementDisplacements(algebraicModel, element, solution);
+				IList<double[]> elementDisplacements = Utilities.ElementVectorToNodalVectors(element,
+						algebraicModel.ExtractElementVector(solution, element));
 				HashSet<IEnrichmentFunction> elementEnrichments = element.FindEnrichments();
 
 				IEnumerable<ConformingOutputMesh.Subcell> subtriangles = outMesh.GetSubcellsForOriginal(element);

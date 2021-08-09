@@ -213,6 +213,48 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			return globalResults;
 		}
 
+		public double[] ExtractNodalValues(IGlobalVector vector, INode node, IDofType[] dofs)
+		{
+			if (!(environment is SequentialSharedEnvironment) && !(environment is TplSharedEnvironment))
+			{
+				throw new NotImplementedException("We need to locate the correct subdomain first");
+			}
+			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
+			if (node.Subdomains.Count == 1) // Internal nodes are straightforward
+			{
+				int s = node.Subdomains.First();
+				ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[s];
+				var result = new double[dofs.Length];
+				for (int i = 0; i < dofs.Length; ++i)
+				{
+					int dofID = model.AllDofs.GetIdOfDof(dofs[i]);
+					bool dofExists = subdomainDofs.FreeDofs.TryGetValue(node.ID, dofID, out int dofIdx);
+					if (dofExists)
+					{
+						result[i] = distributedVector.LocalVectors[s][dofIdx];
+					}
+					else
+					{
+						Constraint constraint = node.Constraints.Find(con => con.DOF == dofs[i]);
+						if (constraint != null)
+						{
+							result[i] = constraint.Amount;
+						}
+						else
+						{
+							throw new KeyNotFoundException(
+								$"The requested {dofs[i]} is neither a free nor a constrained dof of node node {node.ID}.");
+						}
+					}
+				}
+				return result;
+			}
+			else // Boundary nodes are tricky
+			{
+				throw new NotImplementedException();
+			}
+		}
+
 		public double ExtractSingleValue(IGlobalVector vector, INode node, IDofType dof) //TODO: Dedicated classes to extract values.
 		{
 			if (!(environment is SequentialSharedEnvironment) && !(environment is TplSharedEnvironment))

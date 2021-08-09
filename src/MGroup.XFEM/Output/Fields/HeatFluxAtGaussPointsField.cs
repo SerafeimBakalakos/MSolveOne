@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using MGroup.MSolve.Discretization.Dofs;
-using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Enrichment;
 using MGroup.XFEM.Entities;
@@ -43,7 +40,7 @@ namespace MGroup.XFEM.Output.Fields
 
 				(IReadOnlyList<GaussPoint> gaussPoints, IReadOnlyList<ThermalMaterial> materials)
 					= element.GetMaterialsForBulkIntegration();
-				double[] nodalTemperatures = Utilities.ExtractNodalTemperatures(algebraicModel, element, solution);
+				IList<double[]> nodalTemperatures = Utilities.ExtractNodalTemperatures(algebraicModel, element, solution);
 				for (int i = 0; i < gaussPoints.Count; ++i)
 				{
 					GaussPoint pointNatural = gaussPoints[i];
@@ -70,18 +67,20 @@ namespace MGroup.XFEM.Output.Fields
 		}
 
 		public static double[] CalcTemperatureGradientAt(XPoint point, EvalInterpolation evalInterpolation,
-			IXFiniteElement element, double[] nodalTemperatures)
+			IXFiniteElement element, IList<double[]> nodalTemperatures)
 		{
 			int dimension = evalInterpolation.ShapeGradientsCartesian.NumColumns;
 			var gradient = new double[dimension];
-			int idx = 0;
 			for (int n = 0; n < element.Nodes.Count; ++n)
 			{
+				double[] Tn = nodalTemperatures[n];
+				int idx = 0;
+
 				// Standard temperatures
-				double stdTi = nodalTemperatures[idx++];
+				double stdTn = Tn[idx++];
 				for (int i = 0; i < dimension; ++i)
 				{
-					gradient[i] += evalInterpolation.ShapeGradientsCartesian[n, i] * stdTi;
+					gradient[i] += evalInterpolation.ShapeGradientsCartesian[n, i] * stdTn;
 				}
 
 				// Eniched temperatures
@@ -89,11 +88,11 @@ namespace MGroup.XFEM.Output.Fields
 				{
 					double psiVertex = enrichment.EvaluateAt(point);
 					double psiNode = element.Nodes[n].EnrichmentFuncs[enrichment];
-					double enrTij = nodalTemperatures[idx++];
+					double enrTne = Tn[idx++];
 
 					for (int i = 0; i < dimension; ++i)
 					{
-						gradient[i] += evalInterpolation.ShapeGradientsCartesian[n, i] * (psiVertex - psiNode) * enrTij;
+						gradient[i] += evalInterpolation.ShapeGradientsCartesian[n, i] * (psiVertex - psiNode) * enrTne;
 					}
 				}
 			}

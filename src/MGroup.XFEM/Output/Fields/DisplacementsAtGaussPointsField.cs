@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using MGroup.MSolve.Discretization.Dofs;
 using MGroup.XFEM.Integration;
-using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Geometry.Primitives;
@@ -31,7 +29,8 @@ namespace MGroup.XFEM.Output.Fields
 			foreach (IXMultiphaseElement element in model.Elements.Values)
 			{
 				IEnumerable<GaussPoint> gaussPoints = element.BulkIntegrationPoints;
-				IList<double[]> elementDisplacements = Utilities.ExtractElementDisplacements(algebraicModel, element, solution);
+				IList<double[]> elementDisplacements = Utilities.ElementVectorToNodalVectors(element,
+						algebraicModel.ExtractElementVector(solution, element));
 				foreach (GaussPoint pointNatural in gaussPoints)
 				{
 					var point = new XPoint(pointNatural.Coordinates.Length);

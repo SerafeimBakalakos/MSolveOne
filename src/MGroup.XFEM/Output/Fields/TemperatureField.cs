@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using MGroup.MSolve.Discretization.Dofs;
-using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Enrichment;
 using MGroup.XFEM.Entities;
@@ -38,17 +36,17 @@ namespace MGroup.XFEM.Output.Fields
 				IEnumerable<ConformingOutputMesh.Subcell> subtriangles = outMesh.GetSubcellsForOriginal(element);
 				if (subtriangles.Count() == 0)
 				{
-					double[] nodalTemperatures = ExtractNodalTemperaturesStandard(element, systemSolution);
+					IList<double[]> nodalTemperatures = Utilities.ExtractNodalTemperatures(algebraicModel, element, systemSolution);
 					Debug.Assert(outMesh.GetOutCellsForOriginal(element).Count() == 1);
 					VtkCell outCell = outMesh.GetOutCellsForOriginal(element).First();
 					for (int n = 0; n < element.Nodes.Count; ++n)
 					{
-						outTemperatures[outCell.Vertices[n].ID] = nodalTemperatures[n];
+						outTemperatures[outCell.Vertices[n].ID] = nodalTemperatures[n][0]; // ignore enriched dofs in blending elements
 					}
 				}
 				else
 				{
-					double[] nodalTemperatures = Utilities.ExtractNodalTemperatures(algebraicModel, element, systemSolution);
+					IList<double[]> nodalTemperatures = Utilities.ExtractNodalTemperatures(algebraicModel, element, systemSolution);
 					foreach (ConformingOutputMesh.Subcell subcell in subtriangles)
 					{
 						Debug.Assert(subcell.OutVertices.Count == 3 || subcell.OutVertices.Count == 4); //TODO: Not sure what happens for 2nd order elements
@@ -69,7 +67,7 @@ namespace MGroup.XFEM.Output.Fields
 		}
 
 		private double[] CalcTemperatureFieldInSubtriangle(IXFiniteElement element, IElementSubcell subcell,
-			double[] nodalTemperatures)
+			IList<double[]> nodalTemperatures)
 		{
 			// Evaluate shape functions
 			var shapeFunctionsAtVertices = new List<double[]>(subcell.VerticesNatural.Count);
@@ -103,51 +101,25 @@ namespace MGroup.XFEM.Output.Fields
 			{
 				double[] N = shapeFunctionsAtVertices[v];
 				double sum = 0.0;
-				int idx = 0;
 				for (int n = 0; n < element.Nodes.Count; ++n)
 				{
+					double[] Tn = nodalTemperatures[n];
+					int idx = 0;
+
 					// Standard temperatures
-					sum += N[n] * nodalTemperatures[idx++];
+					sum += N[n] * Tn[idx++];
 
 					// Eniched temperatures
 					foreach (IEnrichmentFunction enrichment in element.Nodes[n].EnrichmentFuncs.Keys)
 					{
 						double psiVertex = enrichmentValues[enrichment];
 						double psiNode = element.Nodes[n].EnrichmentFuncs[enrichment];
-						sum += N[n] * (psiVertex - psiNode) * nodalTemperatures[idx++];
+						sum += N[n] * (psiVertex - psiNode) * Tn[idx++];
 					}
 				}
 				temperaturesAtVertices[v] = sum;
 			}
 			return temperaturesAtVertices;
-		}
-
-		/// <summary>
-		/// Contrary to <see cref="Utilities.ExtractNodalTemperatures(IXFiniteElement, XSubdomain, IVectorView)"/>, this method only
-		/// finds the nodal temperatures of an element that correspond to standard dofs.
-		/// </summary>
-		/// <param name="element"></param>
-		/// <param name="subdomain"></param>
-		/// <param name="solution"></param>
-		/// <returns></returns>
-		public double[] ExtractNodalTemperaturesStandard(IXFiniteElement element, IGlobalVector solution)
-		{
-			//TODO: Could this be done using FreeDofOrdering.ExtractVectorElementFromSubdomain(...)? What about enriched dofs?
-			var nodalTemperatures = new double[element.Nodes.Count];
-			for (int n = 0; n < element.Nodes.Count; ++n)
-			{
-				XNode node = element.Nodes[n];
-				IDofType dof = ThermalDof.Temperature;
-				try
-				{
-					nodalTemperatures[n] = algebraicModel.ExtractSingleValue(solution, node, dof);
-				}
-				catch (KeyNotFoundException)
-				{
-					nodalTemperatures[n] = node.Constraints.Find(con => con.DOF == dof).Amount;
-				}
-			}
-			return nodalTemperatures;
 		}
 	}
 }

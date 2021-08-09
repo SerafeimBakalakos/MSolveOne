@@ -143,6 +143,36 @@ namespace MGroup.Solvers.AlgebraicModel
 			return subdomainDofs.ExtractVectorElementFromSubdomain(element, globalVector.SingleVector);
 		}
 
+		public double[] ExtractNodalValues(IGlobalVector vector, INode node, IDofType[] dofs)
+		{
+			GlobalVector globalVector = CheckCompatibleVector(vector);
+			ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrdering;
+			var result = new double[dofs.Length];
+			for (int i = 0; i < dofs.Length; ++i)
+			{
+				int dofID = model.AllDofs.GetIdOfDof(dofs[i]);
+				bool dofExists = subdomainDofs.FreeDofs.TryGetValue(node.ID, dofID, out int dofIdx);
+				if (dofExists)
+				{
+					result[i] = globalVector.SingleVector[dofIdx];
+				}
+				else
+				{
+					Constraint constraint = node.Constraints.Find(con => con.DOF == dofs[i]);
+					if (constraint != null)
+					{
+						result[i] = constraint.Amount;
+					}
+					else
+					{
+						throw new KeyNotFoundException(
+							$"The requested {dofs[i]} is neither a free nor a constrained dof of node node {node.ID}.");
+					}
+				}
+			}
+			return result;
+		}
+
 		public double ExtractSingleValue(IGlobalVector vector, INode node, IDofType dof)
 		{
 			GlobalVector globalVector = CheckCompatibleVector(vector);

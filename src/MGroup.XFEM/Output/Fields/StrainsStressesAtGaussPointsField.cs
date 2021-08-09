@@ -34,7 +34,8 @@ namespace MGroup.XFEM.Output.Fields
 			var allStresses = new Dictionary<double[], double[]>();
 			foreach (IXStructuralMultiphaseElement element in model.Elements.Values)
 			{
-				IList<double[]> elementDisplacements = Utilities.ExtractElementDisplacements(algebraicModel, element, solution);
+				IList<double[]> elementDisplacements = Utilities.ElementVectorToNodalVectors(element,
+						algebraicModel.ExtractElementVector(solution, element));
 				HashSet<IEnrichmentFunction> elementEnrichments = element.FindEnrichments();
 				foreach (GaussPoint gp in element.BulkIntegrationPoints)
 				{

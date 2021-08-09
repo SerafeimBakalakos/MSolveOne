@@ -5,6 +5,7 @@ using System.Text;
 using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization.Dofs;
+using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
@@ -56,53 +57,27 @@ namespace MGroup.XFEM.Output.Fields
 			return bulkSizes;
 		}
 
-		internal static IList<double[]> ExtractElementDisplacements(IAlgebraicModel algebraicModel, IXFiniteElement element, 
-			IGlobalVector solution)
+		internal static IList<double[]> ElementVectorToNodalVectors(IXFiniteElement element, double[] elementVector)
 		{
-			var nodalDisplacements = new List<double[]>(element.Nodes.Count);
+			var nodalVectors = new List<double[]>(element.Nodes.Count);
 			IReadOnlyList<IReadOnlyList<IDofType>> nodalDofs = element.GetElementDofTypes(element);
+			int offset = 0;
 			for (int n = 0; n < element.Nodes.Count; ++n)
 			{
-				XNode node = element.Nodes[n];
-				double[] displacementsOfNode = new double[nodalDofs[n].Count];
-				for (int i = 0; i < displacementsOfNode.Length; ++i)
-				{
-					IDofType dof = nodalDofs[n][i];
-					try //TODO: This should be a feature offered by IAlgebraicModel: find displacements/etc of a node for a list of dofs
-					{
-						displacementsOfNode[i] = algebraicModel.ExtractSingleValue(solution, node, dof);
-					}
-					catch (KeyNotFoundException)
-					{
-						displacementsOfNode[i] = node.Constraints.Find(con => con.DOF == dof).Amount;
-					}
-				}
-				nodalDisplacements.Add(displacementsOfNode);
+				var nodalVector = new double[nodalDofs[n].Count];
+				Array.Copy(elementVector, offset, nodalVector, 0, nodalVector.Length);
+				offset += nodalVector.Length;
+				nodalVectors.Add(nodalVector);
 			}
-			return nodalDisplacements.ToArray();
+			return nodalVectors;
 		}
 
-		internal static double[] ExtractNodalTemperatures(IAlgebraicModel algebraicModel, IXFiniteElement element, 
+		internal static IList<double[]> ExtractNodalTemperatures(IAlgebraicModel algebraicModel, IXFiniteElement element, 
 			IGlobalVector solution)
 		{
-			var nodalTemperatures = new List<double>(element.Nodes.Count);
-			IReadOnlyList<IReadOnlyList<IDofType>> nodalDofs = element.GetElementDofTypes(element);
-			for (int n = 0; n < element.Nodes.Count; ++n)
-			{
-				XNode node = element.Nodes[n];
-				foreach (IDofType dof in nodalDofs[n])
-				{
-					try //TODO: This should be a feature offered by IAlgebraicModel: find displacements/etc of a node for a list of dofs
-					{
-						nodalTemperatures.Add(algebraicModel.ExtractSingleValue(solution, node, dof));
-					}
-					catch (KeyNotFoundException)
-					{
-						nodalTemperatures.Add(node.Constraints.Find(con => con.DOF == dof).Amount);
-					}
-				}
-			}
-			return nodalTemperatures.ToArray();
+			double[] elementVector = algebraicModel.ExtractElementVector(solution, element);
+			DirichletElementLoad.ApplyBoundaryConditions(element, elementVector);
+			return Utilities.ElementVectorToNodalVectors(element, elementVector);
 		}
 
 		internal static double[] TransformNaturalToCartesian(double[] shapeFunctionsAtPoint, IReadOnlyList<XNode> nodes)

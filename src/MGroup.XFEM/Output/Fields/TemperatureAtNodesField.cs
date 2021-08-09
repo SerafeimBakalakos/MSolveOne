@@ -25,17 +25,11 @@ namespace MGroup.XFEM.Output.Fields
 		public Dictionary<double[], double> CalcValuesAtVertices(IGlobalVector solution)
 		{
 			var result = new Dictionary<double[], double>();
+			IDofType[] dofsPerNode = { ThermalDof.Temperature };
 			foreach (XNode node in model.Nodes.Values)
 			{
-				IDofType dof = ThermalDof.Temperature;
-				try //TODO: This should be a feature offered by IAlgebraicModel: find displacements/etc of a node for a list of dofs
-				{
-					result[node.Coordinates] = algebraicModel.ExtractSingleValue(solution, node, dof);
-				}
-				catch (KeyNotFoundException)
-				{
-					result[node.Coordinates] = node.Constraints.Find(con => con.DOF == dof).Amount;
-				}
+				double[] nodalValues = algebraicModel.ExtractNodalValues(solution, node, dofsPerNode);
+				result[node.Coordinates] = nodalValues[0];
 			}
 			return result;
 		}

@@ -39,20 +39,7 @@ namespace MGroup.XFEM.Output.Fields
 			var result = new Dictionary<double[], double[]>();
 			foreach (XNode node in model.Nodes.Values)
 			{
-				double[] displacementsOfNode = new double[dofsPerNode.Length];
-				for (int i = 0; i < dofsPerNode.Length; ++i)
-				{
-					IDofType dof = dofsPerNode[i];
-					try //TODO: This should be a feature offered by IAlgebraicModel: find displacements/etc of a node for a list of dofs
-					{
-						displacementsOfNode[i] = algebraicModel.ExtractSingleValue(solution, node, dof);
-					}
-					catch (KeyNotFoundException)
-					{
-						displacementsOfNode[i] = node.Constraints.Find(con => con.DOF == dof).Amount;
-					}
-				}
-				result[node.Coordinates] = displacementsOfNode;
+				result[node.Coordinates] = algebraicModel.ExtractNodalValues(solution, node, dofsPerNode);
 			}
 			return result;
 		}
