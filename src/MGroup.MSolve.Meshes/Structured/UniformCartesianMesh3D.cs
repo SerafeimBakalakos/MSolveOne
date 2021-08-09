@@ -23,7 +23,7 @@ namespace MGroup.MSolve.Meshes.Structured
             int axisMajor, int axisMedium, int axisMinor, int[] elementNodeOrderPermutation, int firstNodeID, int firstElementID)
         {
             this.MinCoordinates = minCoordinates;
-            this.MaxCoordinates = MaxCoordinates;
+            this.MaxCoordinates = maxCoordinates;
             this.NumElements = numElements;
 
             NumNodes = new int[dim];

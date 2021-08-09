@@ -38,12 +38,13 @@ namespace MGroup.XFEM.Output.Fields
 			this.outMesh = outMesh;
 		}
 
-		public (IEnumerable<double[]> strains, IEnumerable<double[]> stresses) CalcTensorsAtVertices(IGlobalVector solution)
+		public (Dictionary<int, double[]> strains, Dictionary<int, double[]> stresses) CalcTensorsAtVertices(IGlobalVector solution)
 		{
 			if (model.Subdomains.Count != 1) throw new NotImplementedException();
 			XSubdomain subdomain = model.Subdomains.First().Value;
 
-			var outTensors = new Dictionary<VtkPoint, (double[] strains, double[] stresses)>();
+			var outStrainTensors = new Dictionary<int, double[]>();
+			var outStressTensors = new Dictionary<int, double[]>();
 			foreach (IXStructuralMultiphaseElement element in subdomain.Elements)
 			{
 				IList<double[]> elementDisplacements =
@@ -67,7 +68,8 @@ namespace MGroup.XFEM.Output.Fields
 						(double[] strains, double[] stresses) tensors = CalcStrainsStressesAt(
 								point, element, elementDisplacements, elementEnrichments); //TODO: optimizations are possible for nodes
 						VtkPoint vertexOut = outCell.Vertices[n];
-						outTensors[vertexOut] = tensors;
+						outStrainTensors[vertexOut.ID] = tensors.strains;
+						outStressTensors[vertexOut.ID] = tensors.stresses;
 					}
 				}
 				else
@@ -99,12 +101,13 @@ namespace MGroup.XFEM.Output.Fields
 							(double[] strains, double[] stresses) tensors = CalcStrainsStressesAt(
 								point, element, elementDisplacements, elementEnrichments);
 							VtkPoint vertexOut = subcell.OutVertices[v];
-							outTensors[vertexOut] = tensors;
+							outStrainTensors[vertexOut.ID] = tensors.strains;
+							outStressTensors[vertexOut.ID] = tensors.stresses;
 						}
 					}
 				}
 			}
-			return (outMesh.OutVertices.Select(v => outTensors[v].strains), outMesh.OutVertices.Select(v => outTensors[v].stresses));
+			return (outStrainTensors, outStressTensors);
 		}
 
 

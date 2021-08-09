@@ -9,27 +9,25 @@ namespace MGroup.XFEM.Output.Mesh
     public class ContinuousOutputMesh : IOutputMesh
     {
         private readonly List<VtkCell> outCells;
-        private readonly List<VtkPoint> outVertices;
+        private readonly SortedDictionary<int, VtkPoint> outVertices;
 
         public ContinuousOutputMesh(IEnumerable<XNode> originalVertices, IEnumerable<IXFiniteElement> originalCells)
         {
             this.OriginalVertices = originalVertices;
             this.OriginalCells = originalCells;
 
-            var original2OutVertices = new Dictionary<XNode, VtkPoint>();
 
-            this.outVertices = new List<VtkPoint>();
+            this.outVertices = new SortedDictionary<int, VtkPoint>();
             foreach (XNode vertex in originalVertices)
             {
                 var outVertex = new VtkPoint(vertex.ID, vertex.Coordinates);
-                outVertices.Add(outVertex);
-                original2OutVertices[vertex] = outVertex;
+                outVertices[vertex.ID] = outVertex;
             }
 
             this.outCells = new List<VtkCell>();
             foreach (IXFiniteElement cell in originalCells)
             {
-                List<VtkPoint> vertices = cell.Nodes.Select(v => original2OutVertices[v]).ToList();
+                List<VtkPoint> vertices = cell.Nodes.Select(v => outVertices[v.ID]).ToList();
                 outCells.Add(new VtkCell(cell.CellType, vertices));
             }
         }
@@ -50,6 +48,6 @@ namespace MGroup.XFEM.Output.Mesh
         /// <summary>
         /// Same order as the corresponding one in <see cref="OriginalVertices"/>.
         /// </summary>
-        public IEnumerable<VtkPoint> OutVertices => outVertices;
+        public SortedDictionary<int, VtkPoint> OutVertices => outVertices;
     }
 }

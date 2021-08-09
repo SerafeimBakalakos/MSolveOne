@@ -29,9 +29,9 @@ namespace MGroup.XFEM.Output.Fields
 			this.outMesh = outMesh;
 		}
 
-		public IEnumerable<double> CalcValuesAtVertices(IGlobalVector systemSolution)
+		public Dictionary<int, double> CalcValuesAtVertices(IGlobalVector systemSolution)
 		{
-			var outTemperatures = new Dictionary<VtkPoint, double>();
+			var outTemperatures = new Dictionary<int, double>();
 			foreach (IXFiniteElement element in model.Elements.Values)
 			{
 
@@ -41,7 +41,10 @@ namespace MGroup.XFEM.Output.Fields
 					double[] nodalTemperatures = ExtractNodalTemperaturesStandard(element, systemSolution);
 					Debug.Assert(outMesh.GetOutCellsForOriginal(element).Count() == 1);
 					VtkCell outCell = outMesh.GetOutCellsForOriginal(element).First();
-					for (int n = 0; n < element.Nodes.Count; ++n) outTemperatures[outCell.Vertices[n]] = nodalTemperatures[n];
+					for (int n = 0; n < element.Nodes.Count; ++n)
+					{
+						outTemperatures[outCell.Vertices[n].ID] = nodalTemperatures[n];
+					}
 				}
 				else
 				{
@@ -57,12 +60,12 @@ namespace MGroup.XFEM.Output.Fields
 						for (int v = 0; v < subcell.OutVertices.Count; ++v)
 						{
 							VtkPoint vertexOut = subcell.OutVertices[v];
-							outTemperatures[vertexOut] = temperatureAtVertices[v];
+							outTemperatures[vertexOut.ID] = temperatureAtVertices[v];
 						}
 					}
 				}
 			}
-			return outMesh.OutVertices.Select(v => outTemperatures[v]);
+			return outTemperatures;
 		}
 
 		private double[] CalcTemperatureFieldInSubtriangle(IXFiniteElement element, IElementSubcell subcell,

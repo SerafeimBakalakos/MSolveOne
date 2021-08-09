@@ -36,9 +36,9 @@ namespace MGroup.XFEM.Output.Fields
 			this.outMesh = outMesh;
 		}
 
-		public IEnumerable<double[]> CalcValuesAtVertices(IGlobalVector systemSolution)
+		public Dictionary<int, double[]> CalcValuesAtVertices(IGlobalVector systemSolution)
 		{
-			var outDisplacements = new Dictionary<VtkPoint, double[]>();
+			var outDisplacements = new Dictionary<int, double[]>();
 			foreach (IXFiniteElement element in model.Elements.Values)
 			{
 				IEnumerable<ConformingOutputMesh.Subcell> subtriangles = outMesh.GetSubcellsForOriginal(element);
@@ -54,7 +54,7 @@ namespace MGroup.XFEM.Output.Fields
 					VtkCell outCell = outMesh.GetOutCellsForOriginal(element).First();
 					for (int n = 0; n < element.Nodes.Count; ++n)
 					{
-						outDisplacements[outCell.Vertices[n]] = elementDisplacements[n];
+						outDisplacements[outCell.Vertices[n].ID] = elementDisplacements[n];
 					}
 				}
 				else
@@ -89,12 +89,12 @@ namespace MGroup.XFEM.Output.Fields
 							double[] u = CalcDisplacementsAtPoint(
 								vertexOffset, element, elementDisplacements, elementEnrichments);
 							VtkPoint vertexOut = subcell.OutVertices[v];
-							outDisplacements[vertexOut] = u;
+							outDisplacements[vertexOut.ID] = u;
 						}
 					}
 				}
 			}
-			return outMesh.OutVertices.Select(v => outDisplacements[v]);
+			return outDisplacements;
 		}
 
 		/// <summary>

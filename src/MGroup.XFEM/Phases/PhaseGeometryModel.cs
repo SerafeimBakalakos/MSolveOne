@@ -42,14 +42,14 @@ namespace MGroup.XFEM.Phases
 
 		public void InitializeGeometry()
 		{
-			//calcPhasesNodesInteractions = true;
+			calcPhasesNodesInteractions = true;
 
-			//foreach (IPhaseBoundary boundary in PhaseBoundaries.Values)
-			//{
-			//    boundary.InitializeGeometry();
-			//}
+			foreach (IPhaseBoundary boundary in PhaseBoundaries.Values)
+			{
+				boundary.InitializeGeometry();
+			}
 
-			//if (MergeOverlappingPhases) MergePhases();
+			if (MergeOverlappingPhases) MergePhases();
 
 
 			foreach (IPhaseGeometryObserver observer in GeometryObservers)

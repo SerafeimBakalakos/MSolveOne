@@ -13,7 +13,7 @@ namespace MGroup.XFEM.Output.Mesh
     {
         public LsmIntersectionSegmentsMesh(IEnumerable<IElementDiscontinuityInteraction> intersections)
         {
-            var vertices = new List<VtkPoint>();
+            var vertices = new SortedDictionary<int, VtkPoint>();
             this.ParentElementIDsOfVertices = new List<double>();
             this.ParentGeometryIDsOfVertices = new List<double>();
             var cells = new List<VtkCell>();
@@ -28,7 +28,7 @@ namespace MGroup.XFEM.Output.Mesh
                 {
                     double[] point = intersectionPoints[v];
                     var vertex = new VtkPoint(vertexID++, point);
-                    vertices.Add(vertex);
+                    vertices[vertex.ID] = vertex;
                     verticesOfIntersection.Add(vertex);
                     ParentElementIDsOfVertices.Add(intersection.Element.ID);
                     ParentGeometryIDsOfVertices.Add(intersection.ParentGeometryID);
@@ -58,7 +58,7 @@ namespace MGroup.XFEM.Output.Mesh
 
         public IEnumerable<VtkCell> OutCells { get; }
 
-        public IEnumerable<VtkPoint> OutVertices { get; }
+        public SortedDictionary<int, VtkPoint> OutVertices { get; }
 
         public List<double> ParentElementIDsOfVertices { get; }
 

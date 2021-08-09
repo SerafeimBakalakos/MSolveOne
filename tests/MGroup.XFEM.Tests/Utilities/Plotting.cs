@@ -46,13 +46,15 @@ namespace MGroup.XFEM.Tests.Utilities
 				writer.WriteMesh(conformingMesh);
 
 				var displacementField = new DisplacementField(model, algebraicModel, conformingMesh);
-				writer.WriteVector2DField("displacements", conformingMesh, displacementField.CalcValuesAtVertices(solution));
+				Dictionary<int, double[]> nodalDisplacements = displacementField.CalcValuesAtVertices(solution);
+				writer.WriteVector2DField("displacements", conformingMesh, v => nodalDisplacements[v.ID]);
 
 				var strainStressField = new StrainStressField(model, algebraicModel, conformingMesh);
-				(IEnumerable<double[]> strains, IEnumerable<double[]> stresses) = strainStressField.CalcTensorsAtVertices(solution);
+				(Dictionary<int, double[]> strains, Dictionary<int, double[]> stresses) 
+					= strainStressField.CalcTensorsAtVertices(solution);
 
-				writer.WriteTensor2DField("strain", conformingMesh, strains);
-				writer.WriteTensor2DField("stress", conformingMesh, stresses);
+				writer.WriteTensor2DField("strain", conformingMesh, v => strains[v.ID]);
+				writer.WriteTensor2DField("stress", conformingMesh, v => stresses[v.ID]);
 			}
 		}
 
@@ -79,8 +81,9 @@ namespace MGroup.XFEM.Tests.Utilities
 			using (var writer = new VtkFileWriter(pathTemperatureField))
 			{
 				var temperatureField = new TemperatureField(model, algebraicModel, conformingMesh);
+				Dictionary<int, double> nodalTemperatures = temperatureField.CalcValuesAtVertices(solution);
 				writer.WriteMesh(conformingMesh);
-				writer.WriteScalarField("temperature", conformingMesh, temperatureField.CalcValuesAtVertices(solution));
+				writer.WriteScalarField("temperature", conformingMesh, v => nodalTemperatures[v.ID]);
 			}
 
 			// Heat flux at Gauss Points

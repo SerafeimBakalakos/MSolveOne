@@ -70,10 +70,10 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 			// Create and analyze model, in order to get the solution vector
 			XModel<IXCrackElement> model = CreateModel3x1();
 			model.Initialize();
-			IDofType dofStdX = model.AllDofs.GetDofWithId(0);
-			IDofType dofStdY = model.AllDofs.GetDofWithId(1);
-			IDofType dofStepX = model.AllDofs.GetDofWithId(2);
-			IDofType dofStepY = model.AllDofs.GetDofWithId(3);
+			IDofType dofStdX = StructuralDof.TranslationX;
+			IDofType dofStdY = StructuralDof.TranslationY;
+			IDofType dofStepX = model.Enrichments[0].EnrichedDofs[0];
+			IDofType dofStepY = model.Enrichments[0].EnrichedDofs[1];
 			(IAlgebraicModel algebraicModel, IGlobalVector globalU, IMatrixView globalK) = RunAnalysis(model);
 
 			var computedStdDisplacements = Vector.CreateFromArray(new double[]

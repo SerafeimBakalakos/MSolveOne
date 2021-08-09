@@ -21,9 +21,9 @@ namespace MGroup.XFEM.Tests.MultiphaseThermal
 	public static class UnionHollowBalls2DTests
 	{
 		private static readonly string outputDirectory = Path.Combine(
-			Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName, "Resources", "union_hollow_balls_2D_temp");
+			Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName, "Resources", "union_hollow_balls_2D_temp");
 		private static readonly string expectedDirectory = Path.Combine(
-			Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName, "Resources", "union_hollow_balls_2D");
+			Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName, "Resources", "union_hollow_balls_2D");
 
 		private static readonly double[] minCoords = { -1.0, -1.0 };
 		private static readonly double[] maxCoords = { +1.0, +1.0 };

@@ -22,7 +22,7 @@ namespace MGroup.XFEM.Output.Mesh
         /// <summary>
         /// The order will be always the same.
         /// </summary>
-        IEnumerable<VtkPoint> OutVertices { get; }
+        SortedDictionary<int, VtkPoint> OutVertices { get; }
 
         ///// <summary>
         ///// The order will be always the same.

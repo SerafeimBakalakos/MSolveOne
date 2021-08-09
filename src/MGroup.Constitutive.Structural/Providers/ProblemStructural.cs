@@ -190,11 +190,13 @@ namespace MGroup.Constitutive.Structural
 
 		public void AssignRhs()
 		{//TODO: Remove type casting
-			var femModel = (Model)model;
 			solver.LinearSystem.RhsVector.Clear();
-			algebraicModel.AddToGlobalVector(femModel.EnumerateNodalLoads, solver.LinearSystem.RhsVector);
-			algebraicModel.AddToGlobalVector(femModel.EnumerateElementMassLoads, solver.LinearSystem.RhsVector);
-			algebraicModel.AddToGlobalVector(femModel.EnumerateMassAccelerationLoads, solver.LinearSystem.RhsVector);
+			algebraicModel.AddToGlobalVector(model.EnumerateNodalLoads, solver.LinearSystem.RhsVector);
+			if (model is Model femModel)
+			{
+				algebraicModel.AddToGlobalVector(femModel.EnumerateElementMassLoads, solver.LinearSystem.RhsVector);
+				algebraicModel.AddToGlobalVector(femModel.EnumerateMassAccelerationLoads, solver.LinearSystem.RhsVector);
+			}
 		}
 	}
 }
