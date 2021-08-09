@@ -166,6 +166,7 @@ namespace MGroup.Solvers.AlgebraicModel
 			{
 				observer.HandleDofOrderWasModified();
 			}
+			subdomainMatrixAssembler.HandleDofOrderingWasModified();
 
 			// Define new format and recreate objects using it 
 			Format = Guid.NewGuid();

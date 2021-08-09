@@ -7,22 +7,22 @@ using MGroup.Solvers.DofOrdering;
 //TODO: not sure this interface is required
 namespace MGroup.Solvers.Assemblers
 {
-    /// <summary>
-    /// Builds the matrix of the linear system that will be solved.
-    /// Authors: Serafeim Bakalakos
-    /// </summary>
-    /// <typeparam name="TMatrix">The type of the matrix that will be solved.</typeparam>
-    public interface ISubdomainMatrixAssembler<TMatrix>
-        where TMatrix : class, IMatrix
-    {
-        /// <summary>
-        /// Builds the linear system matrix that corresponds to the free freedom degrees of a subdomain.
-        /// </summary>
-        /// <param name="dofOrdering">The free freedom degree ordering of the subdomain.</param>
-        /// <param name="elements">The (finite) elements of the subdomain.</param>
-        /// <param name="matrixProvider">Determines the matrix calculated for each element (e.g. stiffness, mass, etc.)</param>
-        TMatrix BuildGlobalMatrix(ISubdomainFreeDofOrdering dofOrdering, IEnumerable<IElement> elements,
-            IElementMatrixProvider matrixProvider);
+	/// <summary>
+	/// Builds the matrix of the linear system that will be solved.
+	/// Authors: Serafeim Bakalakos
+	/// </summary>
+	/// <typeparam name="TMatrix">The type of the matrix that will be solved.</typeparam>
+	public interface ISubdomainMatrixAssembler<TMatrix>
+		where TMatrix : class, IMatrix
+	{
+		/// <summary>
+		/// Builds the linear system matrix that corresponds to the free freedom degrees of a subdomain.
+		/// </summary>
+		/// <param name="dofOrdering">The free freedom degree ordering of the subdomain.</param>
+		/// <param name="elements">The (finite) elements of the subdomain.</param>
+		/// <param name="matrixProvider">Determines the matrix calculated for each element (e.g. stiffness, mass, etc.)</param>
+		TMatrix BuildGlobalMatrix(ISubdomainFreeDofOrdering dofOrdering, IEnumerable<IElement> elements,
+			IElementMatrixProvider matrixProvider);
 
 		ISubdomainMatrixAssembler<TMatrix> Clone();
 
@@ -31,7 +31,7 @@ namespace MGroup.Solvers.Assemblers
 		/// will be called after modifying the current freedom degree ordering.
 		/// </summary>
 		void HandleDofOrderingWasModified();
-    }
+	}
 
 	public static class ISubdomainMatrixAssemblerExtensions
 	{
