@@ -7,6 +7,8 @@ using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Meshes.Structured;
+using MGroup.MSolve.Solution;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.Direct;
 using MGroup.XFEM.Analysis;
@@ -26,9 +28,9 @@ using MGroup.XFEM.Integration.Quadratures;
 using MGroup.XFEM.Materials;
 using Xunit;
 
-namespace MGroup.XFEM.Tests.Fracture.Benchmarks
+namespace MGroup.XFEM.Tests.SpecialSolvers
 {
-	public static class DcbBelytschkoBenchmark
+	public static class DcbBenchmark
 	{
 		private static readonly double[] minCoords = new double[] { 0, 0 };
 		private static readonly double[] maxCoords = new double[] { 3 * 3.94, 3.94 }; // in
@@ -47,14 +49,29 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 		private const int maxIterations = 7;
 		private const double fractureToughness = double.MaxValue;
 
+		private static HomogeneousFractureMaterialField2D Material 
+			=> new HomogeneousFractureMaterialField2D(E, v, thickness, planeStress);
+
 		[Fact]
-		public static void TestCrackPropagationPath()
+		public static void Run()
 		{
 			int[] numElements = { 60, 20 };
-			XModel<IXCrackElement> model = CreateModel(numElements);
-			RunAnalysis(model);
+			XModel<IXCrackElement> model = DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
+			CreateGeometryModel(model);
+
+			// Solver
+			var factory = new SkylineSolver.Factory();
+			GlobalAlgebraicModel<SkylineMatrix> algebraicModel = factory.BuildAlgebraicModel(model);
+			var solver = factory.BuildSolver(algebraicModel);
+
+			RunAnalysis(model, algebraicModel, solver);
 			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
 
+			CheckCrackPropagationPath(crack);
+		}
+
+		public static void CheckCrackPropagationPath(ExteriorLsmCrack crack)
+		{
 			// Check propagation path
 			var expectedPath = new List<double[]>();
 			expectedPath.Add(new double[] { 0, 1.97 });
@@ -66,7 +83,7 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 			expectedPath.Add(new double[] { 5.57293125400903, 1.55258374084037 });
 			expectedPath.Add(new double[] { 5.77034730849673, 1.32669239211158 });
 			expectedPath.Add(new double[] { 5.89862696520051, 1.05550181396411 });
-			//expectedPath.Add(new double[] { 5.97090805835735, 0.764339585005661 }); // The model is not analyzed for this propagation step will not be 
+			//expectedPath.Add(new double[] { 5.97090805835735, 0.764339585005661 }); // The model is not analyzed for this propagation step
 
 			Assert.Equal(expectedPath.Count, crack.CrackPath.Count);
 			int precision = 10;
@@ -75,6 +92,67 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 				Assert.Equal(expectedPath[i][0], crack.CrackPath[i][0], precision);
 				Assert.Equal(expectedPath[i][1], crack.CrackPath[i][1], precision);
 			}
+		}
+
+		public static void CreateGeometryModel(XModel<IXCrackElement> model)
+		{
+			// Crack, enrichments
+			var geometryModel = new CrackGeometryModel(model);
+			model.GeometryModel = geometryModel;
+			geometryModel.Enricher = new NodeEnricherIndependentCracks(
+				geometryModel, new RelativeAreaSingularityResolver(heavisideTol), tipEnrichmentArea);
+			var point0 = new double[] { minCoords[0], 0.5 * (maxCoords[1] - minCoords[1]) };
+			var point1 = new double[] { minCoords[0] + a, 0.5 * (maxCoords[1] - minCoords[1]) };
+			var initialGeom = new PolyLine2D(point0, point1);
+			initialGeom.UpdateGeometry(-dTheta, da);
+
+			//TODO: This is probably better, but my expected results are from the next one
+			//var jIntegrationRule = new JintegrationStrategy(
+			//    GaussLegendre2D.GetQuadratureWithOrder(4, 4),
+			//    new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(4, 4)));
+			var jIntegrationRule = new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(4, 4));
+			var propagator = new JintegralPropagator2D(jIntegralRadiusRatio, jIntegrationRule, Material,
+				new MaximumCircumferentialTensileStressCriterion(), new ConstantIncrement2D(growthLength));
+			var crack = new ExteriorLsmCrack(0, initialGeom, model, propagator);
+			geometryModel.Cracks[crack.ID] = crack;
+		}
+
+
+		public static UniformDdmCrackModelBuilder2D DescribePhysicalModel(int[] numElements, 
+			int[] numSubdomains = null, int[] numClusters = null)
+		{
+			if (numSubdomains == null)
+			{
+				numSubdomains = new int[] { 1, 1 };
+				numClusters = new int[] { 1, 1 };
+			}
+
+			var modelBuilder = new UniformDdmCrackModelBuilder2D();
+			modelBuilder.MinCoords = minCoords;
+			modelBuilder.MaxCoords = maxCoords;
+			modelBuilder.Thickness = thickness;
+
+			modelBuilder.NumElementsTotal = numElements;
+			modelBuilder.NumSubdomains = numSubdomains;
+			modelBuilder.NumClusters = numClusters;
+
+			modelBuilder.MaterialField = Material;
+			var enrichedIntegration = new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(2, 2));
+			modelBuilder.BulkIntegration = new CrackElementIntegrationStrategy(
+				enrichedIntegration, enrichedIntegration, enrichedIntegration);
+
+			modelBuilder.PrescribeDisplacement(
+				UniformDdmCrackModelBuilder2D.BoundaryRegion.RightSide, StructuralDof.TranslationX, 0.0); 
+			modelBuilder.PrescribeDisplacement(
+				UniformDdmCrackModelBuilder2D.BoundaryRegion.RightSide, StructuralDof.TranslationY, 0.0);
+			modelBuilder.DistributeLoadAtNodes(
+				UniformDdmCrackModelBuilder2D.BoundaryRegion.UpperLeftCorner, StructuralDof.TranslationY, +load);
+			modelBuilder.DistributeLoadAtNodes(
+				UniformDdmCrackModelBuilder2D.BoundaryRegion.LowerLeftCorner, StructuralDof.TranslationY, -load);
+
+			modelBuilder.FindConformingSubcells = true;
+
+			return modelBuilder;
 		}
 
 		private static void ApplyBoundaryConditions(XModel<IXCrackElement> model)
@@ -94,7 +172,7 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 			}
 		}
 
-		private static XModel<IXCrackElement> CreateModel(int[] numElements)
+		public static XModel<IXCrackElement> CreatePhysicalModel(int[] numElements)
 		{
 			var model = new XModel<IXCrackElement>(2);
 			model.Subdomains[subdomainID] = new XSubdomain(subdomainID);
@@ -112,37 +190,13 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 			Utilities.Models.AddNodesElements(model, mesh, factory);
 
 			ApplyBoundaryConditions(model);
-
-			// Crack, enrichments
-			var geometryModel = new CrackGeometryModel(model);
-			model.GeometryModel = geometryModel;
-			geometryModel.Enricher = new NodeEnricherIndependentCracks(
-				geometryModel, new RelativeAreaSingularityResolver(heavisideTol), tipEnrichmentArea);
-			var point0 = new double[] { minCoords[0], 0.5 * (maxCoords[1] - minCoords[1]) };
-			var point1 = new double[] { minCoords[0] + a, 0.5 * (maxCoords[1] - minCoords[1]) };
-			var initialGeom = new PolyLine2D(point0, point1);
-			initialGeom.UpdateGeometry(-dTheta, da);
-
-			//TODO: This is probably better, but my expected results are from the next one
-			//var jIntegrationRule = new JintegrationStrategy(
-			//    GaussLegendre2D.GetQuadratureWithOrder(4, 4),
-			//    new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(4, 4)));
-			var jIntegrationRule = new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(4, 4));
-			var propagator = new JintegralPropagator2D(jIntegralRadiusRatio, jIntegrationRule, material,
-				new MaximumCircumferentialTensileStressCriterion(), new ConstantIncrement2D(growthLength));
-			var crack = new ExteriorLsmCrack(0, initialGeom, model, propagator);
-			geometryModel.Cracks[crack.ID] = crack;
-
 			return model;
 		}
 
-		private static void RunAnalysis(XModel<IXCrackElement> model)
-		{
-			// Solver
-			var factory = new SkylineSolver.Factory();
-			GlobalAlgebraicModel<SkylineMatrix> algebraicModel = factory.BuildAlgebraicModel(model);
-			var solver = factory.BuildSolver(algebraicModel);
+		
 
+		public static void RunAnalysis(XModel<IXCrackElement> model, IAlgebraicModel algebraicModel, ISolver solver)
+		{
 			var domainBoundary = new RectangularDomainBoundary(minCoords, maxCoords);
 			var termination = new TerminationLogic.Or(
 				new FractureToughnessTermination(fractureToughness), 
@@ -151,5 +205,7 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 
 			analyzer.Analyze();
 		}
+
+		
 	}
 }
