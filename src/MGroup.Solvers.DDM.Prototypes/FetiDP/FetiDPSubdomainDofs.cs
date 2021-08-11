@@ -67,7 +67,7 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 				{
 					int dof = pair.Key;
 					int freeDofIdx = pair.Value;
-					if (cornerDofs.IsCornerDof(node, dof))
+					if (cornerDofs.IsCornerDof(subdomain.ID, node, dof))
 					{
 						cornerDofOrdering[node, dof] = subdomainCornerIdx++;
 						cornerToFree.Add(freeDofIdx);

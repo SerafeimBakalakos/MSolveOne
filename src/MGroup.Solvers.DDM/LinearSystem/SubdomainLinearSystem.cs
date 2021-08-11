@@ -11,32 +11,33 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		where TMatrix : class, IMatrix
 	{
 		private readonly DistributedAlgebraicModel<TMatrix> algebraicModel;
-		private readonly int subdomainID;
 
 		public SubdomainLinearSystem(DistributedAlgebraicModel<TMatrix> algebraicModel, int subdomainID)
 		{
-			this.subdomainID = subdomainID;
+			this.SubdomainID = subdomainID;
 			this.algebraicModel = algebraicModel;
 		}
 
-		public ISubdomainFreeDofOrdering DofOrdering => algebraicModel.SubdomainFreeDofOrderings[subdomainID];
+		public ISubdomainFreeDofOrdering DofOrdering => algebraicModel.SubdomainFreeDofOrderings[SubdomainID];
 
 		IMatrix ISubdomainLinearSystem.Matrix => this.Matrix;
 
 		public TMatrix Matrix
 		{
-			get => algebraicModel.LinearSystem.Matrix.LocalMatrices[subdomainID];
+			get => algebraicModel.LinearSystem.Matrix.LocalMatrices[SubdomainID];
 		}
 
 		public Vector RhsVector 
 		{
-			get => algebraicModel.LinearSystem.RhsVector.LocalVectors[subdomainID];
+			get => algebraicModel.LinearSystem.RhsVector.LocalVectors[SubdomainID];
 		}
 
 		public Vector Solution 
 		{
-			get => algebraicModel.LinearSystem.Solution.LocalVectors[subdomainID];
-			set => algebraicModel.LinearSystem.Solution.LocalVectors[subdomainID] = value;
+			get => algebraicModel.LinearSystem.Solution.LocalVectors[SubdomainID];
+			set => algebraicModel.LinearSystem.Solution.LocalVectors[SubdomainID] = value;
 		}
+
+		public int SubdomainID { get; }
 	}
 }

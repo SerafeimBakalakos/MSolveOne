@@ -16,6 +16,6 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 
 		public void AddCornerNode(int nodeID) => cornerNodes.Add(nodeID);
 
-		public bool IsCornerDof(int nodeID, int dofID) => cornerNodes.Contains(nodeID);
+		public bool IsCornerDof(int subdomainID, int nodeID, int dofID) => cornerNodes.Contains(nodeID);
 	}
 }

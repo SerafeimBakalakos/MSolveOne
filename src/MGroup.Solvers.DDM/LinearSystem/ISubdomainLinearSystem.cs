@@ -16,5 +16,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		Vector RhsVector { get; }
 
 		Vector Solution { get; set; }
+
+		int SubdomainID { get; }
 	}
 }

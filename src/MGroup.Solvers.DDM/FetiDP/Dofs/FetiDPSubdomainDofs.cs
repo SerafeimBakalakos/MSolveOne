@@ -16,6 +16,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 		public FetiDPSubdomainDofs(ISubdomainLinearSystem linearSystem)
 		{
 			this.linearSystem = linearSystem;
+			this.SubdomainID = linearSystem.SubdomainID;
 		}
 
 		public IntDofTable DofOrderingCorner { get; private set; }
@@ -28,7 +29,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 
 		public int[] DofsRemainderToFree { get; private set; }
 
-		public ISubdomain Subdomain { get; }
+		public int SubdomainID { get; }
 
 		public void ReorderRemainderDofs(DofPermutation permutation)
 		{
@@ -52,7 +53,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 				foreach (var dofIdxPair in dofsOfNode)
 				{
 					int dof = dofIdxPair.Key;
-					if (cornerDofSelection.IsCornerDof(node, dof))
+					if (cornerDofSelection.IsCornerDof(SubdomainID, node, dof))
 					{
 						cornerDofOrdering[node, dof] = numCornerDofs++;
 						cornerToFree.Add(dofIdxPair.Value);

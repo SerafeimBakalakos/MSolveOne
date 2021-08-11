@@ -116,32 +116,23 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		public void PrescribeDisplacement(BoundaryRegion region, IDofType dof, double displacement)
 			=> prescribedDisplacements.Add((region, dof, displacement));
 
-		public static ICornerDofSelection FindCornerDofs(IModel model, int minCornerNodeMultiplicity = 2)
+		public static IEnumerable<INode> FindCornerNodes(ISubdomain subdomain, int minCornerNodeMultiplicity = 2)
 		{
-			var cornerNodes = new HashSet<int>();
-			foreach (ISubdomain subdomain in model.EnumerateSubdomains())
+			var cornerNodes = new List<INode>();
+			INode[] subdomainCorners = CornerNodeUtilities.FindCornersOfRectangle2D(subdomain);
+			foreach (INode node in subdomainCorners)
 			{
-				INode[] subdomainCorners = CornerNodeUtilities.FindCornersOfRectangle2D(subdomain);
-				foreach (INode node in subdomainCorners)
+				if (node.Constraints.Count > 0) //TODO: allow only some dofs to be constrained
 				{
-					if (node.Constraints.Count > 0) //TODO: allow only some dofs to be constrained
-					{
-						continue;
-					}
+					continue;
+				}
 
-					if (node.Subdomains.Count >= minCornerNodeMultiplicity)
-					{
-						cornerNodes.Add(node.ID);
-					}
+				if (node.Subdomains.Count >= minCornerNodeMultiplicity)
+				{
+					cornerNodes.Add(node);
 				}
 			}
-
-			var cornerDofs = new UserDefinedCornerDofSelection();
-			foreach (int node in cornerNodes)
-			{
-				cornerDofs.AddCornerNode(node);
-			}
-			return cornerDofs;
+			return cornerNodes;
 		}
 
 		private void ApplyBoundaryConditions(XModel<IXCrackElement> model)

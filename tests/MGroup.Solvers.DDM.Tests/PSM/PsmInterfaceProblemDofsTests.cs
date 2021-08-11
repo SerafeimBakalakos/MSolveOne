@@ -66,7 +66,7 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			var subdomainTopology = new SubdomainTopology(environment, model, s => dofOrderings[s]);
 
 			Dictionary<int, MockSubdomainLinearSystem> linearSystems = environment.CalcNodeData(
-				s => new MockSubdomainLinearSystem(dofOrderings[s]));
+				s => new MockSubdomainLinearSystem(s, dofOrderings[s]));
 			Dictionary<int, PsmSubdomainDofs> subdomainDofs = environment.CalcNodeData(
 				s => new PsmSubdomainDofs(model.GetSubdomain(s), linearSystems[s], true));
 
@@ -78,8 +78,9 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 
 		private class MockSubdomainLinearSystem : ISubdomainLinearSystem
 		{
-			public MockSubdomainLinearSystem(ISubdomainFreeDofOrdering dofOrdering)
+			public MockSubdomainLinearSystem(int subdomainID, ISubdomainFreeDofOrdering dofOrdering)
 			{
+				this.SubdomainID = subdomainID;
 				this.DofOrdering = dofOrdering;
 			}
 
@@ -90,6 +91,8 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 			public Vector RhsVector => throw new NotImplementedException();
 
 			public Vector Solution { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+			public int SubdomainID { get; }
 		}
 	}
 }

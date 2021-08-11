@@ -7,8 +7,6 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 {
 	public interface ICornerDofSelection
 	{
-		int[] CornerNodeIDs { get; }
-
-		bool IsCornerDof(int nodeID, int dofID);
+		bool IsCornerDof(int subdomainID, int nodeID, int dofID);
 	}
 }
