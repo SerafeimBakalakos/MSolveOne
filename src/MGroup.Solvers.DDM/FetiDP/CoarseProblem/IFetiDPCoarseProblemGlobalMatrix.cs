@@ -9,6 +9,8 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 {
 	public interface IFetiDPCoarseProblemGlobalMatrix
 	{
+		void Clear();
+
 		void InvertGlobalScc(int numGlobalCornerDofs, IDictionary<int, int[]> subdomainToGlobalCornerDofs,
 			IDictionary<int, IMatrix> subdomainMatricesScc);
 

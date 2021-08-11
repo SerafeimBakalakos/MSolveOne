@@ -16,7 +16,16 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		private readonly OrderingAmdSuiteSparse reordering = new OrderingAmdSuiteSparse();
 
 		private CholeskySuiteSparse inverseSccGlobal;
-		
+
+		public void Clear()
+		{
+			if (inverseSccGlobal != null)
+			{
+				inverseSccGlobal.Dispose();
+			}
+			inverseSccGlobal = null;
+			assembler.HandleDofOrderingWasModified();
+		}
 		public void InvertGlobalScc(int numGlobalCornerDofs, IDictionary<int, int[]> subdomainToGlobalCornerDofs, 
 			IDictionary<int, IMatrix>  subdomainMatricesScc)
 		{

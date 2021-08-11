@@ -324,6 +324,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			{
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
 				SubdomainFreeDofOrderings[subdomainID] = dofOrderer.OrderFreeDofs(subdomain, model.AllDofs);
+				subdomainMatrixAssemblers[subdomainID].HandleDofOrderingWasModified();
 			});
 			SubdomainTopology.FindCommonDofsBetweenSubdomains();
 			FreeDofIndexer = SubdomainTopology.CreateDistributedVectorIndexer(s => SubdomainFreeDofOrderings[s].FreeDofs);

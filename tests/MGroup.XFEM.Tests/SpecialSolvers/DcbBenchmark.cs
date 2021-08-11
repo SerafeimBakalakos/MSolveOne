@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using MGroup.LinearAlgebra.Matrices;
@@ -51,24 +52,6 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 		private static HomogeneousFractureMaterialField2D Material 
 			=> new HomogeneousFractureMaterialField2D(E, v, thickness, planeStress);
-
-		[Fact]
-		public static void Run()
-		{
-			int[] numElements = { 60, 20 };
-			XModel<IXCrackElement> model = DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
-			CreateGeometryModel(model);
-
-			// Solver
-			var factory = new SkylineSolver.Factory();
-			GlobalAlgebraicModel<SkylineMatrix> algebraicModel = factory.BuildAlgebraicModel(model);
-			var solver = factory.BuildSolver(algebraicModel);
-
-			RunAnalysis(model, algebraicModel, solver);
-			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
-
-			CheckCrackPropagationPath(crack);
-		}
 
 		public static void CheckCrackPropagationPath(ExteriorLsmCrack crack)
 		{
@@ -155,23 +138,6 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			return modelBuilder;
 		}
 
-		private static void ApplyBoundaryConditions(XModel<IXCrackElement> model)
-		{
-			// Boundary conditions
-			double tol = 1E-6;
-			double L = maxCoords[0];
-			double H = maxCoords[1];
-			XNode topLeft = model.Nodes.Values.Where(n => Math.Abs(n.X) <= tol && Math.Abs(n.Y - H) <= tol).First();
-			XNode bottomLeft = model.Nodes.Values.Where(n => Math.Abs(n.X) <= tol && Math.Abs(n.Y) <= tol).First();
-			model.NodalLoads.Add(new Load() { Node = topLeft, DOF = StructuralDof.TranslationY, Amount = +load });
-			model.NodalLoads.Add(new Load() { Node = bottomLeft, DOF = StructuralDof.TranslationY, Amount = -load });
-			foreach (XNode node in model.Nodes.Values.Where(n => Math.Abs(n.X - L) <= tol))
-			{
-				node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0.0 });
-				node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0.0 });
-			}
-		}
-
 		public static XModel<IXCrackElement> CreatePhysicalModel(int[] numElements)
 		{
 			var model = new XModel<IXCrackElement>(2);
@@ -205,7 +171,33 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			analyzer.Analyze();
 		}
-
 		
+		public static void WriteCrackPath(ExteriorLsmCrack crack)
+		{
+			Debug.WriteLine("Crack path:");
+			for (int i = 0; i < crack.CrackPath.Count; ++i)
+			{
+				Debug.WriteLine($"{crack.CrackPath[i][0]} \t {crack.CrackPath[i][1]}");
+			}
+		}
+
+		private static void ApplyBoundaryConditions(XModel<IXCrackElement> model)
+		{
+			// Boundary conditions
+			double tol = 1E-6;
+			double L = maxCoords[0];
+			double H = maxCoords[1];
+			XNode topLeft = model.Nodes.Values.Where(n => Math.Abs(n.X) <= tol && Math.Abs(n.Y - H) <= tol).First();
+			XNode bottomLeft = model.Nodes.Values.Where(n => Math.Abs(n.X) <= tol && Math.Abs(n.Y) <= tol).First();
+			model.NodalLoads.Add(new Load() { Node = topLeft, DOF = StructuralDof.TranslationY, Amount = +load });
+			model.NodalLoads.Add(new Load() { Node = bottomLeft, DOF = StructuralDof.TranslationY, Amount = -load });
+			foreach (XNode node in model.Nodes.Values.Where(n => Math.Abs(n.X - L) <= tol))
+			{
+				node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0.0 });
+				node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0.0 });
+			}
+		}
+
+
 	}
 }

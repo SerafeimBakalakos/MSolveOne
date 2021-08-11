@@ -70,6 +70,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 				subdomainMatricesFetiDP[subdomainID].ReorderRemainderDofs();
 				subdomainDofsPFetiDP[subdomainID].MapPsmFetiDPDofs();
 
+				subdomainMatricesFetiDP[subdomainID].HandleDofsWereModified();
 				subdomainMatricesFetiDP[subdomainID].ExtractKrrKccKrc();
 				subdomainMatricesFetiDP[subdomainID].InvertKrr();
 			});

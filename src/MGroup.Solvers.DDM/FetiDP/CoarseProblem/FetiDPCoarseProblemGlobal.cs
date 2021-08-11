@@ -56,6 +56,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 			environment.DoGlobalOperation(() =>
 			{
+				coarseProblemMatrix.Clear();
 				coarseProblemMatrix.InvertGlobalScc(
 					coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs, subdomainMatricesScc);
 			});

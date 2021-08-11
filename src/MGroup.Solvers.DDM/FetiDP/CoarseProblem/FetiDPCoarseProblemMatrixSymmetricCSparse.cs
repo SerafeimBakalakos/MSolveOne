@@ -16,7 +16,13 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		private readonly OrderingAmdCSparseNet reordering = new OrderingAmdCSparseNet();
 
 		private CholeskyCSparseNet inverseSccGlobal;
-		
+
+		public void Clear()
+		{
+			inverseSccGlobal = null;
+			assembler.HandleDofOrderingWasModified();
+		}
+
 		public void InvertGlobalScc(int numGlobalCornerDofs, IDictionary<int, int[]> subdomainToGlobalCornerDofs, 
 			IDictionary<int, IMatrix>  subdomainMatricesScc)
 		{

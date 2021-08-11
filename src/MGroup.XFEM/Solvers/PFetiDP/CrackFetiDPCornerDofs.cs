@@ -6,6 +6,7 @@ using MGroup.Environments;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
+using MGroup.XFEM.Enrichment;
 using MGroup.XFEM.Enrichment.Functions;
 using MGroup.XFEM.Entities;
 
@@ -38,18 +39,31 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 			if (subdomainCornerNodes.Contains(nodeID))
 			{
 				// Regular corner dofs, at the standard dofs of the user-defined corner nodes.
-				if (standardCornerDofs.Contains(dofID))
-				{
-					return true;
-				}
+				return true;
+				//if (standardCornerDofs.Contains(dofID))
+				//{
+				//	return true;
+				//}
 			}
-			else
+
+			// Extra corner dofs used to avoid mechanisms due to a crack dividing the subdomain into 2 parts, by entering 
+			// at one point and exiting at another. The linear dependence is caused when boundary nodes have dofs enriched by 
+			// a step enrichment or the 1st of the 4 crack tip enrichments.  
+
+
+			// Option A: //TODO: Choose an option
+			//XNode node = model.Nodes[nodeID];
+			//if ((node.Subdomains.Count > 1) && node.IsEnriched) //TODO: With geometric tip enrichment this will return a huge number of nodes
+			//{
+			//	return true;
+			//}
+
+			// Option B: //TODO: Choose an option
+			IDofType dof = model.AllDofs.GetDofWithId(dofID);
+			if (dof is EnrichedDof enrichedDof)
 			{
-				// Extra corner dofs used to avoid mechanisms due to a crack dividing the subdomain into 2 parts, by entering 
-				// at one point and exiting at another. The linear dependence is caused when boundary nodes have dofs enriched by 
-				// a step enrichment or the 1st of the 4 crack tip enrichments.  
-				IDofType dof = model.AllDofs.GetDofWithId(dofID);
-				if ((dof is CrackStepEnrichment) || (dof is IsotropicBrittleTipEnrichments2D.Func0))
+				IEnrichmentFunction enrichment = enrichedDof.Enrichment;
+				if ((enrichment is CrackStepEnrichment) || (enrichment is IsotropicBrittleTipEnrichments2D.Func0))
 				{
 					XNode node = model.Nodes[nodeID];
 					if (node.Subdomains.Count > 1)
@@ -62,6 +76,16 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 					}
 				}
 			}
+
+			// Option C: //TODO: Choose an option
+			//XNode node = model.Nodes[nodeID];
+			//if ((node.Subdomains.Count > 1) && node.IsEnriched) //TODO: With geometric tip enrichment this will return a huge number of nodes
+			//{
+			//	if (standardCornerDofs.Contains(dofID))
+			//	{
+			//		return true;
+			//	}
+			//}
 
 			return false;
 		}

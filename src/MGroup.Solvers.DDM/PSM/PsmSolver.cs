@@ -136,6 +136,7 @@ namespace MGroup.Solvers.DDM.Psm
 				subdomainMatricesPsm[subdomainID].ReorderInternalDofs();
 
 				//TODO: These should happen if the connectivity or stiffness of the subdomain changes
+				subdomainMatricesPsm[subdomainID].HandleDofsWereModified();
 				subdomainMatricesPsm[subdomainID].ExtractKiiKbbKib();
 				subdomainMatricesPsm[subdomainID].InvertKii();
 			});

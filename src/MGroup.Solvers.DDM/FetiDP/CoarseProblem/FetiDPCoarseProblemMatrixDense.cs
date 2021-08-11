@@ -12,7 +12,9 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 	{
 		private readonly DenseMatrixAssembler assembler = new DenseMatrixAssembler();
 		private Matrix inverseSccGlobal;
-		
+
+		public void Clear() { }
+
 		public void InvertGlobalScc(int numGlobalCornerDofs, IDictionary<int, int[]> subdomainToGlobalCornerDofs, 
 			IDictionary<int, IMatrix>  subdomainMatricesScc)
 		{

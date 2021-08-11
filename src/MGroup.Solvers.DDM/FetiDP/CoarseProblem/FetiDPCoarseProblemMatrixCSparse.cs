@@ -13,7 +13,13 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 	{
 		private readonly CscMatrixAssembler assembler = new CscMatrixAssembler(false, true);
 		private LUCSparseNet inverseSccGlobal;
-		
+
+		public void Clear() 
+		{
+			inverseSccGlobal = null;
+			assembler.HandleDofOrderingWasModified();
+		}
+
 		public void InvertGlobalScc(int numGlobalCornerDofs, IDictionary<int, int[]> subdomainToGlobalCornerDofs, 
 			IDictionary<int, IMatrix>  subdomainMatricesScc)
 		{
