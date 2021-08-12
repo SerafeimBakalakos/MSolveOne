@@ -13,6 +13,7 @@ using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PFetiDP;
+using MGroup.Solvers.DDM.Psm;
 using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.Direct;
@@ -30,7 +31,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		public static void AnalyzeWithSkylineSolver()
 		{
 			// Model
-			int[] numElements = { 48, 48 };
+			int[] numElements = { 96, 96 };
 			XModel<IXCrackElement> model = PlateBenchmark.DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
 			PlateBenchmark.CreateGeometryModel(model);
 
@@ -48,33 +49,101 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 		[Fact]
 		public static void AnalyzeWithPFetiDPSolver()
+			=> AnalyzeWithPFetiDPSolverInternal(new SequentialSharedEnvironment());
+
+		internal static void AnalyzeWithPFetiDPSolverInternal(IComputeEnvironment environment, int numClustersTotal = 1)
 		{
 			// Model
 			int[] numElements = { 48, 48 };
-			int[] numSubdomains = { 8, 8 };
-			int[] numClusters = { 1, 1 };
-			(XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology) 
+			int[] numSubdomains = { 12, 12 };
+			int[] numClusters = GetNumClusters(numClustersTotal);
+			(XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
 				= PlateBenchmark.DescribePhysicalModel(numElements, numSubdomains, numClusters).BuildMultiSubdomainModel();
 			PlateBenchmark.CreateGeometryModel(model);
 
-			(IAlgebraicModel algebraicModel, ISolver solver) = CreatePFetiDPSolver(model, nodeTopology);
+			(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver) 
+				= CreatePFetiDPSolver(environment, model, nodeTopology);
 
 			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
 			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
 
 			//DcbBenchmark.CheckCrackPropagationPath(crack);
 			PlateBenchmark.WriteCrackPath(crack);
+
+			string path = @"C:\Users\Serafeim\Desktop\DDM\PFETIDP\XFEM\plate_pfetidp_convergence.txt";
+			solver.LoggerDdm.WriteToFile(path, true);
 		}
 
-		public static void ScalabilityAnalysisPFetiDP()
+		[Fact]
+		public static void StrongScalabilityAnalysisPFetiDP()
+			=> StrongScalabilityAnalysisPFetiDPInternal(new SequentialSharedEnvironment());
+
+		internal static void StrongScalabilityAnalysisPFetiDPInternal(IComputeEnvironment environment, int numClustersTotal = 1)
 		{
+			string path = @"C:\Users\Serafeim\Desktop\DDM\PFETIDP\XFEM\plate_pfetidp_scalability_strong.txt";
+
+			// Const mesh, varying subdomains
+			int[] numElements = { 96, 96 };
+			int[] numSubdomainsPerAxis = { 2, 3, 4, 6, 8, 12, 16 };
+			int[] numClusters = GetNumClusters(numClustersTotal);
+			for (int r = 0; r < numSubdomainsPerAxis.Length; ++r)
+			{
+				int[] numSubdomains = { numSubdomainsPerAxis[r], numSubdomainsPerAxis[r] };
+				(XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
+					= PlateBenchmark.DescribePhysicalModel(numElements, numSubdomains, numClusters).BuildMultiSubdomainModel();
+				PlateBenchmark.CreateGeometryModel(model);
+
+				(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver) = 
+					CreatePFetiDPSolver(environment, model, nodeTopology);
+
+				PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
+				var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
+
+				//DcbBenchmark.CheckCrackPropagationPath(crack);
+				//PlateBenchmark.WriteCrackPath(crack);
+
+				solver.LoggerDdm.WriteToFile(path, true);
+			}
 		}
 
-		private static (IAlgebraicModel algebraicModel, ISolver solver) CreatePFetiDPSolver(
-			XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
+		[Fact]
+		public static void WeakScalabilityAnalysisPFetiDP()
+			=> WeakScalabilityAnalysisPFetiDPInternal(new SequentialSharedEnvironment());
+
+		internal static void WeakScalabilityAnalysisPFetiDPInternal(IComputeEnvironment environment, int numClustersTotal = 1)
+		{
+			string path = @"C:\Users\Serafeim\Desktop\DDM\PFETIDP\XFEM\plate_pfetidp_scalability_weak.txt";
+
+			// Const mesh, varying subdomains
+			int numElementsPerSubdomain = 8;
+			int[] numSubdomainsPerAxis = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+			int[] numClusters = GetNumClusters(numClustersTotal);
+			for (int r = 0; r < numSubdomainsPerAxis.Length; ++r)
+			{
+				int numElementsPerAxis = numElementsPerSubdomain * numSubdomainsPerAxis[r];
+				int[] numElements = { numElementsPerAxis, numElementsPerAxis };
+				int[] numSubdomains = { numSubdomainsPerAxis[r], numSubdomainsPerAxis[r] };
+				(XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
+					= PlateBenchmark.DescribePhysicalModel(numElements, numSubdomains, numClusters).BuildMultiSubdomainModel();
+				PlateBenchmark.CreateGeometryModel(model);
+
+				(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver) 
+					= CreatePFetiDPSolver(environment, model, nodeTopology);
+
+				PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
+
+				var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
+				//DcbBenchmark.CheckCrackPropagationPath(crack);
+				//PlateBenchmark.WriteCrackPath(crack);
+
+				solver.LoggerDdm.WriteToFile(path, true);
+			}
+		}
+
+		private static (IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver) CreatePFetiDPSolver(
+			IComputeEnvironment environment, XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
 		{
 			// Environment
-			IComputeEnvironment environment = new SequentialSharedEnvironment();
 			environment.Initialize(nodeTopology);
 
 			// Corner dofs
@@ -96,9 +165,19 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			};
 
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
-			var solver = solverFactory.BuildSolver(model, algebraicModel);
+			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 
 			return (algebraicModel, solver);
+		}
+
+		private static int[] GetNumClusters(int numClustersTotal)
+		{
+			if (Math.Sqrt(numClustersTotal) % 1 != 0)
+			{
+				throw new ArgumentException("The number of clusters must be the square of some integer");
+			}
+			int numClustersPerAxis = (int)Math.Sqrt(numClustersTotal);
+			return new int[] { numClustersPerAxis, numClustersPerAxis };
 		}
 	}
 }

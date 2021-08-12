@@ -43,7 +43,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		private const double a = 1.05, growthLength = 0.3; 
 
 		private const double jIntegralRadiusRatio = 2.0;
-		private const double heavisideTol = 1E-3;
+		private const double heavisideTol = 1E-4;
 		private const double tipEnrichmentArea = 0.0;
 		private const int maxIterations = 8;
 		private const double fractureToughness = double.MaxValue;
@@ -94,7 +94,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			modelBuilder.NumClusters = numClusters;
 
 			modelBuilder.MaterialField = Material;
-			var enrichedIntegration = new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(2, 2));
+			//var enrichedIntegration = new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(2, 2));
+			var enrichedIntegration = new IntegrationWithConformingSubtriangles2D(
+				TriangleQuadratureSymmetricGaussian.Order2Points3);
 			modelBuilder.BulkIntegration = new CrackElementIntegrationStrategy(
 				enrichedIntegration, enrichedIntegration, enrichedIntegration);
 

@@ -14,6 +14,7 @@ using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Solution;
 using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.Solvers.DDM.LinearSystem;
+using MGroup.Solvers.DDM.Output;
 using MGroup.Solvers.DDM.PSM.Dofs;
 using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.Preconditioning;
@@ -108,6 +109,7 @@ namespace MGroup.Solvers.DDM.Psm
 			this.interfaceProblemSolver = interfaceProblemSolverFactory.BuildIterativeMethod(convergenceCriterion);
 
 			Logger = new SolverLogger(name);
+			LoggerDdm = new DdmLogger(name, model.NumSubdomains);
 		}
 
 		public IterativeStatistics InterfaceProblemSolutionStats { get; private set; }
@@ -115,6 +117,8 @@ namespace MGroup.Solvers.DDM.Psm
 		public IGlobalLinearSystem LinearSystem { get; }
 
 		public ISolverLogger Logger { get; }
+
+		public DdmLogger LoggerDdm { get; }
 
 		public string Name => name;
 
@@ -128,6 +132,8 @@ namespace MGroup.Solvers.DDM.Psm
 
 		public virtual void Solve() 
 		{
+			LoggerDdm.IncrementAnalysisIteration();
+
 			// Prepare subdomain-level dofs and matrices
 			environment.DoPerNode(subdomainID =>
 			{
@@ -190,6 +196,7 @@ namespace MGroup.Solvers.DDM.Psm
 				interfaceProblemVectors.InterfaceProblemSolution, initalGuessIsZero);
 
 			InterfaceProblemSolutionStats = stats;
+			LoggerDdm.LogSolverConvergenceData(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
 			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
 			Debug.WriteLine("Iterations for boundary problem = " + stats.NumIterationsRequired);
 		}
