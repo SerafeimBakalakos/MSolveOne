@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Matrices;
+using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
+using MGroup.MSolve.Solution;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
@@ -21,23 +24,58 @@ using Xunit;
 
 namespace MGroup.XFEM.Tests.SpecialSolvers
 {
-	public static class DcbBenchmarkSolvers
+	public static class PlateBenchmarkSolvers
 	{
+		[Fact]
+		public static void AnalyzeWithSkylineSolver()
+		{
+			// Model
+			int[] numElements = { 48, 48 };
+			XModel<IXCrackElement> model = PlateBenchmark.DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
+			PlateBenchmark.CreateGeometryModel(model);
+
+			// Solver
+			var factory = new SkylineSolver.Factory();
+			GlobalAlgebraicModel<SkylineMatrix> algebraicModel = factory.BuildAlgebraicModel(model);
+			var solver = factory.BuildSolver(algebraicModel);
+
+			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
+			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
+
+			//DcbBenchmark.CheckCrackPropagationPath(crack);
+			PlateBenchmark.WriteCrackPath(crack);
+		}
+
 		[Fact]
 		public static void AnalyzeWithPFetiDPSolver()
 		{
 			// Model
-			int[] numElements = { 60, 21 };
-			int[] numSubdomains = { 4, 3 };
+			int[] numElements = { 48, 48 };
+			int[] numSubdomains = { 8, 8 };
 			int[] numClusters = { 1, 1 };
 			(XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology) 
-				= DcbBenchmark.DescribePhysicalModel(numElements, numSubdomains, numClusters).BuildMultiSubdomainModel();
-			DcbBenchmark.CreateGeometryModel(model);
+				= PlateBenchmark.DescribePhysicalModel(numElements, numSubdomains, numClusters).BuildMultiSubdomainModel();
+			PlateBenchmark.CreateGeometryModel(model);
 
+			(IAlgebraicModel algebraicModel, ISolver solver) = CreatePFetiDPSolver(model, nodeTopology);
+
+			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
+			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
+
+			//DcbBenchmark.CheckCrackPropagationPath(crack);
+			PlateBenchmark.WriteCrackPath(crack);
+		}
+
+		public static void ScalabilityAnalysisPFetiDP()
+		{
+		}
+
+		private static (IAlgebraicModel algebraicModel, ISolver solver) CreatePFetiDPSolver(
+			XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
+		{
 			// Environment
 			IComputeEnvironment environment = new SequentialSharedEnvironment();
 			environment.Initialize(nodeTopology);
-
 
 			// Corner dofs
 			IDofType[] stdDofs = { StructuralDof.TranslationX, StructuralDof.TranslationY };
@@ -45,7 +83,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				sub => UniformDdmCrackModelBuilder2D.FindCornerNodes(sub, 2));
 
 			// Solver
-			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(environment, 
+			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(environment,
 				new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
 				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
 			solverFactory.ExplicitSubdomainMatrices = true;
@@ -60,31 +98,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			var solver = solverFactory.BuildSolver(model, algebraicModel);
 
-			DcbBenchmark.RunAnalysis(model, algebraicModel, solver);
-			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
-
-			//DcbBenchmark.CheckCrackPropagationPath(crack);
-			DcbBenchmark.WriteCrackPath(crack);
-		}
-
-		[Fact]
-		public static void AnalyzeWithSkylineSolver()
-		{
-			// Model
-			int[] numElements = { 60, 21 };
-			XModel<IXCrackElement> model = DcbBenchmark.DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
-			DcbBenchmark.CreateGeometryModel(model);
-
-			// Solver
-			var factory = new SkylineSolver.Factory();
-			GlobalAlgebraicModel<SkylineMatrix> algebraicModel = factory.BuildAlgebraicModel(model);
-			var solver = factory.BuildSolver(algebraicModel);
-
-			DcbBenchmark.RunAnalysis(model, algebraicModel, solver);
-			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
-
-			//DcbBenchmark.CheckCrackPropagationPath(crack);
-			DcbBenchmark.WriteCrackPath(crack);
+			return (algebraicModel, solver);
 		}
 	}
 }
