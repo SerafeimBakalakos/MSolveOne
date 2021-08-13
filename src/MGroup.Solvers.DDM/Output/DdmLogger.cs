@@ -89,19 +89,19 @@ namespace MGroup.Solvers.DDM.Output
 				(int numIterations, double residualNorm) = convergenceData[t];
 				var msg = new StringBuilder();
 				msg.Append($"Analysis iteration {t}:");
-				if (problemSizeData[t].TryGetValue(0, out int numFreeDofs))
+				if (problemSizeData[t].TryGetValue(0, out int size0))
 				{
-					msg.Append($" Num free dofs = {numFreeDofs}.");
+					msg.Append($" Global problem size = {size0}.");
 
 				}
-				if (problemSizeData[t].TryGetValue(1, out int numInterfaceDofs))
+				if (problemSizeData[t].TryGetValue(1, out int size1))
 				{
-					msg.Append($" Num interface dofs = {numInterfaceDofs}.");
+					msg.Append($" Interface problem size = {size1}.");
 
 				}
-				if (problemSizeData[t].TryGetValue(2, out int numCoarseDofs))
+				if (problemSizeData[t].TryGetValue(2, out int size2))
 				{
-					msg.Append($" Num boundary dofs = {numCoarseDofs}.");
+					msg.Append($" Coarse problem size = {size2}.");
 
 				}
 				msg.Append($" Solver iterations = {numIterations}.");

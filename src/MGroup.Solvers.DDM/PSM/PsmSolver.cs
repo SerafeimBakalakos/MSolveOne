@@ -32,7 +32,6 @@ namespace MGroup.Solvers.DDM.Psm
 		where TMatrix : class, IMatrix
 	{
 		protected readonly DistributedAlgebraicModel<TMatrix> algebraicModel;
-		protected readonly bool enableLogging;
 		protected readonly IComputeEnvironment environment;
 		protected readonly IPsmInterfaceProblemMatrix interfaceProblemMatrix;
 		protected readonly IDistributedIterativeMethod interfaceProblemSolver;
@@ -51,7 +50,7 @@ namespace MGroup.Solvers.DDM.Psm
 		protected PsmSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel, 
 			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory, 
 			bool explicitSubdomainMatrices, IPsmPreconditioner preconditioner,
-			IPsmInterfaceProblemSolverFactory interfaceProblemSolverFactory, bool isHomogeneous, bool enableLogging,
+			IPsmInterfaceProblemSolverFactory interfaceProblemSolverFactory, bool isHomogeneous, DdmLogger logger,
 			string name = "PSM Solver")
 		{
 			this.name = name;
@@ -61,7 +60,6 @@ namespace MGroup.Solvers.DDM.Psm
 			this.subdomainTopology = algebraicModel.SubdomainTopology;
 			this.LinearSystem = algebraicModel.LinearSystem;
 			this.preconditioner = preconditioner;
-			this.enableLogging = enableLogging;
 			this.subdomainDofsPsm = new ConcurrentDictionary<int, PsmSubdomainDofs>();
 			this.subdomainMatricesPsm = new ConcurrentDictionary<int, IPsmSubdomainMatrixManager>();
 			this.subdomainVectors = new ConcurrentDictionary<int, PsmSubdomainVectors>();
@@ -111,7 +109,7 @@ namespace MGroup.Solvers.DDM.Psm
 			this.interfaceProblemSolver = interfaceProblemSolverFactory.BuildIterativeMethod(convergenceCriterion);
 
 			Logger = new SolverLogger(name);
-			LoggerDdm = new DdmLogger(name, model.NumSubdomains);
+			LoggerDdm = logger;
 		}
 
 		public IterativeStatistics InterfaceProblemSolutionStats { get; private set; }
@@ -134,7 +132,10 @@ namespace MGroup.Solvers.DDM.Psm
 
 		public virtual void Solve() 
 		{
-			LoggerDdm.IncrementAnalysisIteration();
+			if (LoggerDdm != null)
+			{
+				LoggerDdm.IncrementAnalysisIteration();
+			}
 
 			// Prepare subdomain-level dofs and matrices
 			environment.DoPerNode(subdomainID =>
@@ -196,15 +197,16 @@ namespace MGroup.Solvers.DDM.Psm
 			IterativeStatistics stats = interfaceProblemSolver.Solve(
 				interfaceProblemMatrix.Matrix, preconditioner.Preconditioner, interfaceProblemVectors.InterfaceProblemRhs,
 				interfaceProblemVectors.InterfaceProblemSolution, initalGuessIsZero);
-
 			InterfaceProblemSolutionStats = stats;
-			if (enableLogging)
+
+			if (LoggerDdm != null)
 			{
+				LoggerDdm.LogProblemSize(0, algebraicModel.FreeDofIndexer.CountUniqueEntries());
 				LoggerDdm.LogProblemSize(1, boundaryDofIndexer.CountUniqueEntries());
 				LoggerDdm.LogSolverConvergenceData(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
-				Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
-				Debug.WriteLine("Iterations for boundary problem = " + stats.NumIterationsRequired);
 			}
+			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
+			Debug.WriteLine("Iterations for boundary problem = " + stats.NumIterationsRequired);
 		}
 
 		public class Factory
@@ -242,9 +244,10 @@ namespace MGroup.Solvers.DDM.Psm
 
 			public virtual PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
 			{
+				DdmLogger logger = EnableLogging ? new DdmLogger("PSM Solver", model.NumSubdomains) : null;
 				return new PsmSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
-					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolverFactory, IsHomogeneousProblem, 
-					EnableLogging);
+					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolverFactory, IsHomogeneousProblem,
+					logger);
 			}
 		}
 	}

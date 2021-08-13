@@ -25,6 +25,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 	public class DistributedOverlappingIndexer : IDistributedIndexer
 	{
 		private readonly Dictionary<int, Local> localIndexers;
+		private int numUniqueEntries = int.MinValue;
 
 		public DistributedOverlappingIndexer(IComputeEnvironment environment)
 		{
@@ -37,20 +38,24 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 
 		public int CountUniqueEntries()
 		{
-			Dictionary<int, double> countPerNode = Environment.CalcNodeData(node =>
+			if (numUniqueEntries == int.MinValue)
 			{
-				int[] multiplicities = localIndexers[node].Multiplicities;
-
-				double localCount = 0.0;
-				for (int i = 0; i < multiplicities.Length; ++i)
+				Dictionary<int, double> countPerNode = Environment.CalcNodeData(node =>
 				{
-					localCount += 1.0 / multiplicities[i];
-				}
+					int[] multiplicities = localIndexers[node].Multiplicities;
 
-				return localCount;
-			});
-			double globalCount = Environment.AllReduceSum(countPerNode);
-			return (int)globalCount;
+					double localCount = 0.0;
+					for (int i = 0; i < multiplicities.Length; ++i)
+					{
+						localCount += 1.0 / multiplicities[i];
+					}
+
+					return localCount;
+				});
+				double globalCount = Environment.AllReduceSum(countPerNode);
+				numUniqueEntries = (int)globalCount;
+			}
+			return numUniqueEntries;
 		}
 
 		public DistributedOverlappingIndexer.Local GetLocalComponent(int nodeID) => localIndexers[nodeID];

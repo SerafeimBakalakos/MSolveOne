@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.Solvers.DDM.Output;
 
 namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 {
 	public interface IFetiDPCoarseProblem
 	{
-		void FindCoarseProblemDofs();
+		void FindCoarseProblemDofs(DdmLogger logger);
 
 		void PrepareMatricesForSolution();
 

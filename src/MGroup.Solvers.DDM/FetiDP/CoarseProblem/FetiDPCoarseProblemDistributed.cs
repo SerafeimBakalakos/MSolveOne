@@ -14,6 +14,7 @@ using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
+using MGroup.Solvers.DDM.Output;
 
 namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 {
@@ -53,9 +54,14 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			}
 		}
 
-		public void FindCoarseProblemDofs()
+		public void FindCoarseProblemDofs(DdmLogger logger)
 		{
 			cornerDofIndexer = subdomainTopology.CreateDistributedVectorIndexer(s => getSubdomainDofs(s).DofOrderingCorner);
+
+			if (logger != null)
+			{
+				logger.LogProblemSize(2, cornerDofIndexer.CountUniqueEntries());
+			}
 		}
 
 		public void PrepareMatricesForSolution()

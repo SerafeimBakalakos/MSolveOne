@@ -9,6 +9,7 @@ using MGroup.MSolve.Discretization.Dofs;
 using MGroup.Solvers.DDM.Commons;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
+using MGroup.Solvers.DDM.Output;
 
 namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 {
@@ -32,7 +33,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			this.coarseProblemSolver = new FetiDPCoarseProblemGlobalSolver(coarseProblemDofs, coarseProblemMatrix);
 		}
 
-		public virtual void FindCoarseProblemDofs()
+		public virtual void FindCoarseProblemDofs(DdmLogger logger)
 		{
 			Dictionary<int, IntDofTable> subdomainCornerDofs =
 				environment.CalcNodeDataAndTransferToGlobalMemory(s => getSubdomainDofs(s).DofOrderingCorner);
@@ -44,6 +45,11 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 				DofPermutation permutation = coarseProblemMatrix.ReorderGlobalCornerDofs(
 				coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs);
 				coarseProblemDofs.ReorderGlobalCornerDofs(permutation);
+
+				if (logger != null)
+				{
+					logger.LogProblemSize(2, coarseProblemDofs.NumGlobalCornerDofs);
+				}
 			});
 		}
 

@@ -11,6 +11,7 @@ using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 using MGroup.Solvers.DDM.LinearSystem;
+using MGroup.Solvers.DDM.Output;
 using MGroup.Solvers.DDM.PFetiDP.Dofs;
 using MGroup.Solvers.DDM.PFetiDP.Preconditioner;
 using MGroup.Solvers.DDM.Psm;
@@ -32,10 +33,10 @@ namespace MGroup.Solvers.DDM.PFetiDP
 		public PFetiDPSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel,
 			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixFactoryPsm, bool explicitSubdomainMatrices,
 			IPsmPreconditioner preconditioner, IPsmInterfaceProblemSolverFactory interfaceProblemSolverFactory, bool isHomogeneous,
-			bool enableLogging, ICornerDofSelection cornerDofs, IFetiDPCoarseProblemFactory coarseProblemFactory, 
+			DdmLogger logger, ICornerDofSelection cornerDofs, IFetiDPCoarseProblemFactory coarseProblemFactory, 
 			IFetiDPSubdomainMatrixManagerFactory<TMatrix> matrixFactoryFetiDP)
 			: base(environment, model, algebraicModel, matrixFactoryPsm, explicitSubdomainMatrices, preconditioner,
-				  interfaceProblemSolverFactory, isHomogeneous, enableLogging, "PFETI-DP solver")
+				  interfaceProblemSolverFactory, isHomogeneous, logger, "PFETI-DP solver")
 		{
 			this.cornerDofs = cornerDofs;
 
@@ -76,7 +77,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			});
 
 			// Prepare coarse problem
-			coarseProblemFetiDP.FindCoarseProblemDofs();
+			coarseProblemFetiDP.FindCoarseProblemDofs(LoggerDdm);
 			coarseProblemFetiDP.PrepareMatricesForSolution();
 
 			preconditioner.Calculate(environment, boundaryDofIndexer, interfaceProblemMatrix);
@@ -102,8 +103,9 @@ namespace MGroup.Solvers.DDM.PFetiDP
 
 			public override PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
 			{
+				DdmLogger logger = EnableLogging ? new DdmLogger("PFETI-DP Solver", model.NumSubdomains) : null;
 				return new PFetiDPSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
-					ExplicitSubdomainMatrices, null, InterfaceProblemSolverFactory, IsHomogeneousProblem, EnableLogging,
+					ExplicitSubdomainMatrices, null, InterfaceProblemSolverFactory, IsHomogeneousProblem, logger,
 					cornerDofs, CoarseProblemFactory, FetiDPMatricesFactory);
 			}
 		}
