@@ -6,6 +6,7 @@ namespace MGroup.XFEM.Tests
 	{
 		static void Main(string[] args)
 		{
+			SpecialSolvers.MpiTestSuite.RunTestsWith4Processes();
 			//Multiphase.EpoxyAg.Benchmark3D.RunHomogenization();
 		}
 	}

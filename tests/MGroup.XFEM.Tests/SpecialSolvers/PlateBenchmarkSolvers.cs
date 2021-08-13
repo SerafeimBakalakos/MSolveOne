@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using MGroup.Environments;
+using MGroup.Environments.Mpi;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
@@ -22,7 +23,6 @@ using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Solvers.PFetiDP;
-using TriangleNet;
 using Xunit;
 
 namespace MGroup.XFEM.Tests.SpecialSolvers
@@ -56,6 +56,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 		internal static void AnalyzeWithPFetiDPSolverInternal(IComputeEnvironment environment, int numClustersTotal = 1)
 		{
+			string outputDirectory = Path.Combine(workDirectory, "plots");
+
 			// Model
 			int[] numElements = { 48, 48 };
 			int[] numSubdomains = { 4, 4 };
@@ -63,14 +65,17 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			(XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
 				= PlateBenchmark.DescribePhysicalModel(numElements, numSubdomains, numClusters).BuildMultiSubdomainModel();
 			PlateBenchmark.CreateGeometryModel(model);
-			string outputDirectory = Path.Combine(workDirectory, "plots");
-			PlateBenchmark.SetupModelOutput(model, outputDirectory);
 
 			(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver, CrackFetiDPCornerDofs cornerDofs) 
 				= CreatePFetiDPSolver(environment, model, nodeTopology, outputDirectory);
-			PlateBenchmark.SetupPartitioningOutput(
-				environment, model, (CrackFetiDPCornerDofsPlusLogging)cornerDofs, outputDirectory);
 
+			if (!(environment is MpiEnvironment))
+			{
+				PlateBenchmark.SetupModelOutput(model, outputDirectory);
+				PlateBenchmark.SetupPartitioningOutput(
+					environment, model, (CrackFetiDPCornerDofsPlusLogging)cornerDofs, outputDirectory);
+			}
+			
 			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
 			PlateBenchmark.WriteCrackPath(model);
 
