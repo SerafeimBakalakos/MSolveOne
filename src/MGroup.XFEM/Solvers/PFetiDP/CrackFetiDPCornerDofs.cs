@@ -18,10 +18,10 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 		// Corner dofs od a boundary-enriched node: 0 = all dofs, 1 = heaviside & tip0 dofs, 2 = std dofs
 		private const int option = 1; 
 
-		private readonly IComputeEnvironment environment;
-		private readonly IXModel model;
-		private readonly HashSet<int> standardCornerDofs;
-		private readonly Dictionary<int, HashSet<int>> standardCornerNodes;
+		protected readonly IComputeEnvironment environment;
+		protected readonly IXModel model;
+		protected readonly HashSet<int> standardCornerDofs;
+		protected readonly Dictionary<int, HashSet<int>> standardCornerNodes;
 
 		public CrackFetiDPCornerDofs(IComputeEnvironment environment, IXModel model, IEnumerable<IDofType> standardCornerDofs, 
 			Func<ISubdomain, IEnumerable<INode>> getStandardCornerNodesOfSubdomain)

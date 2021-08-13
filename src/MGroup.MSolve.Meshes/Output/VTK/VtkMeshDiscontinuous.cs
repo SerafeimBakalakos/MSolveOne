@@ -9,7 +9,7 @@ namespace MGroup.MSolve.Meshes.Output.VTK
 {
 	public class VtkMeshDiscontinuous : IVtkMesh 
 	{
-		public VtkMeshDiscontinuous(IReadOnlyList<INode> nodes, IReadOnlyList<IElement> elements)
+		public VtkMeshDiscontinuous(IReadOnlyList<INode> nodes, IReadOnlyList<IElement> elements, int dimension = 3)
 		{
 			this.OriginalNodes = nodes;
 			this.OriginalElements = elements;
@@ -25,7 +25,15 @@ namespace MGroup.MSolve.Meshes.Output.VTK
 				{
 					INode node = element.Nodes[i];
 
-					var point = new VtkPoint(pointID++, node.X, node.Y, node.Z);
+					VtkPoint point;
+					if (dimension == 2)
+					{
+						point = new VtkPoint(pointID++, node.X, node.Y, 0);
+					}
+					else
+					{
+						point = new VtkPoint(pointID++, node.X, node.Y, node.Z);
+					}
 					cellVertices[i] = point;
 					vtkPoints.Add(point);
 				}

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Matrices;
@@ -21,19 +22,24 @@ using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Solvers.PFetiDP;
+using TriangleNet;
 using Xunit;
 
 namespace MGroup.XFEM.Tests.SpecialSolvers
 {
 	public static class PlateBenchmarkSolvers
 	{
+		private const string workDirectory = @"C:\Users\Serafeim\Desktop\DDM\PFETIDP\XFEM\plate2D";
+
 		[Fact]
 		public static void AnalyzeWithSkylineSolver()
 		{
 			// Model
-			int[] numElements = { 96, 96 };
+			int[] numElements = { 48, 48 };
 			XModel<IXCrackElement> model = PlateBenchmark.DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
 			PlateBenchmark.CreateGeometryModel(model);
+			string outputDirectory = Path.Combine(workDirectory, "plots");
+			PlateBenchmark.SetupModelOutput(model, outputDirectory);
 
 			// Solver
 			var factory = new SkylineSolver.Factory();
@@ -41,10 +47,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			var solver = factory.BuildSolver(algebraicModel);
 
 			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
-			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
-
-			//DcbBenchmark.CheckCrackPropagationPath(crack);
-			PlateBenchmark.WriteCrackPath(crack);
+			PlateBenchmark.WriteCrackPath(model);
 		}
 
 		[Fact]
@@ -55,22 +58,23 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		{
 			// Model
 			int[] numElements = { 48, 48 };
-			int[] numSubdomains = { 12, 12 };
+			int[] numSubdomains = { 4, 4 };
 			int[] numClusters = GetNumClusters(numClustersTotal);
 			(XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
 				= PlateBenchmark.DescribePhysicalModel(numElements, numSubdomains, numClusters).BuildMultiSubdomainModel();
 			PlateBenchmark.CreateGeometryModel(model);
+			string outputDirectory = Path.Combine(workDirectory, "plots");
+			PlateBenchmark.SetupModelOutput(model, outputDirectory);
 
-			(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver) 
-				= CreatePFetiDPSolver(environment, model, nodeTopology);
+			(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver, CrackFetiDPCornerDofs cornerDofs) 
+				= CreatePFetiDPSolver(environment, model, nodeTopology, outputDirectory);
+			PlateBenchmark.SetupPartitioningOutput(
+				environment, model, (CrackFetiDPCornerDofsPlusLogging)cornerDofs, outputDirectory);
 
 			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
-			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
+			PlateBenchmark.WriteCrackPath(model);
 
-			//DcbBenchmark.CheckCrackPropagationPath(crack);
-			PlateBenchmark.WriteCrackPath(crack);
-
-			string path = @"C:\Users\Serafeim\Desktop\DDM\PFETIDP\XFEM\plate_pfetidp_convergence.txt";
+			string path = Path.Combine(workDirectory, "pfetidp_convergence.txt");
 			solver.LoggerDdm.WriteToFile(path, true);
 		}
 
@@ -80,7 +84,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 		internal static void StrongScalabilityAnalysisPFetiDPInternal(IComputeEnvironment environment, int numClustersTotal = 1)
 		{
-			string path = @"C:\Users\Serafeim\Desktop\DDM\PFETIDP\XFEM\plate_pfetidp_scalability_strong.txt";
+			string path = Path.Combine(workDirectory, "pfetidp_scalability_strong.txt");
 
 			// Const mesh, varying subdomains
 			int[] numElements = { 96, 96 };
@@ -93,13 +97,10 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					= PlateBenchmark.DescribePhysicalModel(numElements, numSubdomains, numClusters).BuildMultiSubdomainModel();
 				PlateBenchmark.CreateGeometryModel(model);
 
-				(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver) = 
+				(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver, _) = 
 					CreatePFetiDPSolver(environment, model, nodeTopology);
 
 				PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
-				var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
-
-				//DcbBenchmark.CheckCrackPropagationPath(crack);
 				//PlateBenchmark.WriteCrackPath(crack);
 
 				solver.LoggerDdm.WriteToFile(path, true);
@@ -112,7 +113,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 		internal static void WeakScalabilityAnalysisPFetiDPInternal(IComputeEnvironment environment, int numClustersTotal = 1)
 		{
-			string path = @"C:\Users\Serafeim\Desktop\DDM\PFETIDP\XFEM\plate_pfetidp_scalability_weak.txt";
+			string path = Path.Combine(workDirectory, "pfetidp_scalability_weak.txt");
 
 			// Const mesh, varying subdomains
 			int numElementsPerSubdomain = 8;
@@ -127,29 +128,36 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					= PlateBenchmark.DescribePhysicalModel(numElements, numSubdomains, numClusters).BuildMultiSubdomainModel();
 				PlateBenchmark.CreateGeometryModel(model);
 
-				(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver) 
+				(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver, _) 
 					= CreatePFetiDPSolver(environment, model, nodeTopology);
 
 				PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
-
-				var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
-				//DcbBenchmark.CheckCrackPropagationPath(crack);
 				//PlateBenchmark.WriteCrackPath(crack);
 
 				solver.LoggerDdm.WriteToFile(path, true);
 			}
 		}
 
-		private static (IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver) CreatePFetiDPSolver(
-			IComputeEnvironment environment, XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
+		private static (IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver, CrackFetiDPCornerDofs cornerDofs)
+			CreatePFetiDPSolver(IComputeEnvironment environment, XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology,
+				string cornerNodesOutputDirectory = null)
 		{
 			// Environment
 			environment.Initialize(nodeTopology);
 
 			// Corner dofs
 			IDofType[] stdDofs = { StructuralDof.TranslationX, StructuralDof.TranslationY };
-			ICornerDofSelection cornerDofs = new CrackFetiDPCornerDofs(environment, model, stdDofs,
-				sub => UniformDdmCrackModelBuilder2D.FindCornerNodes(sub, 2));
+			CrackFetiDPCornerDofs cornerDofs; 
+			if (cornerNodesOutputDirectory != null)
+			{
+				cornerDofs = new CrackFetiDPCornerDofsPlusLogging(environment, model, stdDofs,
+					sub => UniformDdmCrackModelBuilder2D.FindCornerNodes(sub, 2), cornerNodesOutputDirectory);
+			}
+			else
+			{
+				cornerDofs = new CrackFetiDPCornerDofs(environment, model, stdDofs,
+					sub => UniformDdmCrackModelBuilder2D.FindCornerNodes(sub, 2));
+			}
 
 			// Solver
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(environment,
@@ -167,7 +175,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 
-			return (algebraicModel, solver);
+			return (algebraicModel, solver, cornerDofs);
 		}
 
 		private static int[] GetNumClusters(int numClustersTotal)

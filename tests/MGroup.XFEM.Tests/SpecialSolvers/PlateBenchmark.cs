@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using MGroup.Environments;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
@@ -27,6 +28,10 @@ using MGroup.XFEM.Geometry.Primitives;
 using MGroup.XFEM.Integration;
 using MGroup.XFEM.Integration.Quadratures;
 using MGroup.XFEM.Materials;
+using MGroup.XFEM.Output.EnrichmentObservers;
+using MGroup.XFEM.Output.Mesh;
+using MGroup.XFEM.Output.Writers;
+using MGroup.XFEM.Solvers.PFetiDP;
 using Xunit;
 
 namespace MGroup.XFEM.Tests.SpecialSolvers
@@ -124,9 +129,55 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			analyzer.Analyze();
 		}
-		
-		public static void WriteCrackPath(ExteriorLsmCrack crack)
+
+		public static void SetupModelOutput(XModel<IXCrackElement> model, string outputDirectory)
 		{
+			// Crack geometry and interactions
+			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
+			var outputMesh = new ContinuousOutputMesh(model.Nodes.Values.OrderBy(n => n.ID).ToList(), model.EnumerateElements());
+			crack.Observers.Add(new CrackLevelSetPlotter(crack, outputMesh, outputDirectory));
+			crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
+
+			// Enrichments
+			var previousEnrichments = new PreviousEnrichmentsObserver();
+			model.RegisterEnrichmentObserver(previousEnrichments);
+			var newTipNodes = new NewCrackTipNodesObserver(crack);
+			model.RegisterEnrichmentObserver(newTipNodes);
+			var previousTipNodes = new PreviousCrackTipNodesObserver(crack, previousEnrichments);
+			model.RegisterEnrichmentObserver(previousTipNodes);
+			var allBodyNodes = new CrackBodyNodesObserver(crack);
+			model.RegisterEnrichmentObserver(allBodyNodes);
+			var newBodyNodes = new NewCrackBodyNodesObserver(crack, previousEnrichments, allBodyNodes);
+			model.RegisterEnrichmentObserver(newBodyNodes);
+			var rejectedBodyNodes = new RejectedCrackBodyNodesObserver(crack, newTipNodes, allBodyNodes);
+			model.RegisterEnrichmentObserver(rejectedBodyNodes);
+			var bodyNodesWithModifiedLevelSet = new CrackBodyNodesWithModifiedLevelSetObserver(
+				crack, previousEnrichments, allBodyNodes);
+			model.RegisterEnrichmentObserver(bodyNodesWithModifiedLevelSet);
+			var modifiedNodes = new NodesWithModifiedEnrichmentsObserver(
+				newTipNodes, previousTipNodes, newBodyNodes, bodyNodesWithModifiedLevelSet);
+			model.RegisterEnrichmentObserver(modifiedNodes);
+			var modifiedElements = new ElementsWithModifiedNodesObserver(modifiedNodes);
+			model.RegisterEnrichmentObserver(modifiedElements);
+			var nearModifiedNodes = new NodesNearModifiedNodesObserver(modifiedNodes, modifiedElements);
+			model.RegisterEnrichmentObserver(nearModifiedNodes);
+			
+			var enrichmentPlotter = new CrackEnrichmentPlotter(crack, outputDirectory, newTipNodes, previousTipNodes,
+				allBodyNodes, newBodyNodes, rejectedBodyNodes, nearModifiedNodes);
+			model.RegisterEnrichmentObserver(enrichmentPlotter);
+		}
+
+		public static void SetupPartitioningOutput(IComputeEnvironment environment, XModel<IXCrackElement> model, 
+			CrackFetiDPCornerDofsPlusLogging cornerDofs, string outputDirectory)
+		{
+			model.ModelObservers.Add(new PartitioningPlotter(outputDirectory, model, 2));
+			model.ModelObservers.Add(new CornerNodesPlotter(environment, model, cornerDofs, outputDirectory));
+		}
+
+		public static void WriteCrackPath(XModel<IXCrackElement> model)
+		{
+			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
+
 			Debug.WriteLine("Crack path:");
 			for (int i = 0; i < crack.CrackPath.Count; ++i)
 			{
