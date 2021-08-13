@@ -35,6 +35,24 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 
 		public IComputeEnvironment Environment { get; }
 
+		public int CountUniqueEntries()
+		{
+			Dictionary<int, double> countPerNode = Environment.CalcNodeData(node =>
+			{
+				int[] multiplicities = localIndexers[node].Multiplicities;
+
+				double localCount = 0.0;
+				for (int i = 0; i < multiplicities.Length; ++i)
+				{
+					localCount += 1.0 / multiplicities[i];
+				}
+
+				return localCount;
+			});
+			double globalCount = Environment.AllReduceSum(countPerNode);
+			return (int)globalCount;
+		}
+
 		public DistributedOverlappingIndexer.Local GetLocalComponent(int nodeID) => localIndexers[nodeID];
 
 		public bool IsCompatibleWith(IDistributedIndexer other) => this == other;

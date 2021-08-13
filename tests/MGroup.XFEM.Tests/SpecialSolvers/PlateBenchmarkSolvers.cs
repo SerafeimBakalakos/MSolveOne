@@ -163,6 +163,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(environment,
 				new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
 				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
+			solverFactory.EnableLogging = true;
 			solverFactory.ExplicitSubdomainMatrices = true;
 			solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(
 				new FetiDPCoarseProblemMatrixSymmetricCSparse());

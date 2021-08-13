@@ -12,8 +12,10 @@ namespace MGroup.Solvers.DDM.Output
 		private readonly string solverName;
 		private readonly int numSubdomains;
 		private int analysisIteration = -1;
-		private List<(int numIterations, double residualNormRatio)> data
-			= new List<(int numIterations, double residualNormRatio)>();
+		private SortedDictionary<int, (int numIterations, double residualNormRatio)> convergenceData
+			= new SortedDictionary<int, (int numIterations, double residualNormRatio)>();
+
+		private List<Dictionary<int, int>> problemSizeData = new List<Dictionary<int, int>>();
 
 		public DdmLogger(string solverName, int numSubdomains)
 		{
@@ -24,11 +26,24 @@ namespace MGroup.Solvers.DDM.Output
 		public void IncrementAnalysisIteration()
 		{
 			++analysisIteration;
+			problemSizeData.Add(new Dictionary<int, int>());
+		}
+
+		/// <summary>
+		/// Log the number of unique dofs for a specified level: Lvl 0 = free dofs, Lvl 1 = interface problem, 
+		/// Lvl 2 = coarse problem, Lvl 3 = interface problem of coarse problem (multilevel-DDM), 
+		/// Lvl 4 = coarse problem of coarse problem (multilevel-DDM), ...
+		/// </summary>
+		/// <param name="problemLevel"></param>
+		/// <param name="size"></param>
+		public void LogProblemSize(int problemLevel, int size)
+		{
+			problemSizeData[analysisIteration][problemLevel] = size;
 		}
 
 		public void LogSolverConvergenceData(int numIterations, double residualNormRatio)
 		{
-			data.Add((numIterations, residualNormRatio));
+			convergenceData[analysisIteration] = (numIterations, residualNormRatio);
 		}
 
 		public void WriteToConsole()
@@ -69,13 +84,32 @@ namespace MGroup.Solvers.DDM.Output
 			writer.WriteLine(DateTime.Now);
 			writer.WriteLine($"Solver: {solverName}");
 			writer.WriteLine($"Num subdomains: {numSubdomains}");
-			for (int t = 0; t < data.Count; ++t)
+			for (int t = 0; t < convergenceData.Count; ++t)
 			{
-				(int numIterations, double residualNorm) = data[t];
-				writer.WriteLine(
-					$"Analysis iteration {t}: Solver iterations = {numIterations}. Residual norm ratio = {residualNorm}");
+				(int numIterations, double residualNorm) = convergenceData[t];
+				var msg = new StringBuilder();
+				msg.Append($"Analysis iteration {t}:");
+				if (problemSizeData[t].TryGetValue(0, out int numFreeDofs))
+				{
+					msg.Append($" Num free dofs = {numFreeDofs}.");
+
+				}
+				if (problemSizeData[t].TryGetValue(1, out int numInterfaceDofs))
+				{
+					msg.Append($" Num interface dofs = {numInterfaceDofs}.");
+
+				}
+				if (problemSizeData[t].TryGetValue(2, out int numCoarseDofs))
+				{
+					msg.Append($" Num boundary dofs = {numCoarseDofs}.");
+
+				}
+				msg.Append($" Solver iterations = {numIterations}.");
+				msg.Append($" Residual norm ratio = {residualNorm}.");
+				writer.WriteLine(msg);
 			}
-			(int min, int max, double avg, double sum) = CalcStatistics(data.Select(d => d.numIterations));
+
+			(int min, int max, double avg, double sum) = CalcStatistics(convergenceData.Select(d => d.Value.numIterations));
 			writer.WriteLine($"Solver iteration statistics: min = {min}, max = {max}, average = {avg}, sum = {sum}");
 			writer.WriteLine("************************************************************************************************");
 		}

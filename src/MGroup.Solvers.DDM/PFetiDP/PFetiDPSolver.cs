@@ -32,10 +32,10 @@ namespace MGroup.Solvers.DDM.PFetiDP
 		public PFetiDPSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel,
 			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixFactoryPsm, bool explicitSubdomainMatrices,
 			IPsmPreconditioner preconditioner, IPsmInterfaceProblemSolverFactory interfaceProblemSolverFactory, bool isHomogeneous,
-			ICornerDofSelection cornerDofs, IFetiDPCoarseProblemFactory coarseProblemFactory, 
+			bool enableLogging, ICornerDofSelection cornerDofs, IFetiDPCoarseProblemFactory coarseProblemFactory, 
 			IFetiDPSubdomainMatrixManagerFactory<TMatrix> matrixFactoryFetiDP)
 			: base(environment, model, algebraicModel, matrixFactoryPsm, explicitSubdomainMatrices, preconditioner,
-				  interfaceProblemSolverFactory, isHomogeneous, "PFETI-DP solver")
+				  interfaceProblemSolverFactory, isHomogeneous, enableLogging, "PFETI-DP solver")
 		{
 			this.cornerDofs = cornerDofs;
 
@@ -103,7 +103,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			public override PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
 			{
 				return new PFetiDPSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
-					ExplicitSubdomainMatrices, null, InterfaceProblemSolverFactory, IsHomogeneousProblem,
+					ExplicitSubdomainMatrices, null, InterfaceProblemSolverFactory, IsHomogeneousProblem, EnableLogging,
 					cornerDofs, CoarseProblemFactory, FetiDPMatricesFactory);
 			}
 		}
