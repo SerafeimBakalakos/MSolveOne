@@ -97,7 +97,7 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 		private static XModel<IXCrackElement> CreateModel(int[] numElements)
 		{
 			var model = new XModel<IXCrackElement>(2);
-			model.Subdomains[subdomainID] = new XSubdomain(subdomainID);
+			model.Subdomains[subdomainID] = new XSubdomain<IXCrackElement>(subdomainID);
 			model.FindConformingSubcells = true;
 
 			// Materials, integration

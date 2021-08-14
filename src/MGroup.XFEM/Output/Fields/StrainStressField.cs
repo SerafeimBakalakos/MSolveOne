@@ -41,7 +41,7 @@ namespace MGroup.XFEM.Output.Fields
 		public (Dictionary<int, double[]> strains, Dictionary<int, double[]> stresses) CalcTensorsAtVertices(IGlobalVector solution)
 		{
 			if (model.Subdomains.Count != 1) throw new NotImplementedException();
-			XSubdomain subdomain = model.Subdomains.First().Value;
+			XSubdomain<IXMultiphaseElement> subdomain = model.Subdomains.First().Value;
 
 			var outStrainTensors = new Dictionary<int, double[]>();
 			var outStressTensors = new Dictionary<int, double[]>();

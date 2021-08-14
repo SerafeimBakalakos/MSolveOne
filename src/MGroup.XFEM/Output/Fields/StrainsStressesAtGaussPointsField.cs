@@ -28,7 +28,7 @@ namespace MGroup.XFEM.Output.Fields
 			CalcTensorsAtPoints(IGlobalVector solution)
 		{
 			if (model.Subdomains.Count != 1) throw new NotImplementedException();
-			XSubdomain subdomain = model.Subdomains.First().Value;
+			XSubdomain<IXMultiphaseElement> subdomain = model.Subdomains.First().Value;
 
 			var allStrains = new Dictionary<double[], double[]>();
 			var allStresses = new Dictionary<double[], double[]>();

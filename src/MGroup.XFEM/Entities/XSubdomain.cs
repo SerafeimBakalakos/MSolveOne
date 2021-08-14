@@ -8,7 +8,8 @@ using MGroup.MSolve.Discretization.Dofs;
 
 namespace MGroup.XFEM.Entities
 {
-	public class XSubdomain : ISubdomain
+	public class XSubdomain<TElement> : ISubdomain
+		where TElement : class, IXFiniteElement 
 	{
 		private readonly SortedDictionary<int, XNode> nodes = new SortedDictionary<int, XNode>();
 
@@ -19,7 +20,7 @@ namespace MGroup.XFEM.Entities
 
 		public Table<INode, IDofType, double> Constraints { get; } = new Table<INode, IDofType, double>();
 
-		public List<IXFiniteElement> Elements { get; } = new List<IXFiniteElement>();
+		public List<TElement> Elements { get; } = new List<TElement>();
 
 		public Vector Forces { get; set; } //TODO: this doesn't belong here
 
@@ -32,7 +33,7 @@ namespace MGroup.XFEM.Entities
 		public void DefineNodesFromElements()
 		{
 			nodes.Clear();
-			foreach (IXFiniteElement element in Elements)
+			foreach (TElement element in Elements)
 			{
 				foreach (XNode node in element.Nodes)
 				{
@@ -41,7 +42,9 @@ namespace MGroup.XFEM.Entities
 			}
 		}
 
-		public IEnumerable<IElement> EnumerateElements() => Elements;
+		IEnumerable<IElement> ISubdomain.EnumerateElements() => Elements;
+
+		public IEnumerable<TElement> EnumerateElements() => Elements;
 
 		public IEnumerable<INode> EnumerateNodes() => nodes.Values;
 

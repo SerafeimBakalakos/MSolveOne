@@ -25,9 +25,6 @@ namespace MGroup.XFEM.Output.Fields
 
 		public Dictionary<double[], double> CalcValuesAtVertices(IGlobalVector solution)
 		{
-			if (model.Subdomains.Count != 1) throw new NotImplementedException();
-			XSubdomain subdomain = model.Subdomains.First().Value;
-
 			var result = new Dictionary<double[], double>();
 			foreach (IXThermalElement element in model.Elements.Values)
 			{

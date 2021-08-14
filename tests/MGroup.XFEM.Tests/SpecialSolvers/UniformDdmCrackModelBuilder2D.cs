@@ -77,7 +77,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		public XModel<IXCrackElement> BuildSingleSubdomainModel()
 		{
 			var model = new XModel<IXCrackElement>(2);
-			model.Subdomains[0] = new XSubdomain(0);
+			model.Subdomains[0] = new XSubdomain<IXCrackElement>(0);
 
 			UniformCartesianMesh2D mesh = BuildMesh();
 

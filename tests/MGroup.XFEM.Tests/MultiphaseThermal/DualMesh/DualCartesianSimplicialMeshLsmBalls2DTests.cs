@@ -281,7 +281,7 @@ namespace MGroup.XFEM.Tests.MultiphaseThermal.DualMesh
 		private static XModel<IXMultiphaseElement> CreateModel(IStructuredMesh mesh)
 		{
 			var model = new XModel<IXMultiphaseElement>(dim);
-			model.Subdomains[0] = new XSubdomain(0);
+			model.Subdomains[0] = new XSubdomain<IXMultiphaseElement>(0);
 			for (int n = 0; n < mesh.NumNodesTotal; ++n)
 			{
 				model.Nodes[n] = new XNode(n, mesh.GetNodeCoordinates(mesh.GetNodeIdx(n)));

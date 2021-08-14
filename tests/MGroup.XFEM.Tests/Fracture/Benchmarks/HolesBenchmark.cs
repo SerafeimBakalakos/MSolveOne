@@ -232,7 +232,7 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 		private static XModel<IXCrackElement> CreateModel()
 		{
 			var model = new XModel<IXCrackElement>(2);
-			model.Subdomains[subdomainID] = new XSubdomain(subdomainID);
+			model.Subdomains[subdomainID] = new XSubdomain<IXCrackElement>(subdomainID);
 			model.FindConformingSubcells = true;
 
 			// Mesh generation

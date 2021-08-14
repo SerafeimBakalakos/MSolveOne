@@ -21,11 +21,11 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			for (int s = 0; s < numSubdomains; ++s)
 			{
-				model.Subdomains[s] = new XSubdomain(s);
+				model.Subdomains[s] = new XSubdomain<IXCrackElement>(s);
 			}
 			foreach (IXCrackElement element in model.Elements.Values)
 			{
-				XSubdomain subdomain = model.Subdomains[getSubdomainOfElement(element.ID)];
+				XSubdomain<IXCrackElement> subdomain = model.Subdomains[getSubdomainOfElement(element.ID)];
 				subdomain.Elements.Add(element);
 			}
 

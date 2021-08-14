@@ -321,7 +321,7 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 		private static XModel<IXCrackElement> CreateModel3x1()
 		{
 			var model = new XModel<IXCrackElement>(2);
-			model.Subdomains[subdomainID] = new XSubdomain(subdomainID);
+			model.Subdomains[subdomainID] = new XSubdomain<IXCrackElement>(subdomainID);
 
 			// Nodes
 			var nodes = new XNode[8];
@@ -378,7 +378,7 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 		private static XModel<IXCrackElement> CreateModel(int[] numElements)
 		{
 			var model = new XModel<IXCrackElement>(2);
-			model.Subdomains[subdomainID] = new XSubdomain(subdomainID);
+			model.Subdomains[subdomainID] = new XSubdomain<IXCrackElement>(subdomainID);
 
 			// Materials, integration
 			var material = new HomogeneousFractureMaterialField2D(E, v, thickness, false);

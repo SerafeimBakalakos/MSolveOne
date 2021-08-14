@@ -94,7 +94,7 @@ namespace MGroup.XFEM.Tests.Utilities
 			IThermalMaterialField materialField, bool cohesiveInterfaces)
 		{
 			var model = new XModel<IXMultiphaseElement>(2);
-			model.Subdomains[0] = new XSubdomain(0);
+			model.Subdomains[0] = new XSubdomain<IXMultiphaseElement>(0);
 
 			// Nodes
 			IStructuredMesh mesh;
@@ -158,7 +158,7 @@ namespace MGroup.XFEM.Tests.Utilities
 			bool cohesiveInterfaces)
 		{
 			var model = new XModel<IXMultiphaseElement>(2);
-			model.Subdomains[0] = new XSubdomain(0);
+			model.Subdomains[0] = new XSubdomain<IXMultiphaseElement>(0);
 
 			IStructuredMesh mesh = new UniformCartesianMesh2D.Builder(minCoords, maxCoords, numElements).BuildMesh();
 
@@ -195,7 +195,7 @@ namespace MGroup.XFEM.Tests.Utilities
 			bool cohesiveInterfaces)
 		{
 			var model = new XModel<IXMultiphaseElement>(3);
-			model.Subdomains[0] = new XSubdomain(0);
+			model.Subdomains[0] = new XSubdomain<IXMultiphaseElement>(0);
 
 			IStructuredMesh mesh;
 			if (cartesianMesh)
@@ -240,7 +240,7 @@ namespace MGroup.XFEM.Tests.Utilities
 			bool cohesiveInterfaces)
 		{
 			var model = new XModel<IXMultiphaseElement>(3);
-			model.Subdomains[0] = new XSubdomain(0);
+			model.Subdomains[0] = new XSubdomain<IXMultiphaseElement>(0);
 
 			// Nodes
 			IStructuredMesh mesh = new UniformCartesianMesh3D.Builder(minCoords, maxCoords, numElements).BuildMesh();

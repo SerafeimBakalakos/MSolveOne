@@ -16,7 +16,7 @@ using MGroup.MSolve.Solution.AlgebraicModel;
 //      be moved to a common class. Same goes for the interconnection methods of XSubdomain.
 namespace MGroup.XFEM.Entities
 {
-	public class XModel<TElement> : IXModel where TElement: IXFiniteElement
+	public class XModel<TElement> : IXModel where TElement: class, IXFiniteElement
 	{
 		private bool areDataStructuresConnected = false;
 
@@ -59,7 +59,7 @@ namespace MGroup.XFEM.Entities
 
 		public int NumSubdomains => Subdomains.Count;
 
-		public Dictionary<int, XSubdomain> Subdomains { get; } = new Dictionary<int, XSubdomain>();
+		public Dictionary<int, XSubdomain<TElement>> Subdomains { get; } = new Dictionary<int, XSubdomain<TElement>>();
 
 		public void ConnectDataStructures()
 		{
@@ -85,7 +85,6 @@ namespace MGroup.XFEM.Entities
 			return subdomainLoads;
 		}
 
-
 		public IEnumerable<IElement> EnumerateElements(int subdomainID) => Subdomains[subdomainID].Elements;
 
 		public IEnumerable<IXFiniteElement> EnumerateElements() 
@@ -95,6 +94,7 @@ namespace MGroup.XFEM.Entities
 			for (int i = 0; i < Elements.Count; ++i) result[i] = Elements[i];
 			return result;
 		}
+
 		public IEnumerable<Load> EnumerateNodalLoads(int subdomainID)
 		{
 			//TODO: This partitioning should be done in ConnectDataStructures and then just return the correct collection.
@@ -144,7 +144,7 @@ namespace MGroup.XFEM.Entities
 
 		public void SaveMaterialState()
 		{
-			foreach (XSubdomain subdomain in Subdomains.Values)
+			foreach (XSubdomain<TElement> subdomain in Subdomains.Values)
 			{
 				subdomain.SaveMaterialState();
 			}
@@ -173,7 +173,7 @@ namespace MGroup.XFEM.Entities
 		private void BuildInterconnectionData()
 		{
 			// Associate each element with its subdomains
-			foreach (XSubdomain subdomain in Subdomains.Values)
+			foreach (XSubdomain<TElement> subdomain in Subdomains.Values)
 			{
 				foreach (IXFiniteElement element in subdomain.Elements)
 				{
@@ -197,7 +197,7 @@ namespace MGroup.XFEM.Entities
 			}
 
 			// Associate each subdomain with its nodes
-			foreach (XSubdomain subdomain in Subdomains.Values) subdomain.DefineNodesFromElements();
+			foreach (XSubdomain<TElement> subdomain in Subdomains.Values) subdomain.DefineNodesFromElements();
 		}
 
 		private void CalcConformingSubcells()
