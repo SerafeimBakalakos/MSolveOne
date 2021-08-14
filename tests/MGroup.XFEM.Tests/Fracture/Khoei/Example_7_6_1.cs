@@ -286,7 +286,7 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 
 			double elementSize = Math.Max(maxCoords[0] / numElements[0], maxCoords[1] / numElements[1]);
 
-			var propagator = new JintegralPropagator2D(jIntegralRadiusRatio, jIntegrationRule, material, 
+			var propagator = new JintegralPropagator2D(model, jIntegralRadiusRatio, jIntegrationRule, material, 
 				new MaximumCircumferentialTensileStressCriterion(), 
 				new ConstantIncrement2D(1.5 * jIntegralRadiusRatio * elementSize));
 			(double growthAngle, double growthLength) = propagator.Propagate(algebraicModel, globalU,

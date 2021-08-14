@@ -230,7 +230,7 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 			//    GaussLegendre2D.GetQuadratureWithOrder(4, 4),
 			//    new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(4, 4)));
 			var jIntegrationRule = new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(4, 4));
-			var propagator = new JintegralPropagator2D(jIntegralRadiusRatio, jIntegrationRule, material,
+			var propagator = new JintegralPropagator2D(model, jIntegralRadiusRatio, jIntegrationRule, material,
 				new MaximumCircumferentialTensileStressCriterion(), new ConstantIncrement2D(growthLength));
 			var crack = new ExteriorLsmCrack(0, initialCrack, model, propagator);
 			geometryModel.Cracks[crack.ID] = crack;
