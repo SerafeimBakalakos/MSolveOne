@@ -149,13 +149,14 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public DistributedOverlappingVector CreateZeroVector() => new DistributedOverlappingVector(FreeDofIndexer);
 
-		public void DoPerElement(Func<int, IEnumerable<IElement>> accessElements, Action<IElement> elementAction)
+		public void DoPerElement<TElement>(Func<int, IEnumerable<TElement>> accessElements, Action<TElement> elementOperation)
+			where TElement: IElement
 		{
 			environment.DoPerNode(subdomainID =>
 			{
-				foreach (IElement element in accessElements(subdomainID))
+				foreach (TElement element in accessElements(subdomainID))
 				{
-					elementAction(element);
+					elementOperation(element);
 				}
 			});
 		}
@@ -356,6 +357,20 @@ namespace MGroup.Solvers.DDM.LinearSystem
 					distributedMatrix.LocalMatrices[subdomainID] = subdomainMatrix;
 				}
 			});
+		}
+
+		public double[] ReduceAddPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements,
+			Func<TElement, double[]> elementOperation)
+			where TElement: IElement
+		{
+			throw new NotImplementedException();
+		}
+
+		public double[] ReduceAddPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements,
+			Predicate<TElement> isActiveElement, Func<TElement, double[]> elementOperation)
+			where TElement: IElement
+		{
+			throw new NotImplementedException();
 		}
 
 		internal DistributedOverlappingMatrix<TMatrix> CheckCompatibleMatrix(IGlobalMatrix matrix) 

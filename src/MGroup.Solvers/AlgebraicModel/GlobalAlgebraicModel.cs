@@ -105,11 +105,12 @@ namespace MGroup.Solvers.AlgebraicModel
 			return result;
 		}
 
-		public void DoPerElement(Func<int, IEnumerable<IElement>> accessElements, Action<IElement> elementAction)
+		public void DoPerElement<TElement>(Func<int, IEnumerable<TElement>> accessElements, Action<TElement> elementOperation)
+			where TElement: IElement
 		{
-			foreach (IElement element in accessElements(subdomain.ID))
+			foreach (TElement element in accessElements(subdomain.ID))
 			{
-				elementAction(element);
+				elementOperation(element);
 			}
 		}
 
@@ -222,6 +223,42 @@ namespace MGroup.Solvers.AlgebraicModel
 				//TODO: This is a good point to notify solvers, etc, if the processed matrix is the linear system matrix 
 				globalMatrix.SingleMatrix = subdomainMatrix;
 			}
+			watch.Stop();
+		}
+
+		public double[] ReduceAddPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements, 
+			Func<TElement, double[]> elementOperation)
+			where TElement: IElement
+		{
+			var result = new double[numReducedValues];
+			foreach (TElement element in accessElements(subdomain.ID))
+			{
+				double[] partialResult = elementOperation(element);
+				for (int i = 0; i < numReducedValues; ++i)
+				{
+					result[i] += partialResult[i];
+				}
+			}
+			return result;
+		}
+
+		public double[] ReduceAddPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements,
+			Predicate<TElement> isActiveElement, Func<TElement, double[]> elementOperation)
+			where TElement: IElement
+		{
+			var result = new double[numReducedValues];
+			foreach (TElement element in accessElements(subdomain.ID))
+			{
+				if (isActiveElement(element))
+				{
+					double[] partialResult = elementOperation(element);
+					for (int i = 0; i < numReducedValues; ++i)
+					{
+						result[i] += partialResult[i];
+					}
+				}
+			}
+			return result;
 		}
 
 		internal GlobalMatrix<TMatrix> CheckCompatibleMatrix(IGlobalMatrix matrix)
