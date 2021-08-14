@@ -230,35 +230,35 @@ namespace MGroup.Solvers.AlgebraicModel
 			Func<TElement, double[]> elementOperation)
 			where TElement: IElement
 		{
-			var result = new double[numReducedValues];
+			var totalResult = new double[numReducedValues];
 			foreach (TElement element in accessElements(subdomain.ID))
 			{
-				double[] partialResult = elementOperation(element);
+				double[] elementResult = elementOperation(element);
 				for (int i = 0; i < numReducedValues; ++i)
 				{
-					result[i] += partialResult[i];
+					totalResult[i] += elementResult[i];
 				}
 			}
-			return result;
+			return totalResult;
 		}
 
 		public double[] ReduceAddPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements,
 			Predicate<TElement> isActiveElement, Func<TElement, double[]> elementOperation)
 			where TElement: IElement
 		{
-			var result = new double[numReducedValues];
+			var totalResult = new double[numReducedValues];
 			foreach (TElement element in accessElements(subdomain.ID))
 			{
 				if (isActiveElement(element))
 				{
-					double[] partialResult = elementOperation(element);
+					double[] elementResult = elementOperation(element);
 					for (int i = 0; i < numReducedValues; ++i)
 					{
-						result[i] += partialResult[i];
+						totalResult[i] += elementResult[i];
 					}
 				}
 			}
-			return result;
+			return totalResult;
 		}
 
 		internal GlobalMatrix<TMatrix> CheckCompatibleMatrix(IGlobalMatrix matrix)

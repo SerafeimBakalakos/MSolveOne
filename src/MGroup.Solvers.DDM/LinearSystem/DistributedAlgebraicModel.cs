@@ -363,14 +363,47 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			Func<TElement, double[]> elementOperation)
 			where TElement: IElement
 		{
-			throw new NotImplementedException();
+			Dictionary<int, double[]> subdomainResults = environment.CalcNodeData(subdomainID =>
+			{
+				var subdomainResult = new double[numReducedValues];
+				foreach (TElement element in accessElements(subdomainID))
+				{
+					double[] elementResult = elementOperation(element);
+					for (int i = 0; i < numReducedValues; ++i)
+					{
+						subdomainResult[i] += elementResult[i];
+					}
+				}
+				return subdomainResult;
+			});
+
+			double[] totalResult = environment.AllReduceSum(numReducedValues, subdomainResults);
+			return totalResult;
 		}
 
 		public double[] ReduceAddPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements,
 			Predicate<TElement> isActiveElement, Func<TElement, double[]> elementOperation)
 			where TElement: IElement
 		{
-			throw new NotImplementedException();
+			Dictionary<int, double[]> subdomainResults = environment.CalcNodeData(subdomainID =>
+			{
+				var subdomainResult = new double[numReducedValues];
+				foreach (TElement element in accessElements(subdomainID))
+				{
+					if (isActiveElement(element))
+					{
+						double[] elementResult = elementOperation(element);
+						for (int i = 0; i < numReducedValues; ++i)
+						{
+							subdomainResult[i] += elementResult[i];
+						}
+					}
+				}
+				return subdomainResult;
+			});
+
+			double[] totalResult = environment.AllReduceSum(numReducedValues, subdomainResults);
+			return totalResult;
 		}
 
 		internal DistributedOverlappingMatrix<TMatrix> CheckCompatibleMatrix(IGlobalMatrix matrix) 
