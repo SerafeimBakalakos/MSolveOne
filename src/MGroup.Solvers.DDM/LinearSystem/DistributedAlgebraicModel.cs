@@ -189,13 +189,16 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public double[] ExtractElementVector(IGlobalVector vector, IElement element)
 		{
-			if (!(environment is SequentialSharedEnvironment) && !(environment is TplSharedEnvironment))
-			{
-				throw new NotImplementedException("We need to locate the correct subdomain first");
-			}
 			DistributedOverlappingVector distributedVector = CheckCompatibleVector(vector);
+
 			int s = element.SubdomainID;
-			ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[s];
+			bool isLocalElement = SubdomainFreeDofOrderings.TryGetValue(s, out ISubdomainFreeDofOrdering subdomainDofs);
+			if (!isLocalElement)
+			{
+				throw new ArgumentException($"Element {element.ID} belongs to subdomain {s}, which is not local to this " +
+					$"memory space and thus all needed data are unavailable");
+			}
+
 			return subdomainDofs.ExtractVectorElementFromSubdomain(element, distributedVector.LocalVectors[s]);
 		}
 

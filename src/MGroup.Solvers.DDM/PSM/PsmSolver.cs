@@ -244,7 +244,7 @@ namespace MGroup.Solvers.DDM.Psm
 
 			public virtual PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
 			{
-				DdmLogger logger = EnableLogging ? new DdmLogger("PSM Solver", model.NumSubdomains) : null;
+				DdmLogger logger = EnableLogging ? new DdmLogger(environment, "PSM Solver", model.NumSubdomains) : null;
 				return new PsmSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
 					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolverFactory, IsHomogeneousProblem,
 					logger);

@@ -4,11 +4,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using MGroup.Environments;
 
 namespace MGroup.Solvers.DDM.Output
 {
 	public class DdmLogger
 	{
+		private readonly IComputeEnvironment environment;
 		private readonly string solverName;
 		private readonly int numSubdomains;
 		private int analysisIteration = -1;
@@ -17,8 +19,9 @@ namespace MGroup.Solvers.DDM.Output
 
 		private List<Dictionary<int, int>> problemSizeData = new List<Dictionary<int, int>>();
 
-		public DdmLogger(string solverName, int numSubdomains)
+		public DdmLogger(IComputeEnvironment environment, string solverName, int numSubdomains)
 		{
+			this.environment = environment;
 			this.solverName = solverName;
 			this.numSubdomains = numSubdomains;
 		}
@@ -48,18 +51,21 @@ namespace MGroup.Solvers.DDM.Output
 
 		public void WriteToConsole()
 		{
-			// Point the stream to standard output
-			var writer = new StreamWriter(Console.OpenStandardOutput());
-			writer.AutoFlush = true;
-			Console.SetOut(writer);
+			environment.DoGlobalOperation(() =>
+			{
+				// Point the stream to standard output
+				var writer = new StreamWriter(Console.OpenStandardOutput());
+				writer.AutoFlush = true;
+				Console.SetOut(writer);
 
-			// Call the abstract method
-			WriteToStream(writer);
+				// Call the abstract method
+				WriteToStream(writer);
 
-			// Recover the standard output stream
-			var standardOutput = new StreamWriter(Console.OpenStandardOutput());
-			standardOutput.AutoFlush = true;
-			Console.SetOut(standardOutput);
+				// Recover the standard output stream
+				var standardOutput = new StreamWriter(Console.OpenStandardOutput());
+				standardOutput.AutoFlush = true;
+				Console.SetOut(standardOutput);
+			});
 		}
 
 		public void WriteToDebug()
@@ -69,13 +75,16 @@ namespace MGroup.Solvers.DDM.Output
 
 		public void WriteToFile(string path, bool append = true)
 		{
-			using (var writer = new StreamWriter(path, append))
+			environment.DoGlobalOperation(() =>
 			{
+				using (var writer = new StreamWriter(path, append))
+				{
 #if DEBUG
-				writer.AutoFlush = true; // To look at intermediate output at certain breakpoints
+					writer.AutoFlush = true; // To look at intermediate output at certain breakpoints
 #endif
-				WriteToStream(writer);
-			}
+					WriteToStream(writer);
+				}
+			});
 		}
 
 		public void WriteToStream(StreamWriter writer)

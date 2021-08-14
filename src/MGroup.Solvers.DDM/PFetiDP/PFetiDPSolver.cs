@@ -103,7 +103,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 
 			public override PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
 			{
-				DdmLogger logger = EnableLogging ? new DdmLogger("PFETI-DP Solver", model.NumSubdomains) : null;
+				DdmLogger logger = EnableLogging ? new DdmLogger(environment, "PFETI-DP Solver", model.NumSubdomains) : null;
 				return new PFetiDPSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
 					ExplicitSubdomainMatrices, null, InterfaceProblemSolverFactory, IsHomogeneousProblem, logger,
 					cornerDofs, CoarseProblemFactory, FetiDPMatricesFactory);
