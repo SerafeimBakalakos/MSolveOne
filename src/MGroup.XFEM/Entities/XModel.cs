@@ -85,11 +85,14 @@ namespace MGroup.XFEM.Entities
 			return subdomainLoads;
 		}
 
-		public IEnumerable<IElement> EnumerateElements(int subdomainID) => Subdomains[subdomainID].Elements;
+		IEnumerable<IElement> IModel.EnumerateElements(int subdomainID) => Subdomains[subdomainID].Elements;
 
-		public IEnumerable<IXFiniteElement> EnumerateElements() 
+		public IEnumerable<TElement> EnumerateElements(int subdomainID) => Subdomains[subdomainID].Elements;
+
+		//TODO: There must be a better way than recreating the data structures. Nope just remove this. Operating on all elements 
+		//		should be done through IAlgebraicModel. 
+		public IEnumerable<IXFiniteElement> EnumerateElements()
 		{
-			//TODO: There must be a better way than recreating the data structures
 			var result = new IXFiniteElement[Elements.Count];
 			for (int i = 0; i < Elements.Count; ++i) result[i] = Elements[i];
 			return result;

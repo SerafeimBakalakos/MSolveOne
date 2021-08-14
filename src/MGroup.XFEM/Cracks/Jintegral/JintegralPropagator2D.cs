@@ -6,6 +6,7 @@ using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.DataStructures;
+using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Cracks.PropagationCriteria;
@@ -74,23 +75,18 @@ namespace MGroup.XFEM.Cracks.Jintegral
 		private double[] ComputeSIFS(IAlgebraicModel algebraicModel, IGlobalVector totalFreeDisplacements,
 			double[] crackTip, TipCoordinateSystem tipSystem, IEnumerable<IXCrackElement> tipElements)
 		{
-			Circle2D outerJintegralContour =
-				new Circle2D(crackTip[0], crackTip[1], ComputeRadiusOfJintegralOuterContour(tipElements));
+			var contour = new Circle2D(crackTip[0], crackTip[1], ComputeRadiusOfJintegralOuterContour(tipElements));
 
-			double[] interactionIntegrals = { 0.0, 0.0 };
-			foreach (IXCrackElement element in model.Elements.Values)
+			Predicate<IXCrackElement> isActiveElement = element => IsIntersectedByJintegralContour(contour, element);
+			Func<IXCrackElement, double[]> elementOperation = element =>
 			{
-				bool participatesInIntegration = IsIntersectedByJintegralContour(outerJintegralContour, element);
-				if (participatesInIntegration)
-				{
-					double[] nodalWeights = CalcNodalWeights(outerJintegralContour, element);
-					double[] elementDisplacements = algebraicModel.ExtractElementVector(totalFreeDisplacements, element);
-					(double mode1I, double mode2I) = ComputeInteractionIntegrals(
-						element, Vector.CreateFromArray(elementDisplacements), nodalWeights, tipSystem);
-					interactionIntegrals[0] += mode1I;
-					interactionIntegrals[1] += mode2I;
-				}
-			}
+				double[] nodalWeights = CalcNodalWeights(contour, element);
+				double[] elementDisplacements = algebraicModel.ExtractElementVector(totalFreeDisplacements, element);
+				return ComputeInteractionIntegrals(
+					element, Vector.CreateFromArray(elementDisplacements), nodalWeights, tipSystem);
+			};
+			double[] interactionIntegrals = algebraicModel.ReduceAddPerElement(
+				2, model.EnumerateElements, isActiveElement, elementOperation);
 
 			double sifMode1 = sifCalculationStrategy.CalculateSif(interactionIntegrals[0]);
 			double sifMode2 = sifCalculationStrategy.CalculateSif(interactionIntegrals[1]);
@@ -143,7 +139,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 			return magnificationOfJintegralRadius * Math.Sqrt(maxTipElementArea);
 		}
 
-		private (double mode1I, double mode2I) ComputeInteractionIntegrals(IXCrackElement element, Vector nodalDisplacements,
+		private double[] ComputeInteractionIntegrals(IXCrackElement element, Vector nodalDisplacements,
 			double[] nodalWeights, TipCoordinateSystem tipSystem)
 		{
 			double integralMode1 = 0.0;
@@ -207,7 +203,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 				integralMode1 += integrandMode1 * evalInterpolation.Jacobian.DirectDeterminant * gp.Weight;
 				integralMode2 += integrandMode2 * evalInterpolation.Jacobian.DirectDeterminant * gp.Weight;
 			}
-			return (integralMode1, integralMode2);
+			return new double[] { integralMode1, integralMode2 };
 		}
 
 		// In a non linear problem I would also have to pass the new displacements or I would have to update the
