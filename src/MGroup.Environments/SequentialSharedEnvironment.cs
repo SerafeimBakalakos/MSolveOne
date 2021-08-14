@@ -37,6 +37,20 @@ namespace MGroup.Environments
 			return sum;
 		}
 
+		public double[] AllReduceSum(int numReducedValues, Dictionary<int, double[]> valuesPerNode)
+		{
+			var sum = new double[numReducedValues];
+			foreach (int nodeID in nodeTopology.Nodes.Keys)
+			{
+				double[] nodeValues = valuesPerNode[nodeID];
+				for (int i = 0; i < numReducedValues; ++i)
+				{
+					sum[i] += nodeValues[i];
+				}
+			}
+			return sum;
+		}
+
 		public Dictionary<int, T> CalcNodeData<T>(Func<int, T> calcNodeData)
 		{
 			var result = new Dictionary<int, T>(nodeTopology.Nodes.Count);

@@ -21,6 +21,8 @@ namespace MGroup.Environments
 
 		double AllReduceSum(Dictionary<int, double> valuePerNode);
 
+		double[] AllReduceSum(int numReducedValues, Dictionary<int, double[]> valuesPerNode);
+
 		/// <summary>
 		/// Performs <paramref name="calcNodeData"/> on each <see cref="ComputeNode"/> and returns a dictionary where 
 		/// keys are the ids of the nodes. 

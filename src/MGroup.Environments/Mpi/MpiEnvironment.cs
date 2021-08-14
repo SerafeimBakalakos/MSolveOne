@@ -115,6 +115,24 @@ namespace MGroup.Environments.Mpi
 			}
 		}
 
+		public double[] AllReduceSum(int numReducedValues, Dictionary<int, double[]> valuesPerNode)
+		{
+			var localValues = new double[numReducedValues];
+			if (CommNodes != null)
+			{
+				//TODOMPI: reductions for local nodes can be done more efficiently. See TplSharedEnvironment
+				foreach (int nodeID in localNodes.Keys)
+				{
+					double[] nodeValues = valuesPerNode[nodeID];
+					for (int i = 0; i < numReducedValues; ++i)
+					{
+						localValues[i] += nodeValues[i];
+					}
+				}
+			}
+			return CommWorld.Allreduce(localValues, MpiNet.Operation<double>.Add);
+		}
+
 		public Dictionary<int, T> CalcNodeData<T>(Func<int, T> calcNodeData)
 		{
 			if (CommNodes == null)
