@@ -3,37 +3,40 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using MGroup.XFEM.Enrichment.Functions;
 using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.Enrichment.Observers
 {
 	public class NodesWithModifiedEnrichmentsObserver : IEnrichmentObserver_v2
 	{
-		private readonly HashSet<int> nodes = new HashSet<int>();
+		public HashSet<XNode> NodesWithModifiedEnrichments { get; } = new HashSet<XNode>();
 
-		public void IncrementAnalysisIteration()
+		public void EndCurrentAnalysisIteration()
 		{
 			WriteToDebug();
-			nodes.Clear();
 		}
 
 		public void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment)
 		{
-			nodes.Add(node.ID);
+			NodesWithModifiedEnrichments.Add(node);
 		}
 
 		public void LogEnrichmentRemoval(XNode node, EnrichmentItem enrichment)
 		{
-			nodes.Add(node.ID);
+			NodesWithModifiedEnrichments.Add(node);
+		}
+
+		public void StartNewAnalysisIteration()
+		{
+			NodesWithModifiedEnrichments.Clear();
 		}
 
 		public void WriteToDebug()
 		{
 			var msg = new StringBuilder("Nodes with modified enrichments:");
-			foreach (int node in nodes.OrderBy(n => n))
+			foreach (XNode node in NodesWithModifiedEnrichments.OrderBy(n => n.ID))
 			{
-				msg.Append(" " + node);
+				msg.Append(" " + node.ID);
 			}
 			Debug.WriteLine(msg);
 		}

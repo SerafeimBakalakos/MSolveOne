@@ -10,9 +10,9 @@ namespace MGroup.XFEM.Enrichment.Observers
 {
 	public class AllCrackStepNodesObserver : IEnrichmentObserver_v2
 	{
-		private readonly HashSet<int> nodes = new HashSet<int>();
+		public HashSet<XNode> AllCrackStepNodes { get; } = new HashSet<XNode>();
 
-		public void IncrementAnalysisIteration()
+		public void EndCurrentAnalysisIteration()
 		{
 			WriteToDebug();
 		}
@@ -21,7 +21,7 @@ namespace MGroup.XFEM.Enrichment.Observers
 		{
 			if (enrichment.EnrichmentFunctions[0] is CrackStepEnrichment)
 			{
-				nodes.Add(node.ID);
+				AllCrackStepNodes.Add(node);
 			}
 		}
 
@@ -29,16 +29,20 @@ namespace MGroup.XFEM.Enrichment.Observers
 		{
 			if (enrichment.EnrichmentFunctions[0] is CrackStepEnrichment)
 			{
-				nodes.Remove(node.ID);
+				AllCrackStepNodes.Remove(node);
 			}
+		}
+
+		public void StartNewAnalysisIteration()
+		{
 		}
 
 		public void WriteToDebug()
 		{
 			var msg = new StringBuilder("All crack step nodes:");
-			foreach (int node in nodes.OrderBy(n => n))
+			foreach (XNode node in AllCrackStepNodes.OrderBy(n => n.ID))
 			{
-				msg.Append(" " + node);
+				msg.Append(" " + node.ID);
 			}
 			Debug.WriteLine(msg);
 		}

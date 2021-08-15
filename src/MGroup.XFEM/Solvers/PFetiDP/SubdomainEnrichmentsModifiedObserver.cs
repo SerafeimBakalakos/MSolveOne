@@ -11,9 +11,8 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 	{
 		private readonly HashSet<int> modifiedSubdomains = new HashSet<int>();
 
-		public void IncrementAnalysisIteration()
+		public void EndCurrentAnalysisIteration()
 		{
-			modifiedSubdomains.Clear();
 		}
 
 		public bool IsConnectivityModified(int subdomainID)
@@ -34,6 +33,11 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 		public void LogEnrichmentRemoval(XNode node, EnrichmentItem enrichment)
 		{
 			modifiedSubdomains.UnionWith(node.Subdomains);
+		}
+
+		public void StartNewAnalysisIteration()
+		{
+			modifiedSubdomains.Clear();
 		}
 	}
 }

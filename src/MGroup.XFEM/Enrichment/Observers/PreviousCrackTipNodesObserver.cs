@@ -10,19 +10,18 @@ namespace MGroup.XFEM.Enrichment.Observers
 {
 	public class PreviousCrackTipNodesObserver : IEnrichmentObserver_v2
 	{
-		private readonly HashSet<int> nodes = new HashSet<int>();
+		public HashSet<XNode> PreviousCrackTipNodes { get; } = new HashSet<XNode>();
 
-		public void IncrementAnalysisIteration()
+		public void EndCurrentAnalysisIteration()
 		{
 			WriteToDebug();
-			nodes.Clear();
 		}
 
 		public void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment)
 		{
 			if (enrichment.EnrichmentFunctions[0] is ICrackTipEnrichment)
 			{
-				nodes.Remove(node.ID);
+				PreviousCrackTipNodes.Remove(node);
 			}
 		}
 
@@ -30,16 +29,21 @@ namespace MGroup.XFEM.Enrichment.Observers
 		{
 			if (enrichment.EnrichmentFunctions[0] is ICrackTipEnrichment)
 			{
-				nodes.Add(node.ID);
+				PreviousCrackTipNodes.Add(node);
 			}
+		}
+
+		public void StartNewAnalysisIteration()
+		{
+			PreviousCrackTipNodes.Clear();
 		}
 
 		public void WriteToDebug()
 		{
 			var msg = new StringBuilder("Previous crack tip nodes:");
-			foreach (int node in nodes.OrderBy(n => n))
+			foreach (XNode node in PreviousCrackTipNodes.OrderBy(n => n.ID))
 			{
-				msg.Append(" " + node);
+				msg.Append(" " + node.ID);
 			}
 			Debug.WriteLine(msg);
 		}

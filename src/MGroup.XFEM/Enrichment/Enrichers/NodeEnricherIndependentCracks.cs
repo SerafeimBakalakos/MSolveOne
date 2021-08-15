@@ -52,7 +52,7 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 		{
 			foreach (IEnrichmentObserver_v2 observer in Observers)
 			{
-				observer.IncrementAnalysisIteration();
+				observer.StartNewAnalysisIteration();
 			}
 
 			foreach (ICrack crack in geometryModel.Cracks.Values)
@@ -115,6 +115,11 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 					}
 				}
 				EnrichNodesWith(newHeavisideNodes, crack.CrackBodyEnrichment);
+			}
+
+			foreach (IEnrichmentObserver_v2 observer in Observers)
+			{
+				observer.EndCurrentAnalysisIteration();
 			}
 		}
 
