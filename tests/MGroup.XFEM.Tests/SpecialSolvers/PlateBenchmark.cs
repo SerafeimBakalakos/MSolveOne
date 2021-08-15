@@ -21,6 +21,7 @@ using MGroup.XFEM.Cracks.PropagationCriteria;
 using MGroup.XFEM.Cracks.PropagationTermination;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Enrichment.Enrichers;
+using MGroup.XFEM.Enrichment.Observers;
 using MGroup.XFEM.Enrichment.SingularityResolution;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Geometry.Boundaries;
@@ -130,6 +131,16 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			analyzer.Analyze();
 		}
 
+		public static void SetupEnrichmentObservers(XModel<IXCrackElement> model)
+		{
+			INodeEnricher enricher = model.GeometryModel.Enricher;
+			enricher.Observers.Add(new AllCrackStepNodesObserver());
+			enricher.Observers.Add(new NewCrackStepNodesObserver());
+			enricher.Observers.Add(new Enrichment.Observers.NewCrackTipNodesObserver());
+			enricher.Observers.Add(new Enrichment.Observers.PreviousCrackTipNodesObserver());
+			enricher.Observers.Add(new Enrichment.Observers.NodesWithModifiedEnrichmentsObserver());
+		}
+
 		public static void SetupModelOutput(XModel<IXCrackElement> model, string outputDirectory)
 		{
 			// Crack geometry and interactions
@@ -141,9 +152,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			// Enrichments
 			var previousEnrichments = new PreviousEnrichmentsObserver();
 			model.RegisterEnrichmentObserver(previousEnrichments);
-			var newTipNodes = new NewCrackTipNodesObserver(crack);
+			var newTipNodes = new Output.EnrichmentObservers.NewCrackTipNodesObserver(crack);
 			model.RegisterEnrichmentObserver(newTipNodes);
-			var previousTipNodes = new PreviousCrackTipNodesObserver(crack, previousEnrichments);
+			var previousTipNodes = new Output.EnrichmentObservers.PreviousCrackTipNodesObserver(crack, previousEnrichments);
 			model.RegisterEnrichmentObserver(previousTipNodes);
 			var allBodyNodes = new CrackBodyNodesObserver(crack);
 			model.RegisterEnrichmentObserver(allBodyNodes);
@@ -154,7 +165,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			var bodyNodesWithModifiedLevelSet = new CrackBodyNodesWithModifiedLevelSetObserver(
 				crack, previousEnrichments, allBodyNodes);
 			model.RegisterEnrichmentObserver(bodyNodesWithModifiedLevelSet);
-			var modifiedNodes = new NodesWithModifiedEnrichmentsObserver(
+			var modifiedNodes = new Output.EnrichmentObservers.NodesWithModifiedEnrichmentsObserver(
 				newTipNodes, previousTipNodes, newBodyNodes, bodyNodesWithModifiedLevelSet);
 			model.RegisterEnrichmentObserver(modifiedNodes);
 			var modifiedElements = new ElementsWithModifiedNodesObserver(modifiedNodes);

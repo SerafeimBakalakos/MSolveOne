@@ -1,14 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 //TODO: Move this, its implementations, singularity resolvers, etc to a sub-namespace.
 namespace MGroup.XFEM.Enrichment.Enrichers
 {
-    public interface INodeEnricher
-    {
-        void ApplyEnrichments();
+	public interface INodeEnricher
+	{
+		List<IEnrichmentObserver_v2> Observers { get; } //TODO: perhaps this should be passed into ApplyEnrichments()
 
-        IEnumerable<EnrichmentItem> DefineEnrichments();
-    }
+		void ApplyEnrichments();
+
+		IEnumerable<EnrichmentItem> DefineEnrichments();
+	}
 }

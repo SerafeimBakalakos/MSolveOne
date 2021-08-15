@@ -35,6 +35,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			int[] numElements = { 48, 48 };
 			XModel<IXCrackElement> model = PlateBenchmark.DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
 			PlateBenchmark.CreateGeometryModel(model);
+			PlateBenchmark.SetupEnrichmentObservers(model);
 			string outputDirectory = Path.Combine(workDirectory, "plots");
 			PlateBenchmark.SetupModelOutput(model, outputDirectory);
 
