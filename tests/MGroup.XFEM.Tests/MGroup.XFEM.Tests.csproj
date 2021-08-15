@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\src\MGroup.NumericalAnalyzers\MGroup.NumericalAnalyzers.csproj" />
     <ProjectReference Include="..\..\src\MGroup.Solvers.DDM\MGroup.Solvers.DDM.csproj" />
     <ProjectReference Include="..\..\src\MGroup.XFEM\MGroup.XFEM.csproj" />
+    <ProjectReference Include="..\MGroup.Solvers.DDM.Tests\MGroup.Solvers.DDM.Tests.csproj" />
   </ItemGroup>
 
 </Project>

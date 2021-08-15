@@ -61,12 +61,11 @@ namespace MGroup.XFEM.Tests.MultiphaseThermal.EpoxyAg
 
 				// This is the correct one
 				//double radiusExternal = Math.Pow(1 + densityEpoxy / densitySilver * weightFraction, 1.0 / 3) * radiusEpoxyPhase;
-				// Hack to test code
-				#region debug
+				
+				// Hacks to test code
 				//double radiusExternal = Math.Pow(1 + densityEpoxy / densitySilver * weightFraction, 1.0 / 3) * radiusEpoxyPhase + 100;
 				//double radiusExternal = radiusEpoxyPhase + 10;
 				double radiusExternal = radiusEpoxyPhase + 15;
-				#endregion
 
 				var newBallInternal = new Sphere(newCenter, radiusEpoxyPhase);
 				var newBallExternal = new Sphere(newCenter, radiusExternal);

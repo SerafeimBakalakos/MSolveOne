@@ -6,7 +6,6 @@ using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.DataStructures;
-using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Cracks.PropagationCriteria;
@@ -82,8 +81,9 @@ namespace MGroup.XFEM.Cracks.Jintegral
 			{
 				double[] nodalWeights = CalcNodalWeights(contour, element);
 				double[] elementDisplacements = algebraicModel.ExtractElementVector(totalFreeDisplacements, element);
-				return ComputeInteractionIntegrals(
+				double[] elementIntegrals = ComputeInteractionIntegrals(
 					element, Vector.CreateFromArray(elementDisplacements), nodalWeights, tipSystem);
+				return elementIntegrals;
 			};
 			double[] interactionIntegrals = algebraicModel.ReduceAddPerElement(
 				2, model.EnumerateElements, isActiveElement, elementOperation);

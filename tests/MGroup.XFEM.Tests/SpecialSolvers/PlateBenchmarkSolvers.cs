@@ -5,21 +5,18 @@ using System.Text;
 using MGroup.Environments;
 using MGroup.Environments.Mpi;
 using MGroup.LinearAlgebra.Matrices;
-using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
-using MGroup.MSolve.Solution;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
-using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PFetiDP;
 using MGroup.Solvers.DDM.Psm;
 using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
+using MGroup.Solvers.DDM.Tests;
 using MGroup.Solvers.Direct;
-using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Solvers.PFetiDP;
@@ -50,9 +47,11 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			PlateBenchmark.WriteCrackPath(model);
 		}
 
-		[Fact]
-		public static void AnalyzeWithPFetiDPSolver()
-			=> AnalyzeWithPFetiDPSolverInternal(new SequentialSharedEnvironment());
+		[Theory]
+		[InlineData(EnvironmentChoice.SequentialShared)]
+		[InlineData(EnvironmentChoice.TplShared)]
+		public static void AnalyzeWithPFetiDPSolver(EnvironmentChoice environmentChoice)
+			=> AnalyzeWithPFetiDPSolverInternal(environmentChoice.CreateEnvironment());
 
 		internal static void AnalyzeWithPFetiDPSolverInternal(IComputeEnvironment environment, int numClustersTotal = 1)
 		{
