@@ -31,7 +31,7 @@ namespace MGroup.MSolve.Solution.AlgebraicModel
 		/// <param name="accessElements"></param>
 		/// <param name="elementOperation"></param>
 		/// <returns></returns>
-		double[] ReduceAddPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements, 
+		double[] ReduceSumPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements, 
 			Func<TElement, double[]> elementOperation)
 			where TElement: IElement;
 
@@ -45,7 +45,7 @@ namespace MGroup.MSolve.Solution.AlgebraicModel
 		/// <param name="isActiveElement"></param>
 		/// <param name="elementOperation"></param>
 		/// <returns></returns>
-		double[] ReduceAddPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements,
+		double[] ReduceSumPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements,
 			Predicate<TElement> isActiveElement, Func<TElement, double[]> elementOperation)
 			where TElement: IElement;
 	}

@@ -85,7 +85,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 					element, Vector.CreateFromArray(elementDisplacements), nodalWeights, tipSystem);
 				return elementIntegrals;
 			};
-			double[] interactionIntegrals = algebraicModel.ReduceAddPerElement(
+			double[] interactionIntegrals = algebraicModel.ReduceSumPerElement(
 				2, model.EnumerateElements, isActiveElement, elementOperation);
 
 			double sifMode1 = sifCalculationStrategy.CalculateSif(interactionIntegrals[0]);

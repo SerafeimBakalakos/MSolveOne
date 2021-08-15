@@ -362,7 +362,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			});
 		}
 
-		public double[] ReduceAddPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements,
+		public double[] ReduceSumPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements,
 			Func<TElement, double[]> elementOperation)
 			where TElement: IElement
 		{
@@ -384,7 +384,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			return totalResult;
 		}
 
-		public double[] ReduceAddPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements,
+		public double[] ReduceSumPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements,
 			Predicate<TElement> isActiveElement, Func<TElement, double[]> elementOperation)
 			where TElement: IElement
 		{
