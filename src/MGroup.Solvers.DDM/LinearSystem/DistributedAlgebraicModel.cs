@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed;
@@ -66,6 +67,8 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		public HashSet<IAlgebraicModelObserver> Observers { get; }
 
 		public Dictionary<int, SubdomainLinearSystem<TMatrix>> SubdomainLinearSystems { get; }
+
+		public ISubdomainModification SubdomainModification { get; set; } = new NullSubdomainModification();
 
 		public SubdomainTopology SubdomainTopology { get; }
 
@@ -326,6 +329,16 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		{
 			environment.DoPerNode(subdomainID =>
 			{
+				if (SubdomainFreeDofOrderings.ContainsKey(subdomainID) 
+					&& !SubdomainModification.IsConnectivityModified(subdomainID))
+				{
+					return;
+				}
+
+				#region debug
+				Debug.WriteLine($"Ordering dofs of subdomain {subdomainID}");
+				Console.WriteLine($"Ordering dofs of subdomain {subdomainID}");
+				#endregion
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
 				SubdomainFreeDofOrderings[subdomainID] = dofOrderer.OrderFreeDofs(subdomain, model.AllDofs);
 				subdomainMatrixAssemblers[subdomainID].HandleDofOrderingWasModified();
@@ -351,6 +364,16 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				FreeDofIndexer.CheckCompatibleMatrix<TMatrix>(currentMatrix);
 			environment.DoPerNode(subdomainID =>
 			{
+				//if (!SubdomainModification.IsStiffnessModified(subdomainID))
+				//{
+				//	return;
+				//}
+
+				#region debug
+				Debug.WriteLine($"Building Kff of subdomain {subdomainID}");
+				Console.WriteLine($"Building Kff of subdomain {subdomainID}");
+				#endregion
+
 				IEnumerable<IElement> subdomainElements = accessElements(subdomainID);
 				TMatrix subdomainMatrix = subdomainMatrixAssemblers[subdomainID].RebuildSubdomainMatrix(
 					subdomainElements, SubdomainFreeDofOrderings[subdomainID], elementMatrixProvider, predicate);

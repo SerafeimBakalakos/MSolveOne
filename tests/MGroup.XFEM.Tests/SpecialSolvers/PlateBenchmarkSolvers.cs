@@ -66,8 +66,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				= PlateBenchmark.DescribePhysicalModel(numElements, numSubdomains, numClusters).BuildMultiSubdomainModel();
 			PlateBenchmark.CreateGeometryModel(model);
 
-			(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver, CrackFetiDPCornerDofs cornerDofs) 
-				= CreatePFetiDPSolver(environment, model, nodeTopology, outputDirectory);
+			(DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel, PsmSolver<SymmetricCscMatrix> solver, 
+				CrackFetiDPCornerDofs cornerDofs) 
+				= CreatePFetiDPSolver(environment, model, nodeTopology, true, outputDirectory);
 
 			if (!(environment is MpiEnvironment))
 			{
@@ -103,7 +104,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				PlateBenchmark.CreateGeometryModel(model);
 
 				(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver, _) = 
-					CreatePFetiDPSolver(environment, model, nodeTopology);
+					CreatePFetiDPSolver(environment, model, nodeTopology, true);
 
 				PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
 				//PlateBenchmark.WriteCrackPath(crack);
@@ -134,7 +135,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				PlateBenchmark.CreateGeometryModel(model);
 
 				(IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver, _) 
-					= CreatePFetiDPSolver(environment, model, nodeTopology);
+					= CreatePFetiDPSolver(environment, model, nodeTopology, true);
 
 				PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
 				//PlateBenchmark.WriteCrackPath(crack);
@@ -143,9 +144,10 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			}
 		}
 
-		private static (IAlgebraicModel algebraicModel, PsmSolver<SymmetricCscMatrix> solver, CrackFetiDPCornerDofs cornerDofs)
+		private static (DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel, PsmSolver<SymmetricCscMatrix> solver, 
+			CrackFetiDPCornerDofs cornerDofs)
 			CreatePFetiDPSolver(IComputeEnvironment environment, XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology,
-				string cornerNodesOutputDirectory = null)
+				bool reanalysis, string cornerNodesOutputDirectory = null)
 		{
 			// Environment
 			environment.Initialize(nodeTopology);
@@ -180,6 +182,13 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
+
+			if (reanalysis)
+			{
+				var observer = new SubdomainEnrichmentsModifiedObserver();
+				model.GeometryModel.Enricher.Observers.Add(observer);
+				algebraicModel.SubdomainModification = observer;
+			}
 
 			return (algebraicModel, solver, cornerDofs);
 		}

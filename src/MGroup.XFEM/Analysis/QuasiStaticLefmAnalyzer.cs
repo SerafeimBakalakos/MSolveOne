@@ -45,6 +45,7 @@ namespace MGroup.XFEM.Analysis
 			for (int iteration = 0; iteration < maxIterations; ++iteration)
 			{
 				Debug.WriteLine($"Crack propagation step {iteration}");
+				Console.WriteLine($"Crack propagation step {iteration}");
 
 				if (iteration == 0) model.Initialize();
 				else
@@ -91,8 +92,17 @@ namespace MGroup.XFEM.Analysis
 
 		private void BuildMatrices()
 		{
-			IGlobalMatrix Kff = algebraicModel.BuildGlobalMatrix(model.EnumerateElements, elementMatrixProvider);
-			solver.LinearSystem.Matrix = Kff;
+			if (solver.LinearSystem.Matrix == null)
+			{
+				IGlobalMatrix Kff = algebraicModel.BuildGlobalMatrix(model.EnumerateElements, elementMatrixProvider);
+				solver.LinearSystem.Matrix = Kff;
+			}
+			else
+			{
+				IGlobalMatrix Kff = solver.LinearSystem.Matrix;
+				algebraicModel.RebuildGlobalMatrixPartially(
+					Kff, model.EnumerateElements, elementMatrixProvider, new NullElementMarixPredicate());
+			}
 		}
 	}
 }
