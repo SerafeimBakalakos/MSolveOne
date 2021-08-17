@@ -133,12 +133,16 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 		public static void SetupEnrichmentObservers(XModel<IXCrackElement> model)
 		{
-			INodeEnricher enricher = model.GeometryModel.Enricher;
-			enricher.Observers.Add(new AllCrackStepNodesObserver());
-			enricher.Observers.Add(new NewCrackStepNodesObserver());
-			enricher.Observers.Add(new Enrichment.Observers.NewCrackTipNodesObserver());
-			enricher.Observers.Add(new Enrichment.Observers.PreviousCrackTipNodesObserver());
-			enricher.Observers.Add(new Enrichment.Observers.NodesWithModifiedEnrichmentsObserver());
+			var allCrackStepNodesObserver = new AllCrackStepNodesObserver();
+			var newCrackStepNodesObserver = new NewCrackStepNodesObserver();
+			var newCrackTipNodesObserver = new Enrichment.Observers.NewCrackTipNodesObserver();
+			var previousCrackTipNodesObserver = new Enrichment.Observers.PreviousCrackTipNodesObserver();
+			var nodesWithModifiedEnrichmentsObserver = new Enrichment.Observers.NodesWithModifiedEnrichmentsObserver();
+
+			var compositeObserver = new CompositeEnrichmentObserver();
+			compositeObserver.AddObservers(allCrackStepNodesObserver, newCrackStepNodesObserver, newCrackTipNodesObserver,
+				previousCrackTipNodesObserver/*, nodesWithModifiedEnrichmentsObserver*/);
+			model.GeometryModel.Enricher.Observers.Add(compositeObserver);
 		}
 
 		public static void SetupModelOutput(XModel<IXCrackElement> model, string outputDirectory)
@@ -168,7 +172,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			var modifiedNodes = new Output.EnrichmentObservers.NodesWithModifiedEnrichmentsObserver(
 				newTipNodes, previousTipNodes, newBodyNodes, bodyNodesWithModifiedLevelSet);
 			model.RegisterEnrichmentObserver(modifiedNodes);
-			var modifiedElements = new ElementsWithModifiedNodesObserver(modifiedNodes);
+			var modifiedElements = new Output.EnrichmentObservers.ElementsWithModifiedNodesObserver(modifiedNodes);
 			model.RegisterEnrichmentObserver(modifiedElements);
 			var nearModifiedNodes = new NodesNearModifiedNodesObserver(modifiedNodes, modifiedElements);
 			model.RegisterEnrichmentObserver(nearModifiedNodes);

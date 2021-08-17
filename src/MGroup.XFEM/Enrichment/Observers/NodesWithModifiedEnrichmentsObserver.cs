@@ -7,12 +7,18 @@ using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.Enrichment.Observers
 {
+	/// <summary>
+	/// Tracks nodes with different enrichments or different values of enrichment functions between two consecutive
+	/// crack propagation steps. These changes may result from application or removal of crack tip enrichments, application of 
+	/// crack body enrichments or change in the values of crack body enrichments or level sets, due to the crack curving.
+	/// </summary>
 	public class NodesWithModifiedEnrichmentsObserver : IEnrichmentObserver_v2
 	{
 		public HashSet<XNode> NodesWithModifiedEnrichments { get; } = new HashSet<XNode>();
 
 		public void EndCurrentAnalysisIteration()
 		{
+			throw new NotImplementedException("Also track if the level set has changed");
 			WriteToDebug();
 		}
 
