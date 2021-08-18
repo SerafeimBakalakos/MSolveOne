@@ -46,7 +46,6 @@ namespace MGroup.XFEM.Enrichment.Observers
 					}
 				}
 			}
-			WriteToDebug();
 		}
 
 		public void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment)
@@ -60,16 +59,6 @@ namespace MGroup.XFEM.Enrichment.Observers
 		public void StartNewAnalysisIteration()
 		{
 			RejectedHeavisideNodes.Clear();
-		}
-
-		public void WriteToDebug()
-		{
-			var msg = new StringBuilder("Rejected crack step nodes:");
-			foreach (XNode node in RejectedHeavisideNodes.OrderBy(n => n.ID))
-			{
-				msg.Append(" " + node.ID);
-			}
-			Debug.WriteLine(msg);
 		}
 	}
 }

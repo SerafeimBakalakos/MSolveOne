@@ -5,6 +5,7 @@ using System.Text;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Enrichment.Functions;
+using MGroup.XFEM.Enrichment.Observers;
 using MGroup.XFEM.Enrichment.SingularityResolution;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Phases;

@@ -30,7 +30,6 @@ namespace MGroup.XFEM.Enrichment.Observers
 		public void EndCurrentAnalysisIteration()
 		{
 			NodesWithModifiedEnrichments.UnionWith(crackStepNodesWithModifiedLevelSetObserver.StepNodesWithModifiedLevelSets);
-			WriteToDebug();
 		}
 
 		public void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment)
@@ -46,16 +45,6 @@ namespace MGroup.XFEM.Enrichment.Observers
 		public void StartNewAnalysisIteration()
 		{
 			NodesWithModifiedEnrichments.Clear();
-		}
-
-		public void WriteToDebug()
-		{
-			var msg = new StringBuilder("Nodes with modified enrichments:");
-			foreach (XNode node in NodesWithModifiedEnrichments.OrderBy(n => n.ID))
-			{
-				msg.Append(" " + node.ID);
-			}
-			Debug.WriteLine(msg);
 		}
 	}
 }

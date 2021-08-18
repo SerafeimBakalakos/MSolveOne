@@ -32,7 +32,6 @@ namespace MGroup.XFEM.Enrichment.Observers
 			{
 				ModifiedElements.UnionWith(node.ElementsDictionary.Values);
 			}
-			WriteToDebug();
 		}
 
 		public void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment)
@@ -46,16 +45,6 @@ namespace MGroup.XFEM.Enrichment.Observers
 		public void StartNewAnalysisIteration()
 		{
 			ModifiedElements.Clear();
-		}
-
-		public void WriteToDebug()
-		{
-			var msg = new StringBuilder("Elements with modified nodes:");
-			foreach (IXFiniteElement element in ModifiedElements.OrderBy(n => n.ID))
-			{
-				msg.Append(" " + element.ID);
-			}
-			Debug.WriteLine(msg);
 		}
 	}
 }

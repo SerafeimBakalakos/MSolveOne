@@ -16,7 +16,6 @@ namespace MGroup.XFEM.Enrichment.Observers
 
 		public void EndCurrentAnalysisIteration()
 		{
-			WriteToDebug();
 		}
 
 		public void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment)
@@ -38,16 +37,6 @@ namespace MGroup.XFEM.Enrichment.Observers
 		public void StartNewAnalysisIteration()
 		{
 			NewCrackStepNodes.Clear();
-		}
-
-		public void WriteToDebug()
-		{
-			var msg = new StringBuilder("New crack step nodes:");
-			foreach (XNode node in NewCrackStepNodes.OrderBy(n => n.ID))
-			{
-				msg.Append(" " + node.ID);
-			}
-			Debug.WriteLine(msg);
 		}
 	}
 }

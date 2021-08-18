@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.XFEM.Entities;
 
-namespace MGroup.XFEM.Enrichment
+namespace MGroup.XFEM.Enrichment.Observers
 {
 	public interface IEnrichmentObserver
 	{

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.XFEM.Enrichment;
+using MGroup.XFEM.Enrichment.Observers;
 using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.Solvers.PFetiDP

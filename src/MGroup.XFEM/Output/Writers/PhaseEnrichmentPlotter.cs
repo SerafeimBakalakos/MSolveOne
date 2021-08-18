@@ -5,6 +5,7 @@ using System.Linq;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Enrichment;
 using MGroup.XFEM.Enrichment.Functions;
+using MGroup.XFEM.Enrichment.Observers;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Output.Vtk;
 
