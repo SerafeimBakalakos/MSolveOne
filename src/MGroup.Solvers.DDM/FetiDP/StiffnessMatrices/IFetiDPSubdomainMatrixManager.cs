@@ -8,6 +8,8 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 {
 	public interface IFetiDPSubdomainMatrixManager
 	{
+		bool IsEmpty { get; }
+
 		IMatrix SchurComplementOfRemainderDofs { get; }
 
 		void CalcSchurComplementOfRemainderDofs();

@@ -8,6 +8,8 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 {
 	public interface IPsmSubdomainMatrixManager
 	{
+		bool IsEmpty { get; }
+
 		IMatrixView CalcSchurComplement();
 
 		void ClearSubMatrices();

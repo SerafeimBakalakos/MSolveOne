@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 using MGroup.Environments;
-using MGroup.LinearAlgebra.Distributed.IterativeMethods;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
 using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
@@ -66,14 +66,29 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			// Prepare subdomain-level dofs and matrices
 			environment.DoPerNode(subdomainID =>
 			{
-				//TODO: These should only happen if the connectivity of the subdomain changes. 
-				subdomainDofsFetiDP[subdomainID].SeparateFreeDofsIntoCornerAndRemainder(cornerDofs);
-				subdomainMatricesFetiDP[subdomainID].ReorderRemainderDofs();
-				subdomainDofsPFetiDP[subdomainID].MapPsmFetiDPDofs();
+				if (subdomainDofsFetiDP[subdomainID].IsEmpty
+					|| algebraicModel.SubdomainModification.IsConnectivityModified(subdomainID))
+				{
+					#region debug
+					Console.WriteLine($"Processing corner & remainder dofs of subdomain {subdomainID}");
+					Debug.WriteLine($"Processing corner & remainder dofs of subdomain {subdomainID}");
+					#endregion
+					subdomainDofsFetiDP[subdomainID].SeparateFreeDofsIntoCornerAndRemainder(cornerDofs);
+					subdomainMatricesFetiDP[subdomainID].ReorderRemainderDofs();
+					subdomainDofsPFetiDP[subdomainID].MapPsmFetiDPDofs();
+				}
 
-				subdomainMatricesFetiDP[subdomainID].HandleDofsWereModified();
-				subdomainMatricesFetiDP[subdomainID].ExtractKrrKccKrc();
-				subdomainMatricesFetiDP[subdomainID].InvertKrr();
+				if (subdomainMatricesFetiDP[subdomainID].IsEmpty
+					|| algebraicModel.SubdomainModification.IsStiffnessModified(subdomainID))
+				{
+					#region debug
+					Console.WriteLine($"Processing corner & remainder submatrices of subdomain {subdomainID}");
+					Debug.WriteLine($"Processing corner & remainder submatrices of subdomain {subdomainID}");
+					#endregion
+					subdomainMatricesFetiDP[subdomainID].HandleDofsWereModified();
+					subdomainMatricesFetiDP[subdomainID].ExtractKrrKccKrc();
+					subdomainMatricesFetiDP[subdomainID].InvertKrr();
+				}
 			});
 
 			// Prepare coarse problem

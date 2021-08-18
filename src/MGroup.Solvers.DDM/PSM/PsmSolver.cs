@@ -140,14 +140,29 @@ namespace MGroup.Solvers.DDM.Psm
 			// Prepare subdomain-level dofs and matrices
 			environment.DoPerNode(subdomainID =>
 			{
-				//TODO: These should only happen if the connectivity of the subdomain changes. 
-				subdomainDofsPsm[subdomainID].SeparateFreeDofsIntoBoundaryAndInternal();
-				subdomainMatricesPsm[subdomainID].ReorderInternalDofs();
+				if (subdomainDofsPsm[subdomainID].IsEmpty 
+					|| algebraicModel.SubdomainModification.IsConnectivityModified(subdomainID))
+				{
+					#region debug
+					Console.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
+					Debug.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
+					#endregion
+					subdomainDofsPsm[subdomainID].SeparateFreeDofsIntoBoundaryAndInternal();
+					subdomainMatricesPsm[subdomainID].ReorderInternalDofs();
+				}
 
-				//TODO: These should happen if the connectivity or stiffness of the subdomain changes
-				subdomainMatricesPsm[subdomainID].HandleDofsWereModified();
-				subdomainMatricesPsm[subdomainID].ExtractKiiKbbKib();
-				subdomainMatricesPsm[subdomainID].InvertKii();
+				if (subdomainMatricesPsm[subdomainID].IsEmpty 
+					|| algebraicModel.SubdomainModification.IsStiffnessModified(subdomainID))
+				{
+					#region debug
+					Console.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
+					Debug.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
+					#endregion
+					subdomainMatricesPsm[subdomainID].HandleDofsWereModified();
+					subdomainMatricesPsm[subdomainID].ExtractKiiKbbKib();
+					subdomainMatricesPsm[subdomainID].InvertKii();
+				}
+				
 			});
 
 			// Intersubdomain dofs

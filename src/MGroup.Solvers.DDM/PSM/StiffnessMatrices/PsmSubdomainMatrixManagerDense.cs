@@ -24,6 +24,8 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 			this.subdomainDofs = subdomainDofs;
 		}
 
+		public bool IsEmpty => inverseKii == null;
+
 		public IMatrixView CalcSchurComplement() => Kbb - Kbi * (inverseKii * Kib);
 
 		public void ClearSubMatrices()

@@ -31,6 +31,8 @@ namespace MGroup.Solvers.DDM.PSM.StiffnessMatrices
 			this.subdomainDofs = subdomainDofs;
 		}
 
+		public bool IsEmpty => inverseKii == null;
+
 		public IMatrixView CalcSchurComplement()
 		{
 			//TODO: Implement SchurComplement with A11 being in CSR format.

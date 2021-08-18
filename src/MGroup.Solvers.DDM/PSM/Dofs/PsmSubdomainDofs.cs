@@ -36,6 +36,8 @@ namespace MGroup.Solvers.DDM.PSM.Dofs
 
 		public int[] DofsInternalToFree { get; private set; }
 
+		public bool IsEmpty => DofOrderingBoundary == null;
+
 		public int NumFreeDofs { get; private set; }
 		
 		public void ReorderInternalDofs(DofPermutation permutation)

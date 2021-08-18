@@ -29,6 +29,8 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 
 		public int[] DofsRemainderToFree { get; private set; }
 
+		public bool IsEmpty => DofOrderingCorner == null;
+
 		public int SubdomainID { get; }
 
 		public void ReorderRemainderDofs(DofPermutation permutation)

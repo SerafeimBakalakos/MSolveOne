@@ -28,6 +28,8 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			this.subdomainDofs = subdomainDofs;
 		}
 
+		public bool IsEmpty => inverseKrr == null;
+
 		public IMatrix SchurComplementOfRemainderDofs => Scc;
 
 		public void CalcSchurComplementOfRemainderDofs()
