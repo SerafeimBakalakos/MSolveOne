@@ -34,7 +34,7 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 
 		public Dictionary<IXFiniteElement, HashSet<JunctionEnrichment>> JunctionElements { get; }
 
-		public List<IEnrichmentObserver_v2> Observers => throw new NotImplementedException();
+		public List<IEnrichmentObserver> Observers => throw new NotImplementedException();
 
 		public void ApplyEnrichments()
 		{

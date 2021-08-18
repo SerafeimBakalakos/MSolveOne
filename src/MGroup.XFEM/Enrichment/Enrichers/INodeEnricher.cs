@@ -7,7 +7,7 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 {
 	public interface INodeEnricher
 	{
-		List<IEnrichmentObserver_v2> Observers { get; } //TODO: perhaps this should be passed into ApplyEnrichments()
+		List<IEnrichmentObserver> Observers { get; } //TODO: perhaps this should be passed into ApplyEnrichments()
 
 		void ApplyEnrichments();
 

@@ -8,9 +8,11 @@ using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.Enrichment.Observers
 {
-	public class NewCrackTipNodesObserver : IEnrichmentObserver_v2
+	public class NewCrackTipNodesObserver : IEnrichmentObserver
 	{
 		public HashSet<XNode> NewCrackTipNodes { get; } = new HashSet<XNode>();
+
+		public IReadOnlyCollection<IEnrichmentObserver> ObserverDependencies => Array.Empty<IEnrichmentObserver>();
 
 		public void EndCurrentAnalysisIteration()
 		{

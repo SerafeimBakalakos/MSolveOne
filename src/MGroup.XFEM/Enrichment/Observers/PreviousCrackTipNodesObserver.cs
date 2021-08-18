@@ -8,9 +8,11 @@ using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.Enrichment.Observers
 {
-	public class PreviousCrackTipNodesObserver : IEnrichmentObserver_v2
+	public class PreviousCrackTipNodesObserver : IEnrichmentObserver
 	{
 		public HashSet<XNode> PreviousCrackTipNodes { get; } = new HashSet<XNode>();
+
+		public IReadOnlyCollection<IEnrichmentObserver> ObserverDependencies => Array.Empty<IEnrichmentObserver>();
 
 		public void EndCurrentAnalysisIteration()
 		{
@@ -19,10 +21,8 @@ namespace MGroup.XFEM.Enrichment.Observers
 
 		public void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment)
 		{
-			if (enrichment.EnrichmentFunctions[0] is ICrackTipEnrichment)
-			{
-				PreviousCrackTipNodes.Remove(node);
-			}
+			// Do not remove this node from the previous tip nodes. It is possible for a node to be enriched with tip function
+			// for 2 consecutive iterations.
 		}
 
 		public void LogEnrichmentRemoval(XNode node, EnrichmentItem enrichment)

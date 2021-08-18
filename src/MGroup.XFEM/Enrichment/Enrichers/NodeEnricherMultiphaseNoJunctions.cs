@@ -30,7 +30,7 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 			this.singularityResolver = singularityResolver;
 		}
 
-		public List<IEnrichmentObserver_v2> Observers => throw new NotImplementedException();
+		public List<IEnrichmentObserver> Observers { get; } = new List<IEnrichmentObserver>();
 
 		public static NodeEnricherMultiphaseNoJunctions CreateStructuralRidge(PhaseGeometryModel geometryModel, int dimension)
 		{
@@ -94,6 +94,11 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 
 		public void ApplyEnrichments()
 		{
+			foreach (IEnrichmentObserver observer in Observers)
+			{
+				observer.StartNewAnalysisIteration();
+			}
+
 			// Find nodes of elements interacting with each discontinuity. These nodes will potentially be enriched.
 			var nodesPerEnrichment = new Dictionary<EnrichmentItem, HashSet<XNode>>();
 			foreach (IPhase phase in geometricModel.Phases.Values)
@@ -132,6 +137,11 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 				{
 					EnrichNode(node, enrichment);
 				}
+			}
+
+			foreach (IEnrichmentObserver observer in Observers)
+			{
+				observer.EndCurrentAnalysisIteration();
 			}
 		}
 

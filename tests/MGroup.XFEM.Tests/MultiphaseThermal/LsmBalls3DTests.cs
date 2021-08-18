@@ -78,7 +78,7 @@ namespace MGroup.XFEM.Tests.MultiphaseThermal
 
 				// Plot enrichments
 				double elementSize = (maxCoords[0] - minCoords[0]) / numElements[0];
-				model.RegisterEnrichmentObserver(new PhaseEnrichmentPlotter(outputDirectory, model, elementSize, 3));
+				model.GeometryModel.Enricher.Observers.Add(new PhaseEnrichmentPlotter(outputDirectory, model, elementSize, 3));
 
 				// Initialize model state so that everything described above can be tracked
 				model.Initialize();

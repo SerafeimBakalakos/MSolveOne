@@ -33,7 +33,7 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 			this.fixedTipEnrichmentRegionRadius = fixedTipEnrichmentRegionRadius;
 		}
 
-		public List<IEnrichmentObserver_v2> Observers { get; } = new List<IEnrichmentObserver_v2>();
+		public List<IEnrichmentObserver> Observers { get; } = new List<IEnrichmentObserver>();
 
 		/// <summary>
 		/// 
@@ -50,7 +50,7 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 
 		public void ApplyEnrichments()
 		{
-			foreach (IEnrichmentObserver_v2 observer in Observers)
+			foreach (IEnrichmentObserver observer in Observers)
 			{
 				observer.StartNewAnalysisIteration();
 			}
@@ -117,7 +117,7 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 				EnrichNodesWith(newHeavisideNodes, crack.CrackBodyEnrichment);
 			}
 
-			foreach (IEnrichmentObserver_v2 observer in Observers)
+			foreach (IEnrichmentObserver observer in Observers)
 			{
 				observer.EndCurrentAnalysisIteration();
 			}
@@ -144,7 +144,7 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 					node.EnrichmentFuncs.Remove(enrichmentFunc);
 				}
 
-				foreach (IEnrichmentObserver_v2 observer in Observers)
+				foreach (IEnrichmentObserver observer in Observers)
 				{
 					observer.LogEnrichmentRemoval(node, enrichment);
 				}
@@ -163,7 +163,7 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 				}
 				enrichment.EnrichedNodes.Add(node);
 
-				foreach (IEnrichmentObserver_v2 observer in Observers)
+				foreach (IEnrichmentObserver observer in Observers)
 				{
 					observer.LogEnrichmentAddition(node, enrichment);
 				}

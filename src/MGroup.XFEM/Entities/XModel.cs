@@ -20,8 +20,6 @@ namespace MGroup.XFEM.Entities
 	{
 		private bool areDataStructuresConnected = false;
 
-		private List<IEnrichmentObserver> enrichmentObservers = new List<IEnrichmentObserver>();
-
 		public XModel(int dimension)
 		{
 			Dimension = dimension;
@@ -124,25 +122,6 @@ namespace MGroup.XFEM.Entities
 		{
 			ConnectDataStructures();
 			UpdateStatePrivate(true, null, null);
-		}
-
-		public void RegisterEnrichmentObserver(IEnrichmentObserver observer)
-		{
-			var previous = observer.RegisterAfterThese();
-			foreach (IEnrichmentObserver other in previous)
-			{
-				if (!enrichmentObservers.Contains(other))
-				{
-					if (other.RegisterAfterThese().Length == 0) enrichmentObservers.Add(other);
-					else
-					{
-						throw new ArgumentException("This observer depends on others that in turn depend on even more."
-							+ " The order of registration cannot be safely determined automatically."
-							+ " Please register them in the correct order yourself.");
-					}
-				}
-			}
-			enrichmentObservers.Add(observer);
 		}
 
 		public void SaveMaterialState()
@@ -288,7 +267,6 @@ namespace MGroup.XFEM.Entities
 
 			// Let observers read the current state and update themselves
 			foreach (IModelObserver observer in ModelObservers) observer.Update();
-			foreach (IEnrichmentObserver observer in enrichmentObservers) observer.Update(Enrichments.Values);
 		}
 	}
 }

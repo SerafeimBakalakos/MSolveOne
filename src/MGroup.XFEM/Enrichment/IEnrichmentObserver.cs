@@ -1,19 +1,21 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.Enrichment
 {
-    public interface IEnrichmentObserver
-    {
-        void Update(IEnumerable<EnrichmentItem> allEnrichments);
+	public interface IEnrichmentObserver
+	{
+		IReadOnlyCollection<IEnrichmentObserver> ObserverDependencies { get; }
 
-        /// <summary>
-        /// Observers will be called in the order they register. Therefore if an observer depends on the updated state of another
-        /// the independent one must register first.
-        /// </summary>
-        /// <returns></returns>
-        IEnrichmentObserver[] RegisterAfterThese();
+		void EndCurrentAnalysisIteration();
 
-    }
+		void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment);
+
+		void LogEnrichmentRemoval(XNode node, EnrichmentItem enrichment);
+
+		void StartNewAnalysisIteration();
+
+	}
 }

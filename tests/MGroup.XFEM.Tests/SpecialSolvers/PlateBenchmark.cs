@@ -29,7 +29,6 @@ using MGroup.XFEM.Geometry.Primitives;
 using MGroup.XFEM.Integration;
 using MGroup.XFEM.Integration.Quadratures;
 using MGroup.XFEM.Materials;
-using MGroup.XFEM.Output.EnrichmentObservers;
 using MGroup.XFEM.Output.Mesh;
 using MGroup.XFEM.Output.Writers;
 using MGroup.XFEM.Solvers.PFetiDP;
@@ -131,20 +130,6 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			analyzer.Analyze();
 		}
 
-		public static void SetupEnrichmentObservers(XModel<IXCrackElement> model)
-		{
-			var allCrackStepNodesObserver = new AllCrackStepNodesObserver();
-			var newCrackStepNodesObserver = new NewCrackStepNodesObserver();
-			var newCrackTipNodesObserver = new Enrichment.Observers.NewCrackTipNodesObserver();
-			var previousCrackTipNodesObserver = new Enrichment.Observers.PreviousCrackTipNodesObserver();
-			var nodesWithModifiedEnrichmentsObserver = new Enrichment.Observers.NodesWithModifiedEnrichmentsObserver();
-
-			var compositeObserver = new CompositeEnrichmentObserver();
-			compositeObserver.AddObservers(allCrackStepNodesObserver, newCrackStepNodesObserver, newCrackTipNodesObserver,
-				previousCrackTipNodesObserver/*, nodesWithModifiedEnrichmentsObserver*/);
-			model.GeometryModel.Enricher.Observers.Add(compositeObserver);
-		}
-
 		public static void SetupModelOutput(XModel<IXCrackElement> model, string outputDirectory)
 		{
 			// Crack geometry and interactions
@@ -154,32 +139,26 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
 
 			// Enrichments
-			var previousEnrichments = new PreviousEnrichmentsObserver();
-			model.RegisterEnrichmentObserver(previousEnrichments);
-			var newTipNodes = new Output.EnrichmentObservers.NewCrackTipNodesObserver(crack);
-			model.RegisterEnrichmentObserver(newTipNodes);
-			var previousTipNodes = new Output.EnrichmentObservers.PreviousCrackTipNodesObserver(crack, previousEnrichments);
-			model.RegisterEnrichmentObserver(previousTipNodes);
-			var allBodyNodes = new CrackBodyNodesObserver(crack);
-			model.RegisterEnrichmentObserver(allBodyNodes);
-			var newBodyNodes = new NewCrackBodyNodesObserver(crack, previousEnrichments, allBodyNodes);
-			model.RegisterEnrichmentObserver(newBodyNodes);
-			var rejectedBodyNodes = new RejectedCrackBodyNodesObserver(crack, newTipNodes, allBodyNodes);
-			model.RegisterEnrichmentObserver(rejectedBodyNodes);
-			var bodyNodesWithModifiedLevelSet = new CrackBodyNodesWithModifiedLevelSetObserver(
-				crack, previousEnrichments, allBodyNodes);
-			model.RegisterEnrichmentObserver(bodyNodesWithModifiedLevelSet);
-			var modifiedNodes = new Output.EnrichmentObservers.NodesWithModifiedEnrichmentsObserver(
-				newTipNodes, previousTipNodes, newBodyNodes, bodyNodesWithModifiedLevelSet);
-			model.RegisterEnrichmentObserver(modifiedNodes);
-			var modifiedElements = new Output.EnrichmentObservers.ElementsWithModifiedNodesObserver(modifiedNodes);
-			model.RegisterEnrichmentObserver(modifiedElements);
-			var nearModifiedNodes = new NodesNearModifiedNodesObserver(modifiedNodes, modifiedElements);
-			model.RegisterEnrichmentObserver(nearModifiedNodes);
-			
-			var enrichmentPlotter = new CrackEnrichmentPlotter(crack, outputDirectory, newTipNodes, previousTipNodes,
-				allBodyNodes, newBodyNodes, rejectedBodyNodes, nearModifiedNodes);
-			model.RegisterEnrichmentObserver(enrichmentPlotter);
+			var allCrackStepNodes = new AllCrackStepNodesObserver();
+			var newCrackStepNodes = new NewCrackStepNodesObserver();
+			var newCrackTipNodes = new NewCrackTipNodesObserver();
+			var previousCrackTipNodes = new PreviousCrackTipNodesObserver();
+			var rejectedCrackStepNodes = new RejectedCrackStepNodesObserver(
+				crack, newCrackTipNodes, allCrackStepNodes);
+			var nodesWithModifiedLevelSet = new CrackStepNodesWithModifiedLevelSetObserver(crack);
+			var nodesWithModifiedEnrichments = new NodesWithModifiedEnrichmentsObserver(nodesWithModifiedLevelSet);
+			var elementsWithModifiedNodes = new ElementsWithModifiedNodesObserver(nodesWithModifiedEnrichments);
+			var nodesNearModifiedNodes = new NodesNearModifiedNodesObserver(
+				nodesWithModifiedEnrichments, elementsWithModifiedNodes);
+			var enrichmentPlotter = new CrackEnrichmentPlotter(crack, outputDirectory, newCrackTipNodes, previousCrackTipNodes,
+				allCrackStepNodes, newCrackStepNodes, rejectedCrackStepNodes, nodesNearModifiedNodes);
+
+			var compositeObserver = new CompositeEnrichmentObserver();
+			compositeObserver.AddObservers(
+				allCrackStepNodes, newCrackStepNodes, newCrackTipNodes, previousCrackTipNodes, rejectedCrackStepNodes,
+				nodesWithModifiedLevelSet, nodesWithModifiedEnrichments, elementsWithModifiedNodes, nodesNearModifiedNodes,
+				enrichmentPlotter);
+			model.GeometryModel.Enricher.Observers.Add(compositeObserver);
 		}
 
 		public static void SetupPartitioningOutput(IComputeEnvironment environment, XModel<IXCrackElement> model, 

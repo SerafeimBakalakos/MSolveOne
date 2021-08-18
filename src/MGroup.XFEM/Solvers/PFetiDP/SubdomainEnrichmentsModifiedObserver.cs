@@ -7,9 +7,11 @@ using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.Solvers.PFetiDP
 {
-	public class SubdomainEnrichmentsModifiedObserver : ISubdomainModification, IEnrichmentObserver_v2
+	public class SubdomainEnrichmentsModifiedObserver : ISubdomainModification, IEnrichmentObserver
 	{
 		private readonly HashSet<int> modifiedSubdomains = new HashSet<int>();
+
+		public IReadOnlyCollection<IEnrichmentObserver> ObserverDependencies => Array.Empty<IEnrichmentObserver>();
 
 		public void EndCurrentAnalysisIteration()
 		{

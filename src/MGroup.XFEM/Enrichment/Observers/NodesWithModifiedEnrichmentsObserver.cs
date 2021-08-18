@@ -12,13 +12,24 @@ namespace MGroup.XFEM.Enrichment.Observers
 	/// crack propagation steps. These changes may result from application or removal of crack tip enrichments, application of 
 	/// crack body enrichments or change in the values of crack body enrichments or level sets, due to the crack curving.
 	/// </summary>
-	public class NodesWithModifiedEnrichmentsObserver : IEnrichmentObserver_v2
+	public class NodesWithModifiedEnrichmentsObserver : IEnrichmentObserver
 	{
+		private readonly CrackStepNodesWithModifiedLevelSetObserver crackStepNodesWithModifiedLevelSetObserver;
+
+		public NodesWithModifiedEnrichmentsObserver(
+			CrackStepNodesWithModifiedLevelSetObserver crackStepNodesWithModifiedLevelSetObserver)
+		{
+			this.crackStepNodesWithModifiedLevelSetObserver = crackStepNodesWithModifiedLevelSetObserver;
+		}
+
 		public HashSet<XNode> NodesWithModifiedEnrichments { get; } = new HashSet<XNode>();
+
+		public IReadOnlyCollection<IEnrichmentObserver> ObserverDependencies
+			=> new IEnrichmentObserver[] { crackStepNodesWithModifiedLevelSetObserver };
 
 		public void EndCurrentAnalysisIteration()
 		{
-			throw new NotImplementedException("Also track if the level set has changed");
+			NodesWithModifiedEnrichments.UnionWith(crackStepNodesWithModifiedLevelSetObserver.StepNodesWithModifiedLevelSets);
 			WriteToDebug();
 		}
 
