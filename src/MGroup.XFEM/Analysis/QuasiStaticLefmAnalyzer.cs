@@ -24,15 +24,17 @@ namespace MGroup.XFEM.Analysis
 		private readonly ISolver solver;
 		private readonly int maxIterations;
 		private readonly IPropagationTermination termination;
+		private readonly bool reanalysis;
 
 		public QuasiStaticLefmAnalyzer(XModel<IXCrackElement> model, IAlgebraicModel algebraicModel, ISolver solver, 
-			int maxIterations, IPropagationTermination terminationCriterion)
+			int maxIterations, IPropagationTermination terminationCriterion, bool reanalysis = true)
 		{
 			this.model = model;
 			this.algebraicModel = algebraicModel;
 			this.solver = solver;
 			this.maxIterations = maxIterations;
 			this.termination = terminationCriterion;
+			this.reanalysis = reanalysis;
 			this.elementMatrixProvider = new ElementStructuralStiffnessProvider();
 		}
 
@@ -47,7 +49,12 @@ namespace MGroup.XFEM.Analysis
 				Debug.WriteLine($"Crack propagation step {iteration}");
 				Console.WriteLine($"Crack propagation step {iteration}");
 
-				if (iteration == 0) model.Initialize();
+				if (iteration == 0)
+				{
+					model.Initialize();
+					algebraicModel.OrderDofs();
+					BuildMatrices();
+				}
 				else
 				{
 					model.Update(algebraicModel, totalDisplacementsFreeDofs);
@@ -55,18 +62,24 @@ namespace MGroup.XFEM.Analysis
 					{
 						if (termination.MustTerminate(crack))
 						{
-							Status = 
+							Status =
 								$"Terminated at iteration {iteration}, because of crack {crack.ID}: {termination.Description}";
 							return;
 						}
+					}
 
+					if (reanalysis)
+					{
+						algebraicModel.ReorderDofs();
+						RebuildMatrices();
+					}
+					else
+					{
+						algebraicModel.OrderDofs();
+						BuildMatrices();
 					}
 				}
 
-				algebraicModel.OrderDofs();
-
-				// Create the stiffness matrix and forces vector
-				BuildMatrices();
 				AddLoadsToRhs();
 
 				// Plot domain decomposition data, if necessary
@@ -92,17 +105,15 @@ namespace MGroup.XFEM.Analysis
 
 		private void BuildMatrices()
 		{
-			if (solver.LinearSystem.Matrix == null)
-			{
-				IGlobalMatrix Kff = algebraicModel.BuildGlobalMatrix(model.EnumerateElements, elementMatrixProvider);
-				solver.LinearSystem.Matrix = Kff;
-			}
-			else
-			{
-				IGlobalMatrix Kff = solver.LinearSystem.Matrix;
-				algebraicModel.RebuildGlobalMatrixPartially(
-					Kff, model.EnumerateElements, elementMatrixProvider, new NullElementMarixPredicate());
-			}
+			IGlobalMatrix Kff = algebraicModel.BuildGlobalMatrix(model.EnumerateElements, elementMatrixProvider);
+			solver.LinearSystem.Matrix = Kff;
+		}
+
+		private void RebuildMatrices()
+		{
+			IGlobalMatrix previousKff = solver.LinearSystem.Matrix;
+			solver.LinearSystem.Matrix = algebraicModel.RebuildGlobalMatrixPartially(
+				previousKff, model.EnumerateElements, elementMatrixProvider);
 		}
 	}
 }

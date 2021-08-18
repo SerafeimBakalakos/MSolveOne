@@ -54,8 +54,6 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		public ConcurrentDictionary<int, ISubdomainFreeDofOrdering> SubdomainFreeDofOrderings { get; } 
 			= new ConcurrentDictionary<int, ISubdomainFreeDofOrdering>();
 
-		internal Guid Format { get; private set; }
-
 		//TODOMPI: Perhaps this and subdomain free dof orderings must be managed by a dedicated component. That component could 
 		//		also perform some of all these tasks done by SubdomainTopology.
 		public DistributedOverlappingIndexer FreeDofIndexer { get; private set; } 
@@ -140,6 +138,11 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			var globalMatrix = new DistributedOverlappingMatrix<TMatrix>(FreeDofIndexer);
 			environment.DoPerNode(subdomainID =>
 			{
+				#region debug
+				Debug.WriteLine($"Building Kff of subdomain {subdomainID}");
+				Console.WriteLine($"Building Kff of subdomain {subdomainID}");
+				#endregion
+
 				ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[subdomainID];
 				TMatrix matrix = subdomainMatrixAssemblers[subdomainID].BuildGlobalMatrix(
 						subdomainDofs, accessElements(subdomainID), elementMatrixProvider);
@@ -329,7 +332,35 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		{
 			environment.DoPerNode(subdomainID =>
 			{
-				if (SubdomainFreeDofOrderings.ContainsKey(subdomainID) 
+				#region debug
+				Debug.WriteLine($"Ordering dofs of subdomain {subdomainID}");
+				Console.WriteLine($"Ordering dofs of subdomain {subdomainID}");
+				#endregion
+
+				ISubdomain subdomain = model.GetSubdomain(subdomainID);
+				SubdomainFreeDofOrderings[subdomainID] = dofOrderer.OrderFreeDofs(subdomain, model.AllDofs);
+				subdomainMatrixAssemblers[subdomainID].HandleDofOrderingWasModified();
+			});
+
+			SubdomainTopology.FindCommonDofsBetweenSubdomains();
+			FreeDofIndexer = SubdomainTopology.CreateDistributedVectorIndexer(s => SubdomainFreeDofOrderings[s].FreeDofs);
+
+			foreach (IAlgebraicModelObserver observer in Observers)
+			{
+				observer.HandleDofOrderWasModified();
+			}
+
+			// Define new format and recreate objects using it 
+			LinearSystem.Matrix = null; // If this is set to null, I cannot reuse portions of the previous matrix
+			LinearSystem.RhsVector = CreateZeroVector();
+			LinearSystem.Solution = CreateZeroVector();
+		}
+
+		public void ReorderDofs()
+		{
+			environment.DoPerNode(subdomainID =>
+			{
+				if (SubdomainFreeDofOrderings.ContainsKey(subdomainID)
 					&& !SubdomainModification.IsConnectivityModified(subdomainID))
 				{
 					return;
@@ -339,20 +370,23 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				Debug.WriteLine($"Ordering dofs of subdomain {subdomainID}");
 				Console.WriteLine($"Ordering dofs of subdomain {subdomainID}");
 				#endregion
+
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
 				SubdomainFreeDofOrderings[subdomainID] = dofOrderer.OrderFreeDofs(subdomain, model.AllDofs);
 				subdomainMatrixAssemblers[subdomainID].HandleDofOrderingWasModified();
 			});
+
+			//TODO: reuse data from previous FreeDofIndexer
 			SubdomainTopology.FindCommonDofsBetweenSubdomains();
 			FreeDofIndexer = SubdomainTopology.CreateDistributedVectorIndexer(s => SubdomainFreeDofOrderings[s].FreeDofs);
+
 			foreach (IAlgebraicModelObserver observer in Observers)
 			{
 				observer.HandleDofOrderWasModified();
 			}
 
 			// Define new format and recreate objects using it 
-			Format = Guid.NewGuid();
-			LinearSystem.Matrix = null;
+			//LinearSystem.Matrix = null; // If this is set to null, I cannot reuse portions of the previous matrix
 			LinearSystem.RhsVector = CreateZeroVector();
 			LinearSystem.Solution = CreateZeroVector();
 		}
@@ -383,6 +417,35 @@ namespace MGroup.Solvers.DDM.LinearSystem
 					distributedMatrix.LocalMatrices[subdomainID] = subdomainMatrix;
 				}
 			});
+		}
+
+		public IGlobalMatrix RebuildGlobalMatrixPartially(IGlobalMatrix previousMatrix, 
+			Func<int, IEnumerable<IElement>> accessElements, IElementMatrixProvider elementMatrixProvider)
+		{
+			var previousMatrixDistributed = (DistributedOverlappingMatrix<TMatrix>)previousMatrix;
+			var newGlobalMatrix = new DistributedOverlappingMatrix<TMatrix>(FreeDofIndexer);
+			environment.DoPerNode(subdomainID =>
+			{
+				if (SubdomainModification.IsStiffnessModified(subdomainID))
+				{
+					#region debug
+					Debug.WriteLine($"Building Kff of subdomain {subdomainID}");
+					Console.WriteLine($"Building Kff of subdomain {subdomainID}");
+					#endregion
+
+					ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[subdomainID];
+					TMatrix matrix = subdomainMatrixAssemblers[subdomainID].BuildGlobalMatrix(
+							subdomainDofs, accessElements(subdomainID), elementMatrixProvider);
+					newGlobalMatrix.LocalMatrices[subdomainID] = matrix;
+				}
+				else
+				{
+					//TODO: check the previous matrix somehow
+					newGlobalMatrix.LocalMatrices[subdomainID] = previousMatrixDistributed.LocalMatrices[subdomainID];
+				}
+			});
+
+			return newGlobalMatrix;
 		}
 
 		public double[] ReduceSumPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements,

@@ -37,5 +37,17 @@ namespace MGroup.MSolve.Solution.AlgebraicModel
 		/// <param name="predicate"></param>
 		void RebuildGlobalMatrixPartially(IGlobalMatrix currentMatrix, Func<int, IEnumerable<IElement>> accessElements,
 			IElementMatrixProvider elementMatrixProvider, IElementMatrixPredicate predicate);
+
+		/// <summary>
+		/// Builds and returns the linear system matrix that corresponds to the free (unconstrained) freedom degrees. Reuses 
+		/// portions of <paramref name="previousMatrix"/> that have not changed due to partial changes in free dofs. 
+		/// </summary>
+		/// <param name="previousMatrix">
+		/// A matrix that corresponds to different dofs, but parts of it can be reused. Will not be modified.
+		/// </param>
+		/// <param name="accessElements"></param>
+		/// <param name="elementMatrixProvider"></param>
+		IGlobalMatrix RebuildGlobalMatrixPartially(IGlobalMatrix previousMatrix,
+			Func<int, IEnumerable<IElement>> accessElements, IElementMatrixProvider elementMatrixProvider);
 	}
 }

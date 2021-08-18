@@ -206,6 +206,8 @@ namespace MGroup.Solvers.AlgebraicModel
 			LinearSystem.Solution = CreateZeroVector();
 		}
 
+		public void ReorderDofs() => OrderDofs();
+
 		public void RebuildGlobalMatrixPartially(
 			IGlobalMatrix currentMatrix, Func<int, IEnumerable<IElement>> accessElements,
 			IElementMatrixProvider elementMatrixProvider, IElementMatrixPredicate predicate)
@@ -224,6 +226,13 @@ namespace MGroup.Solvers.AlgebraicModel
 				globalMatrix.SingleMatrix = subdomainMatrix;
 			}
 			watch.Stop();
+		}
+
+		public IGlobalMatrix RebuildGlobalMatrixPartially(IGlobalMatrix previousMatrix, 
+			Func<int, IEnumerable<IElement>> accessElements, IElementMatrixProvider elementMatrixProvider)
+		{
+			// Any change that happened in dofs affected the whole matrix, which needs to be built from scratch.
+			return BuildGlobalMatrix(accessElements, elementMatrixProvider);
 		}
 
 		public double[] ReduceSumPerElement<TElement>(int numReducedValues, Func<int, IEnumerable<TElement>> accessElements, 

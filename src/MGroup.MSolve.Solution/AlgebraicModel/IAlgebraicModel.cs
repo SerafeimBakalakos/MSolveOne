@@ -15,5 +15,11 @@ namespace MGroup.MSolve.Solution.AlgebraicModel
 		IGlobalLinearSystem LinearSystem { get; }
 
 		void OrderDofs();
+
+		/// <summary>
+		/// Same effect as <see cref="OrderDofs"/>, but avoids repeating dof ordering computations from previous analysis 
+		/// iterations, as much as possible.
+		/// </summary>
+		void ReorderDofs();
 	}
 }
