@@ -255,17 +255,7 @@ namespace MGroup.MSolve.Discretization.Dofs
 			bool containsRow = data.TryGetValue(row, out Dictionary<int, int> wholeRow);
 			if (containsRow)
 			{
-				//TODO: the following try clause can be replaced by the more efficient "return wholeRow.TryAdd(col, value)", once
-				// it is available in .NET Standard. Unfortunately I cannot reference a .Net Core 2.1 project from .Net Standard
-				try
-				{
-					wholeRow.Add(col, value);
-					return true;
-				}
-				catch (ArgumentException)
-				{
-					return false;
-				}
+				return wholeRow.TryAdd(col, value);
 			}
 			else
 			{
