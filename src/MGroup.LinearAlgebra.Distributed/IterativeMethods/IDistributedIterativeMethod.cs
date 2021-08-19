@@ -6,9 +6,11 @@ using MGroup.LinearAlgebra.Distributed.IterativeMethods.Preconditioning;
 
 namespace MGroup.LinearAlgebra.Distributed.IterativeMethods
 {
-    public interface IDistributedIterativeMethod
-    {
-        IterativeStatistics Solve(ILinearTransformation matrix, IPreconditioner preconditioner,
-            IGlobalVector rhs, IGlobalVector solution, bool initialGuessIsZero);
-    }
+	public interface IDistributedIterativeMethod
+	{
+		void Clear();
+
+		IterativeStatistics Solve(ILinearTransformation matrix, IPreconditioner preconditioner,
+			IGlobalVector rhs, IGlobalVector solution, bool initialGuessIsZero);
+	}
 }

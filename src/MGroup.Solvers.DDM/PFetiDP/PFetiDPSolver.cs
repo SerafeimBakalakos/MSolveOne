@@ -98,7 +98,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			modifiedCornerDofs.Update(algebraicModel.ModifiedSubdomains);
 
 			// Prepare coarse problem
-			coarseProblemFetiDP.FindCoarseProblemDofs(LoggerDdm);
+			coarseProblemFetiDP.FindCoarseProblemDofs(LoggerDdm, modifiedCornerDofs);
 			coarseProblemFetiDP.PrepareMatricesForSolution();
 
 			preconditioner.Calculate(environment, boundaryDofIndexer, interfaceProblemMatrix);

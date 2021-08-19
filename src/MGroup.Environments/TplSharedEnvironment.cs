@@ -87,6 +87,24 @@ namespace MGroup.Environments
 		public Dictionary<int, T> CalcNodeDataAndTransferToGlobalMemory<T>(Func<int, T> calcNodeData)
 			=> CalcNodeData(calcNodeData);
 
+		public Dictionary<int, T> CalcNodeDataAndTransferToGlobalMemoryPartial<T>(Func<int, T> calcNodeData,
+			Func<int, bool> isActiveNode)
+		{
+			var sync = new object();
+			var result = new Dictionary<int, T>(nodeTopology.Nodes.Count);
+			foreach (int nodeID in nodeTopology.Nodes.Keys)
+			{
+				if (isActiveNode(nodeID))
+				{
+					T data = calcNodeData(nodeID);
+					lock (sync)
+					{
+						result[nodeID] = data;
+					}
+				}
+			}
+			return result;
+		}
 		public Dictionary<int, T> CalcNodeDataAndTransferToLocalMemory<T>(Func<int, T> calcNodeData)
 			=> CalcNodeData(calcNodeData);
 

@@ -176,6 +176,10 @@ namespace MGroup.Environments.Mpi
 		public Dictionary<int, T> CalcNodeDataAndTransferToGlobalMemory<T>(Func<int, T> calcNodeData)
 			=> globalOperationStrategy.CalcNodeDataAndTransferToGlobalMemory(this, calcNodeData);
 
+		public Dictionary<int, T> CalcNodeDataAndTransferToGlobalMemoryPartial<T>(Func<int, T> calcNodeData,
+			Func<int, bool> isActiveNode)
+			=> throw new NotImplementedException("Perhaps I could call the non-partial method instead of throwing exceptions");
+
 		public Dictionary<int, T> CalcNodeDataAndTransferToLocalMemory<T>(Func<int, T> subdomainOperation)
 			=> globalOperationStrategy.CalcNodeDataAndTransferToLocalMemory(this, subdomainOperation);
 

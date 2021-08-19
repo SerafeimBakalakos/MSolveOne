@@ -85,6 +85,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 		{
 			base.Clear();
 			DirectionTimesMatrixTimesDirection = 0.0;
+			ReorthoCache.Clear();
 		}
 
 		public override IterativeStatistics Solve(ILinearTransformation matrix, IPreconditioner preconditioner, IGlobalVector rhs,

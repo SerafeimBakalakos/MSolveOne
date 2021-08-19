@@ -47,6 +47,13 @@ namespace MGroup.Environments
 		Dictionary<int, T> CalcNodeDataAndTransferToGlobalMemory<T>(Func<int, T> calcNodeData);
 
 		/// <summary>
+		/// Same as <see cref="CalcNodeDataAndTransferToGlobalMemory{T}(Func{int, T})"/>, but only for nodes that satisfy 
+		/// <paramref name="isActiveNode"/>.
+		/// </summary>
+		Dictionary<int, T> CalcNodeDataAndTransferToGlobalMemoryPartial<T>(Func<int, T> calcNodeData, 
+			Func<int, bool> isActiveNode);
+
+		/// <summary>
 		/// Performs <paramref name="calcNodeData"/> on each <see cref="ComputeNode"/> and returns a dictionary where 
 		/// keys are the ids of the nodes. 
 		/// <paramref name="calcNodeData"/> will be run only on the memory space that is assigned to global operations. 

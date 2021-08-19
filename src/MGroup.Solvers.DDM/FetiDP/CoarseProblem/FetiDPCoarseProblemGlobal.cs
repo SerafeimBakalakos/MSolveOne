@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
-using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.Solvers.DDM.Commons;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
@@ -33,10 +33,20 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			this.coarseProblemSolver = new FetiDPCoarseProblemGlobalSolver(coarseProblemDofs, coarseProblemMatrix);
 		}
 
-		public virtual void FindCoarseProblemDofs(DdmLogger logger)
+		public void FindCoarseProblemDofs(DdmLogger logger, IModifiedCornerDofs modifiedCornerDofs)
 		{
+			if (!modifiedCornerDofs.AreGlobalCornerDofsModified)
+			{
+				#region debug
+				Console.WriteLine("Coarse problem dofs are the same as last analysis");
+				Debug.WriteLine("Coarse problem dofs are the same as last analysis");
+				#endregion
+				return;
+			}
+
 			Dictionary<int, IntDofTable> subdomainCornerDofs =
 				environment.CalcNodeDataAndTransferToGlobalMemory(s => getSubdomainDofs(s).DofOrderingCorner);
+			//Dictionary<int, IntDofTable> subdomainCornerDofs = RegatherSubdomainCornerDofs(modifiedCornerDofs);
 
 			environment.DoGlobalOperation(() =>
 			{
@@ -53,7 +63,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			});
 		}
 
-		public virtual void PrepareMatricesForSolution()
+		public void PrepareMatricesForSolution()
 		{
 			environment.DoPerNode(subdomainID => getSubdomainMatrices(subdomainID).CalcSchurComplementOfRemainderDofs());
 
@@ -68,7 +78,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			});
 		}
 
-		public virtual void SolveCoarseProblem(
+		public void SolveCoarseProblem(
 			IDictionary<int, Vector> coarseProblemRhs, IDictionary<int, Vector> coarseProblemSolution)
 		{
 			Dictionary<int, Vector> subdomainRhsGlobal = 
@@ -84,6 +94,45 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 				s => coarseProblemSolver.ExtractCoarseProblemSolutionForSubdomain(s, globalSolution));
 
 			environment.DoPerNode(s => coarseProblemSolution[s].CopyFrom(subdomainSolutionsLocal[s]));
+		}
+
+		/// <summary>
+		/// Avoids transferring corner dofs from subdomains, if they are already available.
+		/// </summary>
+		/// <param name="modifiedCornerDofs"></param>
+		private Dictionary<int, IntDofTable> RegatherSubdomainCornerDofs(IModifiedCornerDofs modifiedCornerDofs)
+		{
+			//TODO: This will probably not improve performance. Perhaps for MPI environments.
+			//TODO: Changing the order of entries in the returned dictionary, seems to alter the solution. Find out why.
+
+			if ((modifiedCornerDofs is NullModifiedCornerDofs) || (coarseProblemDofs.SubdomainDofOrderingsCorner == null))
+			{
+				return environment.CalcNodeDataAndTransferToGlobalMemory(s => getSubdomainDofs(s).DofOrderingCorner);
+			}
+			else
+			{
+				Dictionary<int, IntDofTable> transferedDofs = environment.CalcNodeDataAndTransferToGlobalMemoryPartial(
+				   s => getSubdomainDofs(s).DofOrderingCorner, s => modifiedCornerDofs.AreSubdomainCornerDofsModified(s));
+
+				#region debug
+				foreach (int s in transferedDofs.Keys)
+				{
+					Console.WriteLine($"Transfered corner dofs of subdomain {s} to global memory");
+					Debug.WriteLine($"Transfered corner dofs of subdomain {s} to global memory");
+
+				}
+				#endregion
+
+				var result = new Dictionary<int, IntDofTable>(coarseProblemDofs.SubdomainDofOrderingsCorner.Count);
+				foreach (KeyValuePair<int, IntDofTable> pair in coarseProblemDofs.SubdomainDofOrderingsCorner)
+				{
+					int subdomainID = pair.Key;
+					bool isModified = transferedDofs.TryGetValue(subdomainID, out IntDofTable subdomainCornerDofs);
+					result[subdomainID] = isModified ? subdomainCornerDofs : pair.Value;
+				}
+
+				return result;
+			}
 		}
 
 		public class Factory : IFetiDPCoarseProblemFactory

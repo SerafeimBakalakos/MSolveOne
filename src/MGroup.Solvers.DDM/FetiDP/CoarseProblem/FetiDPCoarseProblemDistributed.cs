@@ -54,9 +54,10 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			}
 		}
 
-		public void FindCoarseProblemDofs(DdmLogger logger)
+		public void FindCoarseProblemDofs(DdmLogger logger, IModifiedCornerDofs modifiedCornerDofs)
 		{
 			cornerDofIndexer = subdomainTopology.CreateDistributedVectorIndexer(s => getSubdomainDofs(s).DofOrderingCorner);
+			coarseProblemSolver.Clear();
 
 			if (logger != null)
 			{
