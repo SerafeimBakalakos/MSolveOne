@@ -45,7 +45,7 @@ namespace MGroup.Solvers.DDM.Psm
 		protected readonly SubdomainTopology subdomainTopology;
 		protected readonly ConcurrentDictionary<int, PsmSubdomainVectors> subdomainVectors;
 
-		protected DistributedOverlappingIndexer boundaryDofIndexer; //TODOMPI: Perhaps this should be accessed from DofSeparator
+		protected DistributedOverlappingIndexer boundaryDofIndexer;
 
 		protected PsmSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel, 
 			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory, 
@@ -81,8 +81,8 @@ namespace MGroup.Solvers.DDM.Psm
 			}
 			else
 			{
-				this.scaling = new HeterogeneousScaling(
-					environment, s => algebraicModel.SubdomainLinearSystems[s], s => subdomainDofsPsm[s]);
+				this.scaling = new HeterogeneousScaling(environment, subdomainTopology,
+					s => algebraicModel.SubdomainLinearSystems[s], s => subdomainDofsPsm[s]);
 			}
 
 			this.interfaceProblemVectors = new PsmInterfaceProblemVectors(environment, subdomainVectors);
@@ -141,7 +141,7 @@ namespace MGroup.Solvers.DDM.Psm
 			environment.DoPerNode(subdomainID =>
 			{
 				if (subdomainDofsPsm[subdomainID].IsEmpty 
-					|| algebraicModel.SubdomainModification.IsConnectivityModified(subdomainID))
+					|| algebraicModel.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
 					#region debug
 					Console.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
@@ -152,7 +152,7 @@ namespace MGroup.Solvers.DDM.Psm
 				}
 
 				if (subdomainMatricesPsm[subdomainID].IsEmpty 
-					|| algebraicModel.SubdomainModification.IsStiffnessModified(subdomainID))
+					|| algebraicModel.ModifiedSubdomains.IsStiffnessModified(subdomainID))
 				{
 					#region debug
 					Console.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
@@ -170,7 +170,7 @@ namespace MGroup.Solvers.DDM.Psm
 				s => subdomainDofsPsm[s].DofOrderingBoundary);
 
 			// Calculating scaling coefficients
-			scaling.CalcScalingMatrices(boundaryDofIndexer);
+			scaling.CalcScalingMatrices(boundaryDofIndexer, algebraicModel.ModifiedSubdomains);
 
 			// Prepare subdomain-level vectors
 			environment.DoPerNode(subdomainID =>

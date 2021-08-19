@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MGroup.Solvers.DDM.LinearSystem
 {
-	public class NullSubdomainModification : ISubdomainModification
+	public class NullModifiedSubdomains : IModifiedSubdomains
 	{
 		public bool IsConnectivityModified(int subdomainID) => true;
 

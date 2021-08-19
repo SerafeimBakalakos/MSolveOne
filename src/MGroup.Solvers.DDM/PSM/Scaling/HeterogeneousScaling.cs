@@ -21,15 +21,17 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 	public class HeterogeneousScaling : IBoundaryDofScaling
 	{
 		private readonly IComputeEnvironment environment;
+		private readonly SubdomainTopology subdomainTopology;
 		private readonly Func<int, ISubdomainLinearSystem> getSubdomainLinearSystem;
 		private readonly Func<int, PsmSubdomainDofs> getSubdomainDofs;
 
 		private readonly ConcurrentDictionary<int, double[]> relativeStiffnesses = new ConcurrentDictionary<int, double[]>();
 
-		public HeterogeneousScaling(IComputeEnvironment environment, 
+		public HeterogeneousScaling(IComputeEnvironment environment, SubdomainTopology subdomainTopology,
 			Func<int, ISubdomainLinearSystem> getSubdomainLinearSystem, Func<int, PsmSubdomainDofs> getSubdomainDofs)
 		{
 			this.environment = environment;
+			this.subdomainTopology = subdomainTopology;
 			this.getSubdomainLinearSystem = getSubdomainLinearSystem;
 			this.getSubdomainDofs = getSubdomainDofs;
 		}
@@ -40,7 +42,8 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 		/// See eq (6.3) from Papagiannakis bachelor :
 		/// Lpb^e = Db^e * Lb^e * inv( (Lb^e)^T * Db^e * Lb^e)
 		/// </summary>
-		public void CalcScalingMatrices(DistributedOverlappingIndexer indexer)
+		public void CalcScalingMatrices(DistributedOverlappingIndexer indexer,
+			IModifiedSubdomains modifiedSubdomains)
 		{
 			//Build Db^s from each subdomain's Kff
 			Func<int, Vector> calcSubdomainDb = subdomainID =>
@@ -83,6 +86,28 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 			{
 				boundaryRhsVector[i] *= coefficients[i];
 			}
+		}
+
+		private Dictionary<int, bool> MustComputeSubdomainData(IModifiedSubdomains modifiedSubdomains)
+		{
+			bool isFirstAnalysis = relativeStiffnesses.Count == 0;
+			return environment.CalcNodeData(subdomainID =>
+			{
+				if (isFirstAnalysis || modifiedSubdomains.IsStiffnessModified(subdomainID))
+				{
+					return true;
+				}
+
+				foreach (int neighborID in subdomainTopology.GetNeighborsOfSubdomain(subdomainID))
+				{
+					if (modifiedSubdomains.IsStiffnessModified(neighborID))
+					{
+						return true;
+					}
+				}
+
+				return false;
+			});
 		}
 	}
 }

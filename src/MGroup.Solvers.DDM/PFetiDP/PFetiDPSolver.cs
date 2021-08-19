@@ -67,7 +67,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			environment.DoPerNode(subdomainID =>
 			{
 				if (subdomainDofsFetiDP[subdomainID].IsEmpty
-					|| algebraicModel.SubdomainModification.IsConnectivityModified(subdomainID))
+					|| algebraicModel.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
 					#region debug
 					Console.WriteLine($"Processing corner & remainder dofs of subdomain {subdomainID}");
@@ -79,7 +79,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 				}
 
 				if (subdomainMatricesFetiDP[subdomainID].IsEmpty
-					|| algebraicModel.SubdomainModification.IsStiffnessModified(subdomainID))
+					|| algebraicModel.ModifiedSubdomains.IsStiffnessModified(subdomainID))
 				{
 					#region debug
 					Console.WriteLine($"Processing corner & remainder submatrices of subdomain {subdomainID}");

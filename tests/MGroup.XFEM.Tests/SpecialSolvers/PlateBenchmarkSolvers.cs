@@ -170,7 +170,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
 				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
 			solverFactory.EnableLogging = true;
-			solverFactory.ExplicitSubdomainMatrices = true;
+			solverFactory.ExplicitSubdomainMatrices = false;
 			solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(
 				new FetiDPCoarseProblemMatrixSymmetricCSparse());
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
@@ -179,6 +179,11 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				ResidualTolerance = 1E-10
 			};
 
+			if (reanalysis)
+			{
+				solverFactory.ExplicitSubdomainMatrices = true;
+			}
+
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
 
@@ -186,7 +191,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			{
 				var observer = new SubdomainEnrichmentsModifiedObserver();
 				model.GeometryModel.Enricher.Observers.Add(observer);
-				algebraicModel.SubdomainModification = observer;
+				algebraicModel.ModifiedSubdomains = observer;
 			}
 
 			return (algebraicModel, solver, cornerDofs);

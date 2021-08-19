@@ -62,11 +62,11 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public DistributedLinearSystem<TMatrix> LinearSystem { get; }
 
+		public IModifiedSubdomains ModifiedSubdomains { get; set; } = new NullModifiedSubdomains();
+
 		public HashSet<IAlgebraicModelObserver> Observers { get; }
 
 		public Dictionary<int, SubdomainLinearSystem<TMatrix>> SubdomainLinearSystems { get; }
-
-		public ISubdomainModification SubdomainModification { get; set; } = new NullSubdomainModification();
 
 		public SubdomainTopology SubdomainTopology { get; }
 
@@ -361,7 +361,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			environment.DoPerNode(subdomainID =>
 			{
 				if (SubdomainFreeDofOrderings.ContainsKey(subdomainID)
-					&& !SubdomainModification.IsConnectivityModified(subdomainID))
+					&& !ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
 					return;
 				}
@@ -426,7 +426,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			var newGlobalMatrix = new DistributedOverlappingMatrix<TMatrix>(FreeDofIndexer);
 			environment.DoPerNode(subdomainID =>
 			{
-				if (SubdomainModification.IsStiffnessModified(subdomainID))
+				if (ModifiedSubdomains.IsStiffnessModified(subdomainID))
 				{
 					#region debug
 					Debug.WriteLine($"Building Kff of subdomain {subdomainID}");

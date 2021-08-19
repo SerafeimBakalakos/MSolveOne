@@ -4,6 +4,7 @@ using System.Text;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Matrices;
+using MGroup.Solvers.DDM.LinearSystem;
 
 namespace MGroup.Solvers.DDM.PSM.Scaling
 {
@@ -11,7 +12,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 	{
 		IDictionary<int, DiagonalMatrix> SubdomainMatricesWb { get; }
 
-		void CalcScalingMatrices(DistributedOverlappingIndexer indexer);
+		void CalcScalingMatrices(DistributedOverlappingIndexer indexer, IModifiedSubdomains modifiedSubdomains);
 
 		void ScaleBoundaryRhsVector(int subdomainID, Vector subdomainForces); 
 	}

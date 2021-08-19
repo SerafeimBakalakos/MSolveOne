@@ -5,7 +5,7 @@ using System.Text;
 //TODO: Perhaps these should be done by ISubdomain itself
 namespace MGroup.Solvers.DDM.LinearSystem
 {
-	public interface ISubdomainModification
+	public interface IModifiedSubdomains
 	{
 		bool IsConnectivityModified(int subdomainID);
 

@@ -9,6 +9,7 @@ using MGroup.Solvers.DDM.PSM.Dofs;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using System.Diagnostics;
 using MGroup.LinearAlgebra.Matrices;
+using MGroup.Solvers.DDM.LinearSystem;
 
 namespace MGroup.Solvers.DDM.PSM.Scaling
 {
@@ -27,31 +28,31 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 
 		public IDictionary<int, DiagonalMatrix> SubdomainMatricesWb { get; } = new ConcurrentDictionary<int, DiagonalMatrix>();
 
-		public void CalcScalingMatrices(DistributedOverlappingIndexer boundaryDofIndexer)
+		public void CalcScalingMatrices(DistributedOverlappingIndexer boundaryDofIndexer, 
+			IModifiedSubdomains modifiedSubdomains)
 		{
+			bool isFirstAnalysis = inverseMultiplicities.Count == 0;
 			Action<int> calcSubdomainScaling = subdomainID =>
 			{
-				int numBoundaryDofs = getSubdomainDofs(subdomainID).DofsBoundaryToFree.Length;
-
-				var subdomainW = new double[numBoundaryDofs];
-				int[] multiplicites = boundaryDofIndexer.GetLocalComponent(subdomainID).Multiplicities;
-				for (int i = 0; i < numBoundaryDofs; ++i)
+				if (isFirstAnalysis || modifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
-					subdomainW[i] = 1.0 / multiplicites[i];
+					#region debug
+					Console.WriteLine($"Processing inverse multiplicities of subdomain {subdomainID}");
+					Debug.WriteLine($"Processing inverse multiplicities of subdomain {subdomainID}");
+					#endregion
+
+					int numBoundaryDofs = getSubdomainDofs(subdomainID).DofsBoundaryToFree.Length;
+
+					var subdomainW = new double[numBoundaryDofs];
+					int[] multiplicites = boundaryDofIndexer.GetLocalComponent(subdomainID).Multiplicities;
+					for (int i = 0; i < numBoundaryDofs; ++i)
+					{
+						subdomainW[i] = 1.0 / multiplicites[i];
+					}
+
+					inverseMultiplicities[subdomainID] = subdomainW;
+					SubdomainMatricesWb[subdomainID] = DiagonalMatrix.CreateFromArray(subdomainW);
 				}
-
-				//DofTable boundaryDofs = dofSeparator.GetSubdomainDofOrderingBoundary(subdomainID);
-				//foreach ((INode node, IDofType dof, int idx) in boundaryDofs)
-				//{
-				//	subdomainW[idx] = 1.0 / node.SubdomainsDictionary.Count;
-				//}
-
-				inverseMultiplicities[subdomainID] = subdomainW;
-				SubdomainMatricesWb[subdomainID] = DiagonalMatrix.CreateFromArray(subdomainW);
-
-				//BooleanMatrixRowsToColumns Lb = dofSeparator.GetDofMappingBoundaryClusterToSubdomain(subdomain.ID);
-				//var Lpb = new ScalingMatrixRowMajor(Lb.NumRows, Lb.NumColumns, Lb.RowsToColumns, subdomainW);
-				//dofMappingBoundaryClusterToSubdomain[subdomain.ID] = Lpb;
 			};
 			environment.DoPerNode(calcSubdomainScaling);
 		}
