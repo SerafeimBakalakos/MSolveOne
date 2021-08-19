@@ -97,6 +97,27 @@ namespace MGroup.Environments.Mpi
 			}
 		}
 
+		public bool AllReduceOr(IDictionary<int, bool> valuePerNode)
+		{
+			if (CommNodes != null)
+			{
+				bool localValue = false;
+				foreach (int nodeID in localNodes.Keys)
+				{
+					if (valuePerNode[nodeID])
+					{
+						localValue = true;
+						break;
+					}
+				}
+				return CommWorld.Allreduce(localValue, MpiNet.Operation<bool>.LogicalOr);
+			}
+			else
+			{
+				return CommWorld.Allreduce(default(bool), MpiNet.Operation<bool>.LogicalOr);
+			}
+		}
+
 		public double AllReduceSum(Dictionary<int, double> valuePerNode)
 		{
 			if (CommNodes != null)

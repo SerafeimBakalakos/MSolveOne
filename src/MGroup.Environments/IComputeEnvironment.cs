@@ -19,6 +19,8 @@ namespace MGroup.Environments
 	{
 		bool AllReduceAnd(Dictionary<int, bool> valuePerNode);
 
+		bool AllReduceOr(IDictionary<int, bool> valuePerNode);
+
 		double AllReduceSum(Dictionary<int, double> valuePerNode);
 
 		double[] AllReduceSum(int numReducedValues, Dictionary<int, double[]> valuesPerNode);

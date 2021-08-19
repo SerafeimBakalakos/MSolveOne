@@ -27,6 +27,18 @@ namespace MGroup.Environments
 			return result;
 		}
 
+		public bool AllReduceOr(IDictionary<int, bool> valuePerNode)
+		{
+			foreach (int nodeID in nodeTopology.Nodes.Keys)
+			{
+				if (valuePerNode[nodeID])
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
 		public double AllReduceSum(Dictionary<int, double> valuePerNode)
 		{
 			double sum = 0.0;
