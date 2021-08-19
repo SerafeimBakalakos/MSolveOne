@@ -26,6 +26,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 	{
 		private readonly ICornerDofSelection cornerDofs;
 		private readonly IFetiDPCoarseProblem coarseProblemFetiDP;
+		private readonly IModifiedCornerDofs modifiedCornerDofs;
 		private readonly ConcurrentDictionary<int, FetiDPSubdomainDofs> subdomainDofsFetiDP;
 		private readonly ConcurrentDictionary<int, PFetiDPSubdomainDofs> subdomainDofsPFetiDP;
 		private readonly ConcurrentDictionary<int, IFetiDPSubdomainMatrixManager> subdomainMatricesFetiDP;
@@ -59,6 +60,8 @@ namespace MGroup.Solvers.DDM.PFetiDP
 				s => subdomainDofsFetiDP[s], s => subdomainMatricesFetiDP[s]);
 			this.preconditioner = new PFetiDPPreconditioner(environment, () => base.boundaryDofIndexer, scaling,
 				s => subdomainMatricesFetiDP[s], coarseProblemFetiDP, s => subdomainDofsPFetiDP[s]);
+
+			modifiedCornerDofs = new GeneralModifiedCornerDofs(environment, s => subdomainDofsFetiDP[s]);
 		}
 
 		protected override void CalcPreconditioner()
@@ -70,8 +73,8 @@ namespace MGroup.Solvers.DDM.PFetiDP
 					|| algebraicModel.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
 					#region debug
-					Console.WriteLine($"Processing corner & remainder dofs of subdomain {subdomainID}");
-					Debug.WriteLine($"Processing corner & remainder dofs of subdomain {subdomainID}");
+					//Console.WriteLine($"Processing corner & remainder dofs of subdomain {subdomainID}");
+					//Debug.WriteLine($"Processing corner & remainder dofs of subdomain {subdomainID}");
 					#endregion
 					subdomainDofsFetiDP[subdomainID].SeparateFreeDofsIntoCornerAndRemainder(cornerDofs);
 					subdomainMatricesFetiDP[subdomainID].ReorderRemainderDofs();
@@ -82,14 +85,17 @@ namespace MGroup.Solvers.DDM.PFetiDP
 					|| algebraicModel.ModifiedSubdomains.IsStiffnessModified(subdomainID))
 				{
 					#region debug
-					Console.WriteLine($"Processing corner & remainder submatrices of subdomain {subdomainID}");
-					Debug.WriteLine($"Processing corner & remainder submatrices of subdomain {subdomainID}");
+					//Console.WriteLine($"Processing corner & remainder submatrices of subdomain {subdomainID}");
+					//Debug.WriteLine($"Processing corner & remainder submatrices of subdomain {subdomainID}");
 					#endregion
 					subdomainMatricesFetiDP[subdomainID].HandleDofsWereModified();
 					subdomainMatricesFetiDP[subdomainID].ExtractKrrKccKrc();
 					subdomainMatricesFetiDP[subdomainID].InvertKrr();
 				}
 			});
+
+			// Setup optimizations if coarse dofs are the same as in previous analysis
+			modifiedCornerDofs.Update(algebraicModel.ModifiedSubdomains);
 
 			// Prepare coarse problem
 			coarseProblemFetiDP.FindCoarseProblemDofs(LoggerDdm);

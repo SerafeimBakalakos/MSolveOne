@@ -144,8 +144,8 @@ namespace MGroup.Solvers.DDM.Psm
 					|| algebraicModel.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
 					#region debug
-					Console.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
-					Debug.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
+					//Console.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
+					//Debug.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
 					#endregion
 					subdomainDofsPsm[subdomainID].SeparateFreeDofsIntoBoundaryAndInternal();
 					subdomainMatricesPsm[subdomainID].ReorderInternalDofs();
@@ -155,8 +155,8 @@ namespace MGroup.Solvers.DDM.Psm
 					|| algebraicModel.ModifiedSubdomains.IsStiffnessModified(subdomainID))
 				{
 					#region debug
-					Console.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
-					Debug.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
+					//Console.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
+					//Debug.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
 					#endregion
 					subdomainMatricesPsm[subdomainID].HandleDofsWereModified();
 					subdomainMatricesPsm[subdomainID].ExtractKiiKbbKib();

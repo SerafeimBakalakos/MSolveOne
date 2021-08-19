@@ -162,6 +162,37 @@ namespace MGroup.MSolve.Discretization.Dofs
 			else return Enumerable.Empty<int>();
 		}
 
+		public bool HasSameRowsColumns(IntDofTable other)
+		{
+			if (this.data.Count != other.data.Count)
+			{
+				return false;
+			}
+
+			foreach (KeyValuePair<int, Dictionary<int, int>> wholeRow in this.data)
+			{
+				int row = wholeRow.Key;
+				bool isCommon = other.data.TryGetValue(row, out Dictionary<int, int> dataOfOtherRow);
+				Dictionary<int, int> dataOfThisRow = wholeRow.Value;
+				if (isCommon && (dataOfThisRow.Count == dataOfOtherRow.Count))
+				{
+					foreach (int col in dataOfThisRow.Keys)
+					{
+						if (!dataOfOtherRow.ContainsKey(col))
+						{
+							return false;
+						}
+					}
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		public void ModifyValues(Func<int, int> unaryOperation)
 		{
 			//TODO: perhaps I should create a new table and replace the existing one once finished.

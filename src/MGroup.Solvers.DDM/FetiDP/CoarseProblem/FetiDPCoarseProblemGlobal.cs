@@ -43,7 +43,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 				coarseProblemDofs.FindGlobalCornerDofs(subdomainCornerDofs);
 				coarseProblemDofs.CalcSubdomainGlobalCornerDofMaps();
 				DofPermutation permutation = coarseProblemMatrix.ReorderGlobalCornerDofs(
-				coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs);
+					coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs);
 				coarseProblemDofs.ReorderGlobalCornerDofs(permutation);
 
 				if (logger != null)

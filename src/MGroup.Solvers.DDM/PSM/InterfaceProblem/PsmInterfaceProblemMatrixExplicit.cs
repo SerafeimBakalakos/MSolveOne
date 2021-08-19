@@ -40,8 +40,8 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 				if (!schurComplementsPerSubdomain.ContainsKey(subdomainID) || modifiedSubdomains.IsStiffnessModified(subdomainID))
 				{
 					#region debug
-					Console.WriteLine($"Calculating Schur complement of internal dofs of subdomain {subdomainID}");
-					Debug.WriteLine($"Calculating Schur complement of internal dofs of subdomain {subdomainID}");
+					//Console.WriteLine($"Calculating Schur complement of internal dofs of subdomain {subdomainID}");
+					//Debug.WriteLine($"Calculating Schur complement of internal dofs of subdomain {subdomainID}");
 					#endregion
 
 					IMatrixView Sbb = getSubdomainMatrices(subdomainID).CalcSchurComplement();

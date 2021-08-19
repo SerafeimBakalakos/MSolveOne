@@ -141,8 +141,8 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			environment.DoPerNode(subdomainID =>
 			{
 				#region debug
-				Debug.WriteLine($"Building Kff of subdomain {subdomainID}");
-				Console.WriteLine($"Building Kff of subdomain {subdomainID}");
+				//Debug.WriteLine($"Building Kff of subdomain {subdomainID}");
+				//Console.WriteLine($"Building Kff of subdomain {subdomainID}");
 				#endregion
 
 				ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[subdomainID];

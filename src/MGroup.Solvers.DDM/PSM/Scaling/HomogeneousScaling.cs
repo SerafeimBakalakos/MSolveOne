@@ -37,8 +37,8 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 				if (isFirstAnalysis || modifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
 					#region debug
-					Console.WriteLine($"Processing inverse multiplicities of subdomain {subdomainID}");
-					Debug.WriteLine($"Processing inverse multiplicities of subdomain {subdomainID}");
+					//Console.WriteLine($"Processing inverse multiplicities of subdomain {subdomainID}");
+					//Debug.WriteLine($"Processing inverse multiplicities of subdomain {subdomainID}");
 					#endregion
 
 					int numBoundaryDofs = getSubdomainDofs(subdomainID).DofsBoundaryToFree.Length;

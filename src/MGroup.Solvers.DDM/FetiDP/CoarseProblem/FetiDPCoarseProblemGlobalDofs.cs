@@ -65,7 +65,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		public void CalcSubdomainGlobalCornerDofMaps()
 		{
 			//TODOMPI: This is parallelizable, but needs a different strategy than the usual one. All these data belong to
-			//		a single memory address space, instead of being distributed across separate spaces. In e
+			//		a single memory address space, instead of being distributed across separate spaces.
 			foreach (int sub in SubdomainDofOrderingsCorner.Keys)
 			{
 				int numSubdomainDofs = SubdomainDofOrderingsCorner[sub].EntryCount;
