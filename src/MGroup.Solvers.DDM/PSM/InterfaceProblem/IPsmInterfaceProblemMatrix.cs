@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Iterative;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
+using MGroup.Solvers.DDM.LinearSystem;
 
 namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 {
@@ -10,7 +11,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 	{
 		DistributedOverlappingTransformation Matrix { get; }
 
-		void Calculate(DistributedOverlappingIndexer indexer);
+		void Calculate(DistributedOverlappingIndexer indexer, IModifiedSubdomains modifiedSubdomains);
 
 		double[] ExtractDiagonal(int subdomainID);
 	}

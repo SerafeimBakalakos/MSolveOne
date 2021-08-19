@@ -62,6 +62,8 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public DistributedLinearSystem<TMatrix> LinearSystem { get; }
 
+		//TODO: This should be readonly. As it is now the solver can not read it and pass it to components' constructor, since 
+		//		it is usually set after the solver's constructor.
 		public IModifiedSubdomains ModifiedSubdomains { get; set; } = new NullModifiedSubdomains();
 
 		public HashSet<IAlgebraicModelObserver> Observers { get; }

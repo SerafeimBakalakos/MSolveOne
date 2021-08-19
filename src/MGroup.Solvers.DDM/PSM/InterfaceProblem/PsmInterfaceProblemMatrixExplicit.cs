@@ -7,6 +7,8 @@ using MGroup.LinearAlgebra.Vectors;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
+using MGroup.Solvers.DDM.LinearSystem;
+using System.Diagnostics;
 
 namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 {
@@ -30,14 +32,21 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 
 		public DistributedOverlappingTransformation Matrix { get; private set; }
 
-		public void Calculate(DistributedOverlappingIndexer indexer)
+		public void Calculate(DistributedOverlappingIndexer indexer, IModifiedSubdomains modifiedSubdomains)
 		{
 			//Sbb[s] = Kbb[s] - Kbi[s] * inv(Kii[s]) * Kib[s]
-			schurComplementsPerSubdomain.Clear();
 			Action<int> calcSchurComplement = subdomainID =>
 			{
-				IMatrixView Sbb = getSubdomainMatrices(subdomainID).CalcSchurComplement();
-				schurComplementsPerSubdomain[subdomainID] = Sbb;
+				if (!schurComplementsPerSubdomain.ContainsKey(subdomainID) || modifiedSubdomains.IsStiffnessModified(subdomainID))
+				{
+					#region debug
+					Console.WriteLine($"Calculating Schur complement of internal dofs of subdomain {subdomainID}");
+					Debug.WriteLine($"Calculating Schur complement of internal dofs of subdomain {subdomainID}");
+					#endregion
+
+					IMatrixView Sbb = getSubdomainMatrices(subdomainID).CalcSchurComplement();
+					schurComplementsPerSubdomain[subdomainID] = Sbb;
+				}
 			};
 			environment.DoPerNode(calcSchurComplement);
 

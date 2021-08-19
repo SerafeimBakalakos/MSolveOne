@@ -6,6 +6,7 @@ using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.Solvers.DDM.PSM.Dofs;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
+using MGroup.Solvers.DDM.LinearSystem;
 
 namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 {
@@ -31,7 +32,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 
 		public DistributedOverlappingTransformation Matrix { get; private set; }
 
-		public void Calculate(DistributedOverlappingIndexer indexer)
+		public void Calculate(DistributedOverlappingIndexer indexer, IModifiedSubdomains modifiedSubdomains)
 		{
 			Matrix = new DistributedOverlappingTransformation(indexer, MultiplySubdomainSchurComplement);
 		}

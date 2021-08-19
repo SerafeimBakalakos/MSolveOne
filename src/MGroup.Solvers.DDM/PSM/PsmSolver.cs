@@ -181,7 +181,7 @@ namespace MGroup.Solvers.DDM.Psm
 			});
 
 			// Prepare and solve the interface problem
-			interfaceProblemMatrix.Calculate(boundaryDofIndexer);
+			interfaceProblemMatrix.Calculate(boundaryDofIndexer, algebraicModel.ModifiedSubdomains);
 			CalcPreconditioner();
 			SolveInterfaceProblem();
 
