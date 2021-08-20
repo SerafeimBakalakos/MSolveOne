@@ -47,30 +47,7 @@ namespace MGroup.Solvers.DDM
 		public DistributedOverlappingIndexer CreateDistributedVectorIndexer(Func<int, IntDofTable> getSubdomainDofs)
 		{
 			var indexer = new DistributedOverlappingIndexer(environment);
-			environment.DoPerNode(subdomainID =>
-			{
-				IntDofTable subdomainDofs = getSubdomainDofs(subdomainID);
-
-				var allCommonDofIndices = new Dictionary<int, int[]>();
-				foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
-				{
-					DofSet commonDofs = GetCommonDofsOfSubdomains(subdomainID, neighborID);
-					var commonDofIndices = new List<int>(commonDofs.Count());
-					foreach ((int nodeID, int dofID) in commonDofs.EnumerateNodesDofs())
-					{
-						//TODO: It would be faster to iterate each node and then its dofs. Same for DofTable. 
-						//		Even better let DofTable take DofSet as argument and return the indices.
-						bool isRelevant = subdomainDofs.TryGetValue(nodeID, dofID, out int subdomainIdx);
-						if (isRelevant)
-						{
-							commonDofIndices.Add(subdomainIdx);
-						}
-					}
-					allCommonDofIndices[neighborID] = commonDofIndices.ToArray();
-				}
-
-				indexer.GetLocalComponent(subdomainID).Initialize(subdomainDofs.EntryCount, allCommonDofIndices);
-			});
+			environment.DoPerNode(subdomainID => InitializeIndexer(subdomainID, indexer, getSubdomainDofs));
 			return indexer;
 		}
 
@@ -185,6 +162,34 @@ namespace MGroup.Solvers.DDM
 			});
 		}
 
+		public DistributedOverlappingIndexer RecreateDistributedVectorIndexer(Func<int, IntDofTable> getSubdomainDofs,
+			DistributedOverlappingIndexer previousIndexer, Func<int, bool> isModifiedSubdomain)
+		{
+			var newIndexer = new DistributedOverlappingIndexer(environment);
+			environment.DoPerNode(subdomainID =>
+			{
+				if (isModifiedSubdomain(subdomainID))
+				{
+					#region debug
+					Debug.WriteLine($"Initializing dof indexer for subdomain {subdomainID}");
+					Console.WriteLine($"Initializing dof indexer for subdomain {subdomainID}");
+					#endregion
+
+					InitializeIndexer(subdomainID, newIndexer, getSubdomainDofs);
+				}
+				else
+				{
+					newIndexer.GetLocalComponent(subdomainID).InitializeFrom(previousIndexer.GetLocalComponent(subdomainID));
+				}
+			});
+			return newIndexer;
+		}
+
+		public virtual void RefindCommonDofsBetweenSubdomains(Func<int, bool> isModifiedSubdomain)
+		{
+			FindCommonDofsBetweenSubdomains();
+		}
+
 		protected Dictionary<int, DofSet> FindLocalSubdomainDofsAtCommonNodes(int subdomainID)
 		{
 			var commonDofsOfSubdomain = new Dictionary<int, DofSet>();
@@ -199,6 +204,32 @@ namespace MGroup.Solvers.DDM
 				commonDofsOfSubdomain[neighborID] = dofSet;
 			}
 			return commonDofsOfSubdomain;
+		}
+
+		private void InitializeIndexer(
+			int subdomainID, DistributedOverlappingIndexer indexer, Func<int, IntDofTable> getSubdomainDofs)
+		{
+			IntDofTable subdomainDofs = getSubdomainDofs(subdomainID);
+
+			var allCommonDofIndices = new Dictionary<int, int[]>();
+			foreach (int neighborID in GetNeighborsOfSubdomain(subdomainID))
+			{
+				DofSet commonDofs = GetCommonDofsOfSubdomains(subdomainID, neighborID);
+				var commonDofIndices = new List<int>(commonDofs.Count());
+				foreach ((int nodeID, int dofID) in commonDofs.EnumerateNodesDofs())
+				{
+					//TODO: It would be faster to iterate each node and then its dofs. Same for DofTable. 
+					//		Even better let DofTable take DofSet as argument and return the indices.
+					bool isRelevant = subdomainDofs.TryGetValue(nodeID, dofID, out int subdomainIdx);
+					if (isRelevant)
+					{
+						commonDofIndices.Add(subdomainIdx);
+					}
+				}
+				allCommonDofIndices[neighborID] = commonDofIndices.ToArray();
+			}
+
+			indexer.GetLocalComponent(subdomainID).Initialize(subdomainDofs.EntryCount, allCommonDofIndices);
 		}
 
 		//TODOMPI: Avoid finding and storing the common nodes of a subdomain pair twice. Actually, the GetCommonNodesOfSubdomains 

@@ -16,11 +16,31 @@ namespace MGroup.Solvers.DDM
 	{
 		public override void FindCommonDofsBetweenSubdomains()
 		{
-			// Find all dofs of each subdomain at the common nodes.
 			environment.DoPerNode(subdomainID =>
 			{
 				Dictionary<int, DofSet> commonDofs = FindLocalSubdomainDofsAtCommonNodes(subdomainID);
 				commonDofsBetweenSubdomains[subdomainID] = commonDofs;
+			});
+		}
+
+		public override void RefindCommonDofsBetweenSubdomains(Func<int, bool> isModifiedSubdomain)
+		{
+			environment.DoPerNode(subdomainID =>
+			{
+				if (isModifiedSubdomain(subdomainID))
+				{
+					#region debug
+					Debug.WriteLine($"Finding common dofs of subdomain {subdomainID} with its neighbors");
+					Console.WriteLine($"Finding common dofs of subdomain {subdomainID} with its neighbors");
+					#endregion
+
+					Dictionary<int, DofSet> commonDofs = FindLocalSubdomainDofsAtCommonNodes(subdomainID);
+					commonDofsBetweenSubdomains[subdomainID] = commonDofs;
+				}
+				else
+				{
+					Debug.Assert(commonDofsBetweenSubdomains.ContainsKey(subdomainID));
+				}
 			});
 		}
 	}

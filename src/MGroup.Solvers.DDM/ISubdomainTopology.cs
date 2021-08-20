@@ -22,5 +22,10 @@ namespace MGroup.Solvers.DDM
 		SortedSet<int> GetNeighborsOfSubdomain(int subdomainID);
 
 		void Initialize(IComputeEnvironment environment, IModel model, Func<int, ISubdomainFreeDofOrdering> getSubdomainFreeDofs);
+
+		DistributedOverlappingIndexer RecreateDistributedVectorIndexer(Func<int, IntDofTable> getSubdomainDofs,
+			DistributedOverlappingIndexer previousIndexer, Func<int, bool> isModifiedSubdomain);
+
+		void RefindCommonDofsBetweenSubdomains(Func<int, bool> isModifiedSubdomain);
 	}
 }

@@ -363,25 +363,27 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		{
 			environment.DoPerNode(subdomainID =>
 			{
-				if (SubdomainFreeDofOrderings.ContainsKey(subdomainID)
-					&& !ModifiedSubdomains.IsConnectivityModified(subdomainID))
+				if (ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
+					#region debug
+					Debug.WriteLine($"Ordering dofs of subdomain {subdomainID}");
+					Console.WriteLine($"Ordering dofs of subdomain {subdomainID}");
+					#endregion
+
+					ISubdomain subdomain = model.GetSubdomain(subdomainID);
+					SubdomainFreeDofOrderings[subdomainID] = dofOrderer.OrderFreeDofs(subdomain, model.AllDofs);
+					subdomainMatrixAssemblers[subdomainID].HandleDofOrderingWasModified();
+				}
+				else
+				{
+					Debug.Assert(SubdomainFreeDofOrderings.ContainsKey(subdomainID));
 					return;
 				}
-
-				#region debug
-				Debug.WriteLine($"Ordering dofs of subdomain {subdomainID}");
-				Console.WriteLine($"Ordering dofs of subdomain {subdomainID}");
-				#endregion
-
-				ISubdomain subdomain = model.GetSubdomain(subdomainID);
-				SubdomainFreeDofOrderings[subdomainID] = dofOrderer.OrderFreeDofs(subdomain, model.AllDofs);
-				subdomainMatrixAssemblers[subdomainID].HandleDofOrderingWasModified();
 			});
 
-			//TODO: reuse data from previous FreeDofIndexer
-			SubdomainTopology.FindCommonDofsBetweenSubdomains();
-			FreeDofIndexer = SubdomainTopology.CreateDistributedVectorIndexer(s => SubdomainFreeDofOrderings[s].FreeDofs);
+			SubdomainTopology.RefindCommonDofsBetweenSubdomains(s => ModifiedSubdomains.IsConnectivityModified(s));
+			FreeDofIndexer = SubdomainTopology.RecreateDistributedVectorIndexer(s => SubdomainFreeDofOrderings[s].FreeDofs, 
+				FreeDofIndexer, s => ModifiedSubdomains.IsConnectivityModified(s));
 
 			foreach (IAlgebraicModelObserver observer in Observers)
 			{

@@ -137,6 +137,17 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				FindMultiplicities();
 			}
 
+			/// <summary>
+			/// Copy data shallowly from <paramref name="other"/>.
+			/// </summary>
+			/// <param name="other"></param>
+			public void InitializeFrom(Local other)
+			{
+				this.NumEntries = other.NumEntries;
+				this.commonEntriesWithNeighbors = other.commonEntriesWithNeighbors;
+				this.Multiplicities = other.Multiplicities;
+			}
+
 			public int[] GetCommonEntriesWithNeighbor(int neighbor) => commonEntriesWithNeighbors[neighbor];
 
 			public void FindMultiplicities()
