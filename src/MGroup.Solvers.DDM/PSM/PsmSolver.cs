@@ -35,7 +35,7 @@ namespace MGroup.Solvers.DDM.Psm
 		protected readonly IComputeEnvironment environment;
 		protected readonly IPsmInterfaceProblemMatrix interfaceProblemMatrix;
 		protected readonly IDistributedIterativeMethod interfaceProblemSolver;
-		protected readonly PsmInterfaceProblemVectors interfaceProblemVectors;
+		protected readonly IPsmInterfaceProblemVectors interfaceProblemVectors;
 		protected readonly IModel model;
 		protected readonly string name;
 		protected /*readonly*/ IPsmPreconditioner preconditioner; //TODO: Make this readonly as well.
@@ -193,9 +193,19 @@ namespace MGroup.Solvers.DDM.Psm
 			// Prepare subdomain-level vectors
 			environment.DoPerNode(subdomainID =>
 			{
-				subdomainVectors[subdomainID].Clear();
-				subdomainVectors[subdomainID].ExtractBoundaryInternalRhsVectors(
-					fb => scaling.ScaleBoundaryRhsVector(subdomainID, fb));
+				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsRhsModified(subdomainID))
+				{
+					#region debug
+					Console.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
+					Debug.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
+					#endregion
+					subdomainVectors[subdomainID].ExtractBoundaryInternalRhsVectors(
+						fb => scaling.ScaleBoundaryRhsVector(subdomainID, fb));
+				}
+				else
+				{
+					Debug.Assert(!subdomainVectors[subdomainID].IsEmpty);
+				}
 			});
 
 			// Prepare and solve the interface problem

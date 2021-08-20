@@ -26,6 +26,8 @@ namespace MGroup.Solvers.DDM.PSM.Vectors
 			this.matrixManagerPsm = matrixManagerPsm;
 		}
 
+		public bool IsEmpty => vectorFi == null;
+
 		public Vector CalcCondensedRhsVector()
 		{
 			// Static condensation: fbCondensed[s] = fb[s] - Kbi[s] * inv(Kii[s]) * fi[s]
