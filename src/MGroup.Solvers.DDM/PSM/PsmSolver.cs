@@ -42,7 +42,7 @@ namespace MGroup.Solvers.DDM.Psm
 		protected readonly IBoundaryDofScaling scaling;
 		protected readonly ConcurrentDictionary<int, PsmSubdomainDofs> subdomainDofsPsm;
 		protected readonly ConcurrentDictionary<int, IPsmSubdomainMatrixManager> subdomainMatricesPsm;
-		protected readonly SubdomainTopology subdomainTopology;
+		protected readonly ISubdomainTopology subdomainTopology;
 		protected readonly ConcurrentDictionary<int, PsmSubdomainVectors> subdomainVectors;
 
 		protected DistributedOverlappingIndexer boundaryDofIndexer;
@@ -238,6 +238,7 @@ namespace MGroup.Solvers.DDM.Psm
 				IsHomogeneousProblem = true;
 				PsmMatricesFactory = matrixManagerFactory; //new PsmSubdomainMatrixManagerSymmetricCSparse.Factory();
 				Preconditioner = new PsmPreconditionerIdentity();
+				SubdomainTopology = new SubdomainTopologyGeneral();
 			}
 
 			public IDofOrderer DofOrderer { get; set; }
@@ -254,8 +255,13 @@ namespace MGroup.Solvers.DDM.Psm
 
 			public IPsmPreconditioner Preconditioner { get; set; }
 
+			public ISubdomainTopology SubdomainTopology { get; set; }
+
 			public DistributedAlgebraicModel<TMatrix> BuildAlgebraicModel(IModel model)
-				=> new DistributedAlgebraicModel<TMatrix>(environment, model, DofOrderer, PsmMatricesFactory.CreateAssembler());
+			{
+				return new DistributedAlgebraicModel<TMatrix>(
+					environment, model, DofOrderer, SubdomainTopology, PsmMatricesFactory.CreateAssembler());
+			}
 
 			public virtual PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
 			{

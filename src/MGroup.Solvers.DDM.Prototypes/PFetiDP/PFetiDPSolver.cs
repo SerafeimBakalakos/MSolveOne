@@ -171,13 +171,18 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 
 			public bool IsMatrixPositiveDefinite { get; set; } = true;
 
+			public ISubdomainTopology SubdomainTopology { get; set; } = new SubdomainTopologyGeneral();
+
 			public PFetiDPSolver BuildSolver(IModel model, DDM.FetiDP.Dofs.ICornerDofSelection cornerDofs, 
 				DistributedAlgebraicModel<Matrix> algebraicModel)
 				=> new PFetiDPSolver(model, algebraicModel, cornerDofs, homogeneousProblem, pcgTolerance, maxPcgIterations, 
 					interfaceProblemChoice, coarseProblemChoice, scalingChoice, preconditionerChoice);
 
 			public DistributedAlgebraicModel<Matrix> BuildAlgebraicModel(IComputeEnvironment environment, IModel model)
-				=> new DistributedAlgebraicModel<Matrix>(environment, model, DofOrderer, new DenseMatrixAssembler());
+			{
+				return new DistributedAlgebraicModel<Matrix>(
+					environment, model, DofOrderer, SubdomainTopology, new DenseMatrixAssembler());
+			}
 		}
 	}
 }

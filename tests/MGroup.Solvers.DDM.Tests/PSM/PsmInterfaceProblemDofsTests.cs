@@ -63,7 +63,8 @@ namespace MGroup.Solvers.DDM.Tests.PSM
 
 			Dictionary<int, ISubdomainFreeDofOrdering> dofOrderings = environment.CalcNodeData(
 				s => ModelUtilities.OrderDofs(model.GetSubdomain(s), model.AllDofs));
-			var subdomainTopology = new SubdomainTopology(environment, model, s => dofOrderings[s]);
+			var subdomainTopology = new SubdomainTopologyGeneral();
+			subdomainTopology.Initialize(environment, model, s => dofOrderings[s]);
 
 			Dictionary<int, MockSubdomainLinearSystem> linearSystems = environment.CalcNodeData(
 				s => new MockSubdomainLinearSystem(s, dofOrderings[s]));

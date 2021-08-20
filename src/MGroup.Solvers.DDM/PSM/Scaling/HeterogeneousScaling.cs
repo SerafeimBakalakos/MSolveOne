@@ -21,13 +21,13 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 	public class HeterogeneousScaling : IBoundaryDofScaling
 	{
 		private readonly IComputeEnvironment environment;
-		private readonly SubdomainTopology subdomainTopology;
+		private readonly ISubdomainTopology subdomainTopology;
 		private readonly Func<int, ISubdomainLinearSystem> getSubdomainLinearSystem;
 		private readonly Func<int, PsmSubdomainDofs> getSubdomainDofs;
 
 		private readonly ConcurrentDictionary<int, double[]> relativeStiffnesses = new ConcurrentDictionary<int, double[]>();
 
-		public HeterogeneousScaling(IComputeEnvironment environment, SubdomainTopology subdomainTopology,
+		public HeterogeneousScaling(IComputeEnvironment environment, ISubdomainTopology subdomainTopology,
 			Func<int, ISubdomainLinearSystem> getSubdomainLinearSystem, Func<int, PsmSubdomainDofs> getSubdomainDofs)
 		{
 			this.environment = environment;

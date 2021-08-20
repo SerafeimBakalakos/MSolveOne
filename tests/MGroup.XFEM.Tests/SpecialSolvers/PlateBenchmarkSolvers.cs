@@ -8,6 +8,7 @@ using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Solvers.AlgebraicModel;
+using MGroup.Solvers.DDM;
 using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 using MGroup.Solvers.DDM.LinearSystem;
@@ -182,6 +183,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			if (reanalysis)
 			{
 				solverFactory.ExplicitSubdomainMatrices = true;
+				solverFactory.SubdomainTopology = new SubdomainTopologyOptimized();
 			}
 
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);

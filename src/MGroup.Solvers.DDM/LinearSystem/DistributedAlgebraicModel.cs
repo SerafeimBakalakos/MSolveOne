@@ -32,7 +32,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		private readonly SubdomainVectorAssembler subdomainVectorAssembler;
 
 		public DistributedAlgebraicModel(IComputeEnvironment environment, IModel model, IDofOrderer dofOrderer,
-			ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler)
+			ISubdomainTopology subdomainTopology, ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler)
 		{
 			this.environment = environment;
 			this.model = model;
@@ -45,7 +45,8 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			this.SubdomainLinearSystems = environment.CalcNodeData(
 				subdomainID => new SubdomainLinearSystem<TMatrix>(this, subdomainID));
 
-			this.SubdomainTopology = new SubdomainTopology(environment, model, s => SubdomainFreeDofOrderings[s]);
+			this.SubdomainTopology = subdomainTopology;
+			this.SubdomainTopology.Initialize(environment, model, s => SubdomainFreeDofOrderings[s]); 
 			this.SubdomainTopology.FindCommonNodesBetweenSubdomains(); //TODO: what about problems where the mesh is repartitioned in some iterations?
 
 			Observers = new HashSet<IAlgebraicModelObserver>();
@@ -70,7 +71,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 
 		public Dictionary<int, SubdomainLinearSystem<TMatrix>> SubdomainLinearSystems { get; }
 
-		public SubdomainTopology SubdomainTopology { get; }
+		public ISubdomainTopology SubdomainTopology { get; }
 
 		public void AddToGlobalVector(Func<int, IEnumerable<IElement>> accessElements, IGlobalVector vector,
 			IElementVectorProvider vectorProvider)

@@ -147,11 +147,16 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 
 			public bool IsMatrixPositiveDefinite { get; set; } = true;
 
+			public ISubdomainTopology SubdomainTopology { get; set; } = new SubdomainTopologyGeneral();
+
 			public PsmSolver BuildSolver(IModel model, DistributedAlgebraicModel<Matrix> algebraicModel)
 				=> new PsmSolver(model, algebraicModel, homogeneousProblem, pcgTolerance, maxPcgIterations, interfaceProblem);
 
 			public DistributedAlgebraicModel<Matrix> BuildAlgebraicModel(IComputeEnvironment environment, IModel model)
-				=> new DistributedAlgebraicModel<Matrix>(environment, model, DofOrderer, new DenseMatrixAssembler());
+			{
+				return new DistributedAlgebraicModel<Matrix>(
+					environment, model, DofOrderer, SubdomainTopology, new DenseMatrixAssembler());
+			}
 		}
 	}
 }

@@ -145,7 +145,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			}
 
 			public IFetiDPCoarseProblem CreateCoarseProblem(
-				IComputeEnvironment environment, SubdomainTopology subdomainTopology,
+				IComputeEnvironment environment, ISubdomainTopology subdomainTopology,
 				Func<int, FetiDPSubdomainDofs> getSubdomainDofs, Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices)
 			{
 				return new FetiDPCoarseProblemGlobal(environment, coarseProblemMatrix, getSubdomainDofs, getSubdomainMatrices);
