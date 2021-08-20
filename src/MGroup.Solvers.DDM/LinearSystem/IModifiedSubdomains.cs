@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-//TODO: Perhaps these should be done by ISubdomain itself
+//TODO: Needs a much better name.
 namespace MGroup.Solvers.DDM.LinearSystem
 {
 	public interface IModifiedSubdomains

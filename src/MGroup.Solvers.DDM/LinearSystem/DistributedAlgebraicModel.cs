@@ -28,11 +28,13 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		private readonly IComputeEnvironment environment;
 		private readonly IModel model;
 		private readonly IDofOrderer dofOrderer;
+		private readonly IModifiedSubdomains modifiedSubdomains;
 		private readonly Dictionary<int, ISubdomainMatrixAssembler<TMatrix>> subdomainMatrixAssemblers;
 		private readonly SubdomainVectorAssembler subdomainVectorAssembler;
 
 		public DistributedAlgebraicModel(IComputeEnvironment environment, IModel model, IDofOrderer dofOrderer,
-			ISubdomainTopology subdomainTopology, ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler)
+			ISubdomainTopology subdomainTopology, ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler,
+			IModifiedSubdomains modifiedSubdomains)
 		{
 			this.environment = environment;
 			this.model = model;
@@ -46,6 +48,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				subdomainID => new SubdomainLinearSystem<TMatrix>(this, subdomainID));
 
 			this.SubdomainTopology = subdomainTopology;
+			this.modifiedSubdomains = modifiedSubdomains;
 			this.SubdomainTopology.Initialize(environment, model, s => SubdomainFreeDofOrderings[s]); 
 			this.SubdomainTopology.FindCommonNodesBetweenSubdomains(); //TODO: what about problems where the mesh is repartitioned in some iterations?
 
@@ -62,10 +65,6 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		IGlobalLinearSystem IAlgebraicModel.LinearSystem => LinearSystem;
 
 		public DistributedLinearSystem<TMatrix> LinearSystem { get; }
-
-		//TODO: This should be readonly. As it is now the solver can not read it and pass it to components' constructor, since 
-		//		it is usually set after the solver's constructor.
-		public IModifiedSubdomains ModifiedSubdomains { get; set; } = new NullModifiedSubdomains();
 
 		public HashSet<IAlgebraicModelObserver> Observers { get; }
 
@@ -363,7 +362,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		{
 			environment.DoPerNode(subdomainID =>
 			{
-				if (ModifiedSubdomains.IsConnectivityModified(subdomainID))
+				if (modifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
 					#region debug
 					Debug.WriteLine($"Ordering dofs of subdomain {subdomainID}");
@@ -381,9 +380,9 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				}
 			});
 
-			SubdomainTopology.RefindCommonDofsBetweenSubdomains(s => ModifiedSubdomains.IsConnectivityModified(s));
+			SubdomainTopology.RefindCommonDofsBetweenSubdomains(s => modifiedSubdomains.IsConnectivityModified(s));
 			FreeDofIndexer = SubdomainTopology.RecreateDistributedVectorIndexer(s => SubdomainFreeDofOrderings[s].FreeDofs, 
-				FreeDofIndexer, s => ModifiedSubdomains.IsConnectivityModified(s));
+				FreeDofIndexer, s => modifiedSubdomains.IsConnectivityModified(s));
 
 			foreach (IAlgebraicModelObserver observer in Observers)
 			{
@@ -431,7 +430,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			var newGlobalMatrix = new DistributedOverlappingMatrix<TMatrix>(FreeDofIndexer);
 			environment.DoPerNode(subdomainID =>
 			{
-				if (ModifiedSubdomains.IsMatrixModified(subdomainID))
+				if (modifiedSubdomains.IsMatrixModified(subdomainID))
 				{
 					#region debug
 					Debug.WriteLine($"Building Kff of subdomain {subdomainID}");

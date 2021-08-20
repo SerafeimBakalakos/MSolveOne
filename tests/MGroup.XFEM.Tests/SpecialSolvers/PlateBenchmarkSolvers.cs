@@ -182,19 +182,16 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			if (reanalysis)
 			{
+				var observer = new SubdomainEnrichmentsModifiedObserver();
+				model.GeometryModel.Enricher.Observers.Add(observer);
+				solverFactory.ModifiedSubdomainsForReanalysis = observer;
+
 				solverFactory.ExplicitSubdomainMatrices = true;
 				solverFactory.SubdomainTopology = new SubdomainTopologyOptimized();
 			}
 
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			PsmSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
-
-			if (reanalysis)
-			{
-				var observer = new SubdomainEnrichmentsModifiedObserver();
-				model.GeometryModel.Enricher.Observers.Add(observer);
-				algebraicModel.ModifiedSubdomains = observer;
-			}
 
 			return (algebraicModel, solver, cornerDofs);
 		}

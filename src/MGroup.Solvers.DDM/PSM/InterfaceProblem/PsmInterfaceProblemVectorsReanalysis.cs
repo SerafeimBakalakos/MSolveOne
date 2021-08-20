@@ -6,6 +6,7 @@ using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.Solvers.DDM.PSM.Vectors;
 using MGroup.Solvers.DDM.LinearSystem;
+using System.Diagnostics;
 
 namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 {
@@ -36,6 +37,11 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 			{
 				if (isFirstAnalysis || modifiedSubdomains.IsRhsModified(subdomainID))
 				{
+					#region debug
+					Console.WriteLine($"Calculating condensed rhs of subdomain {subdomainID}");
+					Debug.WriteLine($"Calculating condensed rhs of subdomain {subdomainID}");
+					#endregion
+
 					return subdomainVectors[subdomainID].CalcCondensedRhsVector();
 				}
 				else

@@ -37,6 +37,7 @@ namespace MGroup.Solvers.DDM.Psm
 		protected readonly IDistributedIterativeMethod interfaceProblemSolver;
 		protected readonly IPsmInterfaceProblemVectors interfaceProblemVectors;
 		protected readonly IModel model;
+		protected readonly IModifiedSubdomains modifiedSubdomainsForReanalysis;
 		protected readonly string name;
 		protected /*readonly*/ IPsmPreconditioner preconditioner; //TODO: Make this readonly as well.
 		protected readonly IBoundaryDofScaling scaling;
@@ -52,7 +53,7 @@ namespace MGroup.Solvers.DDM.Psm
 			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory, 
 			bool explicitSubdomainMatrices, IPsmPreconditioner preconditioner,
 			IPsmInterfaceProblemSolverFactory interfaceProblemSolverFactory, bool isHomogeneous, DdmLogger logger,
-			string name = "PSM Solver")
+			IModifiedSubdomains modifiedSubdomainsForReanalysis, string name = "PSM Solver")
 		{
 			this.name = name;
 			this.environment = environment;
@@ -85,8 +86,7 @@ namespace MGroup.Solvers.DDM.Psm
 				this.scaling = new HeterogeneousScaling(environment, subdomainTopology,
 					s => algebraicModel.SubdomainLinearSystems[s], s => subdomainDofsPsm[s]);
 			}
-
-			this.interfaceProblemVectors = new PsmInterfaceProblemVectors(environment, subdomainVectors);
+			
 			if (explicitSubdomainMatrices)
 			{
 				this.interfaceProblemMatrix = new PsmInterfaceProblemMatrixExplicit(environment, s => subdomainMatricesPsm[s]);
@@ -95,6 +95,16 @@ namespace MGroup.Solvers.DDM.Psm
 			{
 				this.interfaceProblemMatrix = new PsmInterfaceProblemMatrixImplicit(environment, 
 					s => subdomainDofsPsm[s], s => subdomainMatricesPsm[s]);
+			}
+
+			if (modifiedSubdomainsForReanalysis is NullModifiedSubdomains)
+			{
+				this.interfaceProblemVectors = new PsmInterfaceProblemVectors(environment, subdomainVectors);
+			}
+			else
+			{
+				this.interfaceProblemVectors = new PsmInterfaceProblemVectorsReanalysis(
+					environment, subdomainVectors, modifiedSubdomainsForReanalysis);
 			}
 
 			IPcgResidualConvergence convergenceCriterion;
@@ -109,9 +119,11 @@ namespace MGroup.Solvers.DDM.Psm
 			}
 			this.interfaceProblemSolver = interfaceProblemSolverFactory.BuildIterativeMethod(convergenceCriterion);
 
-			analysisIteration = 0;
+			this.modifiedSubdomainsForReanalysis = modifiedSubdomainsForReanalysis;
 			Logger = new SolverLogger(name);
 			LoggerDdm = logger;
+
+			analysisIteration = 0;
 		}
 
 		public IterativeStatistics InterfaceProblemSolutionStats { get; private set; }
@@ -144,7 +156,7 @@ namespace MGroup.Solvers.DDM.Psm
 			// Prepare subdomain-level dofs and matrices
 			environment.DoPerNode(subdomainID =>
 			{
-				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsConnectivityModified(subdomainID))
+				if (isFirstAnalysis || modifiedSubdomainsForReanalysis.IsConnectivityModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
@@ -158,7 +170,7 @@ namespace MGroup.Solvers.DDM.Psm
 					Debug.Assert(!subdomainDofsPsm[subdomainID].IsEmpty);
 				}
 
-				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsMatrixModified(subdomainID))
+				if (isFirstAnalysis || modifiedSubdomainsForReanalysis.IsMatrixModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
@@ -184,16 +196,16 @@ namespace MGroup.Solvers.DDM.Psm
 			{
 				this.boundaryDofIndexer = subdomainTopology.RecreateDistributedVectorIndexer(
 					s => subdomainDofsPsm[s].DofOrderingBoundary, this.boundaryDofIndexer,
-					s => algebraicModel.ModifiedSubdomains.IsConnectivityModified(s));
+					s => modifiedSubdomainsForReanalysis.IsConnectivityModified(s));
 			}
 
 			// Calculating scaling coefficients
-			scaling.CalcScalingMatrices(boundaryDofIndexer, algebraicModel.ModifiedSubdomains);
+			scaling.CalcScalingMatrices(boundaryDofIndexer, modifiedSubdomainsForReanalysis);
 
 			// Prepare subdomain-level vectors
 			environment.DoPerNode(subdomainID =>
 			{
-				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsRhsModified(subdomainID))
+				if (isFirstAnalysis || modifiedSubdomainsForReanalysis.IsRhsModified(subdomainID))
 				{
 					#region debug
 					Console.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
@@ -209,7 +221,8 @@ namespace MGroup.Solvers.DDM.Psm
 			});
 
 			// Prepare and solve the interface problem
-			interfaceProblemMatrix.Calculate(boundaryDofIndexer, algebraicModel.ModifiedSubdomains);
+			interfaceProblemMatrix.Calculate(boundaryDofIndexer, modifiedSubdomainsForReanalysis);
+			interfaceProblemVectors.CalcInterfaceRhsVector(boundaryDofIndexer);
 			CalcPreconditioner();
 			SolveInterfaceProblem();
 
@@ -231,8 +244,6 @@ namespace MGroup.Solvers.DDM.Psm
 
 		protected void SolveInterfaceProblem()
 		{
-			interfaceProblemVectors.Clear();
-			interfaceProblemVectors.CalcInterfaceRhsVector(boundaryDofIndexer);
 			bool initalGuessIsZero = !StartIterativeSolverFromPreviousSolution;
 			if (!StartIterativeSolverFromPreviousSolution)
 			{
@@ -265,6 +276,7 @@ namespace MGroup.Solvers.DDM.Psm
 				ExplicitSubdomainMatrices = false;
 				InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg();
 				IsHomogeneousProblem = true;
+				ModifiedSubdomainsForReanalysis = new NullModifiedSubdomains();
 				PsmMatricesFactory = matrixManagerFactory; //new PsmSubdomainMatrixManagerSymmetricCSparse.Factory();
 				Preconditioner = new PsmPreconditionerIdentity();
 				SubdomainTopology = new SubdomainTopologyGeneral();
@@ -284,12 +296,15 @@ namespace MGroup.Solvers.DDM.Psm
 
 			public IPsmPreconditioner Preconditioner { get; set; }
 
+			public IModifiedSubdomains ModifiedSubdomainsForReanalysis { get; set; }
+
 			public ISubdomainTopology SubdomainTopology { get; set; }
 
 			public DistributedAlgebraicModel<TMatrix> BuildAlgebraicModel(IModel model)
 			{
 				return new DistributedAlgebraicModel<TMatrix>(
-					environment, model, DofOrderer, SubdomainTopology, PsmMatricesFactory.CreateAssembler());
+					environment, model, DofOrderer, SubdomainTopology, PsmMatricesFactory.CreateAssembler(),
+					ModifiedSubdomainsForReanalysis);
 			}
 
 			public virtual PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
@@ -297,7 +312,7 @@ namespace MGroup.Solvers.DDM.Psm
 				DdmLogger logger = EnableLogging ? new DdmLogger(environment, "PSM Solver", model.NumSubdomains) : null;
 				return new PsmSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
 					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolverFactory, IsHomogeneousProblem,
-					logger);
+					logger, ModifiedSubdomainsForReanalysis);
 			}
 		}
 	}

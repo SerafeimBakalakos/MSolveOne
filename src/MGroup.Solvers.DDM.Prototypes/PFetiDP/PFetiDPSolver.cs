@@ -171,6 +171,8 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 
 			public bool IsMatrixPositiveDefinite { get; set; } = true;
 
+			public IModifiedSubdomains ModifiedSubdomainsForReanalysis { get; set; } = new NullModifiedSubdomains();
+
 			public ISubdomainTopology SubdomainTopology { get; set; } = new SubdomainTopologyGeneral();
 
 			public PFetiDPSolver BuildSolver(IModel model, DDM.FetiDP.Dofs.ICornerDofSelection cornerDofs, 
@@ -181,7 +183,8 @@ namespace MGroup.Solvers.DDM.Prototypes.PFetiDP
 			public DistributedAlgebraicModel<Matrix> BuildAlgebraicModel(IComputeEnvironment environment, IModel model)
 			{
 				return new DistributedAlgebraicModel<Matrix>(
-					environment, model, DofOrderer, SubdomainTopology, new DenseMatrixAssembler());
+					environment, model, DofOrderer, SubdomainTopology, new DenseMatrixAssembler(), 
+					ModifiedSubdomainsForReanalysis);
 			}
 		}
 	}

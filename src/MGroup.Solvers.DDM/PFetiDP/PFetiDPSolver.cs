@@ -35,9 +35,10 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixFactoryPsm, bool explicitSubdomainMatrices,
 			IPsmPreconditioner preconditioner, IPsmInterfaceProblemSolverFactory interfaceProblemSolverFactory, bool isHomogeneous,
 			DdmLogger logger, ICornerDofSelection cornerDofs, IFetiDPCoarseProblemFactory coarseProblemFactory, 
-			IFetiDPSubdomainMatrixManagerFactory<TMatrix> matrixFactoryFetiDP)
+			IFetiDPSubdomainMatrixManagerFactory<TMatrix> matrixFactoryFetiDP, 
+			IModifiedSubdomains modifiedSubdomainsForReanalysis)
 			: base(environment, model, algebraicModel, matrixFactoryPsm, explicitSubdomainMatrices, preconditioner,
-				  interfaceProblemSolverFactory, isHomogeneous, logger, "PFETI-DP solver")
+				  interfaceProblemSolverFactory, isHomogeneous, logger, modifiedSubdomainsForReanalysis, "PFETI-DP solver")
 		{
 			this.cornerDofs = cornerDofs;
 
@@ -71,7 +72,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			// Prepare subdomain-level dofs and matrices
 			environment.DoPerNode(subdomainID =>
 			{
-				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsConnectivityModified(subdomainID))
+				if (isFirstAnalysis || modifiedSubdomainsForReanalysis.IsConnectivityModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing corner & remainder dofs of subdomain {subdomainID}");
@@ -88,7 +89,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 
 				}
 
-				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsMatrixModified(subdomainID))
+				if (isFirstAnalysis || modifiedSubdomainsForReanalysis.IsMatrixModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing corner & remainder submatrices of subdomain {subdomainID}");
@@ -105,7 +106,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			});
 
 			// Setup optimizations if coarse dofs are the same as in previous analysis
-			modifiedCornerDofs.Update(algebraicModel.ModifiedSubdomains);
+			modifiedCornerDofs.Update(modifiedSubdomainsForReanalysis);
 
 			// Prepare coarse problem
 			coarseProblemFetiDP.FindCoarseProblemDofs(LoggerDdm, modifiedCornerDofs);
@@ -137,7 +138,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 				DdmLogger logger = EnableLogging ? new DdmLogger(environment, "PFETI-DP Solver", model.NumSubdomains) : null;
 				return new PFetiDPSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
 					ExplicitSubdomainMatrices, null, InterfaceProblemSolverFactory, IsHomogeneousProblem, logger,
-					cornerDofs, CoarseProblemFactory, FetiDPMatricesFactory);
+					cornerDofs, CoarseProblemFactory, FetiDPMatricesFactory, ModifiedSubdomainsForReanalysis);
 			}
 		}
 	}
