@@ -9,6 +9,8 @@ namespace MGroup.Solvers.DDM.LinearSystem
 	{
 		bool IsConnectivityModified(int subdomainID);
 
-		bool IsStiffnessModified(int subdomainID);
+		bool IsMatrixModified(int subdomainID);
+
+		bool IsRhsModified(int subdomainID);
 	}
 }

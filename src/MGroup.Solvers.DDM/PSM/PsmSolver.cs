@@ -158,7 +158,7 @@ namespace MGroup.Solvers.DDM.Psm
 					Debug.Assert(!subdomainDofsPsm[subdomainID].IsEmpty);
 				}
 
-				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsStiffnessModified(subdomainID))
+				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsMatrixModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");

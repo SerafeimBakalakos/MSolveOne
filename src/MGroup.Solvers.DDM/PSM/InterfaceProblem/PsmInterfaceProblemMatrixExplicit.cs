@@ -37,7 +37,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 			//Sbb[s] = Kbb[s] - Kbi[s] * inv(Kii[s]) * Kib[s]
 			Action<int> calcSchurComplement = subdomainID =>
 			{
-				if (!schurComplementsPerSubdomain.ContainsKey(subdomainID) || modifiedSubdomains.IsStiffnessModified(subdomainID))
+				if (!schurComplementsPerSubdomain.ContainsKey(subdomainID) || modifiedSubdomains.IsMatrixModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Calculating Schur complement of internal dofs of subdomain {subdomainID}");

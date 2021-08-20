@@ -431,7 +431,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			var newGlobalMatrix = new DistributedOverlappingMatrix<TMatrix>(FreeDofIndexer);
 			environment.DoPerNode(subdomainID =>
 			{
-				if (ModifiedSubdomains.IsStiffnessModified(subdomainID))
+				if (ModifiedSubdomains.IsMatrixModified(subdomainID))
 				{
 					#region debug
 					Debug.WriteLine($"Building Kff of subdomain {subdomainID}");

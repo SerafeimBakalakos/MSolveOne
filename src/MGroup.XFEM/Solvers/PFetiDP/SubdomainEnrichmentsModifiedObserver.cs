@@ -23,10 +23,13 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 			return modifiedSubdomains.Contains(subdomainID);
 		}
 
-		public bool IsStiffnessModified(int subdomainID)
+		public bool IsMatrixModified(int subdomainID)
 		{
 			return modifiedSubdomains.Contains(subdomainID);
 		}
+
+		public bool IsRhsModified(int subdomainID) => IsConnectivityModified(subdomainID);
+
 
 		public void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment)
 		{

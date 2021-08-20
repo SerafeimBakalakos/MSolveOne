@@ -88,7 +88,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 
 				}
 
-				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsStiffnessModified(subdomainID))
+				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsMatrixModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing corner & remainder submatrices of subdomain {subdomainID}");

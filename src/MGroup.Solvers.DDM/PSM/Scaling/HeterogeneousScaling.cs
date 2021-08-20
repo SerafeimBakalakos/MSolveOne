@@ -93,14 +93,14 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 			bool isFirstAnalysis = relativeStiffnesses.Count == 0;
 			return environment.CalcNodeData(subdomainID =>
 			{
-				if (isFirstAnalysis || modifiedSubdomains.IsStiffnessModified(subdomainID))
+				if (isFirstAnalysis || modifiedSubdomains.IsMatrixModified(subdomainID))
 				{
 					return true;
 				}
 
 				foreach (int neighborID in subdomainTopology.GetNeighborsOfSubdomain(subdomainID))
 				{
-					if (modifiedSubdomains.IsStiffnessModified(neighborID))
+					if (modifiedSubdomains.IsMatrixModified(neighborID))
 					{
 						return true;
 					}
