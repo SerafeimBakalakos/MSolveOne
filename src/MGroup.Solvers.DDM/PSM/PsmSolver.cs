@@ -45,6 +45,7 @@ namespace MGroup.Solvers.DDM.Psm
 		protected readonly ISubdomainTopology subdomainTopology;
 		protected readonly ConcurrentDictionary<int, PsmSubdomainVectors> subdomainVectors;
 
+		protected int analysisIteration;
 		protected DistributedOverlappingIndexer boundaryDofIndexer;
 
 		protected PsmSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel, 
@@ -108,6 +109,7 @@ namespace MGroup.Solvers.DDM.Psm
 			}
 			this.interfaceProblemSolver = interfaceProblemSolverFactory.BuildIterativeMethod(convergenceCriterion);
 
+			analysisIteration = 0;
 			Logger = new SolverLogger(name);
 			LoggerDdm = logger;
 		}
@@ -132,6 +134,8 @@ namespace MGroup.Solvers.DDM.Psm
 
 		public virtual void Solve() 
 		{
+			bool isFirstAnalysis = analysisIteration == 0;
+
 			if (LoggerDdm != null)
 			{
 				LoggerDdm.IncrementAnalysisIteration();
@@ -140,8 +144,7 @@ namespace MGroup.Solvers.DDM.Psm
 			// Prepare subdomain-level dofs and matrices
 			environment.DoPerNode(subdomainID =>
 			{
-				if (subdomainDofsPsm[subdomainID].IsEmpty 
-					|| algebraicModel.ModifiedSubdomains.IsConnectivityModified(subdomainID))
+				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
@@ -150,9 +153,12 @@ namespace MGroup.Solvers.DDM.Psm
 					subdomainDofsPsm[subdomainID].SeparateFreeDofsIntoBoundaryAndInternal();
 					subdomainMatricesPsm[subdomainID].ReorderInternalDofs();
 				}
+				else
+				{
+					Debug.Assert(!subdomainDofsPsm[subdomainID].IsEmpty);
+				}
 
-				if (subdomainMatricesPsm[subdomainID].IsEmpty 
-					|| algebraicModel.ModifiedSubdomains.IsStiffnessModified(subdomainID))
+				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsStiffnessModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
@@ -162,12 +168,24 @@ namespace MGroup.Solvers.DDM.Psm
 					subdomainMatricesPsm[subdomainID].ExtractKiiKbbKib();
 					subdomainMatricesPsm[subdomainID].InvertKii();
 				}
-				
+				else
+				{
+					Debug.Assert(!subdomainMatricesPsm[subdomainID].IsEmpty);
+				}
 			});
 
 			// Intersubdomain dofs
-			this.boundaryDofIndexer = subdomainTopology.CreateDistributedVectorIndexer(
-				s => subdomainDofsPsm[s].DofOrderingBoundary);
+			if (isFirstAnalysis)
+			{
+				this.boundaryDofIndexer = subdomainTopology.CreateDistributedVectorIndexer(
+					s => subdomainDofsPsm[s].DofOrderingBoundary);
+			}
+			else
+			{
+				this.boundaryDofIndexer = subdomainTopology.RecreateDistributedVectorIndexer(
+					s => subdomainDofsPsm[s].DofOrderingBoundary, this.boundaryDofIndexer,
+					s => algebraicModel.ModifiedSubdomains.IsConnectivityModified(s));
+			}
 
 			// Calculating scaling coefficients
 			scaling.CalcScalingMatrices(boundaryDofIndexer, algebraicModel.ModifiedSubdomains);
@@ -192,6 +210,7 @@ namespace MGroup.Solvers.DDM.Psm
 				subdomainVectors[subdomainID].CalcStoreSubdomainFreeSolution(subdomainBoundarySolution);
 			});
 
+			++analysisIteration;
 			Logger.IncrementAnalysisStep();
 		}
 

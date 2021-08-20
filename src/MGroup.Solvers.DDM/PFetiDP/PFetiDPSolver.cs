@@ -66,11 +66,12 @@ namespace MGroup.Solvers.DDM.PFetiDP
 
 		protected override void CalcPreconditioner()
 		{
+			bool isFirstAnalysis = analysisIteration == 0;
+
 			// Prepare subdomain-level dofs and matrices
 			environment.DoPerNode(subdomainID =>
 			{
-				if (subdomainDofsFetiDP[subdomainID].IsEmpty
-					|| algebraicModel.ModifiedSubdomains.IsConnectivityModified(subdomainID))
+				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing corner & remainder dofs of subdomain {subdomainID}");
@@ -80,9 +81,14 @@ namespace MGroup.Solvers.DDM.PFetiDP
 					subdomainMatricesFetiDP[subdomainID].ReorderRemainderDofs();
 					subdomainDofsPFetiDP[subdomainID].MapPsmFetiDPDofs();
 				}
+				else
+				{
+					Debug.Assert(!subdomainDofsFetiDP[subdomainID].IsEmpty);
+					Debug.Assert(!subdomainDofsPFetiDP[subdomainID].IsEmpty);
 
-				if (subdomainMatricesFetiDP[subdomainID].IsEmpty
-					|| algebraicModel.ModifiedSubdomains.IsStiffnessModified(subdomainID))
+				}
+
+				if (isFirstAnalysis || algebraicModel.ModifiedSubdomains.IsStiffnessModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing corner & remainder submatrices of subdomain {subdomainID}");
@@ -91,6 +97,10 @@ namespace MGroup.Solvers.DDM.PFetiDP
 					subdomainMatricesFetiDP[subdomainID].HandleDofsWereModified();
 					subdomainMatricesFetiDP[subdomainID].ExtractKrrKccKrc();
 					subdomainMatricesFetiDP[subdomainID].InvertKrr();
+				}
+				else
+				{
+					Debug.Assert(!subdomainMatricesFetiDP[subdomainID].IsEmpty);
 				}
 			});
 
