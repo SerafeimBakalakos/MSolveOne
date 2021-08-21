@@ -184,8 +184,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			{
 				var observer = new SubdomainEnrichmentsModifiedObserver();
 				model.GeometryModel.Enricher.Observers.Add(observer);
-				solverFactory.ModifiedSubdomainsForReanalysis = observer;
+				ReanalysisOptions options = new ReanalysisOptions(true, observer);
 
+				solverFactory.ReanalysisOptions = options;
 				solverFactory.SubdomainTopology = new SubdomainTopologyOptimized();
 				solverFactory.ExplicitSubdomainMatrices = true;
 				solverFactory.ReusePreviousSolution = false;

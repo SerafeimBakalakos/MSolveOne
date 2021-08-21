@@ -319,9 +319,9 @@ namespace MGroup.Solvers.DDM.Psm
 				ExplicitSubdomainMatrices = false;
 				InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg();
 				IsHomogeneousProblem = true;
-				ModifiedSubdomainsForReanalysis = new NullModifiedSubdomains();
 				PsmMatricesFactory = matrixManagerFactory; //new PsmSubdomainMatrixManagerSymmetricCSparse.Factory();
 				Preconditioner = new PsmPreconditionerIdentity();
+				ReanalysisOptions = new ReanalysisOptions();
 				ReusePreviousSolution = false;
 				SubdomainTopology = new SubdomainTopologyGeneral();
 			}
@@ -340,7 +340,7 @@ namespace MGroup.Solvers.DDM.Psm
 
 			public IPsmPreconditioner Preconditioner { get; set; }
 
-			public IModifiedSubdomains ModifiedSubdomainsForReanalysis { get; set; }
+			public ReanalysisOptions ReanalysisOptions { get; set; }
 
 			public bool ReusePreviousSolution { get; set; }
 
@@ -350,7 +350,7 @@ namespace MGroup.Solvers.DDM.Psm
 			{
 				return new DistributedAlgebraicModel<TMatrix>(
 					environment, model, DofOrderer, SubdomainTopology, PsmMatricesFactory.CreateAssembler(),
-					ModifiedSubdomainsForReanalysis);
+					ReanalysisOptions);
 			}
 
 			public virtual PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
@@ -358,7 +358,7 @@ namespace MGroup.Solvers.DDM.Psm
 				DdmLogger logger = EnableLogging ? new DdmLogger(environment, "PSM Solver", model.NumSubdomains) : null;
 				return new PsmSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
 					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolverFactory, IsHomogeneousProblem,
-					logger, ReusePreviousSolution, ModifiedSubdomainsForReanalysis);
+					logger, ReusePreviousSolution, ReanalysisOptions.ModifiedSubdomains);
 			}
 		}
 	}

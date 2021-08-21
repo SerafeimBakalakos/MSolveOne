@@ -28,13 +28,13 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		private readonly IComputeEnvironment environment;
 		private readonly IModel model;
 		private readonly IDofOrderer dofOrderer;
-		private readonly IModifiedSubdomains modifiedSubdomains;
+		private readonly ReanalysisOptions reanalysis;
 		private readonly Dictionary<int, ISubdomainMatrixAssembler<TMatrix>> subdomainMatrixAssemblers;
 		private readonly SubdomainVectorAssembler subdomainVectorAssembler;
 
 		public DistributedAlgebraicModel(IComputeEnvironment environment, IModel model, IDofOrderer dofOrderer,
 			ISubdomainTopology subdomainTopology, ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler,
-			IModifiedSubdomains modifiedSubdomains)
+			ReanalysisOptions reanalysisOptions)
 		{
 			this.environment = environment;
 			this.model = model;
@@ -48,7 +48,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				subdomainID => new SubdomainLinearSystem<TMatrix>(this, subdomainID));
 
 			this.SubdomainTopology = subdomainTopology;
-			this.modifiedSubdomains = modifiedSubdomains;
+			this.reanalysis = reanalysisOptions;
 			this.SubdomainTopology.Initialize(environment, model, s => SubdomainFreeDofOrderings[s]); 
 			this.SubdomainTopology.FindCommonNodesBetweenSubdomains(); //TODO: what about problems where the mesh is repartitioned in some iterations?
 
@@ -140,11 +140,6 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			var globalMatrix = new DistributedOverlappingMatrix<TMatrix>(FreeDofIndexer);
 			environment.DoPerNode(subdomainID =>
 			{
-				#region debug
-				//Debug.WriteLine($"Building Kff of subdomain {subdomainID}");
-				//Console.WriteLine($"Building Kff of subdomain {subdomainID}");
-				#endregion
-
 				ISubdomainFreeDofOrdering subdomainDofs = SubdomainFreeDofOrderings[subdomainID];
 				TMatrix matrix = subdomainMatrixAssemblers[subdomainID].BuildGlobalMatrix(
 						subdomainDofs, accessElements(subdomainID), elementMatrixProvider);
@@ -334,11 +329,6 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		{
 			environment.DoPerNode(subdomainID =>
 			{
-				#region debug
-				Debug.WriteLine($"Ordering dofs of subdomain {subdomainID}");
-				Console.WriteLine($"Ordering dofs of subdomain {subdomainID}");
-				#endregion
-
 				ISubdomain subdomain = model.GetSubdomain(subdomainID);
 				SubdomainFreeDofOrderings[subdomainID] = dofOrderer.OrderFreeDofs(subdomain, model.AllDofs);
 				subdomainMatrixAssemblers[subdomainID].HandleDofOrderingWasModified();
@@ -362,7 +352,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 		{
 			environment.DoPerNode(subdomainID =>
 			{
-				if (modifiedSubdomains.IsConnectivityModified(subdomainID))
+				if (!reanalysis.SubdomainFreeDofs || reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
 					#region debug
 					Debug.WriteLine($"Ordering dofs of subdomain {subdomainID}");
@@ -380,9 +370,17 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				}
 			});
 
-			SubdomainTopology.RefindCommonDofsBetweenSubdomains(s => modifiedSubdomains.IsConnectivityModified(s));
-			FreeDofIndexer = SubdomainTopology.RecreateDistributedVectorIndexer(s => SubdomainFreeDofOrderings[s].FreeDofs, 
-				FreeDofIndexer, s => modifiedSubdomains.IsConnectivityModified(s));
+			if (reanalysis.IntersubdomainFreeDofs)
+			{
+				SubdomainTopology.RefindCommonDofsBetweenSubdomains(s => reanalysis.ModifiedSubdomains.IsConnectivityModified(s));
+				FreeDofIndexer = SubdomainTopology.RecreateDistributedVectorIndexer(s => SubdomainFreeDofOrderings[s].FreeDofs,
+					FreeDofIndexer, s => reanalysis.ModifiedSubdomains.IsConnectivityModified(s));
+			}
+			else
+			{
+				SubdomainTopology.FindCommonDofsBetweenSubdomains();
+				FreeDofIndexer = SubdomainTopology.CreateDistributedVectorIndexer(s => SubdomainFreeDofOrderings[s].FreeDofs);
+			}
 
 			foreach (IAlgebraicModelObserver observer in Observers)
 			{
@@ -402,16 +400,6 @@ namespace MGroup.Solvers.DDM.LinearSystem
 				FreeDofIndexer.CheckCompatibleMatrix<TMatrix>(currentMatrix);
 			environment.DoPerNode(subdomainID =>
 			{
-				//if (!SubdomainModification.IsStiffnessModified(subdomainID))
-				//{
-				//	return;
-				//}
-
-				#region debug
-				Debug.WriteLine($"Building Kff of subdomain {subdomainID}");
-				Console.WriteLine($"Building Kff of subdomain {subdomainID}");
-				#endregion
-
 				IEnumerable<IElement> subdomainElements = accessElements(subdomainID);
 				TMatrix subdomainMatrix = subdomainMatrixAssemblers[subdomainID].RebuildSubdomainMatrix(
 					subdomainElements, SubdomainFreeDofOrderings[subdomainID], elementMatrixProvider, predicate);
@@ -430,7 +418,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			var newGlobalMatrix = new DistributedOverlappingMatrix<TMatrix>(FreeDofIndexer);
 			environment.DoPerNode(subdomainID =>
 			{
-				if (modifiedSubdomains.IsMatrixModified(subdomainID))
+				if (!reanalysis.SubdomainMatrix || reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 				{
 					#region debug
 					Debug.WriteLine($"Building Kff of subdomain {subdomainID}");

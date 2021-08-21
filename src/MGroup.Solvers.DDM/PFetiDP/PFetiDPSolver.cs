@@ -140,7 +140,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 				return new PFetiDPSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
 					ExplicitSubdomainMatrices, null, InterfaceProblemSolverFactory, IsHomogeneousProblem, logger,
 					cornerDofs, CoarseProblemFactory, FetiDPMatricesFactory, 
-					ReusePreviousSolution, ModifiedSubdomainsForReanalysis);
+					ReusePreviousSolution, ReanalysisOptions.ModifiedSubdomains);
 			}
 		}
 	}

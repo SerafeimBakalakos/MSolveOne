@@ -147,7 +147,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 
 			public bool IsMatrixPositiveDefinite { get; set; } = true;
 
-			public IModifiedSubdomains ModifiedSubdomainsForReanalysis { get; set; } = new NullModifiedSubdomains();
+			public ReanalysisOptions ReanalysisOptions { get; set; } = new ReanalysisOptions();
 
 			public ISubdomainTopology SubdomainTopology { get; set; } = new SubdomainTopologyGeneral();
 
@@ -158,7 +158,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 			{
 				return new DistributedAlgebraicModel<Matrix>(
 					environment, model, DofOrderer, SubdomainTopology, new DenseMatrixAssembler(),
-					ModifiedSubdomainsForReanalysis);
+					ReanalysisOptions);
 			}
 		}
 	}
