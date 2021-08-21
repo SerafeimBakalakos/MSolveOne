@@ -72,6 +72,14 @@ namespace MGroup.Environments
 		void DoGlobalOperation(Action globalOperation);
 
 		/// <summary>
+		/// This must be called from inside <see cref="DoGlobalOperation(Action)"/>.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="items">They must exist in global memory.</param>
+		/// <param name="calcItemData"></param>
+		Dictionary<int, T> DoPerItemInGlobalMemory<T>(IEnumerable<int> items, Func<int, T> calcItemData);
+
+		/// <summary>
 		/// Executes <paramref name="actionPerNode"/> for each node on the memory space where that node is accommodated.
 		/// </summary>
 		/// <param name="actionPerNode"></param>

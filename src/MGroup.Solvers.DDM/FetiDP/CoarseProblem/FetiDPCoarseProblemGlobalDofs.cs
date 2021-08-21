@@ -2,10 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
-using MGroup.Solvers.DDM.Commons;
-using MGroup.Solvers.DDM.Mappings;
 
 namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 {
@@ -21,14 +18,8 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 		public Dictionary<int, IntDofTable> SubdomainDofOrderingsCorner { get; private set; }
 
-		//TODO: This is probably useless, since SubdomainToGlobalCornerDofs is easier to use efficiently
-		public Dictionary<int, BooleanMatrixRowsToColumns> SubdomainMatricesLc { get; } 
-			= new Dictionary<int, BooleanMatrixRowsToColumns>();
+		public Dictionary<int, int[]> SubdomainToGlobalCornerDofs { get; set; }
 
-		/// <summary>
-		/// Essentially the same data as in <see cref="SubdomainMatricesLc"/>.
-		/// </summary>
-		public Dictionary<int, int[]> SubdomainToGlobalCornerDofs { get; } = new Dictionary<int, int[]>();
 
 		public void FindGlobalCornerDofs(Dictionary<int, IntDofTable> subdomainDofOrderingsCorner)
 		{
@@ -52,33 +43,17 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			NumGlobalCornerDofs = numCornerDofs;
 		}
 
-		public void ReorderGlobalCornerDofs(DofPermutation permutation)
+		public int[] CalcSubdomainGlobalCornerDofMap(int subdomainID)
 		{
-			if (permutation.IsBetter)
+			int numSubdomainDofs = SubdomainDofOrderingsCorner[subdomainID].EntryCount;
+			var subdomainToGlobalMap = new int[numSubdomainDofs];
+			foreach ((int node, int dof, int subdomainIdx) in SubdomainDofOrderingsCorner[subdomainID])
 			{
-				// The global dof ordering and the subdomain-global maps need to be updated.
-				GlobalDofOrderingCorner.Reorder(permutation.PermutationArray, permutation.PermutationIsOldToNew);
-				CalcSubdomainGlobalCornerDofMaps();
+				int globalIdx = GlobalDofOrderingCorner[node, dof];
+				subdomainToGlobalMap[subdomainIdx] = globalIdx;
 			}
-		}
-
-		public void CalcSubdomainGlobalCornerDofMaps()
-		{
-			//TODOMPI: This is parallelizable, but needs a different strategy than the usual one. All these data belong to
-			//		a single memory address space, instead of being distributed across separate spaces.
-			foreach (int sub in SubdomainDofOrderingsCorner.Keys)
-			{
-				int numSubdomainDofs = SubdomainDofOrderingsCorner[sub].EntryCount;
-				var subdomainToGlobalMap = new int[numSubdomainDofs];
-				foreach ((int node, int dof, int subdomainIdx) in SubdomainDofOrderingsCorner[sub])
-				{
-					int globalIdx = GlobalDofOrderingCorner[node, dof];
-					subdomainToGlobalMap[subdomainIdx] = globalIdx;
-				}
-				var Lc = new BooleanMatrixRowsToColumns(numSubdomainDofs, NumGlobalCornerDofs, subdomainToGlobalMap);
-				SubdomainMatricesLc[sub] = Lc;
-				SubdomainToGlobalCornerDofs[sub] = subdomainToGlobalMap;
-			}
+			//var Lc = new BooleanMatrixRowsToColumns(numSubdomainDofs, NumGlobalCornerDofs, subdomainToGlobalMap);
+			return subdomainToGlobalMap;
 		}
 	}
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Threading.Tasks;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
@@ -55,11 +56,21 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 			environment.DoGlobalOperation(() =>
 			{
+				IEnumerable<int> subdomainIDs = subdomainCornerDofs.Keys;
 				coarseProblemDofs.FindGlobalCornerDofs(subdomainCornerDofs);
-				coarseProblemDofs.CalcSubdomainGlobalCornerDofMaps();
+				coarseProblemDofs.SubdomainToGlobalCornerDofs = environment.DoPerItemInGlobalMemory(
+					subdomainIDs, s => coarseProblemDofs.CalcSubdomainGlobalCornerDofMap(s));
+
 				DofPermutation permutation = coarseProblemMatrix.ReorderGlobalCornerDofs(
 					coarseProblemDofs.NumGlobalCornerDofs, coarseProblemDofs.SubdomainToGlobalCornerDofs);
-				coarseProblemDofs.ReorderGlobalCornerDofs(permutation);
+				if (permutation.IsBetter)
+				{
+					// The global dof ordering and the subdomain-global maps need to be updated.
+					coarseProblemDofs.GlobalDofOrderingCorner.Reorder(
+						permutation.PermutationArray, permutation.PermutationIsOldToNew);
+					coarseProblemDofs.SubdomainToGlobalCornerDofs = environment.DoPerItemInGlobalMemory(
+						subdomainIDs, s => coarseProblemDofs.CalcSubdomainGlobalCornerDofMap(s));
+				}
 
 				if (logger != null)
 				{

@@ -113,6 +113,19 @@ namespace MGroup.Environments
 			globalOperation();
 		}
 
+		public Dictionary<int, T> DoPerItemInGlobalMemory<T>(IEnumerable<int> items, Func<int, T> calcItemData)
+		{
+			var result = new Dictionary<int, T>();
+			foreach (int item in items)
+			{
+				result[item] = default;
+			}
+
+			Parallel.ForEach(items, x => result[x] = calcItemData(x));
+
+			return result;
+		}
+
 		public void DoPerNode(Action<int> actionPerNode)
 		{
 			Parallel.ForEach(nodeTopology.Nodes.Keys, actionPerNode);

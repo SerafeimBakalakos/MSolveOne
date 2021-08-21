@@ -192,6 +192,31 @@ namespace MGroup.Environments.Mpi
 		public void DoGlobalOperation(Action globalOperation) 
 			=> globalOperationStrategy.DoGlobalOperation(this, globalOperation);
 
+		public Dictionary<int, T> DoPerItemInGlobalMemory<T>(IEnumerable<int> items, Func<int, T> calcItemData)
+		{
+			Dictionary<int, T> result = null;
+
+			//TODOMPI: This is not necessary. The whole method should be called inside a DoGlobalOperation(), thus only for
+			//	the processes that are responsible for global operations
+			//globalOperationStrategy.DoGlobalOperation(this, () =>
+			//{
+			//	result = new Dictionary<int, T>();
+			//	foreach (int item in items)
+			//	{
+			//		result[item] = default;
+			//	}
+			//	Parallel.ForEach(items, x => result[x] = calcItemData(x));
+			//});
+			result = new Dictionary<int, T>();
+			foreach (int item in items)
+			{
+				result[item] = default;
+			}
+			Parallel.ForEach(items, x => result[x] = calcItemData(x));
+
+			return result;
+		}
+
 		public void DoPerNode(Action<int> actionPerNode)
 		{
 			if (CommNodes == null)
