@@ -62,10 +62,10 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 
 		public bool IsCompatibleWith(IDistributedIndexer other) => this == other;
 
-		public DistributedOverlappingMatrix<TMatrix> CheckCompatibleMatrix<TMatrix>(IGlobalMatrix other)
+		public DistributedOverlappingMatrix<TMatrix> CheckCompatibleMatrix<TMatrix>(IGlobalMatrix matrix)
 			where TMatrix : class, IMatrix
 		{
-			if (other is DistributedOverlappingMatrix<TMatrix> distributedMatrix)
+			if (matrix is DistributedOverlappingMatrix<TMatrix> distributedMatrix)
 			{
 				if (distributedMatrix.Indexer == this)
 				{
@@ -77,9 +77,9 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				"Their entries correspond to different dofs or they are distributed differently across compute nodes");
 		}
 
-		public DistributedOverlappingVector CheckCompatibleVector(IGlobalVector other)
+		public DistributedOverlappingVector CheckCompatibleVector(IGlobalVector vector)
 		{
-			if (other is DistributedOverlappingVector distributedVector)
+			if (vector is DistributedOverlappingVector distributedVector)
 			{
 				if (distributedVector.Indexer == this)
 				{
@@ -91,6 +91,8 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			throw new NonMatchingFormatException("The provided vector has a different format than this indexer. " +
 				"Their entries correspond to different dofs or they are distributed differently across compute nodes");
 		}
+
+		public bool IsCompatibleVector(DistributedOverlappingVector vector) => vector.Indexer == this;
 
 		/// <summary>
 		/// All indexing data and functionality of <see cref="DistributedOverlappingIndexer"/>, but only for the local vector, 

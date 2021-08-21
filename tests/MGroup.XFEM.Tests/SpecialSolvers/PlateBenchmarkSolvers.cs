@@ -186,8 +186,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				model.GeometryModel.Enricher.Observers.Add(observer);
 				solverFactory.ModifiedSubdomainsForReanalysis = observer;
 
-				solverFactory.ExplicitSubdomainMatrices = true;
 				solverFactory.SubdomainTopology = new SubdomainTopologyOptimized();
+				solverFactory.ExplicitSubdomainMatrices = true;
+				solverFactory.ReusePreviousSolution = false;
 			}
 
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);

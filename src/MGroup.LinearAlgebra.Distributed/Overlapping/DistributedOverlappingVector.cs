@@ -39,6 +39,13 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			this.LocalVectors = localVectors;
 		}
 
+		public DistributedOverlappingVector(DistributedOverlappingIndexer indexer, Func<int, Vector> createLocalVector)
+		{
+			this.Indexer = indexer;
+			this.Environment = indexer.Environment;
+			this.LocalVectors = Environment.CalcNodeData(createLocalVector);
+		}
+
 		public IComputeEnvironment Environment { get; }
 
 		public DistributedOverlappingIndexer Indexer { get; }

@@ -35,10 +35,11 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixFactoryPsm, bool explicitSubdomainMatrices,
 			IPsmPreconditioner preconditioner, IPsmInterfaceProblemSolverFactory interfaceProblemSolverFactory, bool isHomogeneous,
 			DdmLogger logger, ICornerDofSelection cornerDofs, IFetiDPCoarseProblemFactory coarseProblemFactory, 
-			IFetiDPSubdomainMatrixManagerFactory<TMatrix> matrixFactoryFetiDP, 
+			IFetiDPSubdomainMatrixManagerFactory<TMatrix> matrixFactoryFetiDP, bool reusePreviousSolution,
 			IModifiedSubdomains modifiedSubdomainsForReanalysis)
 			: base(environment, model, algebraicModel, matrixFactoryPsm, explicitSubdomainMatrices, preconditioner,
-				  interfaceProblemSolverFactory, isHomogeneous, logger, modifiedSubdomainsForReanalysis, "PFETI-DP solver")
+				  interfaceProblemSolverFactory, isHomogeneous, logger, reusePreviousSolution, modifiedSubdomainsForReanalysis, 
+				  "PFETI-DP solver")
 		{
 			this.cornerDofs = cornerDofs;
 
@@ -138,7 +139,8 @@ namespace MGroup.Solvers.DDM.PFetiDP
 				DdmLogger logger = EnableLogging ? new DdmLogger(environment, "PFETI-DP Solver", model.NumSubdomains) : null;
 				return new PFetiDPSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
 					ExplicitSubdomainMatrices, null, InterfaceProblemSolverFactory, IsHomogeneousProblem, logger,
-					cornerDofs, CoarseProblemFactory, FetiDPMatricesFactory, ModifiedSubdomainsForReanalysis);
+					cornerDofs, CoarseProblemFactory, FetiDPMatricesFactory, 
+					ReusePreviousSolution, ModifiedSubdomainsForReanalysis);
 			}
 		}
 	}

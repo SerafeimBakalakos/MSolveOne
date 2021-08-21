@@ -41,6 +41,11 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 				Console.WriteLine("Coarse problem dofs are the same as last analysis");
 				Debug.WriteLine("Coarse problem dofs are the same as last analysis");
 				#endregion
+
+				if (logger != null)
+				{
+					logger.LogProblemSize(2, coarseProblemDofs.NumGlobalCornerDofs);
+				}
 				return;
 			}
 
