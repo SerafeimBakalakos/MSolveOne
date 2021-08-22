@@ -15,6 +15,7 @@ using MGroup.MSolve.Solution;
 using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.Output;
+using MGroup.Solvers.DDM.PSM;
 using MGroup.Solvers.DDM.PSM.Dofs;
 using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.Preconditioning;
@@ -37,10 +38,9 @@ namespace MGroup.Solvers.DDM.Psm
 		protected readonly IDistributedIterativeMethod interfaceProblemSolver;
 		protected readonly IPsmInterfaceProblemVectors interfaceProblemVectors;
 		protected readonly IModel model;
-		protected readonly IModifiedSubdomains modifiedSubdomainsForReanalysis;
 		protected readonly string name;
 		protected /*readonly*/ IPsmPreconditioner preconditioner; //TODO: Make this readonly as well.
-		protected readonly bool reusePreviousSolution;
+		protected readonly PsmReanalysisOptions reanalysis;
 		protected readonly IBoundaryDofScaling scaling;
 		protected readonly ConcurrentDictionary<int, PsmSubdomainDofs> subdomainDofsPsm;
 		protected readonly ConcurrentDictionary<int, IPsmSubdomainMatrixManager> subdomainMatricesPsm;
@@ -54,8 +54,7 @@ namespace MGroup.Solvers.DDM.Psm
 			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory, 
 			bool explicitSubdomainMatrices, IPsmPreconditioner preconditioner,
 			IPsmInterfaceProblemSolverFactory interfaceProblemSolverFactory, bool isHomogeneous, DdmLogger logger,
-			bool reusePreviousSolution, IModifiedSubdomains modifiedSubdomainsForReanalysis, 
-			string name = "PSM Solver")
+			PsmReanalysisOptions reanalysis, string name = "PSM Solver")
 		{
 			this.name = name;
 			this.environment = environment;
@@ -64,6 +63,8 @@ namespace MGroup.Solvers.DDM.Psm
 			this.subdomainTopology = algebraicModel.SubdomainTopology;
 			this.LinearSystem = algebraicModel.LinearSystem;
 			this.preconditioner = preconditioner;
+			this.reanalysis = reanalysis;
+
 			this.subdomainDofsPsm = new ConcurrentDictionary<int, PsmSubdomainDofs>();
 			this.subdomainMatricesPsm = new ConcurrentDictionary<int, IPsmSubdomainMatrixManager>();
 			this.subdomainVectors = new ConcurrentDictionary<int, PsmSubdomainVectors>();
@@ -81,7 +82,7 @@ namespace MGroup.Solvers.DDM.Psm
 
 			if (isHomogeneous)
 			{
-				this.scaling = new HomogeneousScaling(environment, s => subdomainDofsPsm[s]);
+				this.scaling = new HomogeneousScaling(environment, s => subdomainDofsPsm[s], reanalysis);
 			}
 			else
 			{
@@ -91,7 +92,8 @@ namespace MGroup.Solvers.DDM.Psm
 			
 			if (explicitSubdomainMatrices)
 			{
-				this.interfaceProblemMatrix = new PsmInterfaceProblemMatrixExplicit(environment, s => subdomainMatricesPsm[s]);
+				this.interfaceProblemMatrix = new PsmInterfaceProblemMatrixExplicit(
+					environment, s => subdomainMatricesPsm[s], reanalysis);
 			}
 			else
 			{
@@ -99,15 +101,14 @@ namespace MGroup.Solvers.DDM.Psm
 					s => subdomainDofsPsm[s], s => subdomainMatricesPsm[s]);
 			}
 
-			this.modifiedSubdomainsForReanalysis = modifiedSubdomainsForReanalysis;
-			if (modifiedSubdomainsForReanalysis is NullModifiedSubdomains)
+			if (reanalysis.RhsVectors)
 			{
-				this.interfaceProblemVectors = new PsmInterfaceProblemVectors(environment, subdomainVectors);
+				this.interfaceProblemVectors = new PsmInterfaceProblemVectorsReanalysis(
+					environment, subdomainVectors, reanalysis.ModifiedSubdomains);
 			}
 			else
 			{
-				this.interfaceProblemVectors = new PsmInterfaceProblemVectorsReanalysis(
-					environment, subdomainVectors, modifiedSubdomainsForReanalysis);
+				this.interfaceProblemVectors = new PsmInterfaceProblemVectors(environment, subdomainVectors);
 			}
 
 			IPcgResidualConvergence convergenceCriterion;
@@ -121,8 +122,6 @@ namespace MGroup.Solvers.DDM.Psm
 				convergenceCriterion = new RegularPcgConvergence();
 			}
 			this.interfaceProblemSolver = interfaceProblemSolverFactory.BuildIterativeMethod(convergenceCriterion);
-
-			this.reusePreviousSolution = reusePreviousSolution;
 
 			Logger = new SolverLogger(name);
 			LoggerDdm = logger;
@@ -159,7 +158,8 @@ namespace MGroup.Solvers.DDM.Psm
 			// Prepare subdomain-level dofs and matrices
 			environment.DoPerNode(subdomainID =>
 			{
-				if (isFirstAnalysis || modifiedSubdomainsForReanalysis.IsConnectivityModified(subdomainID))
+				if (isFirstAnalysis || !reanalysis.SubdomainDofSubsets 
+					|| reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
@@ -173,7 +173,8 @@ namespace MGroup.Solvers.DDM.Psm
 					Debug.Assert(!subdomainDofsPsm[subdomainID].IsEmpty);
 				}
 
-				if (isFirstAnalysis || modifiedSubdomainsForReanalysis.IsMatrixModified(subdomainID))
+				if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices 
+					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
@@ -190,7 +191,7 @@ namespace MGroup.Solvers.DDM.Psm
 			});
 
 			// Intersubdomain dofs
-			if (isFirstAnalysis)
+			if (isFirstAnalysis || !reanalysis.InterfaceProblemIndexer)
 			{
 				this.boundaryDofIndexer = subdomainTopology.CreateDistributedVectorIndexer(
 					s => subdomainDofsPsm[s].DofOrderingBoundary);
@@ -199,20 +200,21 @@ namespace MGroup.Solvers.DDM.Psm
 			{
 				this.boundaryDofIndexer = subdomainTopology.RecreateDistributedVectorIndexer(
 					s => subdomainDofsPsm[s].DofOrderingBoundary, this.boundaryDofIndexer,
-					s => modifiedSubdomainsForReanalysis.IsConnectivityModified(s));
+					s => reanalysis.ModifiedSubdomains.IsConnectivityModified(s));
 			}
 
 			// Calculating scaling coefficients
-			scaling.CalcScalingMatrices(boundaryDofIndexer, modifiedSubdomainsForReanalysis);
+			scaling.CalcScalingMatrices(boundaryDofIndexer);
 
 			// Prepare subdomain-level vectors
 			environment.DoPerNode(subdomainID =>
 			{
-				if (isFirstAnalysis || modifiedSubdomainsForReanalysis.IsRhsModified(subdomainID))
+				if (isFirstAnalysis || !reanalysis.RhsVectors 
+					|| reanalysis.ModifiedSubdomains.IsRhsModified(subdomainID))
 				{
 					#region debug
-					Console.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
-					Debug.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
+					//Console.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
+					//Debug.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
 					#endregion
 					subdomainVectors[subdomainID].ExtractBoundaryInternalRhsVectors(
 						fb => scaling.ScaleBoundaryRhsVector(subdomainID, fb));
@@ -224,7 +226,7 @@ namespace MGroup.Solvers.DDM.Psm
 			});
 
 			// Prepare and solve the interface problem
-			interfaceProblemMatrix.Calculate(boundaryDofIndexer, modifiedSubdomainsForReanalysis);
+			interfaceProblemMatrix.Calculate(boundaryDofIndexer);
 			interfaceProblemVectors.CalcInterfaceRhsVector(boundaryDofIndexer);
 			CalcPreconditioner();
 			SolveInterfaceProblem();
@@ -248,14 +250,15 @@ namespace MGroup.Solvers.DDM.Psm
 		protected bool GuessInitialSolution()
 		{
 			// Initial guess of solution vector
-			bool initalGuessIsZero = (analysisIteration == 0) || (!reusePreviousSolution);
-
-			//HERE: if reanalysis && reusing solution are enabled:
-			//	- foreach subdomain: intialize new vector if modified or reuse the previous one if not
-			//	- create new vector
+			bool initalGuessIsZero = (analysisIteration == 0) || (!reanalysis.PreviousSolution);
 
 			if (initalGuessIsZero)
 			{
+				#region log
+				//Console.WriteLine("Allocating new solution vector.");
+				//Debug.WriteLine("Allocating new solution vector.");
+				#endregion
+
 				interfaceProblemVectors.InterfaceProblemSolution = new DistributedOverlappingVector(boundaryDofIndexer);
 			}
 			else
@@ -264,14 +267,22 @@ namespace MGroup.Solvers.DDM.Psm
 				if (boundaryDofIndexer.IsCompatibleVector(previousSolution))
 				{
 					// Do nothing to modify the stored solution vector.
+					#region log
+					//Console.WriteLine("Reusing the previous solution vector.");
+					//Debug.WriteLine("Reusing the previous solution vector.");
+					#endregion
 				}
 				else
 				{
 					// The dof orderings of some subdomains may remain the same, in which case we can reuse the previous values.
 					var newSolution = new DistributedOverlappingVector(boundaryDofIndexer, subdomainID =>
 					{
-						if (modifiedSubdomainsForReanalysis.IsConnectivityModified(subdomainID))
+						if (reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 						{
+							#region log
+							//Console.WriteLine($"Reusing the previous solution subvector for subdomain {subdomainID}.");
+							//Debug.WriteLine($"Reusing the previous solution subvector for subdomain {subdomainID}.");
+							#endregion
 							return Vector.CreateZero(boundaryDofIndexer.GetLocalComponent(subdomainID).NumEntries);
 						}
 						else
@@ -321,8 +332,7 @@ namespace MGroup.Solvers.DDM.Psm
 				IsHomogeneousProblem = true;
 				PsmMatricesFactory = matrixManagerFactory; //new PsmSubdomainMatrixManagerSymmetricCSparse.Factory();
 				Preconditioner = new PsmPreconditionerIdentity();
-				ReanalysisOptions = new ReanalysisOptions();
-				ReusePreviousSolution = false;
+				ReanalysisOptions = PsmReanalysisOptions.CreateWithAllDisabled();
 				SubdomainTopology = new SubdomainTopologyGeneral();
 			}
 
@@ -340,9 +350,7 @@ namespace MGroup.Solvers.DDM.Psm
 
 			public IPsmPreconditioner Preconditioner { get; set; }
 
-			public ReanalysisOptions ReanalysisOptions { get; set; }
-
-			public bool ReusePreviousSolution { get; set; }
+			public PsmReanalysisOptions ReanalysisOptions { get; set; }
 
 			public ISubdomainTopology SubdomainTopology { get; set; }
 
@@ -358,7 +366,7 @@ namespace MGroup.Solvers.DDM.Psm
 				DdmLogger logger = EnableLogging ? new DdmLogger(environment, "PSM Solver", model.NumSubdomains) : null;
 				return new PsmSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
 					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolverFactory, IsHomogeneousProblem,
-					logger, ReusePreviousSolution, ReanalysisOptions.ModifiedSubdomains);
+					logger, ReanalysisOptions);
 			}
 		}
 	}

@@ -32,7 +32,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 
 		public DistributedOverlappingTransformation Matrix { get; private set; }
 
-		public void Calculate(DistributedOverlappingIndexer indexer, IModifiedSubdomains modifiedSubdomains)
+		public void Calculate(DistributedOverlappingIndexer indexer)
 		{
 			Matrix = new DistributedOverlappingTransformation(indexer, MultiplySubdomainSchurComplement);
 		}

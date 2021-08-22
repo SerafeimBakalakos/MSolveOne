@@ -30,8 +30,8 @@ namespace MGroup.Solvers.DDM
 				if (isModifiedSubdomain(subdomainID))
 				{
 					#region debug
-					Debug.WriteLine($"Finding common dofs of subdomain {subdomainID} with its neighbors");
-					Console.WriteLine($"Finding common dofs of subdomain {subdomainID} with its neighbors");
+					//Debug.WriteLine($"Finding common dofs of subdomain {subdomainID} with its neighbors");
+					//Console.WriteLine($"Finding common dofs of subdomain {subdomainID} with its neighbors");
 					#endregion
 
 					Dictionary<int, DofSet> commonDofs = FindLocalSubdomainDofsAtCommonNodes(subdomainID);

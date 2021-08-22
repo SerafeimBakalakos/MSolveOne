@@ -7,26 +7,27 @@ namespace MGroup.Solvers.DDM
 {
 	public class ReanalysisOptions
 	{
-		//TODO: better use static factory methods than overloaded constructors
-		public ReanalysisOptions()
-		{
-		}
-
-		public ReanalysisOptions(bool setAllTrue, IModifiedSubdomains modifiedSubdomains)
+		protected ReanalysisOptions(bool commonValueForFlags, IModifiedSubdomains modifiedSubdomains)
 		{
 			this.ModifiedSubdomains = modifiedSubdomains;
-			IntersubdomainFreeDofs = setAllTrue;
-			SubdomainFreeDofs = setAllTrue;
-			SubdomainMatrix = setAllTrue;
+			IntersubdomainFreeDofs = commonValueForFlags;
+			SubdomainFreeDofs = commonValueForFlags;
+			SubdomainMatrix = commonValueForFlags;
 		}
 
-		public bool IntersubdomainFreeDofs { get; set; } = false;
+		public bool IntersubdomainFreeDofs { get; set; }
 
-		public IModifiedSubdomains ModifiedSubdomains { get; set; } = new NullModifiedSubdomains();
+		public IModifiedSubdomains ModifiedSubdomains { get; set; }
 
-		public bool SubdomainFreeDofs { get; set; } = false;
+		public bool SubdomainFreeDofs { get; set; }
 
-		public bool SubdomainMatrix { get; set; } = false;
+		public bool SubdomainMatrix { get; set; }
+
+		public static ReanalysisOptions CreateWithAllDisabled()
+			=> new ReanalysisOptions(false, new NullModifiedSubdomains());
+
+		public static ReanalysisOptions CreateWithAllEnabled(IModifiedSubdomains modifiedSubdomains)
+			=> new ReanalysisOptions(true, modifiedSubdomains);
 
 	}
 }

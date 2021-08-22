@@ -14,6 +14,7 @@ using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PFetiDP;
 using MGroup.Solvers.DDM.Psm;
+using MGroup.Solvers.DDM.PSM;
 using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.DDM.Tests;
@@ -184,12 +185,13 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			{
 				var observer = new SubdomainEnrichmentsModifiedObserver();
 				model.GeometryModel.Enricher.Observers.Add(observer);
-				ReanalysisOptions options = new ReanalysisOptions(true, observer);
+				var reanalysisOptions = PFetiDPReanalysisOptions.CreateWithAllEnabled(observer);
+				//var reanalysisOptions = PFetiDPReanalysisOptions.CreateWithAllDisabled();
+				reanalysisOptions.PreviousSolution = false; // This causes errors if enabled
 
-				solverFactory.ReanalysisOptions = options;
+				solverFactory.ReanalysisOptions = reanalysisOptions;
 				solverFactory.SubdomainTopology = new SubdomainTopologyOptimized();
 				solverFactory.ExplicitSubdomainMatrices = true;
-				solverFactory.ReusePreviousSolution = false;
 			}
 
 			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);

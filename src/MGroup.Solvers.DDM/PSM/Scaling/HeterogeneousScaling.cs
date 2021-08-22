@@ -42,8 +42,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 		/// See eq (6.3) from Papagiannakis bachelor :
 		/// Lpb^e = Db^e * Lb^e * inv( (Lb^e)^T * Db^e * Lb^e)
 		/// </summary>
-		public void CalcScalingMatrices(DistributedOverlappingIndexer indexer,
-			IModifiedSubdomains modifiedSubdomains)
+		public void CalcScalingMatrices(DistributedOverlappingIndexer indexer)
 		{
 			//Build Db^s from each subdomain's Kff
 			Func<int, Vector> calcSubdomainDb = subdomainID =>

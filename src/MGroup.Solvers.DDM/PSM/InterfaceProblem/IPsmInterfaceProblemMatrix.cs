@@ -11,7 +11,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 	{
 		DistributedOverlappingTransformation Matrix { get; }
 
-		void Calculate(DistributedOverlappingIndexer indexer, IModifiedSubdomains modifiedSubdomains);
+		void Calculate(DistributedOverlappingIndexer indexer);
 
 		double[] ExtractDiagonal(int subdomainID);
 	}

@@ -17,24 +17,26 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 	{
 		private readonly IComputeEnvironment environment;
 		private readonly Func<int, PsmSubdomainDofs> getSubdomainDofs;
-
+		private readonly PsmReanalysisOptions reanalysis;
 		private readonly ConcurrentDictionary<int, double[]> inverseMultiplicities = new ConcurrentDictionary<int, double[]>();
 
-		public HomogeneousScaling(IComputeEnvironment environment, Func<int, PsmSubdomainDofs> getSubdomainDofs)
+		public HomogeneousScaling(IComputeEnvironment environment, Func<int, PsmSubdomainDofs> getSubdomainDofs, 
+			PsmReanalysisOptions reanalysis)
 		{
 			this.environment = environment;
 			this.getSubdomainDofs = getSubdomainDofs;
+			this.reanalysis = reanalysis;
 		}
 
 		public IDictionary<int, DiagonalMatrix> SubdomainMatricesWb { get; } = new ConcurrentDictionary<int, DiagonalMatrix>();
 
-		public void CalcScalingMatrices(DistributedOverlappingIndexer boundaryDofIndexer, 
-			IModifiedSubdomains modifiedSubdomains)
+		public void CalcScalingMatrices(DistributedOverlappingIndexer boundaryDofIndexer)
 		{
 			bool isFirstAnalysis = inverseMultiplicities.Count == 0;
 			Action<int> calcSubdomainScaling = subdomainID =>
 			{
-				if (isFirstAnalysis || modifiedSubdomains.IsConnectivityModified(subdomainID))
+				if (isFirstAnalysis || !reanalysis.RhsVectors 
+					|| reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Processing inverse multiplicities of subdomain {subdomainID}");

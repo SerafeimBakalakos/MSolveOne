@@ -12,7 +12,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 	{
 		IDictionary<int, DiagonalMatrix> SubdomainMatricesWb { get; }
 
-		void CalcScalingMatrices(DistributedOverlappingIndexer indexer, IModifiedSubdomains modifiedSubdomains);
+		void CalcScalingMatrices(DistributedOverlappingIndexer indexer);
 
 		void ScaleBoundaryRhsVector(int subdomainID, Vector subdomainForces); 
 	}

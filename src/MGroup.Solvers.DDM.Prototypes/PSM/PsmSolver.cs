@@ -147,7 +147,7 @@ namespace MGroup.Solvers.DDM.Prototypes.PSM
 
 			public bool IsMatrixPositiveDefinite { get; set; } = true;
 
-			public ReanalysisOptions ReanalysisOptions { get; set; } = new ReanalysisOptions();
+			public ReanalysisOptions ReanalysisOptions { get; set; } = ReanalysisOptions.CreateWithAllDisabled();
 
 			public ISubdomainTopology SubdomainTopology { get; set; } = new SubdomainTopologyGeneral();
 

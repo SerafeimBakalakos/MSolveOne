@@ -20,24 +20,27 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 	{
 		private readonly IComputeEnvironment environment;
 		private readonly Func<int, IPsmSubdomainMatrixManager> getSubdomainMatrices;
+		private readonly PsmReanalysisOptions reanalysis;
 		private readonly ConcurrentDictionary<int, IMatrixView> schurComplementsPerSubdomain 
 			= new ConcurrentDictionary<int, IMatrixView>();
 
 		public PsmInterfaceProblemMatrixExplicit(IComputeEnvironment environment, 
-			Func<int, IPsmSubdomainMatrixManager> getSubdomainMatrices)
+			Func<int, IPsmSubdomainMatrixManager> getSubdomainMatrices, PsmReanalysisOptions reanalysis)
 		{
 			this.environment = environment;
 			this.getSubdomainMatrices = getSubdomainMatrices;
+			this.reanalysis = reanalysis;
 		}
 
 		public DistributedOverlappingTransformation Matrix { get; private set; }
 
-		public void Calculate(DistributedOverlappingIndexer indexer, IModifiedSubdomains modifiedSubdomains)
+		public void Calculate(DistributedOverlappingIndexer indexer)
 		{
 			//Sbb[s] = Kbb[s] - Kbi[s] * inv(Kii[s]) * Kib[s]
 			Action<int> calcSchurComplement = subdomainID =>
 			{
-				if (!schurComplementsPerSubdomain.ContainsKey(subdomainID) || modifiedSubdomains.IsMatrixModified(subdomainID))
+				if (!schurComplementsPerSubdomain.ContainsKey(subdomainID) 
+					|| !reanalysis.SubdomainSubmatrices	|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 				{
 					#region debug
 					//Console.WriteLine($"Calculating Schur complement of internal dofs of subdomain {subdomainID}");
