@@ -354,7 +354,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			{
 				if (!reanalysis.SubdomainFreeDofs || reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
-					#region debug
+					#region log
 					//Debug.WriteLine($"Ordering dofs of subdomain {subdomainID}");
 					//Console.WriteLine($"Ordering dofs of subdomain {subdomainID}");
 					#endregion
@@ -420,7 +420,7 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			{
 				if (!reanalysis.SubdomainMatrix || reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 				{
-					#region debug
+					#region log
 					//Debug.WriteLine($"Building Kff of subdomain {subdomainID}");
 					//Console.WriteLine($"Building Kff of subdomain {subdomainID}");
 					#endregion

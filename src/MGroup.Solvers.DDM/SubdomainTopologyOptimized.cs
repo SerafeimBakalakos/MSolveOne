@@ -29,7 +29,7 @@ namespace MGroup.Solvers.DDM
 			{
 				if (isModifiedSubdomain(subdomainID))
 				{
-					#region debug
+					#region log
 					//Debug.WriteLine($"Finding common dofs of subdomain {subdomainID} with its neighbors");
 					//Console.WriteLine($"Finding common dofs of subdomain {subdomainID} with its neighbors");
 					#endregion

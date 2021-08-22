@@ -18,7 +18,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 				MpiDebugUtilities.DoSerially(MPI.Communicator.world,
 					() => Console.WriteLine(
-						$"Process {MPI.Communicator.world.Rank}: Now running PsmInterfaceProblemDofsTests.TestForLine1DInternal"));
+						$"Process {MPI.Communicator.world.Rank}: Now running PlateBenchmarkSolvers.AnalyzeWithPFetiDPSolverInternal"));
 				PlateBenchmarkSolvers.AnalyzeWithPFetiDPSolverInternal(mpiEnvironment);
 
 				MpiDebugUtilities.DoSerially(MPI.Communicator.world,

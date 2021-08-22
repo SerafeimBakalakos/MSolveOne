@@ -38,9 +38,9 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		{
 			if (!modifiedCornerDofs.AreGlobalCornerDofsModified)
 			{
-				#region debug
-				Console.WriteLine("Coarse problem dofs are the same as last analysis");
-				Debug.WriteLine("Coarse problem dofs are the same as last analysis");
+				#region log
+				//Console.WriteLine("Coarse problem dofs are the same as last analysis");
+				//Debug.WriteLine("Coarse problem dofs are the same as last analysis");
 				#endregion
 
 				if (logger != null)
@@ -130,13 +130,12 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 				Dictionary<int, IntDofTable> transferedDofs = environment.CalcNodeDataAndTransferToGlobalMemoryPartial(
 				   s => getSubdomainDofs(s).DofOrderingCorner, s => modifiedCornerDofs.AreSubdomainCornerDofsModified(s));
 
-				#region debug
-				foreach (int s in transferedDofs.Keys)
-				{
-					Console.WriteLine($"Transfered corner dofs of subdomain {s} to global memory");
-					Debug.WriteLine($"Transfered corner dofs of subdomain {s} to global memory");
-
-				}
+				#region log
+				//foreach (int s in transferedDofs.Keys)
+				//{
+				//	Console.WriteLine($"Transfered corner dofs of subdomain {s} to global memory");
+				//	Debug.WriteLine($"Transfered corner dofs of subdomain {s} to global memory");
+				//}
 				#endregion
 
 				var result = new Dictionary<int, IntDofTable>(coarseProblemDofs.SubdomainDofOrderingsCorner.Count);

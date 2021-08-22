@@ -170,7 +170,7 @@ namespace MGroup.Solvers.DDM
 			{
 				if (isModifiedSubdomain(subdomainID))
 				{
-					#region debug
+					#region log
 					//Debug.WriteLine($"Initializing dof indexer for subdomain {subdomainID}");
 					//Console.WriteLine($"Initializing dof indexer for subdomain {subdomainID}");
 					#endregion

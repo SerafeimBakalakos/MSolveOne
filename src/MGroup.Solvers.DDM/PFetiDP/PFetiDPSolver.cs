@@ -81,7 +81,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 				if (isFirstAnalysis || !reanalysis.SubdomainDofSubsets 
 					|| reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
-					#region debug
+					#region log
 					//Console.WriteLine($"Processing corner & remainder dofs of subdomain {subdomainID}");
 					//Debug.WriteLine($"Processing corner & remainder dofs of subdomain {subdomainID}");
 					#endregion
@@ -99,7 +99,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 				if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices 
 					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 				{
-					#region debug
+					#region log
 					//Console.WriteLine($"Processing corner & remainder submatrices of subdomain {subdomainID}");
 					//Debug.WriteLine($"Processing corner & remainder submatrices of subdomain {subdomainID}");
 					#endregion

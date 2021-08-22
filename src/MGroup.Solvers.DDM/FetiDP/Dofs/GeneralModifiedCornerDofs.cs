@@ -39,7 +39,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 					IntDofTable newCornerDofs = getSubdomainDofs(subdomainID).DofOrderingCorner;
 					previousSubdomainCornerDofs[subdomainID] = newCornerDofs;
 					subdomainsWithModifiedCornerDofs[subdomainID] = true;
-					LogMsg(subdomainID);
+					//LogMsg(subdomainID);
 				});
 
 				AreGlobalCornerDofsModified = true;
@@ -56,7 +56,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 						bool areModified = !previousCornerDofs.HasSameRowsColumns(newCornerDofs);
 						previousSubdomainCornerDofs[subdomainID] = newCornerDofs;
 						subdomainsWithModifiedCornerDofs[subdomainID] = areModified;
-						LogMsg(subdomainID);
+						//LogMsg(subdomainID);
 					}
 					else
 					{
@@ -70,32 +70,32 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 			}
 			
 			isFirstAnalysis = false;
-			LogGlobalMsg();
+			//LogGlobalMsg();
 		}
 
-		#region debug
-		private void LogMsg(int subdomainID)
-		{
-			if (subdomainsWithModifiedCornerDofs[subdomainID])
-			{
-				Console.WriteLine($"Corners dofs of subdomain {subdomainID} have been modified");
-				Debug.WriteLine($"Corners dofs of subdomain {subdomainID} have been modified");
-			}
-		}
+		#region log
+		//private void LogMsg(int subdomainID)
+		//{
+		//	if (subdomainsWithModifiedCornerDofs[subdomainID])
+		//	{
+		//		Console.WriteLine($"Corners dofs of subdomain {subdomainID} have been modified");
+		//		Debug.WriteLine($"Corners dofs of subdomain {subdomainID} have been modified");
+		//	}
+		//}
 
-		private void LogGlobalMsg()
-		{
-			if (AreGlobalCornerDofsModified)
-			{
-				Console.WriteLine("Global corners dofs have been modified");
-				Debug.WriteLine("Global corners dofs have been modified");
-			}
-			else
-			{
-				Console.WriteLine("Global corners dofs are the same");
-				Debug.WriteLine("Global corners dofs are the same");
-			}
-		}
+		//private void LogGlobalMsg()
+		//{
+		//	if (AreGlobalCornerDofsModified)
+		//	{
+		//		Console.WriteLine("Global corners dofs have been modified");
+		//		Debug.WriteLine("Global corners dofs have been modified");
+		//	}
+		//	else
+		//	{
+		//		Console.WriteLine("Global corners dofs are the same");
+		//		Debug.WriteLine("Global corners dofs are the same");
+		//	}
+		//}
 		#endregion
 	}
 }

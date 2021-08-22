@@ -38,7 +38,7 @@ namespace MGroup.Solvers.DDM.PSM.Scaling
 				if (isFirstAnalysis || !reanalysis.RhsVectors 
 					|| reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
-					#region debug
+					#region log
 					//Console.WriteLine($"Processing inverse multiplicities of subdomain {subdomainID}");
 					//Debug.WriteLine($"Processing inverse multiplicities of subdomain {subdomainID}");
 					#endregion

@@ -37,7 +37,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 			{
 				if (isFirstAnalysis || modifiedSubdomains.IsRhsModified(subdomainID))
 				{
-					#region debug
+					#region log
 					//Console.WriteLine($"Calculating condensed rhs of subdomain {subdomainID}");
 					//Debug.WriteLine($"Calculating condensed rhs of subdomain {subdomainID}");
 					#endregion

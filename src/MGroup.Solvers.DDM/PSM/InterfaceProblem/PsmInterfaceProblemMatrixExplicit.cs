@@ -42,7 +42,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 				if (!schurComplementsPerSubdomain.ContainsKey(subdomainID) 
 					|| !reanalysis.SubdomainSubmatrices	|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 				{
-					#region debug
+					#region log
 					//Console.WriteLine($"Calculating Schur complement of internal dofs of subdomain {subdomainID}");
 					//Debug.WriteLine($"Calculating Schur complement of internal dofs of subdomain {subdomainID}");
 					#endregion

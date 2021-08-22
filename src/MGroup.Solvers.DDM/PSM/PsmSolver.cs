@@ -161,7 +161,7 @@ namespace MGroup.Solvers.DDM.Psm
 				if (isFirstAnalysis || !reanalysis.SubdomainDofSubsets 
 					|| reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 				{
-					#region debug
+					#region log
 					//Console.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
 					//Debug.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
 					#endregion
@@ -176,7 +176,7 @@ namespace MGroup.Solvers.DDM.Psm
 				if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices 
 					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 				{
-					#region debug
+					#region log
 					//Console.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
 					//Debug.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
 					#endregion
@@ -212,7 +212,7 @@ namespace MGroup.Solvers.DDM.Psm
 				if (isFirstAnalysis || !reanalysis.RhsVectors 
 					|| reanalysis.ModifiedSubdomains.IsRhsModified(subdomainID))
 				{
-					#region debug
+					#region log
 					//Console.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
 					//Debug.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
 					#endregion
