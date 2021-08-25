@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using MGroup.MSolve.Discretization;
 using MGroup.LinearAlgebra.Matrices;
+using MGroup.XFEM.Extensions;
 
 //TODO: once we know that an exception will be thrown, try to pinpoint the error: wrong node order, clockwise node order, the  
 //      element's shape is too distorted, midpoints are too close to corners in quadratic elements, etc...

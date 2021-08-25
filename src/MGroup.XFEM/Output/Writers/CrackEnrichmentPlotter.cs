@@ -15,7 +15,7 @@ namespace MGroup.XFEM.Output.Writers
 		private static readonly double[] dummyPoint = new double[] { 0.0, 0.0, 0.0 }; //TODO: find a more elegant solution.
 
 		private readonly AllCrackStepNodesObserver bodyNodesObserver;
-		private readonly ExteriorLsmCrack crack;
+		private readonly ExteriorLsmCrack2D crack;
 		private readonly NodesNearModifiedNodesObserver nearModifiedNodesObserver;
 		private readonly NewCrackStepNodesObserver newBodyNodesObserver;
 		private readonly NewCrackTipNodesObserver newTipNodesObserver;
@@ -25,7 +25,7 @@ namespace MGroup.XFEM.Output.Writers
 
 		private int iteration;
 
-		public CrackEnrichmentPlotter(ExteriorLsmCrack crack, string outputDirectory,
+		public CrackEnrichmentPlotter(ExteriorLsmCrack2D crack, string outputDirectory,
 			NewCrackTipNodesObserver newTipNodesObserver, PreviousCrackTipNodesObserver previousTipNodesObserver,
 			AllCrackStepNodesObserver bodyNodesObserver, NewCrackStepNodesObserver newBodyNodesObserver,
 			RejectedCrackStepNodesObserver rejectedBodyNodesObserver, NodesNearModifiedNodesObserver nearModifiedNodesObserver)

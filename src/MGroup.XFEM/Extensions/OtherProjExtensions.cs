@@ -4,7 +4,7 @@ using System.Text;
 using MGroup.MSolve.Discretization;
 using MGroup.XFEM.Entities;
 
-namespace MGroup.XFEM
+namespace MGroup.XFEM.Extensions
 {
     public static class OtherProjExtensions
     {

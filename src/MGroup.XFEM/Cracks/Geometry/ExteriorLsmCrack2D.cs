@@ -17,7 +17,7 @@ using MGroup.XFEM.Geometry.Primitives;
 
 namespace MGroup.XFEM.Cracks.Geometry
 {
-	public class ExteriorLsmCrack : ICrack
+	public class ExteriorLsmCrack2D : ICrack
 	{
 		private readonly List<double[]> crackPath; //TODO: should this also be stored in the pure geometry class?
 		private readonly PolyLine2D initialCrack;
@@ -25,7 +25,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 		private readonly XModel<IXCrackElement> model;
 		private readonly IPropagator propagator;
 
-		public ExteriorLsmCrack(int id, PolyLine2D initialCrack, XModel<IXCrackElement> model, IPropagator propagator)
+		public ExteriorLsmCrack2D(int id, PolyLine2D initialCrack, XModel<IXCrackElement> model, IPropagator propagator)
 		{
 			this.ID = id;
 			this.initialCrack = initialCrack;

@@ -7,6 +7,7 @@ using MGroup.XFEM.Integration;
 using MGroup.XFEM.Integration.Quadratures;
 using MGroup.XFEM.Interpolation.Inverse;
 using MGroup.XFEM.Interpolation.Jacobians;
+using MGroup.XFEM.Extensions;
 
 namespace MGroup.XFEM.Interpolation
 {

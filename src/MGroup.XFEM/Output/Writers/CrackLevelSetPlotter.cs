@@ -11,12 +11,12 @@ namespace MGroup.XFEM.Output.Writers
 {
     public class CrackLevelSetPlotter : ICrackObserver
     {
-        private readonly ExteriorLsmCrack crack;
+        private readonly ExteriorLsmCrack2D crack;
         private readonly ContinuousOutputMesh mesh;
         private readonly string outputDirectory;
         private int iteration;
 
-        public CrackLevelSetPlotter(ExteriorLsmCrack crack, ContinuousOutputMesh mesh, string outputDirectory)
+        public CrackLevelSetPlotter(ExteriorLsmCrack2D crack, ContinuousOutputMesh mesh, string outputDirectory)
         {
             this.crack = crack;
             this.mesh = mesh;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using MGroup.MSolve.Discretization;
+using MGroup.XFEM.Extensions;
 
 namespace MGroup.XFEM.Output.Vtk
 {

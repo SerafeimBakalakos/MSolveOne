@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using MGroup.MSolve.Discretization;
 using MGroup.XFEM.Elements;
+using MGroup.XFEM.Extensions;
 using MGroup.XFEM.Geometry.Primitives;
 
 namespace MGroup.XFEM.Entities

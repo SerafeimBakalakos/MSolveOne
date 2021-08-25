@@ -4,6 +4,7 @@ using MGroup.XFEM.Interpolation.Jacobians;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
 using System.Diagnostics;
+using MGroup.XFEM.Extensions;
 
 
 //TODO: In XFEM I used dictionaries with nodes as keys, but it is less efficient and offers little extra safety, since the

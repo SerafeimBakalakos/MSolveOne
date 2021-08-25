@@ -29,7 +29,7 @@ namespace MGroup.XFEM.Tests.Fracture.Observers
 		public static void TestCrackElementInteraction()
 		{
 			XModel<IXCrackElement> model = CreateModel();
-			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
+			var crack = (ExteriorLsmCrack2D)model.GeometryModel.GetDiscontinuity(0);
 
 			// Expected results
 			var expectedTipElements = new List<int[]>();
@@ -70,7 +70,7 @@ namespace MGroup.XFEM.Tests.Fracture.Observers
 		public static void TestEnrichedNodes()
 		{
 			XModel<IXCrackElement> model = CreateModel();
-			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
+			var crack = (ExteriorLsmCrack2D)model.GeometryModel.GetDiscontinuity(0);
 
 			// Set up observers.
 			var newTipNodes = new NewCrackTipNodesObserver();
@@ -154,7 +154,7 @@ namespace MGroup.XFEM.Tests.Fracture.Observers
 		private static void RunPropagationAndPlot() 
 		{
 			XModel<IXCrackElement> model = CreateModel();
-			var crack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
+			var crack = (ExteriorLsmCrack2D)model.GeometryModel.GetDiscontinuity(0);
 
 			// Plot the FE mesh
 			string outputDir = @"C:\Users\Serafeim\Desktop\XFEM2020\Cracks\InteractionTests\";
@@ -225,7 +225,7 @@ namespace MGroup.XFEM.Tests.Fracture.Observers
 			geometryModel.Enricher = new NodeEnricherIndependentCracks(geometryModel, new RelativeAreaSingularityResolver(0.006));
 			double yCrack = 9.99; // avoid conforming case
 			var initialFlaw = new PolyLine2D(new double[] { 0, yCrack }, new double[] { 4.93, yCrack } );
-			var crack = new ExteriorLsmCrack(0, initialFlaw, model, propagator);
+			var crack = new ExteriorLsmCrack2D(0, initialFlaw, model, propagator);
 			geometryModel.Cracks[crack.ID] = crack;
 
 			return model;

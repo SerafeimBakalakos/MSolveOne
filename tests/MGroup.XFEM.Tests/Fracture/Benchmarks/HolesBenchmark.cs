@@ -101,8 +101,8 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 		{
 			XModel<IXCrackElement> model = CreateModel();
 			RunAnalysis(model);
-			var leftCrack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(0);
-			var rightCrack = (ExteriorLsmCrack)model.GeometryModel.GetDiscontinuity(1);
+			var leftCrack = (ExteriorLsmCrack2D)model.GeometryModel.GetDiscontinuity(0);
+			var rightCrack = (ExteriorLsmCrack2D)model.GeometryModel.GetDiscontinuity(1);
 
 			// Expected propagation paths
 			var expectedPathLeft = new List<double[]>();
@@ -279,11 +279,11 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 			var jIntegrationRule = new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(4, 4));
 			var leftPropagator = new JintegralPropagator2D(model, jIntegralRadiusRatio, jIntegrationRule, material,
 				new MaximumCircumferentialTensileStressCriterion(), new ConstantIncrement2D(growthLength));
-			var leftCrack = new ExteriorLsmCrack(0, new PolyLine2D(leftCrackMouth, leftCrackTip), model, leftPropagator);
+			var leftCrack = new ExteriorLsmCrack2D(0, new PolyLine2D(leftCrackMouth, leftCrackTip), model, leftPropagator);
 			geometryModel.Cracks[leftCrack.ID] = leftCrack;
 			var rightPropagator = new JintegralPropagator2D(model, jIntegralRadiusRatio, jIntegrationRule, material,
 				new MaximumCircumferentialTensileStressCriterion(), new ConstantIncrement2D(growthLength));
-			var rightCrack = new ExteriorLsmCrack(1, new PolyLine2D(rightCrackMouth, rightCrackTip), model, rightPropagator);
+			var rightCrack = new ExteriorLsmCrack2D(1, new PolyLine2D(rightCrackMouth, rightCrackTip), model, rightPropagator);
 			geometryModel.Cracks[rightCrack.ID] = rightCrack;
 			
 			return model;

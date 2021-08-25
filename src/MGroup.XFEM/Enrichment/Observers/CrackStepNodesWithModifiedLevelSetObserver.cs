@@ -13,11 +13,11 @@ namespace MGroup.XFEM.Enrichment.Observers
 	/// </summary>
 	public class CrackStepNodesWithModifiedLevelSetObserver : IEnrichmentObserver
 	{
-		private readonly ExteriorLsmCrack[] allCracks;
-		private readonly Dictionary<EnrichmentItem, ExteriorLsmCrack> enrichmentsToCracks 
-			= new Dictionary<EnrichmentItem, ExteriorLsmCrack>();
+		private readonly ExteriorLsmCrack2D[] allCracks;
+		private readonly Dictionary<EnrichmentItem, ExteriorLsmCrack2D> enrichmentsToCracks 
+			= new Dictionary<EnrichmentItem, ExteriorLsmCrack2D>();
 
-		public CrackStepNodesWithModifiedLevelSetObserver(params ExteriorLsmCrack[] allCracks)
+		public CrackStepNodesWithModifiedLevelSetObserver(params ExteriorLsmCrack2D[] allCracks)
 		{
 			if (allCracks.Length == 0)
 			{
@@ -43,7 +43,7 @@ namespace MGroup.XFEM.Enrichment.Observers
 
 		public void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment)
 		{
-			ExteriorLsmCrack crack = FindCrack(enrichment);
+			ExteriorLsmCrack2D crack = FindCrack(enrichment);
 			if (crack == null)
 			{
 				return;
@@ -60,7 +60,7 @@ namespace MGroup.XFEM.Enrichment.Observers
 
 		public void LogEnrichmentRemoval(XNode node, EnrichmentItem enrichment)
 		{
-			ExteriorLsmCrack crack = FindCrack(enrichment);
+			ExteriorLsmCrack2D crack = FindCrack(enrichment);
 			if (crack == null)
 			{
 				return;
@@ -74,18 +74,18 @@ namespace MGroup.XFEM.Enrichment.Observers
 			StepNodesWithModifiedLevelSets.Clear();
 		}
 
-		private ExteriorLsmCrack FindCrack(EnrichmentItem enrichment)
+		private ExteriorLsmCrack2D FindCrack(EnrichmentItem enrichment)
 		{
 			if (enrichment.EnrichmentFunctions[0] is CrackStepEnrichment)
 			{
-				bool crackExists = enrichmentsToCracks.TryGetValue(enrichment, out ExteriorLsmCrack result);
+				bool crackExists = enrichmentsToCracks.TryGetValue(enrichment, out ExteriorLsmCrack2D result);
 				if (crackExists)
 				{
 					return result;
 				}
 				else
 				{
-					foreach (ExteriorLsmCrack crack in allCracks)
+					foreach (ExteriorLsmCrack2D crack in allCracks)
 					{
 						if (crack.CrackBodyEnrichment == enrichment)
 						{
