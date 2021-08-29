@@ -9,11 +9,14 @@ namespace MGroup.XFEM.Geometry.HybridFries
 {
 	public class Edge3D
 	{
+		private readonly double lengthSquared;
+
 		public Edge3D(Vertex3D start, Vertex3D end, bool isExtension = false)
 		{
 			this.Start = start;
 			this.End = end;
 			this.IsExtension = isExtension;
+			this.lengthSquared = CalcLengthSquared(start.CoordsGlobal, end.CoordsGlobal);
 		}
 
 		public List<TriangleCell3D> Cells { get; } = new List<TriangleCell3D>(2);
@@ -105,18 +108,25 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			// Project the point onto the edge's line
 			Vector p1p2 = p2 - p1;
 			Vector p1p = p - p1;
-			double m = p1p * p1p2;
+			double m = (p1p * p1p2) / lengthSquared;
 			if ((m > 0) && (m < 1))
 			{
-				// The projection P0 lies between the vertices of the edge
-				Vector p0 = p1 + m * p1p2;
-				Vector p0p = p - p0;
+				// The projection point P0 lies between the vertices of the edge. The rejection vector is
+				Vector p0p = p1p - m * p1p2;
 				return p0p.Norm2();
 			}
 			else
 			{
 				return double.NaN;
 			}
+		}
+
+		private static double CalcLengthSquared(double[] pointA, double[] pointB)
+		{
+			double dx0 = pointB[0] - pointA[0];
+			double dx1 = pointB[1] - pointA[1];
+			double dx2 = pointB[2] - pointA[2];
+			return dx0 * dx0 + dx1 * dx1 + dx2 * dx2;
 		}
 	}
 }

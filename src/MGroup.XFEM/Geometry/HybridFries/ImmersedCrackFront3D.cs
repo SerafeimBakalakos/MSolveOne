@@ -87,11 +87,11 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		}
 
 		//TODO: split it into smaller methods
-		//TODO: this has the side effect that changes the IsFront property od vertices and edges
+		//TODO: this has the side effect that changes the IsFront property of vertices and edges
 		public Submesh3D UpdateGeometry(CrackFrontGrowth frontGrowth)
-		{ 
+		{
 			// Find the coordinates of new vertices
-			var newFrontCoords = FindNewFrontCoords(frontGrowth);
+			IList<double[]> newFrontCoords = FindNewFrontCoords(frontGrowth);
 
 			// Create the new crack front vertices
 			var newFrontVertices = new List<Vertex3D>(Vertices.Count);
@@ -160,7 +160,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		}
 
 		private IList<double[]> FindNewFrontCoords(CrackFrontGrowth frontGrowth)
-		{
+		{ //TODO: Let the CrackFrontSystem3D do most of these.
 			var newFrontVertices = new List<double[]>(Vertices.Count);
 			for (int v = 0; v < Vertices.Count; ++v)
 			{
