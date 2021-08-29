@@ -17,15 +17,12 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	public class CrackCurve2D
 	{
 		private readonly double maxDomainDimension;
-		private readonly IXModel model;
 		private Dictionary<int, double[]> nodalLevelSets;
 
-		public CrackCurve2D(int id, double maxDomainDimension, 
-			IEnumerable<Vertex2D> vertices, IXModel model, bool calcPseudoNormals = false)
+		public CrackCurve2D(int id, double maxDomainDimension, IEnumerable<Vertex2D> vertices, bool calcPseudoNormals = false)
 		{
 			ID = id;
 			this.maxDomainDimension = maxDomainDimension;
-			this.model = model;
 			this.Vertices = new List<Vertex2D>(vertices);
 			this.Cells = new List<LineCell2D>();
 			for (int v = 0; v < Vertices.Count - 1; ++v)
@@ -60,7 +57,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		public List<Vertex2D> Vertices { get; }
 
 
-		public void CalcLevelSets()
+		public void CalcLevelSets(IXModel model)
 		{
 			//TODO: This can be sped up significantly by only processing vertices, edges and cells that are inside a circular 
 			//      or square bounding box, defined for each node.
@@ -127,16 +124,16 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public double[] GetLevelSetsOf(XNode node) => nodalLevelSets[node.ID];
 
-		public void InitializeGeometry()
+		public void InitializeGeometry(IXModel model)
 		{
 			// Explicit description
 			this.CrackExtension = new CrackExtension2D(this, maxDomainDimension);
 
 			// Implicit description
-			CalcLevelSets();
+			CalcLevelSets(model);
 		}
 
-		public void PropagateCrack(CrackFrontGrowth frontGrowth)
+		public void PropagateCrack(IXModel model, CrackFrontGrowth frontGrowth)
 		{
 			// Explicit description
 			CrackFront.UpdateGeometry(frontGrowth);
@@ -144,7 +141,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			this.CrackExtension = new CrackExtension2D(this, maxDomainDimension);
 
 			// Implicit description
-			CalcLevelSets();
+			CalcLevelSets(model);
 		}
 
 		private void CalcPseudoNormals()

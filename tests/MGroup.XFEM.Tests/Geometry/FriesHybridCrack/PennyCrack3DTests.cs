@@ -147,8 +147,8 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				//geometryModel, new RelativeAreaSingularityResolver(heavisideTol), tipEnrichmentArea);
 			geometryModel.Enricher = new NullEnricher();
 
-			CrackSurface3D crackGeometry = CreateCircleCrack(model);
-			var crack = new HybridFriesCrack3D();
+			CrackSurface3D crackGeometry = CreateCircleCrack();
+			var crack = new HybridFriesCrack3D(model);
 			crack.CrackSurface = crackGeometry;
 			geometryModel.Cracks[crack.ID] = crack;
 
@@ -161,7 +161,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			return geometryModel;
 		}
 
-		private static CrackSurface3D CreateCircleCrack(IXModel model)
+		private static CrackSurface3D CreateCircleCrack()
 		{
 			// Plane xy, center = 0
 			double dTheta = 2.0 * Math.PI / numPointsBoundary;
@@ -213,7 +213,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			}
 
 			double domainDimension = maxCoords[0] - minCoords[0];
-			var crack = new CrackSurface3D(0, domainDimension, vertices, cells, model, true);
+			var crack = new CrackSurface3D(0, domainDimension, vertices, cells, true);
 			crack.CrackFront = new ImmersedCrackFront3D(crack);
 
 			return crack;

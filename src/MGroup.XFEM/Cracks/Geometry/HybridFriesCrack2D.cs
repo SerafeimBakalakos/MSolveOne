@@ -12,16 +12,16 @@ using MGroup.XFEM.Geometry.HybridFries;
 
 namespace MGroup.XFEM.Cracks.Geometry
 {
-	public class HybridFriesCrack3D : ICrack
+	public class HybridFriesCrack2D : ICrack
 	{
 		private readonly XModel<IXCrackElement> model;
 
-		public HybridFriesCrack3D(XModel<IXCrackElement> model)
+		public HybridFriesCrack2D(XModel<IXCrackElement> model)
 		{
 			this.model = model;
 		}
 
-		public CrackSurface3D CrackSurface { get; set; }
+		public CrackCurve2D CrackCurve { get; set; }
 
 		public List<ICrackObserver> Observers { get; } = new List<ICrackObserver>();
 
@@ -33,7 +33,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public EnrichmentItem CrackTipEnrichments => null;
 
-		public int Dimension => 3;
+		public int Dimension => 2;
 
 		public HashSet<IXCrackElement> IntersectedElements => null;
 
@@ -43,7 +43,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public TipCoordinateSystem TipSystem => null;
 
-		public int ID => CrackSurface.ID;
+		public int ID => CrackCurve.ID;
 
 		public void CheckPropagation(IPropagationTermination termination)
 		{
@@ -56,7 +56,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public void InitializeGeometry()
 		{
-			CrackSurface.InitializeGeometry(model);
+			CrackCurve.InitializeGeometry(model);
 		}
 
 		public void InteractWithMesh()

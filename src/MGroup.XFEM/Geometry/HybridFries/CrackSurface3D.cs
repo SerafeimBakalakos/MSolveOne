@@ -17,15 +17,13 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	public class CrackSurface3D
 	{
 		private readonly double maxDomainDimension;
-		private readonly IXModel model;
 		private Dictionary<int, double[]> nodalLevelSets;
 
 		public CrackSurface3D(int id, double maxDomainDimension, 
-			IEnumerable<Vertex3D> vertices, IEnumerable<TriangleCell3D> cells, IXModel model, bool calcPseudoNormals = false)
+			IEnumerable<Vertex3D> vertices, IEnumerable<TriangleCell3D> cells, bool calcPseudoNormals = false)
 		{
 			ID = id;
 			this.maxDomainDimension = maxDomainDimension;
-			this.model = model;
 			this.Vertices = new List<Vertex3D>(vertices);
 			this.Cells = new List<TriangleCell3D>(cells);
 			this.Edges = new List<Edge3D>();
@@ -62,7 +60,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			throw new NotImplementedException();
 		}
 
-		public void CalcLevelSets()
+		public void CalcLevelSets(IXModel model)
 		{
 			//TODO: This can be sped up significantly by only processing vertices, edges and cells that are inside a spherical 
 			//      or cubic bounding box, defined for each node.
@@ -166,16 +164,16 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public double[] GetLevelSetsOf(XNode node) => nodalLevelSets[node.ID];
 
-		public void InitializeGeometry()
+		public void InitializeGeometry(IXModel model)
 		{
 			// Explicit description
 			this.CrackExtension = new CrackExtension3D(this, maxDomainDimension);
 
 			// Implicit description
-			CalcLevelSets();
+			CalcLevelSets(model);
 		}
 
-		public void PropagateCrack(CrackFrontGrowth frontGrowth)
+		public void PropagateCrack(IXModel model, CrackFrontGrowth frontGrowth)
 		{
 			// Explicit description
 			Submesh3D newSubmesh = CrackFront.UpdateGeometry(frontGrowth);
@@ -185,7 +183,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			this.CrackExtension = new CrackExtension3D(this, maxDomainDimension);
 
 			// Implicit description
-			CalcLevelSets();
+			CalcLevelSets(model);
 		}
 
 		private void CalcPseudoNormals()
