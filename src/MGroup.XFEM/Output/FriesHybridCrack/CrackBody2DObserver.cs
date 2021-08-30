@@ -8,13 +8,13 @@ using MGroup.XFEM.Output.Vtk;
 
 namespace MGroup.XFEM.Output.FriesHybridCrack
 {
-    public class CrackSurfaceBody3DObserver : ICrackObserver
+    public class CrackBody2DObserver : ICrackObserver
     {
-        private readonly CrackSurface3D crack;
+        private readonly CrackCurve2D crack;
         private readonly string outputDirectory;
         private int iteration;
 
-        public CrackSurfaceBody3DObserver(CrackSurface3D crack, string outputDirectory)
+        public CrackBody2DObserver(CrackCurve2D crack, string outputDirectory)
         {
             this.crack = crack;
             this.outputDirectory = outputDirectory;
@@ -23,7 +23,7 @@ namespace MGroup.XFEM.Output.FriesHybridCrack
 
         public void Update()
         {
-            string pathMesh = $"{outputDirectory}\\crack_surface_{crack.ID}_t{iteration}.vtk";
+            string pathMesh = $"{outputDirectory}\\crack_curve_{crack.ID}_t{iteration}.vtk";
             using (var writer = new VtkFileWriter(pathMesh))
             {
                 var outputMesh = new OutputCrackMesh(crack.Vertices, crack.Cells);

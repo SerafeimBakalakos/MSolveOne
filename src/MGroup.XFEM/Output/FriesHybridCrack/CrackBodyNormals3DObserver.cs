@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,14 +9,14 @@ using MGroup.XFEM.Output.Vtk;
 
 namespace MGroup.XFEM.Output.FriesHybridCrack
 {
-    public class CrackSurfaceBodyNormals3DObserver : ICrackObserver
+    public class CrackBodyNormals3DObserver : ICrackObserver
     {
         private readonly CrackSurface3D crack;
         private readonly string outputDirectory;
         private readonly bool plotPseudoNormals;
         private int iteration;
 
-        public CrackSurfaceBodyNormals3DObserver(CrackSurface3D crack, string outputDirectory, bool plotPseudoNormals)
+        public CrackBodyNormals3DObserver(CrackSurface3D crack, string outputDirectory, bool plotPseudoNormals)
         {
             this.crack = crack;
             this.outputDirectory = outputDirectory;

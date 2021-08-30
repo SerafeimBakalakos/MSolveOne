@@ -56,7 +56,6 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public List<Vertex2D> Vertices { get; }
 
-
 		public void CalcLevelSets(IXModel model)
 		{
 			//TODO: This can be sped up significantly by only processing vertices, edges and cells that are inside a circular 

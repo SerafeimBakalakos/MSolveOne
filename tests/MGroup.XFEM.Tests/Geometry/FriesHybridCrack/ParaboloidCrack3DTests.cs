@@ -26,12 +26,12 @@ using Xunit;
 
 namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 {
-	public class PennyCrack3DTests
+	public class ParaboloidCrack3DTests
 	{
 		private static readonly string outputDirectory = Path.Combine(
-			Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName, "Resources", "penny_crack_3D_geometry_temp");
+			Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName, "Resources", "paraboloid_crack_3D_geometry_temp");
 		private static readonly string expectedDirectory = Path.Combine(
-			Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName, "Resources", "penny_crack_3D_geometry");
+			Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName, "Resources", "paraboloid_crack_3D_geometry");
 
 		private static readonly double[] minCoords = { -1.0, -1.0, -1.0 };
 		private static readonly double[] maxCoords = { +1.0, +1.0, +1.0 };
@@ -69,11 +69,11 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				}
 
 				// Crack geometry observers
-				crack.Observers.Add(new CrackSurfaceBody3DObserver(crackGeometry, outputDirectory));
-				crack.Observers.Add(new CrackSurfaceBodyNormals3DObserver(crackGeometry, outputDirectory, true));
-				crack.Observers.Add(new CrackSurfaceFront3DObserver(crackGeometry, outputDirectory));
-				crack.Observers.Add(new CrackSurfaceExtension3DObserver(crackGeometry, outputDirectory));
-				crack.Observers.Add(new CrackSurfaceExtensionNormals3DObserver(crackGeometry, outputDirectory, true));
+				crack.Observers.Add(new CrackBody3DObserver(crackGeometry, outputDirectory));
+				crack.Observers.Add(new CrackBodyNormals3DObserver(crackGeometry, outputDirectory, true));
+				crack.Observers.Add(new CrackFront3DObserver(crackGeometry, outputDirectory));
+				crack.Observers.Add(new CrackExtension3DObserver(crackGeometry, outputDirectory));
+				crack.Observers.Add(new CrackExtensionNormals3DObserver(crackGeometry, outputDirectory, true));
 				//crack.Observers.Add(new CrackPathPlotter(crack, outputDirectory));
 
 				// Level set observers

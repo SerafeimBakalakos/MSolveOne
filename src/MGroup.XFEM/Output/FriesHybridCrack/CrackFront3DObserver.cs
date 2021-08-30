@@ -8,13 +8,13 @@ using MGroup.XFEM.Output.Vtk;
 
 namespace MGroup.XFEM.Output.FriesHybridCrack
 {
-    public class CrackSurfaceFront3DObserver : ICrackObserver
+    public class CrackFront3DObserver : ICrackObserver
     {
         private readonly CrackSurface3D crack;
         private readonly string outputDirectory;
         private int iteration;
 
-        public CrackSurfaceFront3DObserver(CrackSurface3D crack, string outputDirectory)
+        public CrackFront3DObserver(CrackSurface3D crack, string outputDirectory)
         {
             this.crack = crack;
             this.outputDirectory = outputDirectory;

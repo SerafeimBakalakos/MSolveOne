@@ -33,8 +33,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			}
 			else
 			{
-				start = segment.Vertices[0];
-				end = segment.Vertices[1];
+				start = segment.Vertices[1];
+				end = segment.Vertices[0];
 				IsCounterClockwise = false;
 			}
 

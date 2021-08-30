@@ -28,8 +28,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				var vertex = Vector.CreateFromArray(tip.CoordsGlobal);
 				var extensionVector = Vector.CreateFromArray(frontSystem.Tangent);
 				var newVertex = vertex.Axpy(extensionVector, extensionLength);
-				var extension = new Vertex2D(numVertices, newVertex.RawData, true);
-				++numVertices;
+				var extension = new Vertex2D(numVertices++, newVertex.RawData, true);
+				extension.PseudoNormal = tip.PseudoNormal;
 				ExtensionVertices.Add(extension);
 
 				// Create extension cell
