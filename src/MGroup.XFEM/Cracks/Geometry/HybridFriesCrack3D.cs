@@ -16,12 +16,13 @@ namespace MGroup.XFEM.Cracks.Geometry
 	{
 		private readonly XModel<IXCrackElement> model;
 
-		public HybridFriesCrack3D(XModel<IXCrackElement> model)
+		public HybridFriesCrack3D(XModel<IXCrackElement> model, CrackSurface3D crackGeometry)
 		{
 			this.model = model;
+			this.CrackSurface = crackGeometry;
 		}
 
-		public CrackSurface3D CrackSurface { get; set; }
+		public CrackSurface3D CrackSurface { get; }
 
 		public List<ICrackObserver> Observers { get; } = new List<ICrackObserver>();
 

@@ -147,8 +147,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			geometryModel.Enricher = new NullEnricher();
 
 			CrackCurve2D crackGeometry = CreateCircleCrack();
-			var crack = new HybridFriesCrack2D(model);
-			crack.CrackCurve = crackGeometry;
+			var crack = new HybridFriesCrack2D(model, crackGeometry);
 			geometryModel.Cracks[crack.ID] = crack;
 
 			//var jIntegrationRule =
