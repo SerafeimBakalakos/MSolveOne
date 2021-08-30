@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Entities;
 
@@ -120,6 +121,25 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				}
 
 				this.nodalLevelSets[node.ID] = new double[] { phi1, phi2, phi3 };
+			}
+		}
+
+		[Conditional("DEBUG")]
+		public void CheckAnglesBetweenCells()
+		{
+			for (int c = 0; c < Cells.Count - 1; ++c)
+			{
+				double[] x0 = Cells[c].Vertices[0].CoordsGlobal;
+				double[] x1 = Cells[c].Vertices[1].CoordsGlobal;
+				double[] x2 = Cells[c + 1].Vertices[1].CoordsGlobal;
+
+				var v = Vector.CreateFromArray(new double[] { x1[0] - x0[0], x1[1] - x0[1] });
+				var w = Vector.CreateFromArray(new double[] { x2[0] - x1[0], x2[1] - x1[1] });
+				double dot = v * w;
+				if (dot < 0)
+				{
+					throw new Exception($"The angle between cells {c} and {c + 1} is not in the [-pi/2, pi/2] range.");
+				}
 			}
 		}
 

@@ -84,6 +84,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 				frontGrowth.LengthsAtFrontVertices[i] = growthLength;
 			}
 			CrackCurve.PropagateCrack(model, frontGrowth);
+			CrackCurve.CheckAnglesBetweenCells();
 		}
 	}
 }
