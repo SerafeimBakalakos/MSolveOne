@@ -24,6 +24,7 @@ using MGroup.XFEM.Output.Mesh;
 using MGroup.XFEM.Output.Vtk;
 using MGroup.XFEM.Output.Writers;
 using MGroup.XFEM.Tests.Fracture;
+using MGroup.XFEM.Tests.Utilities;
 using Xunit;
 
 namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
@@ -106,10 +107,43 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				//model.ModelObservers.Add(new IntegrationPointsPlotter(outputDirectory, model));
 
 				// Propagate the crack. During this the observers will plot the data they pull from model. 
-				model.Initialize();
 				for (int t = 0; t < numGrowthSteps; ++t)
 				{
-					model.Update(null, null);
+					if (t == 0)
+					{
+						model.Initialize();
+					}
+					else
+					{
+						model.Update(null, null);
+					}
+
+					// Compare output
+					var computedFiles = new List<string>();
+					computedFiles.Add(Path.Combine(outputDirectory, "mesh.vtk"));
+					computedFiles.Add(Path.Combine(outputDirectory, $"crack_curve_0_t{t}.vtk"));
+					computedFiles.Add(Path.Combine(outputDirectory, $"crack_curve_normals_cells_0_t{t}.vtk"));
+					computedFiles.Add(Path.Combine(outputDirectory, $"crack_curve_normals_vertices_0_t{t}.vtk"));
+					computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_0_t{t}.vtk"));
+					computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_normals_cells_0_t{t}.vtk"));
+					computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_normals_vertices_0_t{t}.vtk"));
+					computedFiles.Add(Path.Combine(outputDirectory, $"crack_front_systems_0_t{t}.vtk"));
+
+					var expectedFiles = new List<string>();
+					expectedFiles.Add(Path.Combine(expectedDirectory, "mesh.vtk"));
+					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_curve_0_t{t}.vtk"));
+					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_curve_normals_cells_0_t{t}.vtk"));
+					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_curve_normals_vertices_0_t{t}.vtk"));
+					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_0_t{t}.vtk"));
+					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_normals_cells_0_t{t}.vtk"));
+					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_normals_vertices_0_t{t}.vtk"));
+					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_front_systems_0_t{t}.vtk"));
+
+					double tolerance = 1E-6;
+					for (int i = 0; i < expectedFiles.Count; ++i)
+					{
+						Assert.True(IOUtilities.AreDoubleValueFilesEquivalent(expectedFiles[i], computedFiles[i], tolerance));
+					}
 				}
 			}
 			finally

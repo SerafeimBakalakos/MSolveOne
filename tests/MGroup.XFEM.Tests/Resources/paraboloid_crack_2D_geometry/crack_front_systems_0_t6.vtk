@@ -1,0 +1,21 @@
+# vtk DataFile Version 4.1
+Header:
+ASCII
+
+DATASET UNSTRUCTURED_GRID
+POINTS 2 double
+-0.5297877056362577 0.4297877056362575 0
+0.5297877056362577 0.4297877056362575 0
+
+
+POINT_DATA 2
+VECTORS tangent_vectors double
+0 1 0.0
+0 1 0.0
+
+
+VECTORS normal_vectors double
+1 0 0.0
+-1 0 0.0
+
+
