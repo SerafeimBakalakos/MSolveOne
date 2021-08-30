@@ -70,7 +70,7 @@ namespace MGroup.XFEM.Output.Writers
 
 			public IEnumerable<VtkCell> OutCells => cells;
 
-			public SortedDictionary<int, VtkPoint> OutVertices => vertices;
+			public IEnumerable<VtkPoint> OutVertices => vertices.Values;
 		}
 	}
 }

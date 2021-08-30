@@ -217,7 +217,7 @@ namespace MGroup.XFEM.Tests.Fracture.Observers
 			// Fixed crack path
 			double[] angles = { Math.PI/6, Math.PI / 6, -Math.PI / 6 };
 			double[] lengths = { 1.0, 1.5, 4.0 };
-			IPropagator propagator = new MockPropagator(angles, lengths);
+			IPropagatorOLD propagator = new MockPropagator(angles, lengths);
 
 			// Crack, enrichments
 			var geometryModel = new CrackGeometryModel(model);

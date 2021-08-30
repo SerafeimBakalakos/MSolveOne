@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using MGroup.MSolve.Discretization.Mesh;
 using MGroup.XFEM.Cracks.Geometry;
@@ -52,7 +53,7 @@ namespace MGroup.XFEM.Output.FriesHybridCrack
 			{
 				Vertex2D vertex = vertices[v];
 				var outVertex = new VtkPoint(v, new double[] { vertex.CoordsGlobal[0], vertex.CoordsGlobal[1], 0 });
-				outVertices[vertex.ID] = outVertex;
+				outVertices[v] = outVertex;
 				map[vertex.ID] = outVertex;
 			}
 
@@ -102,6 +103,6 @@ namespace MGroup.XFEM.Output.FriesHybridCrack
 
 		public IEnumerable<VtkCell> OutCells => outCells;
 
-		public SortedDictionary<int, VtkPoint> OutVertices => outVertices;
+		public IEnumerable<VtkPoint> OutVertices => outVertices.Values; 
 	}
 }

@@ -23,9 +23,9 @@ namespace MGroup.XFEM.Cracks.Geometry
 		private readonly PolyLine2D initialCrack;
 		private readonly OpenLsmSingleTip2D lsmGeometry; //TODO: Abstract this
 		private readonly XModel<IXCrackElement> model;
-		private readonly IPropagator propagator;
+		private readonly IPropagatorOLD propagator;
 
-		public ExteriorLsmCrack2D(int id, PolyLine2D initialCrack, XModel<IXCrackElement> model, IPropagator propagator)
+		public ExteriorLsmCrack2D(int id, PolyLine2D initialCrack, XModel<IXCrackElement> model, IPropagatorOLD propagator)
 		{
 			this.ID = id;
 			this.initialCrack = initialCrack;

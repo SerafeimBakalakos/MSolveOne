@@ -17,12 +17,14 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	public class CrackCurve2D
 	{
 		private readonly double maxDomainDimension;
+		private readonly bool calcPseudoNormals;
 		private Dictionary<int, double[]> nodalLevelSets;
 
 		public CrackCurve2D(int id, double maxDomainDimension, IEnumerable<Vertex2D> vertices, bool calcPseudoNormals = false)
 		{
 			ID = id;
 			this.maxDomainDimension = maxDomainDimension;
+			this.calcPseudoNormals = calcPseudoNormals;
 			this.Vertices = new List<Vertex2D>(vertices);
 			this.Cells = new List<LineCell2D>();
 			for (int v = 0; v < Vertices.Count - 1; ++v)
@@ -136,11 +138,15 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		{
 			// Explicit description
 			CrackFront.UpdateGeometry(frontGrowth);
-			
+
+			if (calcPseudoNormals)
+			{
+				CalcPseudoNormals();
+			}
 			this.CrackExtension = new CrackExtension2D(this, maxDomainDimension);
 
 			// Implicit description
-			CalcLevelSets(model);
+			//CalcLevelSets(model);
 		}
 
 		private void CalcPseudoNormals()

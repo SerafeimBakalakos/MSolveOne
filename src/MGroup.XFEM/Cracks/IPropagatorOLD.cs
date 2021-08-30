@@ -9,9 +9,11 @@ using MGroup.XFEM.Elements;
 
 namespace MGroup.XFEM.Cracks
 {
-    public interface IPropagator
+    public interface IPropagatorOLD
     {
+        PropagationLogger Logger { get; }
+
         (double growthAngle, double growthLength) Propagate(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, 
-            double[] crackTip, double[] extensionVector, IEnumerable<IXCrackElement> tipElements);
+            double[] globalCrackTip, TipCoordinateSystem tipSystem, IEnumerable<IXCrackElement> tipElements);
     }
 }

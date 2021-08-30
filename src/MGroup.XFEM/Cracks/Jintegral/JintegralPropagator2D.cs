@@ -21,7 +21,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 	/// <summary>
 	/// Calculates the direction and length of the next crack segment. For now it only works with homogeneous materials.
 	/// </summary>
-	public class JintegralPropagator2D: IPropagator
+	public class JintegralPropagator2D: IPropagatorOLD
 	{
 		private readonly XModel<IXCrackElement> model;
 		private readonly double magnificationOfJintegralRadius;

@@ -92,7 +92,7 @@ namespace MGroup.XFEM.Output.Mesh
 
 		public IEnumerable<VtkCell> OutCells => outCells;
 
-		public SortedDictionary<int, VtkPoint> OutVertices => outVertices;
+		public IEnumerable<VtkPoint> OutVertices => outVertices.Values;
 
 		public IEnumerable<VtkCell> GetOutCellsForOriginal(IXFiniteElement originalCell)
 			=> original2OutCells[originalCell];

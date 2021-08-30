@@ -13,7 +13,7 @@ namespace MGroup.XFEM.Cracks
 	/// <summary>
 	/// Used in tests. Only for propagation from one tip for now.
 	/// </summary>
-	public class MockPropagator: IPropagator
+	public class MockPropagator: IPropagatorOLD
 	{
 		/// <summary>
 		/// In the local polar coordinate system defined at the crack tip.

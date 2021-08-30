@@ -39,7 +39,7 @@ namespace MGroup.XFEM.Output.FriesHybridCrack
                 List<double[]> normalVectors = crack.CrackFront.CoordinateSystems.Select(sys => sys.Normal).ToList();
                 List<double[]> extensionVectors = crack.CrackFront.CoordinateSystems.Select(sys => sys.Extension).ToList();
 
-                writer.WritePoints(outputMesh.OutVertices.Values, true);
+                writer.WritePoints(outputMesh.OutVertices, true);
                 writer.WriteVectorField("tangent_vectors", tangentVectors);
                 writer.WriteVectorField("normal_vectors", normalVectors);
                 writer.WriteVectorField("extension_vectors", extensionVectors);

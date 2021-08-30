@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using MGroup.XFEM.Output.Mesh;
 
 namespace MGroup.XFEM.Output.Vtk
@@ -37,7 +38,7 @@ namespace MGroup.XFEM.Output.Vtk
 			//this.numVertices = mesh.NumOutVertices;
 			writer.WriteLine("DATASET UNSTRUCTURED_GRID");
 			writer.WriteLine($"POINTS {mesh.NumOutVertices} double");
-			foreach (VtkPoint point in mesh.OutVertices.Values)
+			foreach (VtkPoint point in mesh.OutVertices)
 			{
 				double[] coords = point.Get3DCoordinates();
 				writer.WriteLine($"{coords[0]} {coords[1]} {coords[2]}");
@@ -68,7 +69,7 @@ namespace MGroup.XFEM.Output.Vtk
 			WriteFieldsHeader(mesh.NumOutVertices);
 			writer.WriteLine($"SCALARS {fieldName} double 1");
 			writer.WriteLine("LOOKUP_TABLE default");
-			foreach (VtkPoint vertex in mesh.OutVertices.Values) writer.WriteLine(getScalarValue(vertex));
+			foreach (VtkPoint vertex in mesh.OutVertices) writer.WriteLine(getScalarValue(vertex));
 			writer.WriteLine();
 		}
 
@@ -111,19 +112,19 @@ namespace MGroup.XFEM.Output.Vtk
 			// Component 11
 			writer.WriteLine($"SCALARS {fieldName}_11 double 1");
 			writer.WriteLine("LOOKUP_TABLE default");
-			foreach (VtkPoint vertex in mesh.OutVertices.Values) writer.WriteLine(getTensorValues(vertex)[0]);
+			foreach (VtkPoint vertex in mesh.OutVertices) writer.WriteLine(getTensorValues(vertex)[0]);
 			writer.WriteLine();
 
 			// Component 22
 			writer.WriteLine($"SCALARS {fieldName}_22 double 1");
 			writer.WriteLine("LOOKUP_TABLE default");
-			foreach (VtkPoint vertex in mesh.OutVertices.Values) writer.WriteLine(getTensorValues(vertex)[1]);
+			foreach (VtkPoint vertex in mesh.OutVertices) writer.WriteLine(getTensorValues(vertex)[1]);
 			writer.WriteLine();
 
 			// Component 12
 			writer.WriteLine($"SCALARS {fieldName}_12 double 1");
 			writer.WriteLine("LOOKUP_TABLE default");
-			foreach (VtkPoint vertex in mesh.OutVertices.Values) writer.WriteLine(getTensorValues(vertex)[2]);
+			foreach (VtkPoint vertex in mesh.OutVertices) writer.WriteLine(getTensorValues(vertex)[2]);
 			writer.WriteLine();
 		}
 
@@ -203,7 +204,7 @@ namespace MGroup.XFEM.Output.Vtk
 		{
 			WriteFieldsHeader(mesh.NumOutVertices);
 			writer.WriteLine($"VECTORS {fieldName} double");
-			foreach (VtkPoint vertex in mesh.OutVertices.Values)
+			foreach (VtkPoint vertex in mesh.OutVertices)
 			{
 				double[] vector = getVectorValue(vertex);
 				writer.WriteLine($"{vector[0]} {vector[1]} 0.0");
@@ -237,7 +238,7 @@ namespace MGroup.XFEM.Output.Vtk
 		{
 			WriteFieldsHeader(mesh.NumOutVertices);
 			writer.WriteLine($"VECTORS {fieldName} double");
-			foreach (VtkPoint vertex in mesh.OutVertices.Values)
+			foreach (VtkPoint vertex in mesh.OutVertices)
 			{
 				double[] vector = getVectorValue(vertex);
 				writer.WriteLine($"{vector[0]} {vector[1]} {vector[2]}");

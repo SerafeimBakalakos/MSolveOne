@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.MSolve.Meshes.Structured;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Cracks;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Elements;
@@ -40,7 +42,8 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 		private const double E = 1, v = 0.3, thickness = 1.0;
 		private const int bulkIntegrationOrder = 2, boundaryIntegrationOrder = 2;
 
-		private const double radius = 0.3;
+		private const double radius = 0.2, growthAngle = Math.PI / 12.0, growthLength = 0.1;
+		private const int numGrowthSteps = 6;
 
 		[Fact]
 		public static void TestModel()
@@ -104,6 +107,10 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 
 				// Propagate the crack. During this the observers will plot the data they pull from model. 
 				model.Initialize();
+				for (int t = 0; t < numGrowthSteps; ++t)
+				{
+					model.Update(null, null);
+				}
 			}
 			finally
 			{
@@ -147,7 +154,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			geometryModel.Enricher = new NullEnricher();
 
 			CrackCurve2D crackGeometry = CreateCircleCrack();
-			var crack = new HybridFriesCrack2D(model, crackGeometry);
+			var crack = new HybridFriesCrack2D(model, crackGeometry, new MockPropagator());
 			geometryModel.Cracks[crack.ID] = crack;
 
 			//var jIntegrationRule =
@@ -171,6 +178,23 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			crack.CrackFront = new ImmersedCrackFront2D(crack);
 
 			return crack;
+		}
+
+		private class MockPropagator : IPropagator
+		{
+			public (double growthAngle, double growthLength) Propagate(
+				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements,
+				double[] crackTip, double[] extensionVector, IEnumerable<IXCrackElement> tipElements)
+			{
+				if (extensionVector[0] > 0)
+				{
+					return (growthAngle, growthLength);
+				}
+				else
+				{
+					return (-growthAngle, growthLength);
+				}
+			}
 		}
 	}
 }

@@ -48,6 +48,6 @@ namespace MGroup.XFEM.Output.Mesh
         /// <summary>
         /// Same order as the corresponding one in <see cref="OriginalVertices"/>.
         /// </summary>
-        public SortedDictionary<int, VtkPoint> OutVertices => outVertices;
+        public IEnumerable<VtkPoint> OutVertices => outVertices.Values;
     }
 }

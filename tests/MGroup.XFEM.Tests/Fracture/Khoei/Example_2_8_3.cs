@@ -138,7 +138,7 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 			model.GeometryModel = geometryModel;
 			geometryModel.Enricher = new NodeEnricherIndependentCracks(geometryModel, new NullSingularityResolver());
 			var initGeometry = new PolyLine2D(new double[] { 30.0, +40.0 }, new double[] { 30.0, -40.0 });
-			IPropagator propagator = null;
+			IPropagatorOLD propagator = null;
 			var crack = new ExteriorLsmCrack2D(0, initGeometry, model, propagator);
 			geometryModel.Cracks[crack.ID] = crack;
 		}
