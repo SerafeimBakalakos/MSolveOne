@@ -59,7 +59,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public void InitializeGeometry()
 		{
-			CrackCurve.InitializeGeometry(model);
+			CrackCurve.InitializeGeometry(model.Nodes.Values);
 		}
 
 		public void InteractWithMesh()
@@ -83,7 +83,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 				frontGrowth.AnglesAtTips[i] = growthAngle;
 				frontGrowth.LengthsAtTips[i] = growthLength;
 			}
-			CrackCurve.PropagateCrack(model, frontGrowth);
+			CrackCurve.PropagateCrack(model.Nodes.Values, frontGrowth);
 			CrackCurve.CheckAnglesBetweenCells();
 		}
 	}

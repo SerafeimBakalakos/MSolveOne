@@ -63,14 +63,14 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			throw new NotImplementedException();
 		}
 
-		public void CalcLevelSets(IXModel model)
+		public void CalcLevelSets(IEnumerable<XNode> nodes)
 		{
 			//TODO: This can be sped up significantly by only processing vertices, edges and cells that are inside a spherical 
 			//      or cubic bounding box, defined for each node.
 			//TODO: This method has a lot of repetition
 
 			this.nodalLevelSets = new Dictionary<int, double[]>();
-			foreach (XNode node in model.Nodes.Values)
+			foreach (XNode node in nodes)
 			{
 				double phi1 = double.MaxValue; // unsigned distance to the crack surface, excluding the extension
 				double phi2 = double.MaxValue; // unsigned distance to the crack front
@@ -194,17 +194,17 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public double[] GetLevelSetsOf(XNode node) => nodalLevelSets[node.ID];
 
-		public void InitializeGeometry(IXModel model)
+		public void InitializeGeometry(IEnumerable<XNode> nodes)
 		{
 			// Explicit description
 			CrackFront.Update();
 			CrackExtension = new CrackExtension3D(this, maxDomainDimension);
 
 			// Implicit description
-			//CalcLevelSets(model);
+			//CalcLevelSets(nodes);
 		}
 
-		public void PropagateCrack(IXModel model, CrackFrontPropagation frontGrowth)
+		public void PropagateCrack(IEnumerable<XNode> nodes, CrackFrontPropagation frontGrowth)
 		{
 			// Explicit description
 			PropagationMesh3D mesh = CrackFront.CreatePropagationMesh(frontGrowth);
@@ -221,7 +221,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			this.CrackExtension = new CrackExtension3D(this, maxDomainDimension);
 
 			// Implicit description
-			//CalcLevelSets(model);
+			//CalcLevelSets(nodes);
 		}
 
 		private void CalcPseudoNormals()
