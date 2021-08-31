@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.MSolve.Meshes.Structured;
+using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Cracks;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Elements;
@@ -22,6 +24,7 @@ using MGroup.XFEM.Output.Mesh;
 using MGroup.XFEM.Output.Vtk;
 using MGroup.XFEM.Output.Writers;
 using MGroup.XFEM.Tests.Fracture;
+using MGroup.XFEM.Tests.Utilities;
 using Xunit;
 
 namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
@@ -41,7 +44,8 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 		private const int bulkIntegrationOrder = 2, boundaryIntegrationOrder = 2;
 
 		private const int numPointsBoundary = 8;
-		private const double radius = 0.3;
+		private const double radius = 0.2, growthAngle = Math.PI / 12.0, growthLength = 0.1;
+		private const int numGrowthSteps = 7;
 
 		[Fact]
 		public static void TestModel()
@@ -104,7 +108,44 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				//model.ModelObservers.Add(new IntegrationPointsPlotter(outputDirectory, model));
 
 				// Propagate the crack. During this the observers will plot the data they pull from model. 
-				model.Initialize();
+				for (int t = 0; t < numGrowthSteps; ++t)
+				{
+					if (t == 0)
+					{
+						model.Initialize();
+					}
+					else
+					{
+						model.Update(null, null);
+					}
+
+					//// Compare output
+					//var computedFiles = new List<string>();
+					//computedFiles.Add(Path.Combine(outputDirectory, "mesh.vtk"));
+					//computedFiles.Add(Path.Combine(outputDirectory, $"crack_surface_0_t{t}.vtk"));
+					//computedFiles.Add(Path.Combine(outputDirectory, $"crack_surface_normals_cells_0_t{t}.vtk"));
+					//computedFiles.Add(Path.Combine(outputDirectory, $"crack_surface_normals_vertices_0_t{t}.vtk"));
+					//computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_0_t{t}.vtk"));
+					//computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_normals_cells_0_t{t}.vtk"));
+					//computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_normals_vertices_0_t{t}.vtk"));
+					//computedFiles.Add(Path.Combine(outputDirectory, $"crack_front_systems_0_t{t}.vtk"));
+
+					//var expectedFiles = new List<string>();
+					//expectedFiles.Add(Path.Combine(expectedDirectory, "mesh.vtk"));
+					//expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_surface_0_t{t}.vtk"));
+					//expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_surface_normals_cells_0_t{t}.vtk"));
+					//expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_surface_normals_vertices_0_t{t}.vtk"));
+					//expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_0_t{t}.vtk"));
+					//expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_normals_cells_0_t{t}.vtk"));
+					//expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_normals_vertices_0_t{t}.vtk"));
+					//expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_front_systems_0_t{t}.vtk"));
+
+					//double tolerance = 1E-6;
+					//for (int i = 0; i < expectedFiles.Count; ++i)
+					//{
+					//	Assert.True(IOUtilities.AreDoubleValueFilesEquivalent(expectedFiles[i], computedFiles[i], tolerance));
+					//}
+				}
 			}
 			finally
 			{
@@ -148,7 +189,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			geometryModel.Enricher = new NullEnricher();
 
 			CrackSurface3D crackGeometry = CreateCircleCrack();
-			var crack = new HybridFriesCrack3D(model, crackGeometry);
+			var crack = new HybridFriesCrack3D(model, crackGeometry, new MockPropagator());
 			geometryModel.Cracks[crack.ID] = crack;
 
 			//var jIntegrationRule =
@@ -216,6 +257,16 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			crack.CrackFront = new ImmersedCrackFront3D(crack);
 
 			return crack;
+		}
+
+		private class MockPropagator : IPropagator
+		{
+			public (double growthAngle, double growthLength) Propagate(
+				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements,
+				double[] crackTip, double[] extensionVector, IEnumerable<IXCrackElement> tipElements)
+			{
+				return (growthAngle, growthLength);
+			}
 		}
 	}
 }

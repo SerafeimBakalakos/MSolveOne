@@ -17,6 +17,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	public class CrackSurface3D
 	{
 		private readonly double maxDomainDimension;
+		private readonly bool calcPseudoNormals;
 		private Dictionary<int, double[]> nodalLevelSets;
 
 		public CrackSurface3D(int id, double maxDomainDimension, 
@@ -24,6 +25,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		{
 			ID = id;
 			this.maxDomainDimension = maxDomainDimension;
+			this.calcPseudoNormals = calcPseudoNormals;
 			this.Vertices = new List<Vertex3D>(vertices);
 			this.Cells = new List<TriangleCell3D>(cells);
 			this.Edges = new List<Edge3D>();
@@ -162,6 +164,25 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			}
 		}
 
+		[Conditional("DEBUG")]
+		public void CheckAnglesBetweenCells()
+		{
+			//for (int c = 0; c < Cells.Count - 1; ++c)
+			//{
+			//	double[] x0 = Cells[c].Vertices[0].CoordsGlobal;
+			//	double[] x1 = Cells[c].Vertices[1].CoordsGlobal;
+			//	double[] x2 = Cells[c + 1].Vertices[1].CoordsGlobal;
+
+			//	var v = Vector.CreateFromArray(new double[] { x1[0] - x0[0], x1[1] - x0[1] });
+			//	var w = Vector.CreateFromArray(new double[] { x2[0] - x1[0], x2[1] - x1[1] });
+			//	double dot = v * w;
+			//	if (dot < 0)
+			//	{
+			//		throw new Exception($"The angle between cells {c} and {c + 1} is not in the [-pi/2, pi/2] range.");
+			//	}
+			//}
+		}
+
 		public double[] GetLevelSetsOf(XNode node) => nodalLevelSets[node.ID];
 
 		public void InitializeGeometry(IXModel model)
@@ -170,7 +191,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			this.CrackExtension = new CrackExtension3D(this, maxDomainDimension);
 
 			// Implicit description
-			CalcLevelSets(model);
+			//CalcLevelSets(model);
 		}
 
 		public void PropagateCrack(IXModel model, CrackFrontGrowth frontGrowth)
@@ -180,10 +201,15 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			foreach (Vertex3D vertex in newSubmesh.Vertices) Vertices.Add(vertex);
 			foreach (Edge3D edge in newSubmesh.Edges) Edges.Add(edge);
 			foreach (TriangleCell3D cell in newSubmesh.Cells) Cells.Add(cell);
+
+			if (calcPseudoNormals)
+			{
+				CalcPseudoNormals();
+			}
 			this.CrackExtension = new CrackExtension3D(this, maxDomainDimension);
 
 			// Implicit description
-			CalcLevelSets(model);
+			//CalcLevelSets(model);
 		}
 
 		private void CalcPseudoNormals()

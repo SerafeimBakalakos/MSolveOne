@@ -44,7 +44,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 		private const int bulkIntegrationOrder = 2, boundaryIntegrationOrder = 2;
 
 		private const double radius = 0.2, growthAngle = Math.PI / 12.0, growthLength = 0.1;
-		private const int numGrowthSteps = 6;
+		private const int numGrowthSteps = 7;
 
 		[Fact]
 		public static void TestModel()

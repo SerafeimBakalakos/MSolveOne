@@ -15,11 +15,13 @@ namespace MGroup.XFEM.Cracks.Geometry
 	public class HybridFriesCrack3D : ICrack
 	{
 		private readonly XModel<IXCrackElement> model;
+		private readonly IPropagator propagator;
 
-		public HybridFriesCrack3D(XModel<IXCrackElement> model, CrackSurface3D crackGeometry)
+		public HybridFriesCrack3D(XModel<IXCrackElement> model, CrackSurface3D crackGeometry, IPropagator propagator)
 		{
 			this.model = model;
 			this.CrackSurface = crackGeometry;
+			this.propagator = propagator;
 		}
 
 		public CrackSurface3D CrackSurface { get; }
@@ -68,6 +70,21 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements)
 		{
+			int numTips = CrackSurface.CrackFront.Vertices.Count;
+			var frontGrowth = new CrackFrontGrowth();
+			frontGrowth.AnglesAtFrontVertices = new double[numTips];
+			frontGrowth.LengthsAtFrontVertices = new double[numTips];
+			for (int i = 0; i < numTips; ++i)
+			{
+				double[] tipCoords = CrackSurface.CrackFront.Vertices[i].CoordsGlobal;
+				double[] extensionVector = CrackSurface.CrackFront.CoordinateSystems[i].Extension;
+				(double growthAngle, double growthLength) = propagator.Propagate(
+					algebraicModel, totalDisplacements, tipCoords, extensionVector, TipElements);
+				frontGrowth.AnglesAtFrontVertices[i] = growthAngle;
+				frontGrowth.LengthsAtFrontVertices[i] = growthLength;
+			}
+			CrackSurface.PropagateCrack(model, frontGrowth);
+			CrackSurface.CheckAnglesBetweenCells();
 		}
 	}
 }

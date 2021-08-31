@@ -95,10 +95,10 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 			// Create the new crack front vertices
 			var newFrontVertices = new List<Vertex3D>(Vertices.Count);
-			int numVerticesOld = crackSurface.Vertices.Count; // excluding crack extension vertices, which will be removed.
+			int numVerticesTotal = crackSurface.Vertices.Count; // excluding crack extension vertices, which will be removed.
 			for (int v = 0; v < Vertices.Count; ++v)
 			{
-				var newVertex = new Vertex3D(numVerticesOld + v, newFrontCoords[v], false);
+				var newVertex = new Vertex3D(numVerticesTotal++, newFrontCoords[v], false);
 				newVertex.IsFront = true;
 				newFrontVertices.Add(newVertex);
 			}
@@ -127,7 +127,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 				// Rest of the new edges
 				allNewEdges.Add(new Edge3D(vertexOld0, vertexNew0, false));
-				allNewEdges.Add(new Edge3D(vertexOld1, vertexNew1, false));
+				//allNewEdges.Add(new Edge3D(vertexOld1, vertexNew1, false)); // This will be created for the next tip
 				allNewEdges.Add(new Edge3D(vertexOld1, vertexNew0, false));
 			}
 
