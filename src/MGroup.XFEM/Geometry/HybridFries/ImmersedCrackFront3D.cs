@@ -54,9 +54,25 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				Vertex3D vertexNew0 = mesh.PropagationVertices[v];
 				Vertex3D vertexNew1 = mesh.PropagationVertices[(v + 1) % Vertices.Count];
 
-				// Cells
-				mesh.PropagationCells.Add(new TriangleCell3D(vertexOld1, vertexOld0, vertexNew0, false));
-				mesh.PropagationCells.Add(new TriangleCell3D(vertexNew0, vertexNew1, vertexOld1, false));
+				// Cells (simplest case, but the front coordinate systems are not very accurate)
+				//mesh.PropagationCells.Add(new TriangleCell3D(vertexOld1, vertexOld0, vertexNew0, false));
+				//mesh.PropagationCells.Add(new TriangleCell3D(vertexNew0, vertexNew1, vertexOld1, false));
+
+				// Find the centroid and add it to the mesh vertices
+				var coords = new double[4][];
+				coords[0] = vertexOld0.CoordsGlobal;
+				coords[1] = vertexOld1.CoordsGlobal;
+				coords[2] = vertexNew0.CoordsGlobal;
+				coords[3] = vertexNew1.CoordsGlobal;
+				double[] xC = Utilities.FindCentroid((IList<double[]>)coords);
+				var centroid = new Vertex3D(numVerticesTotal++, xC, false);
+				mesh.PropagationVertices.Add(centroid);
+
+				// 4 triangles between the 5 vertices
+				mesh.PropagationCells.Add(new TriangleCell3D(vertexOld1, vertexOld0, centroid, false));
+				mesh.PropagationCells.Add(new TriangleCell3D(vertexOld0, vertexNew0, centroid, false));
+				mesh.PropagationCells.Add(new TriangleCell3D(vertexNew0, vertexNew1, centroid, false));
+				mesh.PropagationCells.Add(new TriangleCell3D(vertexNew1, vertexOld1, centroid, false));
 			}
 
 			// Create the new edges 
