@@ -127,18 +127,22 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		[Conditional("DEBUG")]
 		public void CheckAnglesBetweenCells()
 		{
-			for (int c = 0; c < Cells.Count - 1; ++c)
+			foreach (Vertex2D vertex in Vertices)
 			{
-				double[] x0 = Cells[c].Vertices[0].CoordsGlobal;
-				double[] x1 = Cells[c].Vertices[1].CoordsGlobal;
-				double[] x2 = Cells[c + 1].Vertices[1].CoordsGlobal;
-
-				var v = Vector.CreateFromArray(new double[] { x1[0] - x0[0], x1[1] - x0[1] });
-				var w = Vector.CreateFromArray(new double[] { x2[0] - x1[0], x2[1] - x1[1] });
-				double dot = v * w;
-				if (dot < 0)
+				if (vertex.Cells.Count == 1)
 				{
-					throw new Exception($"The angle between cells {c} and {c + 1} is not in the [-pi/2, pi/2] range.");
+					// No angle between segments can be defined at tips
+					continue;
+				}
+
+				// The angle between the 2 segments is the complementary of the angle between their normals. 
+				// Thus the angle between the normals must be in [-pi/2, pi/2]
+				var n1 = Vector.CreateFromArray(vertex.Cells[0].Normal);
+				var n2 = Vector.CreateFromArray(vertex.Cells[1].Normal);
+				if (n1 * n2 < 0)
+				{
+					throw new Exception(
+						$"The angle between cells {vertex.ID - 1} and {vertex.ID} is not in the [pi/2, 3*pi/2] range.");
 				}
 			}
 		}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Entities;
 
@@ -167,20 +168,28 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		[Conditional("DEBUG")]
 		public void CheckAnglesBetweenCells()
 		{
-			//for (int c = 0; c < Cells.Count - 1; ++c)
-			//{
-			//	double[] x0 = Cells[c].Vertices[0].CoordsGlobal;
-			//	double[] x1 = Cells[c].Vertices[1].CoordsGlobal;
-			//	double[] x2 = Cells[c + 1].Vertices[1].CoordsGlobal;
+			foreach (Edge3D edge in Edges)
+			{
+				if (edge.Cells.Count == 1)
+				{
+					// No angle between cells can be defined at front edges
+					continue;
+				}
 
-			//	var v = Vector.CreateFromArray(new double[] { x1[0] - x0[0], x1[1] - x0[1] });
-			//	var w = Vector.CreateFromArray(new double[] { x2[0] - x1[0], x2[1] - x1[1] });
-			//	double dot = v * w;
-			//	if (dot < 0)
-			//	{
-			//		throw new Exception($"The angle between cells {c} and {c + 1} is not in the [-pi/2, pi/2] range.");
-			//	}
-			//}
+				// The angle between the 2 cells is the complementary of the angle between their normals. 
+				// Thus the angle between the normals must be in [-pi/2, pi/2]
+				var n1 = Vector.CreateFromArray(edge.Cells[0].Normal);
+				var n2 = Vector.CreateFromArray(edge.Cells[1].Normal);
+				if (n1 * n2 < 0)
+				{
+					TriangleCell3D cell0 = edge.Cells[0];
+					TriangleCell3D cell1 = edge.Cells[1];
+					string cell0Name = $"({cell0.Vertices[0].ID}, {cell0.Vertices[1].ID}, {cell0.Vertices[2].ID})";
+					string cell1Name = $"({cell1.Vertices[0].ID}, {cell1.Vertices[1].ID}, {cell1.Vertices[2].ID})";
+					throw new Exception(
+						$"The angle between cells {cell0Name} and {cell1Name} is not in the [pi/2, 3*pi/2] range.");
+				}
+			}
 		}
 
 		public double[] GetLevelSetsOf(XNode node) => nodalLevelSets[node.ID];
