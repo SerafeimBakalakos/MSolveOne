@@ -58,6 +58,12 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		/// </summary>
 		public double[] Tangent { get; }
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="oldTipCoords"></param>
+		/// <param name="angle">Counter-clockwise angle from the current <see cref="Tangent"/> to the propagation vector.</param>
+		/// <param name="length"></param>
 		public double[] CalcNewTipCoords(double[] oldTipCoords, double angle, double length)
 		{
 			double cT = length * Math.Cos(angle);

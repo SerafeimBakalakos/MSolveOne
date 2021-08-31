@@ -71,17 +71,17 @@ namespace MGroup.XFEM.Cracks.Geometry
 		public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements)
 		{
 			int numTips = CrackSurface.CrackFront.Vertices.Count;
-			var frontGrowth = new CrackFrontGrowth();
-			frontGrowth.AnglesAtFrontVertices = new double[numTips];
-			frontGrowth.LengthsAtFrontVertices = new double[numTips];
+			var frontGrowth = new CrackFrontPropagation();
+			frontGrowth.AnglesAtTips = new double[numTips];
+			frontGrowth.LengthsAtTips = new double[numTips];
 			for (int i = 0; i < numTips; ++i)
 			{
 				double[] tipCoords = CrackSurface.CrackFront.Vertices[i].CoordsGlobal;
 				double[] extensionVector = CrackSurface.CrackFront.CoordinateSystems[i].Extension;
 				(double growthAngle, double growthLength) = propagator.Propagate(
 					algebraicModel, totalDisplacements, tipCoords, extensionVector, TipElements);
-				frontGrowth.AnglesAtFrontVertices[i] = growthAngle;
-				frontGrowth.LengthsAtFrontVertices[i] = growthLength;
+				frontGrowth.AnglesAtTips[i] = growthAngle;
+				frontGrowth.LengthsAtTips[i] = growthLength;
 			}
 			CrackSurface.PropagateCrack(model, frontGrowth);
 			CrackSurface.CheckAnglesBetweenCells();

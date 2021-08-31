@@ -13,6 +13,6 @@ namespace MGroup.XFEM.Geometry.HybridFries
         
         List<Vertex2D> Vertices { get; }
 
-        void UpdateGeometry(CrackFrontGrowth frontGrowth);
+        void UpdateGeometry(CrackFrontPropagation frontPropagation);
     }
 }

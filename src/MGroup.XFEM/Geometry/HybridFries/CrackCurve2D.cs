@@ -154,7 +154,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			CalcLevelSets(model);
 		}
 
-		public void PropagateCrack(IXModel model, CrackFrontGrowth frontGrowth)
+		public void PropagateCrack(IXModel model, CrackFrontPropagation frontGrowth)
 		{
 			// Explicit description
 			CrackFront.UpdateGeometry(frontGrowth);

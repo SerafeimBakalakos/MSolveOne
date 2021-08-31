@@ -55,7 +55,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			return vertices;
 		}
 
-		public void UpdateGeometry(CrackFrontGrowth frontGrowth)
+		public void UpdateGeometry(CrackFrontPropagation frontPropagation)
 		{
 			int numOldVertices = crackCurve.Vertices.Count; // excluding crack extension vertices, which will be removed.
 			for (int v = 0; v < 2; ++v)
@@ -65,7 +65,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 				// Create new tip
 				double[] newCoords = oldSystem.CalcNewTipCoords(
-						oldTip.CoordsGlobal, frontGrowth.AnglesAtFrontVertices[v], frontGrowth.LengthsAtFrontVertices[v]);
+						oldTip.CoordsGlobal, frontPropagation.AnglesAtTips[v], frontPropagation.LengthsAtTips[v]);
 				var newTip = new Vertex2D(numOldVertices + v, newCoords, false);
 
 				// Replace it

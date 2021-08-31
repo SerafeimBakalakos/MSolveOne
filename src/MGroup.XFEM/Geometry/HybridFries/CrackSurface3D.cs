@@ -30,7 +30,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			this.Cells = new List<TriangleCell3D>(cells);
 			this.Edges = new List<Edge3D>();
 			CreateEdges();
-			ConnectVerticesEdgesCells();
+			ConnectBidirectionallyVerticesEdgesCells();
 
 			if (calcPseudoNormals)
 			{
@@ -188,19 +188,22 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		public void InitializeGeometry(IXModel model)
 		{
 			// Explicit description
-			this.CrackExtension = new CrackExtension3D(this, maxDomainDimension);
+			CrackFront.Update();
+			CrackExtension = new CrackExtension3D(this, maxDomainDimension);
 
 			// Implicit description
 			//CalcLevelSets(model);
 		}
 
-		public void PropagateCrack(IXModel model, CrackFrontGrowth frontGrowth)
+		public void PropagateCrack(IXModel model, CrackFrontPropagation frontGrowth)
 		{
 			// Explicit description
-			Submesh3D newSubmesh = CrackFront.UpdateGeometry(frontGrowth);
-			foreach (Vertex3D vertex in newSubmesh.Vertices) Vertices.Add(vertex);
-			foreach (Edge3D edge in newSubmesh.Edges) Edges.Add(edge);
-			foreach (TriangleCell3D cell in newSubmesh.Cells) Cells.Add(cell);
+			PropagationMesh3D mesh = CrackFront.CreatePropagationMesh(frontGrowth);
+			foreach (Vertex3D vertex in mesh.PropagationVertices) Vertices.Add(vertex);
+			foreach (Edge3D edge in mesh.PropagationEdges) Edges.Add(edge);
+			foreach (TriangleCell3D cell in mesh.PropagationCells) Cells.Add(cell);
+			mesh.ConnectBidirectionallyVerticesEdgesCells();
+			CrackFront.Update();
 
 			if (calcPseudoNormals)
 			{
@@ -224,7 +227,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			}
 		}
 
-		private void ConnectVerticesEdgesCells()
+		private void ConnectBidirectionallyVerticesEdgesCells()
 		{
 			foreach (TriangleCell3D cell in Cells)
 			{
