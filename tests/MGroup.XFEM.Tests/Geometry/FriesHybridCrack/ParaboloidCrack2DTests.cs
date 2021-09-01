@@ -80,7 +80,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				//crack.Observers.Add(new CrackPathPlotter(crack, outputDirectory));
 
 				// Level set observers
-				//crack.Observers.Add(new LevelSetObserver(model, crack, outputDirectory));
+				crack.Observers.Add(new LevelSetObserver(model, crackGeometry, outputDirectory));
 				//crack.Observers.Add(new CrackLevelSetPlotter(crack, outputMesh, outputDirectory));
 				//crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
 
@@ -128,6 +128,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 					computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_normals_cells_0_t{t}.vtk"));
 					computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_normals_vertices_0_t{t}.vtk"));
 					computedFiles.Add(Path.Combine(outputDirectory, $"crack_front_systems_0_t{t}.vtk"));
+					computedFiles.Add(Path.Combine(outputDirectory, $"level_sets_0_t{t}.vtk"));
 
 					var expectedFiles = new List<string>();
 					expectedFiles.Add(Path.Combine(expectedDirectory, "mesh.vtk"));
@@ -138,6 +139,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_normals_cells_0_t{t}.vtk"));
 					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_normals_vertices_0_t{t}.vtk"));
 					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_front_systems_0_t{t}.vtk"));
+					expectedFiles.Add(Path.Combine(expectedDirectory, $"level_sets_0_t{t}.vtk"));
 
 					double tolerance = 1E-6;
 					for (int i = 0; i < expectedFiles.Count; ++i)
@@ -208,7 +210,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			vertices.Add(new Vertex2D(2, new double[] { +radius, 0 }));
 			
 			double domainDimension = maxCoords[0] - minCoords[0];
-			var crack = new CrackCurve2D(0, domainDimension, vertices, true);
+			var crack = new CrackCurve2D(0, domainDimension, vertices/*, true*/);
 			crack.CrackFront = new ImmersedCrackFront2D(crack);
 
 			return crack;

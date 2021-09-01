@@ -15,18 +15,18 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 	/// section 3.2
 	/// </summary>
-	public class CrackSurface3D
+	public class CrackSurface3D : IHybridFriesCrackDescription
 	{
 		private readonly double maxDomainDimension;
 		private readonly bool calcPseudoNormals;
 		private Dictionary<int, double[]> nodalLevelSets;
 
 		public CrackSurface3D(int id, double maxDomainDimension, 
-			IEnumerable<Vertex3D> vertices, IEnumerable<TriangleCell3D> cells, bool calcPseudoNormals = false)
+			IEnumerable<Vertex3D> vertices, IEnumerable<TriangleCell3D> cells/*, bool calcPseudoNormals = false*/)
 		{
 			ID = id;
 			this.maxDomainDimension = maxDomainDimension;
-			this.calcPseudoNormals = calcPseudoNormals;
+			this.calcPseudoNormals = true/*calcPseudoNormals*/;
 			this.Vertices = new List<Vertex3D>(vertices);
 			this.Cells = new List<TriangleCell3D>(cells);
 			this.Edges = new List<Edge3D>();
@@ -201,7 +201,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			CrackExtension = new CrackExtension3D(this, maxDomainDimension);
 
 			// Implicit description
-			//CalcLevelSets(nodes);
+			CalcLevelSets(nodes);
 		}
 
 		public void PropagateCrack(IEnumerable<XNode> nodes, CrackFrontPropagation frontGrowth)
@@ -221,7 +221,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			this.CrackExtension = new CrackExtension3D(this, maxDomainDimension);
 
 			// Implicit description
-			//CalcLevelSets(nodes);
+			CalcLevelSets(nodes);
 		}
 
 		private void CalcPseudoNormals()

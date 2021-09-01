@@ -15,17 +15,17 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 	/// section 3.1
 	/// </summary>
-	public class CrackCurve2D
+	public class CrackCurve2D : IHybridFriesCrackDescription
 	{
 		private readonly double maxDomainDimension;
 		private readonly bool calcPseudoNormals;
 		private Dictionary<int, double[]> nodalLevelSets;
 
-		public CrackCurve2D(int id, double maxDomainDimension, IEnumerable<Vertex2D> vertices, bool calcPseudoNormals = false)
+		public CrackCurve2D(int id, double maxDomainDimension, IEnumerable<Vertex2D> vertices/*, bool calcPseudoNormals = false*/)
 		{
 			ID = id;
 			this.maxDomainDimension = maxDomainDimension;
-			this.calcPseudoNormals = calcPseudoNormals;
+			this.calcPseudoNormals = true/*calcPseudoNormals*/;
 			this.Vertices = new List<Vertex2D>(vertices);
 			this.Cells = new List<LineCell2D>();
 			for (int v = 0; v < Vertices.Count - 1; ++v)
@@ -170,7 +170,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			this.CrackExtension = new CrackExtension2D(this, maxDomainDimension);
 
 			// Implicit description
-			//CalcLevelSets(nodes);
+			CalcLevelSets(nodes);
 		}
 
 		private void CalcPseudoNormals()
