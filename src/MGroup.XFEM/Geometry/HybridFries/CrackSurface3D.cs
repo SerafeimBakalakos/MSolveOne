@@ -7,24 +7,21 @@ using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Entities;
 
-//TODO: Also implement the limitations listed in section 3.2.6. However the user should choose if they will be enforced by 
-//      stopping the analysis, auto-correcting the crack or just logging the violations. 
 namespace MGroup.XFEM.Geometry.HybridFries
 {
 	/// <summary>
 	/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 	/// section 3.2
 	/// </summary>
-	public class CrackSurface3D : IHybridFriesCrackDescription
+	public class CrackSurface3D : CrackGeometryBase
 	{
 		private readonly double maxDomainDimension;
 		private readonly bool calcPseudoNormals;
-		private Dictionary<int, double[]> nodalLevelSets;
 
 		public CrackSurface3D(int id, double maxDomainDimension, 
 			IEnumerable<Vertex3D> vertices, IEnumerable<TriangleCell3D> cells/*, bool calcPseudoNormals = false*/)
+			: base(id)
 		{
-			ID = id;
 			this.maxDomainDimension = maxDomainDimension;
 			this.calcPseudoNormals = true/*calcPseudoNormals*/;
 			this.Vertices = new List<Vertex3D>(vertices);
@@ -45,14 +42,11 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public CrackExtension3D CrackExtension { get; private set; }
 
-		//HERE:
 		//TODO: The front should also have an InitializeGeometry() method, instead of doing stuff in the constructor. 
 		//      Then it should be injected into the crack surface class's constructor, instead of this property.
 		public ICrackFront3D CrackFront { get; set; } 
 
 		public List<Edge3D> Edges { get; }
-
-		public int ID { get; }
 
 		public List<Vertex3D> Vertices { get; }
 

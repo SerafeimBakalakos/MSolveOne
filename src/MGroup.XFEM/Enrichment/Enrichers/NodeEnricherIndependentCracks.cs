@@ -72,8 +72,7 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 				// Extra tip nodes due to "fixed tip enrichment area"
 				if (fixedTipEnrichmentRegionRadius > 0.0) 
 				{
-					var circle = new Circle2D(crack.TipCoordinates, fixedTipEnrichmentRegionRadius); //TODO: This needs adapting for 3D
-					HashSet<XNode> extraTipNodes = MeshUtilities.FindNodesInsideCircle(circle, crack.TipElements.First());
+					HashSet<XNode> extraTipNodes = crack.FindNodesNearFront(fixedTipEnrichmentRegionRadius);
 					extraTipNodes.ExceptWith(tipElementNodes);
 					EnrichNodesWith(extraTipNodes, crack.CrackTipEnrichments);
 				}

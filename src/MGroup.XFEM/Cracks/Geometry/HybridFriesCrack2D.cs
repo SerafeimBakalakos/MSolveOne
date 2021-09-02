@@ -16,12 +16,15 @@ namespace MGroup.XFEM.Cracks.Geometry
 	{
 		private readonly XModel<IXCrackElement> model;
 		private readonly IPropagator propagator;
+		private readonly double fixedTipEnrichmentRegionRadius;
 
-		public HybridFriesCrack2D(XModel<IXCrackElement> model, CrackCurve2D crackGeometry, IPropagator propagator)
+		public HybridFriesCrack2D(XModel<IXCrackElement> model, CrackCurve2D crackGeometry, IPropagator propagator,
+			double fixedTipEnrichmentRegionRadius = 0.0)
 		{
 			this.model = model;
 			this.CrackCurve = crackGeometry;
 			this.propagator = propagator;
+			this.fixedTipEnrichmentRegionRadius = fixedTipEnrichmentRegionRadius;
 		}
 
 		public CrackCurve2D CrackCurve { get; }
@@ -38,11 +41,11 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public int Dimension => 2;
 
-		public HashSet<IXCrackElement> IntersectedElements => null;
+		public HashSet<IXCrackElement> IntersectedElements { get; } = new HashSet<IXCrackElement>();
 
 		public double[] TipCoordinates => null;
 
-		public HashSet<IXCrackElement> TipElements => null;
+		public HashSet<IXCrackElement> TipElements { get; } = new HashSet<IXCrackElement>();
 
 		public TipCoordinateSystem TipSystem => null;
 
@@ -57,6 +60,9 @@ namespace MGroup.XFEM.Cracks.Geometry
 			return new EnrichmentItem[0];
 		}
 
+		public HashSet<XNode> FindNodesNearFront(double maxDistance) 
+			=> CrackCurve.FindNodesNearFront(model.Nodes.Values, maxDistance);
+
 		public void InitializeGeometry()
 		{
 			CrackCurve.InitializeGeometry(model.Nodes.Values);
@@ -64,6 +70,28 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public void InteractWithMesh()
 		{
+			TipElements.Clear();
+
+			foreach (IXCrackElement element in model.Elements.Values)
+			{
+				IElementDiscontinuityInteraction interaction = CrackCurve.Intersect(element);
+				if (interaction.BoundaryOfGeometryInteractsWithElement)
+				{
+					TipElements.Add(element);
+					element.RegisterInteractionWithCrack(this, interaction);
+				}
+				else if (interaction.RelativePosition == RelativePositionCurveElement.Intersecting)
+				{
+					IntersectedElements.Add(element);
+					element.RegisterInteractionWithCrack(this, interaction);
+				}
+				else if (interaction.RelativePosition == RelativePositionCurveElement.Conforming)
+				{
+					ConformingElements.Add(element);
+					element.RegisterInteractionWithCrack(this, interaction);
+				}
+			}
+
 			// Call observers to pull any state they want
 			foreach (ICrackObserver observer in Observers) observer.Update();
 		}

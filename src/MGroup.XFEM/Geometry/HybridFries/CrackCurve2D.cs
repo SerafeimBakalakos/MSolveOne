@@ -7,23 +7,20 @@ using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Entities;
 
-//TODO: Also implement the limitations listed in section 3.1.6. However the user should choose if they will be enforced by 
-//      stopping the analysis, auto-correcting the crack or just logging the violations. 
 namespace MGroup.XFEM.Geometry.HybridFries
 {
 	/// <summary>
 	/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 	/// section 3.1
 	/// </summary>
-	public class CrackCurve2D : IHybridFriesCrackDescription
+	public class CrackCurve2D : CrackGeometryBase
 	{
 		private readonly double maxDomainDimension;
 		private readonly bool calcPseudoNormals;
-		private Dictionary<int, double[]> nodalLevelSets;
 
 		public CrackCurve2D(int id, double maxDomainDimension, IEnumerable<Vertex2D> vertices/*, bool calcPseudoNormals = false*/)
+			: base(id)
 		{
-			ID = id;
 			this.maxDomainDimension = maxDomainDimension;
 			this.calcPseudoNormals = true/*calcPseudoNormals*/;
 			this.Vertices = new List<Vertex2D>(vertices);
@@ -54,8 +51,6 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		//TODO: The front should also have an InitializeGeometry() method, instead of doing stuff in the constructor. 
 		//      Then it should be injected into the crack surface class's constructor, instead of this property.
 		public ICrackFront2D CrackFront { get; set; } 
-
-		public int ID { get; }
 
 		public List<Vertex2D> Vertices { get; }
 
@@ -146,8 +141,6 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				}
 			}
 		}
-
-		public double[] GetLevelSetsOf(XNode node) => nodalLevelSets[node.ID];
 
 		public void InitializeGeometry(IEnumerable<XNode> nodes)
 		{

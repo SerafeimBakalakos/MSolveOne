@@ -97,6 +97,12 @@ namespace MGroup.XFEM.Cracks.Geometry
 			return new EnrichmentItem[] { this.CrackBodyEnrichment, this.CrackTipEnrichments };
 		}
 
+		public HashSet<XNode> FindNodesNearFront(double maxDistance)
+		{
+			var circle = new Circle2D(TipCoordinates, maxDistance); //TODO: This needs adapting for 3D
+			return MeshUtilities.FindNodesInsideCircle(circle, TipElements.First());
+		}
+
 		public override int GetHashCode() => ID.GetHashCode();
 
 		public void InitializeGeometry()

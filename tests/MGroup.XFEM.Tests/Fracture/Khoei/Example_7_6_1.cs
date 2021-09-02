@@ -481,6 +481,12 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 				return enrichments;
 			}
 
+			public HashSet<XNode> FindNodesNearFront(double maxDistance)
+			{
+				var circle = new Circle2D(TipCoordinates, maxDistance); //TODO: This needs adapting for 3D
+				return MeshUtilities.FindNodesInsideCircle(circle, TipElements.First());
+			}
+
 			public void InitializeGeometry()
 			{
 				crack.InitializeGeometry();
