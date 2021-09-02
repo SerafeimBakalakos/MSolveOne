@@ -87,21 +87,20 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			}
 
 			// Decide on the type of element
-			var position = RelativePositionCurveElement.Disjoint;
-			bool frontInteractsWithElement = false;
 			if (minb * maxb < 0) // The element is intersected by the crack or its extension
 			{
 				if (mina * maxa < 0)
 				{
-					position = RelativePositionCurveElement.Intersecting;
-					frontInteractsWithElement = true;
+					return new ImplicitCrackElementInteraction(
+						this.ID, element, RelativePositionCurveElement.Intersecting, true, null);
 				}
 				else if (maxa < 0)
 				{
-					position = RelativePositionCurveElement.Intersecting;
+					return new ImplicitCrackElementInteraction(
+						 this.ID, element, RelativePositionCurveElement.Intersecting, false, null);
 				}
 			}
-			return new ImplicitCrackElementInteraction(this.ID, element, position, frontInteractsWithElement, null);
+			return new NullElementDiscontinuityInteraction(this.ID, element);
 		}
 	}
 }

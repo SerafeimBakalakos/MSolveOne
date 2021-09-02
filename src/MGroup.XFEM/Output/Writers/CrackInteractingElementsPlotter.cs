@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.XFEM.Cracks;
@@ -25,7 +25,7 @@ namespace MGroup.XFEM.Output.Writers
 
         public void Update()
         {
-            using (var writer = new VtkPointWriter($"{outputDirectory}\\tip_elements_{iteration}.vtk"))
+            using (var writer = new VtkPointWriter($"{outputDirectory}\\tip_elements_{crack.ID}_t{iteration}.vtk"))
             {
                 var tipElementCentroids = new Dictionary<double[], double>();
                 foreach (IXFiniteElement element in crack.TipElements)
@@ -40,7 +40,7 @@ namespace MGroup.XFEM.Output.Writers
                 writer.WriteScalarField("tip_element_centroids", tipElementCentroids);
             }
 
-            using (var writer = new VtkPointWriter($"{outputDirectory}\\intersected_elements_{iteration}.vtk"))
+            using (var writer = new VtkPointWriter($"{outputDirectory}\\intersected_elements_{crack.ID}_t{iteration}.vtk"))
             {
                 var intersectedElementCentroids = new Dictionary<double[], double>();
                 foreach (IXFiniteElement element in crack.IntersectedElements)
@@ -55,7 +55,7 @@ namespace MGroup.XFEM.Output.Writers
                 writer.WriteScalarField("intersected_element_centroids", intersectedElementCentroids);
             }
 
-            using (var writer = new VtkPointWriter($"{outputDirectory}\\conforming_elements_{iteration}.vtk"))
+            using (var writer = new VtkPointWriter($"{outputDirectory}\\conforming_elements_{crack.ID}_t{iteration}.vtk"))
             {
                 var conformingElementCentroids = new Dictionary<double[], double>();
                 foreach (IXFiniteElement element in crack.ConformingElements)

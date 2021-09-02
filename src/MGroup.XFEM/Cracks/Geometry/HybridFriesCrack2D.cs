@@ -31,7 +31,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public List<ICrackObserver> Observers { get; } = new List<ICrackObserver>();
 
-		public HashSet<IXCrackElement> ConformingElements => null;
+		public HashSet<IXCrackElement> ConformingElements { get; } = new HashSet<IXCrackElement>();
 
 		public EnrichmentItem CrackBodyEnrichment => null;
 

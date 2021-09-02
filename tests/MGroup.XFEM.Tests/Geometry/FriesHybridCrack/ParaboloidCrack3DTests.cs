@@ -38,7 +38,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 
 		private static readonly double[] minCoords = { -1.0, -1.0, -1.0 };
 		private static readonly double[] maxCoords = { +1.0, +1.0, +1.0 };
-		private static readonly int[] numElements = { 20, 20, 20 };
+		private static readonly int[] numElements = { 21, 21, 21 };
 		private const int subdomainID = 0;
 		private const double E = 1, v = 0.3;
 		private const int bulkIntegrationOrder = 2, boundaryIntegrationOrder = 2;
@@ -59,7 +59,6 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 
 				// Create model and LSM
 				XModel<IXCrackElement> model = CreateModel();
-				model.FindConformingSubcells = true;
 
 				var crack = (HybridFriesCrack3D)model.GeometryModel.GetDiscontinuity(0);
 				CrackSurface3D crackGeometry = crack.CrackSurface;
@@ -83,7 +82,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				// Level set observers
 				crack.Observers.Add(new LevelSetObserver(model, crackGeometry, outputDirectory));
 				//crack.Observers.Add(new CrackLevelSetPlotter(crack, outputMesh, outputDirectory));
-				//crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
+				crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
 
 				//var newTipNodes = new NewCrackTipNodesObserver(crack);
 				//model.RegisterEnrichmentObserver(newTipNodes);
@@ -119,34 +118,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 						model.Update(null, null);
 					}
 
-					// Compare output
-					var computedFiles = new List<string>();
-					computedFiles.Add(Path.Combine(outputDirectory, "mesh.vtk"));
-					computedFiles.Add(Path.Combine(outputDirectory, $"crack_surface_0_t{t}.vtk"));
-					computedFiles.Add(Path.Combine(outputDirectory, $"crack_surface_normals_cells_0_t{t}.vtk"));
-					computedFiles.Add(Path.Combine(outputDirectory, $"crack_surface_normals_vertices_0_t{t}.vtk"));
-					computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_0_t{t}.vtk"));
-					computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_normals_cells_0_t{t}.vtk"));
-					computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_normals_vertices_0_t{t}.vtk"));
-					computedFiles.Add(Path.Combine(outputDirectory, $"crack_front_systems_0_t{t}.vtk"));
-					computedFiles.Add(Path.Combine(outputDirectory, $"level_sets_0_t{t}.vtk"));
-
-					var expectedFiles = new List<string>();
-					expectedFiles.Add(Path.Combine(expectedDirectory, "mesh.vtk"));
-					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_surface_0_t{t}.vtk"));
-					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_surface_normals_cells_0_t{t}.vtk"));
-					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_surface_normals_vertices_0_t{t}.vtk"));
-					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_0_t{t}.vtk"));
-					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_normals_cells_0_t{t}.vtk"));
-					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_normals_vertices_0_t{t}.vtk"));
-					expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_front_systems_0_t{t}.vtk"));
-					expectedFiles.Add(Path.Combine(expectedDirectory, $"level_sets_0_t{t}.vtk"));
-
-					double tolerance = 1E-6;
-					for (int i = 0; i < expectedFiles.Count; ++i)
-					{
-						Assert.True(IOUtilities.AreDoubleValueFilesEquivalent(expectedFiles[i], computedFiles[i], tolerance));
-					}
+					CheckOutputFiles(t);
 				}
 			}
 			finally
@@ -156,6 +128,44 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 					DirectoryInfo di = new DirectoryInfo(outputDirectory);
 					di.Delete(true);//true means delete subdirectories and files
 				}
+			}
+		}
+
+		private static void CheckOutputFiles(int t)
+		{
+			// Compare output
+			var computedFiles = new List<string>();
+			computedFiles.Add(Path.Combine(outputDirectory, "mesh.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"crack_surface_0_t{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"crack_surface_normals_cells_0_t{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"crack_surface_normals_vertices_0_t{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_0_t{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_normals_cells_0_t{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_normals_vertices_0_t{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"crack_front_systems_0_t{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"level_sets_0_t{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"tip_elements_0_t{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"intersected_elements_0_t{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"conforming_elements_0_t{t}.vtk"));
+
+			var expectedFiles = new List<string>();
+			expectedFiles.Add(Path.Combine(expectedDirectory, "mesh.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_surface_0_t{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_surface_normals_cells_0_t{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_surface_normals_vertices_0_t{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_0_t{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_normals_cells_0_t{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_normals_vertices_0_t{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_front_systems_0_t{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"level_sets_0_t{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"tip_elements_0_t{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"intersected_elements_0_t{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"conforming_elements_0_t{t}.vtk"));
+
+			double tolerance = 1E-6;
+			for (int i = 0; i < expectedFiles.Count; ++i)
+			{
+				Assert.True(IOUtilities.AreDoubleValueFilesEquivalent(expectedFiles[i], computedFiles[i], tolerance));
 			}
 		}
 
