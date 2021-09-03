@@ -10,7 +10,7 @@ using MGroup.XFEM.Output.Vtk;
 //TODO: Let the user decide which of these node categories to plot (and the corresponding output filenames).
 namespace MGroup.XFEM.Output.Writers
 {
-	public class CrackEnrichmentPlotter : IEnrichmentObserver
+	public class CrackEnrichmentPlotterFull : IEnrichmentObserver
 	{
 		private static readonly double[] dummyPoint = new double[] { 0.0, 0.0, 0.0 }; //TODO: find a more elegant solution.
 
@@ -25,7 +25,7 @@ namespace MGroup.XFEM.Output.Writers
 
 		private int iteration;
 
-		public CrackEnrichmentPlotter(ExteriorLsmCrack2D crack, string outputDirectory,
+		public CrackEnrichmentPlotterFull(ExteriorLsmCrack2D crack, string outputDirectory,
 			NewCrackTipNodesObserver newTipNodesObserver, PreviousCrackTipNodesObserver previousTipNodesObserver,
 			AllCrackStepNodesObserver bodyNodesObserver, NewCrackStepNodesObserver newBodyNodesObserver,
 			RejectedCrackStepNodesObserver rejectedBodyNodesObserver, NodesNearModifiedNodesObserver nearModifiedNodesObserver)

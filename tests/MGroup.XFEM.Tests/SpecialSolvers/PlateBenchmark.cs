@@ -150,7 +150,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			var elementsWithModifiedNodes = new ElementsWithModifiedNodesObserver(nodesWithModifiedEnrichments);
 			var nodesNearModifiedNodes = new NodesNearModifiedNodesObserver(
 				nodesWithModifiedEnrichments, elementsWithModifiedNodes);
-			var enrichmentPlotter = new CrackEnrichmentPlotter(crack, outputDirectory, newCrackTipNodes, previousCrackTipNodes,
+			var enrichmentPlotter = new CrackEnrichmentPlotterFull(crack, outputDirectory, newCrackTipNodes, previousCrackTipNodes,
 				allCrackStepNodes, newCrackStepNodes, rejectedCrackStepNodes, nodesNearModifiedNodes);
 
 			var compositeObserver = new CompositeEnrichmentObserver();

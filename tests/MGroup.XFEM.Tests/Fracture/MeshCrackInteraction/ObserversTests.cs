@@ -179,7 +179,7 @@ namespace MGroup.XFEM.Tests.Fracture.Observers
 			var modifiedElements = new ElementsWithModifiedNodesObserver(modifiedNodes);
 			var nearModifiedNodes = new NodesNearModifiedNodesObserver(modifiedNodes, modifiedElements);
 			var compositeObserver = new CompositeEnrichmentObserver();
-			var enrichmentPlotter = new CrackEnrichmentPlotter(crack, outputDir, newTipNodes, previousTipNodes, allBodyNodes,
+			var enrichmentPlotter = new CrackEnrichmentPlotterFull(crack, outputDir, newTipNodes, previousTipNodes, allBodyNodes,
 				newBodyNodes, rejectedBodyNodes, nearModifiedNodes);
 			compositeObserver.AddObservers(newTipNodes, previousTipNodes, allBodyNodes, newBodyNodes, rejectedBodyNodes,
 				bodyNodesWithModifiedLevelSet, modifiedNodes, modifiedElements, nearModifiedNodes);

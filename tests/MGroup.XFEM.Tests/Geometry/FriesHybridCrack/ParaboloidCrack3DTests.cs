@@ -10,6 +10,7 @@ using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Enrichment;
 using MGroup.XFEM.Enrichment.Enrichers;
+using MGroup.XFEM.Enrichment.Observers;
 using MGroup.XFEM.Enrichment.SingularityResolution;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Geometry.HybridFries;
@@ -43,7 +44,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 		private const double E = 1, v = 0.3;
 		private const int bulkIntegrationOrder = 2, boundaryIntegrationOrder = 2;
 
-		private const double tipEnrichmentArea = 0.0;
+		private const double tipEnrichmentArea = 0; //0.15 for some plots
 		private const int numPointsBoundary = 8;
 		private const double radius = 0.2, growthAngle = Math.PI / 12.0, growthLength = 0.1;
 		private const int numGrowthSteps = 7;
@@ -85,17 +86,23 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				//crack.Observers.Add(new CrackLevelSetPlotter(crack, outputMesh, outputDirectory));
 				crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
 
-				//var newTipNodes = new NewCrackTipNodesObserver(crack);
-				//model.RegisterEnrichmentObserver(newTipNodes);
-				//var allBodyNodes = new CrackBodyNodesObserver(crack);
-				//model.RegisterEnrichmentObserver(allBodyNodes);
-				//var rejectedBodyNodes = new RejectedCrackBodyNodesObserver(crack, newTipNodes, allBodyNodes);
-				//model.RegisterEnrichmentObserver(rejectedBodyNodes);
+				// Enrichment observers
+				var allCrackStepNodes = new AllCrackStepNodesObserver();
+				//var newCrackStepNodes = new NewCrackStepNodesObserver();
+				var newCrackTipNodes = new NewCrackTipNodesObserver();
+				//var previousCrackTipNodes = new PreviousCrackTipNodesObserver();
+				//var rejectedCrackStepNodes = new RejectedCrackStepNodesObserver(
+				//	crack, newCrackTipNodes, allCrackStepNodes);
+				//var nodesWithModifiedLevelSet = new CrackStepNodesWithModifiedLevelSetObserver(crack);
+				//var nodesWithModifiedEnrichments = new NodesWithModifiedEnrichmentsObserver(nodesWithModifiedLevelSet);
+				//var elementsWithModifiedNodes = new ElementsWithModifiedNodesObserver(nodesWithModifiedEnrichments);
+				//var nodesNearModifiedNodes = new NodesNearModifiedNodesObserver(
+				//nodesWithModifiedEnrichments, elementsWithModifiedNodes);
+				var enrichmentPlotter = new CrackEnrichmentPlotterBasic(outputDirectory, newCrackTipNodes, allCrackStepNodes);
 
-				//var enrichmentPlotter = new CrackEnrichmentPlotter(crack, outputDir, newTipNodes, previousTipNodes, allBodyNodes,
-				//    newBodyNodes, rejectedBodyNodes, nearModifiedNodes);
-				//model.RegisterEnrichmentObserver(enrichmentPlotter);
-
+				var compositeObserver = new CompositeEnrichmentObserver();
+				compositeObserver.AddObservers(allCrackStepNodes, newCrackTipNodes, enrichmentPlotter);
+				model.GeometryModel.Enricher.Observers.Add(compositeObserver);
 
 				//// Plot element - phase boundaries interactions
 				//model.ModelObservers.Add(new LsmElementIntersectionsPlotter(outputDirectory, model));
@@ -148,6 +155,8 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			computedFiles.Add(Path.Combine(outputDirectory, $"tip_elements_0_t{t}.vtk"));
 			computedFiles.Add(Path.Combine(outputDirectory, $"intersected_elements_0_t{t}.vtk"));
 			//computedFiles.Add(Path.Combine(outputDirectory, $"conforming_elements_0_t{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"tip_nodes_new_{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"heaviside_nodes_all_{t}.vtk"));
 
 			var expectedFiles = new List<string>();
 			expectedFiles.Add(Path.Combine(expectedDirectory, "mesh.vtk"));
@@ -162,6 +171,8 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			expectedFiles.Add(Path.Combine(expectedDirectory, $"tip_elements_0_t{t}.vtk"));
 			expectedFiles.Add(Path.Combine(expectedDirectory, $"intersected_elements_0_t{t}.vtk"));
 			//expectedFiles.Add(Path.Combine(expectedDirectory, $"conforming_elements_0_t{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"tip_nodes_new_{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"heaviside_nodes_all_{t}.vtk"));
 
 			double tolerance = 1E-6;
 			for (int i = 0; i < expectedFiles.Count; ++i)
