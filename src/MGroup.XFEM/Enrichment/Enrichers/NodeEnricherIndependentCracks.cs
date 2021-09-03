@@ -17,6 +17,7 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 		private readonly double fixedTipEnrichmentRegionRadius;
 		private readonly CrackGeometryModel geometryModel;
 		private readonly ISingularityResolver singularityResolver;
+		private readonly bool canExtraTipNodesBeEnrichedWithHeaviside;
 
 		/// <summary>
 		/// 
@@ -26,12 +27,13 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 		/// functions. They can still be enriched with Heaviside functions, if they do not belong to the tip 
 		/// element(s).
 		/// </param>
-		public NodeEnricherIndependentCracks(CrackGeometryModel geometryModel,
-			ISingularityResolver singularityResolver, double fixedTipEnrichmentRegionRadius = 0.0)
+		public NodeEnricherIndependentCracks(CrackGeometryModel geometryModel, ISingularityResolver singularityResolver, 
+			double fixedTipEnrichmentRegionRadius = 0.0, bool canExtraTipNodesBeEnrichedWithHeaviside = true)
 		{
 			this.geometryModel = geometryModel;
 			this.singularityResolver = singularityResolver;
 			this.fixedTipEnrichmentRegionRadius = fixedTipEnrichmentRegionRadius;
+			this.canExtraTipNodesBeEnrichedWithHeaviside = canExtraTipNodesBeEnrichedWithHeaviside;
 		}
 
 		public List<IEnrichmentObserver> Observers { get; } = new List<IEnrichmentObserver>();
@@ -44,8 +46,10 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 		/// functions. They can still be enriched with Heaviside functions, if they do not belong to the tip 
 		/// element(s).
 		/// </param>
-		public NodeEnricherIndependentCracks(CrackGeometryModel geometryModel, double fixedTipEnrichmentRegionRadius = 0.0) :
-			this(geometryModel, new RelativeAreaSingularityResolver(1E-4), fixedTipEnrichmentRegionRadius)
+		public NodeEnricherIndependentCracks(CrackGeometryModel geometryModel, 
+			double fixedTipEnrichmentRegionRadius = 0.0, bool canExtraTipNodesBeEnrichedWithHeaviside = true)
+			: this(geometryModel, new RelativeAreaSingularityResolver(1E-4), 
+				fixedTipEnrichmentRegionRadius, canExtraTipNodesBeEnrichedWithHeaviside)
 		{
 		}
 
@@ -70,9 +74,10 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 				EnrichNodesWith(tipElementNodes, crack.CrackTipEnrichments);
 
 				// Extra tip nodes due to "fixed tip enrichment area"
+				var extraTipNodes = new HashSet<XNode>();
 				if (fixedTipEnrichmentRegionRadius > 0.0) 
 				{
-					HashSet<XNode> extraTipNodes = crack.FindNodesNearFront(fixedTipEnrichmentRegionRadius);
+					extraTipNodes = crack.FindNodesNearFront(fixedTipEnrichmentRegionRadius);
 					extraTipNodes.ExceptWith(tipElementNodes);
 					EnrichNodesWith(extraTipNodes, crack.CrackTipEnrichments);
 				}
@@ -97,6 +102,10 @@ namespace MGroup.XFEM.Enrichment.Enrichers
 
 				// Do not enrich the nodes of the crack tip(s)
 				heavisideNodes.ExceptWith(tipElementNodes);
+				if (!canExtraTipNodesBeEnrichedWithHeaviside)
+				{
+					heavisideNodes.ExceptWith(extraTipNodes);
+				}
 
 				// Also do not enrich nodes that may cause singularities
 				HashSet<XNode> rejectedNodes = 

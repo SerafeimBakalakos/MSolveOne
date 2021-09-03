@@ -43,6 +43,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 		private const double E = 1, v = 0.3, thickness = 1.0;
 		private const int bulkIntegrationOrder = 2, boundaryIntegrationOrder = 2;
 
+		private const double tipEnrichmentArea = 0.0;
 		private const double radius = 0.2, growthAngle = Math.PI / 12.0, growthLength = 0.1;
 		private const int numGrowthSteps = 7;
 
@@ -195,9 +196,9 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 		private static CrackGeometryModel CreateGeometryModel(XModel<IXCrackElement> model)
 		{
 			var geometryModel = new CrackGeometryModel(model);
-			//geometryModel.Enricher = new NodeEnricherIndependentCracks(
-				//geometryModel, new RelativeAreaSingularityResolver(heavisideTol), tipEnrichmentArea);
-			geometryModel.Enricher = new NullEnricher();
+			geometryModel.Enricher = new NodeEnricherIndependentCracks(
+				geometryModel, new NullSingularityResolver(), tipEnrichmentArea, false);
+			//geometryModel.Enricher = new NullEnricher();
 
 			CrackCurve2D crackGeometry = CreateCircleCrack();
 			var crack = new HybridFriesCrack2D(model, crackGeometry, new MockPropagator());

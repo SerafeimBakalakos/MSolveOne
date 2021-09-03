@@ -20,7 +20,7 @@ namespace MGroup.XFEM.Enrichment.Observers
 
 		public void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment)
 		{
-			if (enrichment.EnrichmentFunctions[0] is CrackStepEnrichment)
+			if (enrichment.EnrichmentFunctions[0] is CrackStepEnrichment || (enrichment.EnrichmentFunctions[0] is MockStepEnrichment))
 			{
 				AllCrackStepNodes.Add(node);
 			}
