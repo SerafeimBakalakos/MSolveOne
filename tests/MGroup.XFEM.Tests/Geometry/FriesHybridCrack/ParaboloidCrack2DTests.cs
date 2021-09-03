@@ -145,7 +145,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			computedFiles.Add(Path.Combine(outputDirectory, $"level_sets_0_t{t}.vtk"));
 			computedFiles.Add(Path.Combine(outputDirectory, $"tip_elements_0_t{t}.vtk"));
 			computedFiles.Add(Path.Combine(outputDirectory, $"intersected_elements_0_t{t}.vtk"));
-			computedFiles.Add(Path.Combine(outputDirectory, $"conforming_elements_0_t{t}.vtk"));
+			//computedFiles.Add(Path.Combine(outputDirectory, $"conforming_elements_0_t{t}.vtk"));
 
 			var expectedFiles = new List<string>();
 			expectedFiles.Add(Path.Combine(expectedDirectory, "mesh.vtk"));
@@ -159,7 +159,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			expectedFiles.Add(Path.Combine(expectedDirectory, $"level_sets_0_t{t}.vtk"));
 			expectedFiles.Add(Path.Combine(expectedDirectory, $"tip_elements_0_t{t}.vtk"));
 			expectedFiles.Add(Path.Combine(expectedDirectory, $"intersected_elements_0_t{t}.vtk"));
-			expectedFiles.Add(Path.Combine(expectedDirectory, $"conforming_elements_0_t{t}.vtk"));
+			//expectedFiles.Add(Path.Combine(expectedDirectory, $"conforming_elements_0_t{t}.vtk"));
 
 			double tolerance = 1E-6;
 			for (int i = 0; i < expectedFiles.Count; ++i)

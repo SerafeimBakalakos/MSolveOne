@@ -6,29 +6,34 @@ using MGroup.XFEM.Output.Vtk;
 
 namespace MGroup.XFEM.Output.Mesh
 {
-	public class ContinuousOutputMesh : IOutputMesh
+	public class DiscontinuousOutputMesh : IOutputMesh
 	{
 		private readonly List<VtkCell> outCells;
 		private readonly SortedDictionary<int, VtkPoint> outVertices;
 
-		public ContinuousOutputMesh(IEnumerable<XNode> originalVertices, IEnumerable<IXFiniteElement> originalCells)
+		public DiscontinuousOutputMesh(IEnumerable<IXFiniteElement> elements)
 		{
-			this.OriginalVertices = originalVertices;
-			this.OriginalCells = originalCells;
+			this.OriginalCells = elements;
 
+			var nodes = new HashSet<XNode>();
+			foreach (IXFiniteElement element in elements)
+			{
+				nodes.UnionWith(element.Nodes);
+			}
+			this.OriginalVertices = nodes;
 
 			this.outVertices = new SortedDictionary<int, VtkPoint>();
-			foreach (XNode vertex in originalVertices)
-			{
-				var outVertex = new VtkPoint(vertex.ID, vertex.Coordinates);
-				outVertices[vertex.ID] = outVertex;
-			}
-
 			this.outCells = new List<VtkCell>();
-			foreach (IXFiniteElement cell in originalCells)
+			foreach (IXFiniteElement element in elements)
 			{
-				List<VtkPoint> vertices = cell.Nodes.Select(v => outVertices[v.ID]).ToList();
-				outCells.Add(new VtkCell(cell.CellType, vertices));
+				var verticesOfCell = new List<VtkPoint>();
+				for (int i = 0; i < element.Nodes.Count; ++i)
+				{
+					var vertex = new VtkPoint(outVertices.Count, element.Nodes[i].Coordinates);
+					verticesOfCell.Add(vertex);
+					outVertices[vertex.ID] = vertex;
+				}
+				outCells.Add(new VtkCell(element.CellType, verticesOfCell));
 			}
 		}
 
