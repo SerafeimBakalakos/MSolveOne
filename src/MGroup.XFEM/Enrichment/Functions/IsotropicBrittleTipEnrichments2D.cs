@@ -13,9 +13,9 @@ namespace MGroup.XFEM.Enrichment.Functions
 {
 	public class IsotropicBrittleTipEnrichments2D
 	{
-		private readonly Func<TipCoordinateSystem> getTipSystem;
+		private readonly Func<TipCoordinateSystemExplicit> getTipSystem;
 
-		public IsotropicBrittleTipEnrichments2D(Func<TipCoordinateSystem> getTipSystem)
+		public IsotropicBrittleTipEnrichments2D(Func<TipCoordinateSystemExplicit> getTipSystem)
 		{
 			this.getTipSystem = getTipSystem;
 
@@ -31,25 +31,25 @@ namespace MGroup.XFEM.Enrichment.Functions
 		//TODO: Perhaps these methods should be in a separate class, not the one that contains the function classes.
 		private double[] CalcPolarCoordinates(XNode node)
 		{
-			TipCoordinateSystem tipSystem = getTipSystem();
+			TipCoordinateSystemExplicit tipSystem = getTipSystem();
 			var polarCoords = tipSystem.MapPointGlobalCartesianToLocalPolar(node.Coordinates);
 			return polarCoords;
 		}
 
 		private double[] CalcPolarCoordinates(XPoint point)
 		{
-			TipCoordinateSystem tipSystem = getTipSystem();
+			TipCoordinateSystemExplicit tipSystem = getTipSystem();
 			double[] cartesianCoords = GetGlobalCartesianCoords(point);
 			var polarCoords = tipSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
 			return polarCoords;
 		}
 
-		private (double[] coords, TipJacobians jacobians) CalcPolarCoordinatesAndJacobians(XPoint point)
+		private (double[] coords, TipJacobiansExplicit jacobians) CalcPolarCoordinatesAndJacobians(XPoint point)
 		{
-			TipCoordinateSystem tipSystem = getTipSystem();
+			TipCoordinateSystemExplicit tipSystem = getTipSystem();
 			double[] cartesianCoords = GetGlobalCartesianCoords(point);
 			double[] polarCoords = tipSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
-			TipJacobians jacobians = tipSystem.CalcJacobiansAt(polarCoords);
+			TipJacobiansExplicit jacobians = tipSystem.CalcJacobiansAt(polarCoords);
 			return (polarCoords, jacobians);
 		}
 
@@ -75,7 +75,7 @@ namespace MGroup.XFEM.Enrichment.Functions
 
 			public EvaluatedFunction EvaluateAllAt(XPoint point)
 			{
-				(double[] polarCoords, TipJacobians jacobians) = commonData.CalcPolarCoordinatesAndJacobians(point);
+				(double[] polarCoords, TipJacobiansExplicit jacobians) = commonData.CalcPolarCoordinatesAndJacobians(point);
 				double sqrtR = Math.Sqrt(polarCoords[0]);
 				double cosThetaHalf = Math.Cos(polarCoords[1] / 2.0);
 				double sinThetaHalf = Math.Sin(polarCoords[1] / 2.0);
@@ -125,7 +125,7 @@ namespace MGroup.XFEM.Enrichment.Functions
 
 			public EvaluatedFunction EvaluateAllAt(XPoint point)
 			{
-				(double[] polarCoords, TipJacobians jacobians) = commonData.CalcPolarCoordinatesAndJacobians(point);
+				(double[] polarCoords, TipJacobiansExplicit jacobians) = commonData.CalcPolarCoordinatesAndJacobians(point);
 				double sqrtR = Math.Sqrt(polarCoords[0]);
 				double cosThetaHalf = Math.Cos(polarCoords[1] / 2.0);
 				double sinThetaHalf = Math.Sin(polarCoords[1] / 2.0);
@@ -166,7 +166,7 @@ namespace MGroup.XFEM.Enrichment.Functions
 
 			public EvaluatedFunction EvaluateAllAt(XPoint point)
 			{
-				(double[] polarCoords, TipJacobians jacobians) = commonData.CalcPolarCoordinatesAndJacobians(point); 
+				(double[] polarCoords, TipJacobiansExplicit jacobians) = commonData.CalcPolarCoordinatesAndJacobians(point); 
 				double sqrtR = Math.Sqrt(polarCoords[0]);
 				double cosTheta = Math.Cos(polarCoords[1]);
 				double sinTheta = Math.Sin(polarCoords[1]);
@@ -209,7 +209,7 @@ namespace MGroup.XFEM.Enrichment.Functions
 
 			public EvaluatedFunction EvaluateAllAt(XPoint point)
 			{
-				(double[] polarCoords, TipJacobians jacobians) = commonData.CalcPolarCoordinatesAndJacobians(point);
+				(double[] polarCoords, TipJacobiansExplicit jacobians) = commonData.CalcPolarCoordinatesAndJacobians(point);
 				double sqrtR = Math.Sqrt(polarCoords[0]);
 				double cosTheta = Math.Cos(polarCoords[1]);
 				double sinTheta = Math.Sin(polarCoords[1]);

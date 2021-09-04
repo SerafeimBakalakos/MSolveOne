@@ -47,7 +47,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public HashSet<IXCrackElement> TipElements { get; } = new HashSet<IXCrackElement>();
 
-		public TipCoordinateSystem TipSystem => null;
+		public TipCoordinateSystemExplicit TipSystem => null;
 
 		public int ID => CrackCurve.ID;
 

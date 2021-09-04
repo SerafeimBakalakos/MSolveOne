@@ -41,7 +41,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 		/// </summary>
 		HashSet<IXCrackElement> TipElements { get; }
 
-		TipCoordinateSystem TipSystem { get; } //TODO: This should probably be provided by the Geometry property
+		TipCoordinateSystemExplicit TipSystem { get; } //TODO: This should probably be provided by the Geometry property
 
 		void CheckPropagation(IPropagationTermination termination);
 

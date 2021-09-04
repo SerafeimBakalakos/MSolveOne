@@ -59,7 +59,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public HashSet<IXCrackElement> TipElements { get; } = new HashSet<IXCrackElement>();
 
-		public TipCoordinateSystem TipSystem => lsmGeometry.TipSystem;
+		public TipCoordinateSystemExplicit TipSystem => lsmGeometry.TipSystem;
 
 		public void CheckPropagation(IPropagationTermination termination)
 		{

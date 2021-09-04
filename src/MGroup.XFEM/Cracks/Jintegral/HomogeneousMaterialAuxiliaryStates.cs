@@ -25,7 +25,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
             this.material = globalMaterial;
         }
 
-        public AuxiliaryStatesTensors ComputeTensorsAt(double[] integrationPointPolar, TipJacobians polarJacobians)
+        public AuxiliaryStatesTensors ComputeTensorsAt(double[] integrationPointPolar, TipJacobiansExplicit polarJacobians)
         {
             // Common calculations
             var commonValues = new CommonValues(integrationPointPolar);
@@ -47,7 +47,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
                 strainTensorMode1, strainTensorMode2, stressTensorMode1, stressTensorMode2);
         }
 
-        private void ComputeDisplacementDerivatives(TipJacobians polarJacobians, CommonValues val, 
+        private void ComputeDisplacementDerivatives(TipJacobiansExplicit polarJacobians, CommonValues val, 
             out Matrix displacementGradientMode1, out Matrix displacementGradientMode2)
         {
             // Temporary values and derivatives of the differentiated quantities. See documentation for their derivation.

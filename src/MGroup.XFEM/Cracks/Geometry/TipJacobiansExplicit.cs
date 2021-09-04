@@ -8,12 +8,12 @@ using MGroup.LinearAlgebra.Vectors;
 
 namespace MGroup.XFEM.Cracks.Geometry
 {
-    public class TipJacobians
+    public class TipJacobiansExplicit
     {
         private readonly Matrix inverseJacobianPolarToLocal;
         private readonly Matrix inverseJacobianPolarToGlobal;
 
-        public TipJacobians(double[] pointPolarCoords, Matrix systemRotationMatrixGlobalToLocal)
+        public TipJacobiansExplicit(double[] pointPolarCoords, Matrix systemRotationMatrixGlobalToLocal)
         {
             double r = pointPolarCoords[0];
             double cosTheta = Math.Cos(pointPolarCoords[1]);

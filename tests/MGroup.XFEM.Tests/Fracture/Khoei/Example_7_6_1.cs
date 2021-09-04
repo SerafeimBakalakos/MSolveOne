@@ -455,7 +455,7 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 
 			public HashSet<IXCrackElement> TipElements => crack.TipElements;
 
-			public TipCoordinateSystem TipSystem => crack.TipSystem;
+			public TipCoordinateSystemExplicit TipSystem => crack.TipSystem;
 
 			public int ID => crack.ID;
 

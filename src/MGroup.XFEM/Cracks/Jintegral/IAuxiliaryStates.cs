@@ -9,6 +9,6 @@ namespace MGroup.XFEM.Cracks.Jintegral
 {
     public interface IAuxiliaryStates
     {
-        AuxiliaryStatesTensors ComputeTensorsAt(double[] integrationPointPolar, TipJacobians polarJacobians);
+        AuxiliaryStatesTensors ComputeTensorsAt(double[] integrationPointPolar, TipJacobiansExplicit polarJacobians);
     }
 }

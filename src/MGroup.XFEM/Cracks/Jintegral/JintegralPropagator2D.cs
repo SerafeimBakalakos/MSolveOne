@@ -59,7 +59,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 
 		public (double growthAngle, double growthLength) Propagate(
 			IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, 
-			double[] crackTipGlobal, TipCoordinateSystem tipSystem, IEnumerable<IXCrackElement> tipElements)
+			double[] crackTipGlobal, TipCoordinateSystemExplicit tipSystem, IEnumerable<IXCrackElement> tipElements)
 		{
 			// TODO: Also check if the sifs do not violate the material toughness
 			double[] sifs = ComputeSIFS(algebraicModel, totalDisplacements, crackTipGlobal, tipSystem, tipElements);
@@ -72,7 +72,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 		}
 
 		private double[] ComputeSIFS(IAlgebraicModel algebraicModel, IGlobalVector totalFreeDisplacements,
-			double[] crackTip, TipCoordinateSystem tipSystem, IEnumerable<IXCrackElement> tipElements)
+			double[] crackTip, TipCoordinateSystemExplicit tipSystem, IEnumerable<IXCrackElement> tipElements)
 		{
 			var contour = new Circle2D(crackTip[0], crackTip[1], ComputeRadiusOfJintegralOuterContour(tipElements));
 
@@ -140,7 +140,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 		}
 
 		private double[] ComputeInteractionIntegrals(IXCrackElement element, Vector nodalDisplacements,
-			double[] nodalWeights, TipCoordinateSystem tipSystem)
+			double[] nodalWeights, TipCoordinateSystemExplicit tipSystem)
 		{
 			double integralMode1 = 0.0;
 			double integralMode2 = 0.0;
@@ -160,7 +160,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 				double[] cartesianCoords = point.MapCoordinates(point.ShapeFunctions, point.Element.Nodes);
 				point.Coordinates[CoordinateSystem.GlobalCartesian] = cartesianCoords;
 				double[] polarCoords = tipSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
-				TipJacobians tipJacobians = tipSystem.CalcJacobiansAt(polarCoords);
+				TipJacobiansExplicit tipJacobians = tipSystem.CalcJacobiansAt(polarCoords);
 
 				// Material properties
 				IMatrixView constitutive = material.FindMaterialAt(point).ConstitutiveMatrix;
