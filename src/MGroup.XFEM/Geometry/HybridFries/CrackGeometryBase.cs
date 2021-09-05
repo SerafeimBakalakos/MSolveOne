@@ -41,10 +41,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			return nodesNearFront;
 		}
 
-		public double[] GetNodalLevelSets(XNode node)
-		{
-			throw new NotImplementedException();
-		}
+		public double[] GetNodalLevelSets(XNode node) => nodalDoubleLevelSets[node.ID];
 
 		public double[] GetTripleLevelSetsOf(XNode node) => nodalTripleLevelSets[node.ID];
 

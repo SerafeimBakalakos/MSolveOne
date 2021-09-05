@@ -62,7 +62,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 			int enrichmentID = numCurrentEnrichments;
 
 			// Crack body enrichment
-			var stepEnrichmentFunc = new MockStepEnrichment();
+			var stepEnrichmentFunc = new CrackStepEnrichment_v2(CrackCurve);
 			var stepEnrichedDofs = new IDofType[Dimension];
 			for (int d = 0; d < Dimension; ++d)
 			{
