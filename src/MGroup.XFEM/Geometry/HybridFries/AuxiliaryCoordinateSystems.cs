@@ -40,6 +40,15 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			}
 		}
 
+		/// <summary>
+		/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
+		/// section 5.1. 
+		/// </summary>
+		/// <remarks>
+		/// However, I prefer using the transformation in <see cref="MGroup.XFEM.Cracks.Geometry.TipCoordinateSystemImplicit"/> 
+		/// since its jacobians are ill-conditioned only when r -> 0. Not to mention that its jacobians have been published in 
+		/// at least 1 paper and can thus be verified easily.
+		/// </remarks>
 		public static double CalcTheta(double[] tripleLevelSetsOfPoint)
 		{
 			double phi2 = tripleLevelSetsOfPoint[1];
