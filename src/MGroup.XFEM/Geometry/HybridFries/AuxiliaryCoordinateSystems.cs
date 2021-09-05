@@ -42,7 +42,9 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public static double CalcTheta(double[] levelSetsOfPoint)
 		{
-			double thetaStar = Math.Asin(levelSetsOfPoint[2] / levelSetsOfPoint[1]);
+			double phi2 = levelSetsOfPoint[1];
+			double phi3 = levelSetsOfPoint[2];
+			double thetaStar = Math.Asin(phi3 / phi2);
 			CrackedDomainRegion region = DetermineRegion(levelSetsOfPoint);
 			if (region == CrackedDomainRegion.Omega1)
 			{

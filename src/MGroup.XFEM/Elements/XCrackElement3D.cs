@@ -305,9 +305,10 @@ namespace MGroup.XFEM.Elements
 				GaussPoint gaussPoint = gaussPointsBulk[i];
 				EvalInterpolation evalInterpolation = evalInterpolationsAtGPsVolume[i];
 
-				var gaussPointAlt = new XPoint(3);
-				gaussPointAlt.Element = this;
-				gaussPointAlt.ShapeFunctions = evalInterpolation.ShapeFunctions;
+				var xpoint = new XPoint(3);
+				xpoint.Element = this;
+				xpoint.ShapeFunctions = evalInterpolation.ShapeFunctions;
+				xpoint.JacobianNaturalGlobal = evalInterpolation.Jacobian;
 
 				double dV = evalInterpolation.Jacobian.DirectDeterminant;
 
@@ -316,7 +317,7 @@ namespace MGroup.XFEM.Elements
 
 				// Deformation matrices: Bs = grad(Ns), Be = grad(Ne)
 				Matrix Bstd = CalcDeformationMatrixStandard(evalInterpolation);
-				Matrix Benr = CalculateDeformationMatrixEnriched(numEnrichedDofs, gaussPointAlt, evalInterpolation);
+				Matrix Benr = CalculateDeformationMatrixEnriched(numEnrichedDofs, xpoint, evalInterpolation);
 
 				// Contribution of this gauss point to the element stiffness matrices: 
 				// Kee = SUM(Benr^T * C * Benr  *  dV*w), Kse = SUM(Bstd^T * C * Benr  *  dV*w)
