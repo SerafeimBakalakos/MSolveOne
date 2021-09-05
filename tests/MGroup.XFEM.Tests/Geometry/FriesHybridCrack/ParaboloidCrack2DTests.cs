@@ -62,7 +62,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				XModel<IXCrackElement> model = CreateModel();
 
 				var crack = (HybridFriesCrack2D)model.GeometryModel.GetDiscontinuity(0);
-				CrackCurve2D crackGeometry = crack.CrackCurve;
+				CrackCurve2D crackGeometry = crack.CrackGeometry_v2;
 
 				// Plot the FE mesh
 				var outputMesh = new ContinuousOutputMesh(model.Nodes.Values, model.Elements.Values);

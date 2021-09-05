@@ -23,13 +23,12 @@ namespace MGroup.XFEM.Cracks.Geometry
 		public HybridFriesCrack2D(XModel<IXCrackElement> model, CrackCurve2D crackGeometry, IPropagator propagator)
 		{
 			this.model = model;
-			this.CrackCurve = crackGeometry;
+			this.CrackGeometry_v2 = crackGeometry;
 			this.propagator = propagator;
 
 			this.TipCoordinateSystem = new TipCoordinateSystemImplicit(crackGeometry);
 		}
 
-		public CrackCurve2D CrackCurve { get; }
 
 		public List<ICrackObserver> Observers { get; } = new List<ICrackObserver>();
 
@@ -38,6 +37,8 @@ namespace MGroup.XFEM.Cracks.Geometry
 		public EnrichmentItem CrackBodyEnrichment { get; private set; }
 
 		public IXGeometryDescription CrackGeometry => null;
+
+		public CrackCurve2D CrackGeometry_v2 { get; }
 
 		public EnrichmentItem CrackTipEnrichments { get; private set; }
 
@@ -53,7 +54,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public TipCoordinateSystemExplicit TipSystem => null;
 
-		public int ID => CrackCurve.ID;
+		public int ID => CrackGeometry_v2.ID;
 
 		public void CheckPropagation(IPropagationTermination termination)
 		{
@@ -66,7 +67,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 			int enrichmentID = numCurrentEnrichments;
 
 			// Crack body enrichment
-			var stepEnrichmentFunc = new CrackStepEnrichment_v2(CrackCurve);
+			var stepEnrichmentFunc = new CrackStepEnrichment_v2(CrackGeometry_v2);
 			var stepEnrichedDofs = new IDofType[Dimension];
 			for (int d = 0; d < Dimension; ++d)
 			{
@@ -100,11 +101,11 @@ namespace MGroup.XFEM.Cracks.Geometry
 		}
 
 		public HashSet<XNode> FindNodesNearFront(double maxDistance) 
-			=> CrackCurve.FindNodesNearFront(model.Nodes.Values, maxDistance);
+			=> CrackGeometry_v2.FindNodesNearFront(model.Nodes.Values, maxDistance);
 
 		public void InitializeGeometry()
 		{
-			CrackCurve.InitializeGeometry(model.Nodes.Values);
+			CrackGeometry_v2.InitializeGeometry(model.Nodes.Values);
 		}
 
 		public void InteractWithMesh()
@@ -113,7 +114,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 			foreach (IXCrackElement element in model.Elements.Values)
 			{
-				IElementDiscontinuityInteraction interaction = CrackCurve.Intersect(element);
+				IElementDiscontinuityInteraction interaction = CrackGeometry_v2.Intersect(element);
 				if (interaction.BoundaryOfGeometryInteractsWithElement)
 				{
 					TipElements.Add(element);
@@ -137,21 +138,21 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements)
 		{
-			int numTips = CrackCurve.CrackFront.Vertices.Count;
+			int numTips = CrackGeometry_v2.CrackFront.Vertices.Count;
 			var frontGrowth = new CrackFrontPropagation();
 			frontGrowth.AnglesAtTips = new double[numTips];
 			frontGrowth.LengthsAtTips = new double[numTips];
 			for (int i = 0; i < numTips; ++i)
 			{
-				double[] tipCoords = CrackCurve.CrackFront.Vertices[i].CoordsGlobal;
-				double[] extensionVector = CrackCurve.CrackFront.CoordinateSystems[i].Tangent;
+				double[] tipCoords = CrackGeometry_v2.CrackFront.Vertices[i].CoordsGlobal;
+				double[] extensionVector = CrackGeometry_v2.CrackFront.CoordinateSystems[i].Tangent;
 				(double growthAngle, double growthLength) = propagator.Propagate(
 					algebraicModel, totalDisplacements, tipCoords, extensionVector, TipElements);
 				frontGrowth.AnglesAtTips[i] = growthAngle;
 				frontGrowth.LengthsAtTips[i] = growthLength;
 			}
-			CrackCurve.PropagateCrack(model.Nodes.Values, frontGrowth);
-			CrackCurve.CheckAnglesBetweenCells();
+			CrackGeometry_v2.PropagateCrack(model.Nodes.Values, frontGrowth);
+			CrackGeometry_v2.CheckAnglesBetweenCells();
 		}
 	}
 }
