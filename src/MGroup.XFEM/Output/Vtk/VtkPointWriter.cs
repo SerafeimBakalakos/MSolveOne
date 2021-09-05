@@ -44,6 +44,31 @@ namespace MGroup.XFEM.Output.Vtk
 			}
 		}
 
+		public void WritePoints(IEnumerable<double[]> points, bool willPointDataFollow = false)
+		{
+			int numPoints = points.Count();
+			writer.WriteLine("DATASET UNSTRUCTURED_GRID");
+			writer.WriteLine($"POINTS {numPoints} double");
+			foreach (double[] coords in points)
+			{
+				if (coords.Length == 2)
+				{
+					writer.WriteLine($"{coords[0]} {coords[1]} 0");
+
+				}
+				else
+				{
+					writer.WriteLine($"{coords[0]} {coords[1]} {coords[2]}");
+				}
+			}
+
+			if (willPointDataFollow)
+			{
+				writer.Write("\n\n");
+				writer.WriteLine($"POINT_DATA {numPoints}");
+			}
+		}
+
 		public void WriteScalarField(string fieldName, IReadOnlyList<double[]> points, IReadOnlyList<double> pointValues)
 		{
 			// Points
@@ -112,6 +137,17 @@ namespace MGroup.XFEM.Output.Vtk
 			writer.WriteLine($"SCALARS {fieldName} double 1");
 			writer.WriteLine("LOOKUP_TABLE default");
 			foreach (var value in nodalValues.Values)
+			{
+				writer.WriteLine(value);
+			}
+			writer.WriteLine();
+		}
+
+		public void WriteScalarField(string fieldName, IReadOnlyList<double> pointValues)
+		{
+			writer.WriteLine($"SCALARS {fieldName} double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (double value in pointValues)
 			{
 				writer.WriteLine(value);
 			}

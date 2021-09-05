@@ -38,7 +38,7 @@ namespace MGroup.MSolve.Meshes.Structured
             int axisMinor, int firstNodeID, int firstElementID)
         {
             this.MinCoordinates = minCoordinates;
-            this.MaxCoordinates = MaxCoordinates;
+            this.MaxCoordinates = maxCoordinates;
             this.NumNodes = numNodes;
             NumNodesTotal = NumNodes[0] * NumNodes[1];
 

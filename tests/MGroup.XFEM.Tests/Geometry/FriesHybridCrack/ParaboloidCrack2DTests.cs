@@ -48,6 +48,8 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 		private const double radius = 0.2, growthAngle = Math.PI / 12.0, growthLength = 0.1;
 		private const int numGrowthSteps = 7;
 
+		private const int numPlotPointsPerAxis = 80;
+
 		[Fact]
 		public static void TestModel()
 		{
@@ -79,11 +81,15 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				crack.Observers.Add(new CrackExtension2DObserver(crackGeometry, outputDirectory));
 				crack.Observers.Add(new CrackExtensionNormals2DObserver(crackGeometry, outputDirectory, true));
 				//crack.Observers.Add(new CrackPathPlotter(crack, outputDirectory));
+				crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
 
 				// Level set observers
 				crack.Observers.Add(new LevelSetObserver(model, crackGeometry, outputDirectory));
-				//crack.Observers.Add(new CrackLevelSetPlotter(crack, outputMesh, outputDirectory));
-				crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
+				crack.Observers.Add(new CrackLevelSetPlotter_v2(model, crackGeometry, outputDirectory));
+
+				// Polar systems and functions
+				var mesh = new UniformCartesianMesh2D.Builder(minCoords, maxCoords, numElements).BuildMesh();
+				crack.Observers.Add(new PolarCoordsAtPointsPlotter(outputDirectory, crackGeometry, model, mesh, numPlotPointsPerAxis));
 
 				// Enrichment observers
 				var allCrackStepNodes = new AllCrackStepNodesObserver();
@@ -151,6 +157,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			computedFiles.Add(Path.Combine(outputDirectory, $"crack_extension_normals_vertices_0_t{t}.vtk"));
 			computedFiles.Add(Path.Combine(outputDirectory, $"crack_front_systems_0_t{t}.vtk"));
 			computedFiles.Add(Path.Combine(outputDirectory, $"level_sets_0_t{t}.vtk"));
+			computedFiles.Add(Path.Combine(outputDirectory, $"crack_level_sets_0_t{t}.vtk"));
 			computedFiles.Add(Path.Combine(outputDirectory, $"tip_elements_0_t{t}.vtk"));
 			computedFiles.Add(Path.Combine(outputDirectory, $"intersected_elements_0_t{t}.vtk"));
 			//computedFiles.Add(Path.Combine(outputDirectory, $"conforming_elements_0_t{t}.vtk"));
@@ -168,6 +175,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_extension_normals_vertices_0_t{t}.vtk"));
 			expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_front_systems_0_t{t}.vtk"));
 			expectedFiles.Add(Path.Combine(expectedDirectory, $"level_sets_0_t{t}.vtk"));
+			expectedFiles.Add(Path.Combine(expectedDirectory, $"crack_level_sets_0_t{t}.vtk"));
 			expectedFiles.Add(Path.Combine(expectedDirectory, $"tip_elements_0_t{t}.vtk"));
 			expectedFiles.Add(Path.Combine(expectedDirectory, $"intersected_elements_0_t{t}.vtk"));
 			//expectedFiles.Add(Path.Combine(expectedDirectory, $"conforming_elements_0_t{t}.vtk"));

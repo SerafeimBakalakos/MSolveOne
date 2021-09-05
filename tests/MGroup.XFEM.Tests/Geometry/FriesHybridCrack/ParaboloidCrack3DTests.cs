@@ -80,11 +80,11 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				crack.Observers.Add(new CrackExtension3DObserver(crackGeometry, outputDirectory));
 				crack.Observers.Add(new CrackExtensionNormals3DObserver(crackGeometry, outputDirectory, true));
 				//crack.Observers.Add(new CrackPathPlotter(crack, outputDirectory));
+				crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
 
 				// Level set observers
 				crack.Observers.Add(new LevelSetObserver(model, crackGeometry, outputDirectory));
-				//crack.Observers.Add(new CrackLevelSetPlotter(crack, outputMesh, outputDirectory));
-				crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
+				crack.Observers.Add(new CrackLevelSetPlotter_v2(model, crackGeometry, outputDirectory));
 
 				// Enrichment observers
 				var allCrackStepNodes = new AllCrackStepNodesObserver();
