@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
+using MGroup.XFEM.Output.Writers;
 
 namespace MGroup.XFEM.Geometry.HybridFries
 {
 	public abstract class CrackGeometryBase : IHybridFriesCrackDescription
 	{
-		protected Dictionary<int, double[]> nodalLevelSets;
+		protected Dictionary<int, double[]> nodalTripleLevelSets;
+		private Dictionary<int, double[]> nodalDoubleLevelSets;
 
 		protected CrackGeometryBase(int id)
 		{
@@ -29,7 +31,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			var nodesNearFront = new HashSet<XNode>();
 			foreach (XNode node in allNodes)
 			{
-				double[] phi = nodalLevelSets[node.ID];
+				double[] phi = nodalTripleLevelSets[node.ID];
 				double r = phi[1];
 				if (r <= maxDistance)
 				{
@@ -39,8 +41,12 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			return nodesNearFront;
 		}
 
+		public double[] GetNodalLevelSets(XNode node)
+		{
+			throw new NotImplementedException();
+		}
 
-		public double[] GetLevelSetsOf(XNode node) => nodalLevelSets[node.ID];
+		public double[] GetTripleLevelSetsOf(XNode node) => nodalTripleLevelSets[node.ID];
 
 		/// <summary>
 		/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
@@ -57,8 +63,14 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			//double minr = double.MaxValue;
 			foreach (XNode node in element.Nodes)
 			{
-				double[] phi = nodalLevelSets[node.ID];
-				double a = AuxiliaryCoordinateSystems.CalcAlpha(phi); //TODO: Each node's alpha will be recomputed multiple times. I should precompute and cache them.
+				//double[] phi = nodalTripleLevelSets[node.ID];
+				//double a = AuxiliaryCoordinateSystems.CalcAlpha(phi); //TODO: Each node's alpha will be recomputed multiple times. I should precompute and cache them.
+				//double b = phi[2];
+
+				double[] levelSets = nodalDoubleLevelSets[node.ID];
+				double b = levelSets[0];
+				double a = levelSets[1];
+
 				if (a < mina)
 				{
 					mina = a;
@@ -68,7 +80,6 @@ namespace MGroup.XFEM.Geometry.HybridFries
 					maxa = a;
 				}
 
-				double b = phi[2];
 				if (b < minb)
 				{
 					minb = b;
@@ -101,6 +112,21 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				}
 			}
 			return new NullElementDiscontinuityInteraction(this.ID, element);
+		}
+
+		protected void CalcDoubleLevelSets()
+		{
+			this.nodalDoubleLevelSets = new Dictionary<int, double[]>();
+			foreach (var idLevelSetsPair in nodalTripleLevelSets)
+			{
+				int nodeID = idLevelSetsPair.Key;
+				double[] levelSets = idLevelSetsPair.Value;
+
+				double phi = levelSets[2];
+				double psi = AuxiliaryCoordinateSystems.CalcAlpha(levelSets);
+
+				nodalDoubleLevelSets[nodeID] = new double[] { phi, psi };
+			}
 		}
 	}
 }

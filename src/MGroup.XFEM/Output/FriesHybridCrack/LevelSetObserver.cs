@@ -45,9 +45,9 @@ namespace MGroup.XFEM.Output.FriesHybridCrack
                 //    phi3[n] = levelSets[2];
                 //}
                 
-                writer.WriteScalarField("phi1", outputMesh, v => crack.GetLevelSetsOf(model.Nodes[v.ID])[0]);
-                writer.WriteScalarField("phi2", outputMesh, v => crack.GetLevelSetsOf(model.Nodes[v.ID])[1]);
-                writer.WriteScalarField("phi3", outputMesh, v => crack.GetLevelSetsOf(model.Nodes[v.ID])[2]);
+                writer.WriteScalarField("phi1", outputMesh, v => crack.GetTripleLevelSetsOf(model.Nodes[v.ID])[0]);
+                writer.WriteScalarField("phi2", outputMesh, v => crack.GetTripleLevelSetsOf(model.Nodes[v.ID])[1]);
+                writer.WriteScalarField("phi3", outputMesh, v => crack.GetTripleLevelSetsOf(model.Nodes[v.ID])[2]);
             }
 
             ++iteration;

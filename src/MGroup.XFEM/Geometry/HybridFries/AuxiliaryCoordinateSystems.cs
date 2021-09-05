@@ -20,12 +20,12 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 		/// section 5.2
 		/// </summary>
-		public static double CalcAlpha(double[] levelSetsOfPoint)
+		public static double CalcAlpha(double[] tripleLevelSetsOfPoint)
 		{
-			double phi2 = levelSetsOfPoint[1];
-			double phi3 = levelSetsOfPoint[2];
+			double phi2 = tripleLevelSetsOfPoint[1];
+			double phi3 = tripleLevelSetsOfPoint[2];
 			double alphaStar = Math.Sqrt(phi2 * phi2 - phi3 * phi3);
-			CrackedDomainRegion region = DetermineRegion(levelSetsOfPoint);
+			CrackedDomainRegion region = DetermineRegion(tripleLevelSetsOfPoint);
 			if (region == CrackedDomainRegion.Omega1)
 			{
 				return alphaStar;
@@ -40,12 +40,12 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			}
 		}
 
-		public static double CalcTheta(double[] levelSetsOfPoint)
+		public static double CalcTheta(double[] tripleLevelSetsOfPoint)
 		{
-			double phi2 = levelSetsOfPoint[1];
-			double phi3 = levelSetsOfPoint[2];
+			double phi2 = tripleLevelSetsOfPoint[1];
+			double phi3 = tripleLevelSetsOfPoint[2];
 			double thetaStar = Math.Asin(phi3 / phi2);
-			CrackedDomainRegion region = DetermineRegion(levelSetsOfPoint);
+			CrackedDomainRegion region = DetermineRegion(tripleLevelSetsOfPoint);
 			if (region == CrackedDomainRegion.Omega1)
 			{
 				return thetaStar;
@@ -69,11 +69,11 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 		/// section 5.1
 		/// </summary>
-		public static CrackedDomainRegion DetermineRegion(double[] levelSetsOfPoint)
+		public static CrackedDomainRegion DetermineRegion(double[] tripleLevelSetsOfPoint)
 		{
-			double phi1 = levelSetsOfPoint[0];
-			double phi2 = levelSetsOfPoint[1];
-			double phi3 = levelSetsOfPoint[2];
+			double phi1 = tripleLevelSetsOfPoint[0];
+			double phi2 = tripleLevelSetsOfPoint[1];
+			double phi3 = tripleLevelSetsOfPoint[2];
 
 			double phi3Abs = Math.Abs(phi3);
 			if (phi1 != phi3Abs)

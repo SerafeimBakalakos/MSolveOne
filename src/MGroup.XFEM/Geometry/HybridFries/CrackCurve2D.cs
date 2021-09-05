@@ -60,7 +60,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			//      or square bounding box, defined for each node.
 			//TODO: This method has a lot of repetition
 
-			this.nodalLevelSets = new Dictionary<int, double[]>();
+			this.nodalTripleLevelSets = new Dictionary<int, double[]>();
 			foreach (XNode node in nodes)
 			{
 				double phi1 = double.MaxValue; // unsigned distance to the crack surface, excluding the extension
@@ -115,8 +115,10 @@ namespace MGroup.XFEM.Geometry.HybridFries
 					}
 				}
 
-				this.nodalLevelSets[node.ID] = new double[] { phi1, phi2, phi3 };
+				this.nodalTripleLevelSets[node.ID] = new double[] { phi1, phi2, phi3 };
 			}
+
+			base.CalcDoubleLevelSets();
 		}
 
 		[Conditional("DEBUG")]
