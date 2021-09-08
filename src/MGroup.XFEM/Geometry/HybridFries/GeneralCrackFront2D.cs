@@ -6,6 +6,7 @@ using System.Text;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Extensions;
+using MGroup.XFEM.Geometry.Boundaries;
 
 namespace MGroup.XFEM.Geometry.HybridFries
 {
@@ -13,15 +14,22 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 	/// section 3.1.3
 	/// </summary>
-	public class ImmersedCrackFront2D : ICrackFront2D
+	public class GeneralCrackFront2D : ICrackFront2D
 	{
 		private readonly CrackCurve2D crackCurve;
+		private readonly IDomainBoundary domainBoundary;
 
-		public ImmersedCrackFront2D(CrackCurve2D crackCurve)
+		public GeneralCrackFront2D(CrackCurve2D crackCurve, IDomainBoundary domainBoundary)
 		{
 			this.crackCurve = crackCurve;
-			Vertices = ExtractTips(crackCurve);
-			ActiveTips = new List<int>(new int[] { 0, 1 });
+			this.domainBoundary = domainBoundary;
+
+			Vertices = new List<Vertex2D>(2);
+			Vertices.Add(crackCurve.Vertices[0]);
+			Vertices.Add(crackCurve.Vertices[crackCurve.Vertices.Count - 1]);
+
+			ActiveTips = new List<int>(2);
+			DetermineActiveTips();
 
 			// The coordinate systems are determined by the vertices, edges and cells, without enforcing any specific movement.
 			CoordinateSystems = new List<CrackFrontSystem2D>();
@@ -38,43 +46,26 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public List<Vertex2D> Vertices { get; }
 
-		private static List<Vertex2D> ExtractTips(CrackCurve2D crackCurve)
-		{
-			// Find which vertices belong to only 1 cell. These lie on the polygon boundary.
-			var vertices = new List<Vertex2D>(2);
-			//foreach (Vertex2D vertex in crackCurve.Vertices)
-			//{
-			//	if (vertex.Cells.Count == 1)
-			//	{
-			//		vertices.Add(vertex);
-			//	}
-			//}
-			vertices.Add(crackCurve.Vertices[0]);
-			vertices.Add(crackCurve.Vertices[crackCurve.Vertices.Count - 1]);
-			foreach (Vertex2D vertex in vertices)
-			{
-				vertex.IsFront = true;
-			}
-			return vertices;
-		}
-
 		public void UpdateGeometry(CrackFrontPropagation frontPropagation)
 		{
+			Debug.Assert(frontPropagation.AnglesAtTips.Length == ActiveTips.Count);
+
 			int numOldVertices = crackCurve.Vertices.Count; // excluding crack extension vertices, which will be removed.
-			for (int v = 0; v < 2; ++v)
+			for (int i = 0; i < ActiveTips.Count; ++i)
 			{
-				Vertex2D oldTip = Vertices[v];
-				CrackFrontSystem2D oldSystem = CoordinateSystems[v];
+				int vertexIdx = ActiveTips[i];
+				Vertex2D oldTip = Vertices[vertexIdx];
+				CrackFrontSystem2D oldSystem = CoordinateSystems[vertexIdx];
 
 				// Create new tip
 				double[] newCoords = oldSystem.CalcNewTipCoords(
-						oldTip.CoordsGlobal, frontPropagation.AnglesAtTips[v], frontPropagation.LengthsAtTips[v]);
-				var newTip = new Vertex2D(numOldVertices + v, newCoords, false);
+						oldTip.CoordsGlobal, frontPropagation.AnglesAtTips[i], frontPropagation.LengthsAtTips[i]);
+				var newTip = new Vertex2D(numOldVertices + i, newCoords, false);
 
 				// Replace it
 				oldTip.IsFront = false;
 				newTip.IsFront = true;
-				Vertices[v] = newTip;
+				Vertices[vertexIdx] = newTip;
 
 				// Create new cell
 				LineCell2D newCell;
@@ -92,7 +83,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				newTip.Cells.Add(newCell);
 
 				// Update coordinate system (after completing connectivity data) 
-				CoordinateSystems[v] = new CrackFrontSystem2D(newTip);
+				CoordinateSystems[vertexIdx] = new CrackFrontSystem2D(newTip);
 
 				// Add the new items to the crack curve
 				if (!oldSystem.IsCounterClockwise)
@@ -105,6 +96,26 @@ namespace MGroup.XFEM.Geometry.HybridFries
 					crackCurve.Vertices.Add(newTip);
 					crackCurve.Cells.Add(newCell);
 				}
+			}
+
+			DetermineActiveTips();
+		}
+
+		private void DetermineActiveTips()
+		{
+			ActiveTips.Clear();
+			for (int v = 0; v < Vertices.Count; ++v)
+			{
+				Vertices[v].IsFront = true;
+				if (domainBoundary.SurroundsPoint(Vertices[v].CoordsGlobal))
+				{
+					ActiveTips.Add(v);
+				}
+			}
+
+			if (ActiveTips.Count < 1)
+			{
+				throw new Exception("All tips lie outside the domain.");
 			}
 		}
 	}

@@ -5,14 +5,15 @@ using MGroup.XFEM.Cracks.Geometry;
 
 namespace MGroup.XFEM.Geometry.HybridFries
 {
-    public interface ICrackFront2D
-    {
-        //TODO: Perhaps this should be stored in the vertices.
-        List<CrackFrontSystem2D> CoordinateSystems { get; }
+	public interface ICrackFront2D
+	{
+		List<int> ActiveTips { get; }
 
-        
-        List<Vertex2D> Vertices { get; }
+		//TODO: Perhaps this should be stored in the vertices.
+		List<CrackFrontSystem2D> CoordinateSystems { get; }
 
-        void UpdateGeometry(CrackFrontPropagation frontPropagation);
-    }
+		List<Vertex2D> Vertices { get; }
+
+		void UpdateGeometry(CrackFrontPropagation frontPropagation);
+	}
 }

@@ -13,6 +13,7 @@ using MGroup.XFEM.Enrichment.Enrichers;
 using MGroup.XFEM.Enrichment.Observers;
 using MGroup.XFEM.Enrichment.SingularityResolution;
 using MGroup.XFEM.Entities;
+using MGroup.XFEM.Geometry.Boundaries;
 using MGroup.XFEM.Geometry.HybridFries;
 using MGroup.XFEM.Geometry.LSM;
 using MGroup.XFEM.Geometry.Mesh;
@@ -40,7 +41,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 		private const int dimension = 2;
 		private static readonly double[] minCoords = { -1.0, -1.0 };
 		private static readonly double[] maxCoords = { +1.0, +1.0 };
-		private static readonly int[] numElements = { 43, 43 };
+		private static readonly int[] numElements = { 21, 21 };
 		private const int subdomainID = 0;
 		private const double E = 1, v = 0.3, thickness = 1.0;
 		private const int bulkIntegrationOrder = 2, boundaryIntegrationOrder = 2;
@@ -135,7 +136,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 						model.Update(null, null);
 					}
 
-					//CheckOutputFiles(t);
+					CheckOutputFiles(t);
 				}
 			}
 			finally
@@ -245,8 +246,10 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			vertices.Add(new Vertex2D(2, new double[] { +radius, 0 }));
 			
 			double domainDimension = maxCoords[0] - minCoords[0];
+			var domain = new RectangularDomainBoundary(minCoords, maxCoords);
 			var crack = new CrackCurve2D(0, domainDimension, vertices/*, true*/);
-			crack.CrackFront = new ImmersedCrackFront2D(crack);
+			crack.CrackFront = new GeneralCrackFront2D(crack, domain);
+			//crack.CrackFront = new ImmersedCrackFront2D(crack);
 
 			return crack;
 		}
