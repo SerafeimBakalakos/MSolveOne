@@ -89,7 +89,9 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 
 				// Polar systems and functions
 				var mesh = new UniformCartesianMesh2D.Builder(minCoords, maxCoords, numElements).BuildMesh();
-				crack.Observers.Add(new PolarCoordsAtPointsPlotter(outputDirectory, crackGeometry, model, mesh, numPlotPointsPerAxis));
+				var pointGenerator = new UniformPointGenerator(model, mesh, numPlotPointsPerAxis);
+				crack.Observers.Add(new PolarCoordsAtPointsPlotter(pointGenerator, crackGeometry, outputDirectory));
+				crack.Observers.Add(new TipEnrichmentsAtPointsPlotter(pointGenerator, crackGeometry, outputDirectory));
 
 				// Enrichment observers
 				var allCrackStepNodes = new AllCrackStepNodesObserver();

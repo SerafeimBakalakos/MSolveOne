@@ -55,6 +55,9 @@ namespace MGroup.XFEM.Cracks.Geometry
 			return new double[] { r, theta };
 		}
 
+		/// <summary>
+		/// Both 2D and 3D: J = [ r,phi r,psi ; theta,phi theta,psi ]
+		/// </summary>
 		/// <remarks>
 		/// See Shi et al. "Abaqus Implementation of Extended Finite Element Method Using a Level Set Representation for 
 		/// Three-Dimensional Fatigue Crack Growth and Life Predictions" (2010), Eq 10. 
@@ -81,8 +84,8 @@ namespace MGroup.XFEM.Cracks.Geometry
 		}
 
 		/// <summary>
-		/// 2D: [phi,xi phi,eta; psi,xi psi,eta].
-		/// 3D: [phi,xi phi,eta phi,zeta; psi,xi psi,eta psi,zeta].
+		/// 2D: J = [ phi,xi phi,eta; psi,xi psi,eta ].
+		/// 3D: J = [ phi,xi phi,eta phi,zeta; psi,xi psi,eta psi,zeta ].
 		/// E.g. phi,xi = sum(N_i,xi * phi_i), where i are the nodes of the element that contains <paramref name="point"/>.
 		/// </summary>
 		/// <remarks>
