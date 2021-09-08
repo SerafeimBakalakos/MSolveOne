@@ -10,6 +10,9 @@ using MGroup.XFEM.Geometry.Primitives;
 
 namespace MGroup.XFEM.Cracks.Geometry
 {
+	/// <summary>
+	/// There are serious bugs in this. Theta is grossly incorrect in elements intersected by the crack.
+	/// </summary>
 	public class TipCoordinateSystemImplicitFries : ITipCoordinateSystem
 	{
 		private readonly IHybridFriesCrackDescription crack;
@@ -148,7 +151,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 				double[] levelSets = crack.GetTripleLevelSetsOf(nodes[n]);
 				for (int d = 0; d < dim; ++d)
 				{
-					double dN = point.ShapeFunctionDerivatives[d, n];
+					double dN = point.ShapeFunctionDerivatives[n, d];
 					result[0, d] += dN * levelSets[0]; // phi1 derivative
 					result[1, d] += dN * levelSets[1]; // phi2 derivative
 					result[2, d] += dN * levelSets[2]; // phi3 derivative

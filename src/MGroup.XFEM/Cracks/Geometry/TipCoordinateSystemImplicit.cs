@@ -103,7 +103,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 				double[] levelSets = crack.GetNodalLevelSets(nodes[n]);
 				for (int d = 0; d < dim; ++d)
 				{
-					double dN = point.ShapeFunctionDerivatives[d, n];
+					double dN = point.ShapeFunctionDerivatives[n, d];
 					result[0, d] += dN * levelSets[0]; // phi derivative
 					result[1, d] += dN * levelSets[1]; // psi derivative
 				}
