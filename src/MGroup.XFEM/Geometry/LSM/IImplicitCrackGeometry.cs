@@ -17,17 +17,6 @@ namespace MGroup.XFEM.Geometry.LSM
 		/// <returns></returns>
 		double[] GetNodalLevelSets(XNode node);
 
-		public double[] InterpolateLevelSets(XPoint point)
-		{
-			IReadOnlyList<XNode> nodes = point.Element.Nodes;
-			var pointLevelSets = new double[2];
-			for (int n = 0; n < nodes.Count; ++n)
-			{
-				double[] nodalLevelSets = GetNodalLevelSets(nodes[n]);
-				pointLevelSets[0] += point.ShapeFunctions[n] * nodalLevelSets[0];
-				pointLevelSets[1] += point.ShapeFunctions[n] * nodalLevelSets[1];
-			}
-			return pointLevelSets;
-		}
+		double[] InterpolateLevelSets(XPoint point);
 	}
 }

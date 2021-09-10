@@ -29,14 +29,13 @@ namespace MGroup.XFEM.Cracks.Geometry
 			this.TipCoordinateSystem = new TipCoordinateSystemImplicit(crackGeometry);
 		}
 
-
 		public List<ICrackObserver> Observers { get; } = new List<ICrackObserver>();
 
 		public HashSet<IXCrackElement> ConformingElements { get; } = new HashSet<IXCrackElement>();
 
 		public EnrichmentItem CrackBodyEnrichment { get; private set; }
 
-		public IXGeometryDescription CrackGeometry => null;
+		public IXGeometryDescription CrackGeometry => CrackGeometry_v2;
 
 		public CrackCurve2D CrackGeometry_v2 { get; }
 

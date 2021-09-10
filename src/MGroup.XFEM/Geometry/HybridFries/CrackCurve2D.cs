@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Cracks.Geometry;
+using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.Geometry.HybridFries
@@ -17,12 +18,15 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	{
 		private readonly double maxDomainDimension;
 		private readonly bool calcPseudoNormals;
+		private readonly ImplicitElementIntersectionStrategy2D intersectionStrategy;
 
 		public CrackCurve2D(int id, double maxDomainDimension, IEnumerable<Vertex2D> vertices/*, bool calcPseudoNormals = false*/)
 			: base(id)
 		{
 			this.maxDomainDimension = maxDomainDimension;
 			this.calcPseudoNormals = true/*calcPseudoNormals*/;
+			this.intersectionStrategy = new ImplicitElementIntersectionStrategy2D(this);
+
 			this.Vertices = new List<Vertex2D>(vertices);
 			this.Cells = new List<LineCell2D>();
 			for (int v = 0; v < Vertices.Count - 1; ++v)
@@ -151,6 +155,19 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 			// Implicit description
 			CalcLevelSets(nodes);
+		}
+
+		public override IElementDiscontinuityInteraction Intersect(IXFiniteElement element)
+		{
+			(RelativePositionCurveElement pos, bool isTipElement) = FindRelativePosition(element);
+			if (pos == RelativePositionCurveElement.Disjoint)
+			{
+				return new NullElementDiscontinuityInteraction(this.ID, element);
+			}
+			else
+			{
+				return intersectionStrategy.FindIntersectionWithCutElement(element, isTipElement);
+			}
 		}
 
 		public void PropagateCrack(IEnumerable<XNode> nodes, CrackFrontPropagation frontGrowth)

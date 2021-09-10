@@ -118,8 +118,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				//model.ModelObservers.Add(new LsmElementIntersectionsPlotter(outputDirectory, model));
 
 				// Plot element subcells
-				//model.ModelObservers.Add(new ConformingMeshPlotter(outputDirectory, model, false));
-				//model.ModelObservers.Add(new ConformingMeshPlotter(outputDirectory, model, true));
+				model.ModelObservers.Add(new ConformingMeshPlotter(outputDirectory, model));
 
 				//// Plot bulk and boundary integration points of each element
 				//model.ModelObservers.Add(new IntegrationPointsPlotter(outputDirectory, model));
@@ -198,7 +197,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 		{
 			var model = new XModel<IXCrackElement>(2);
 			model.Subdomains[subdomainID] = new XSubdomain<IXCrackElement>(subdomainID);
-			model.FindConformingSubcells = false;
+			model.FindConformingSubcells = true;
 
 			// Materials, integration
 			var material = new HomogeneousFractureMaterialField2D(E, v, thickness, true);

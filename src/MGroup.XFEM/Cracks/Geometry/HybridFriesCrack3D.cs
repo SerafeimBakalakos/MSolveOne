@@ -35,7 +35,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public EnrichmentItem CrackBodyEnrichment { get; private set; }
 
-		public IXGeometryDescription CrackGeometry => null;
+		public IXGeometryDescription CrackGeometry => CrackGeometry_v2;
 
 		public CrackSurface3D CrackGeometry_v2 { get; }
 

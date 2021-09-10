@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
+using MGroup.XFEM.Geometry.Primitives;
 using MGroup.XFEM.Output.Writers;
 
 namespace MGroup.XFEM.Geometry.HybridFries
 {
-	public abstract class CrackGeometryBase : IHybridFriesCrackDescription
+	public abstract class CrackGeometryBase : IHybridFriesCrackDescription, IXGeometryDescription
 	{
 		protected Dictionary<int, double[]> nodalTripleLevelSets;
 		private Dictionary<int, double[]> nodalDoubleLevelSets;
@@ -45,12 +46,78 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public double[] GetTripleLevelSetsOf(XNode node) => nodalTripleLevelSets[node.ID];
 
+		public double[] InterpolateLevelSets(XPoint point)
+		{
+			IReadOnlyList<XNode> nodes = point.Element.Nodes;
+			var pointLevelSets = new double[2];
+			for (int n = 0; n < nodes.Count; ++n)
+			{
+				double[] nodalLevelSets = nodalDoubleLevelSets[nodes[n].ID];
+				pointLevelSets[0] += point.ShapeFunctions[n] * nodalLevelSets[0];
+				pointLevelSets[1] += point.ShapeFunctions[n] * nodalLevelSets[1];
+			}
+			return pointLevelSets;
+		}
+
+		public double[] InterpolateTripleLevelSets(XPoint point)
+		{
+			IReadOnlyList<XNode> nodes = point.Element.Nodes;
+			var pointLevelSets = new double[3];
+			for (int n = 0; n < nodes.Count; ++n)
+			{
+				double[] nodalLevelSets = nodalTripleLevelSets[nodes[n].ID];
+				pointLevelSets[0] += point.ShapeFunctions[n] * nodalLevelSets[0];
+				pointLevelSets[1] += point.ShapeFunctions[n] * nodalLevelSets[1];
+				pointLevelSets[2] += point.ShapeFunctions[n] * nodalLevelSets[2];
+			}
+			return pointLevelSets;
+		}
+
+		public virtual IElementDiscontinuityInteraction Intersect(IXFiniteElement element)
+		{
+			(RelativePositionCurveElement pos, bool containsTip) = FindRelativePosition(element);
+			if (pos == RelativePositionCurveElement.Disjoint)
+			{
+				return new NullElementDiscontinuityInteraction(this.ID, element);
+			}
+			else
+			{
+				return new ImplicitCrackElementInteraction(this.ID, element, pos, containsTip, null);
+			}
+		}
+
+		public double SignedDistanceOf(XNode node)
+		{
+			double[] levelSets = nodalDoubleLevelSets[node.ID];
+			return levelSets[0];
+		}
+
+		public double SignedDistanceOf(XPoint point)
+		{
+			double[] levelSets = InterpolateLevelSets(point);
+			return levelSets[0];
+		}
+
+		protected void CalcDoubleLevelSets()
+		{
+			this.nodalDoubleLevelSets = new Dictionary<int, double[]>();
+			foreach (var idLevelSetsPair in nodalTripleLevelSets)
+			{
+				int nodeID = idLevelSetsPair.Key;
+				double[] levelSets = idLevelSetsPair.Value;
+
+				double phi = levelSets[2];
+				double psi = AuxiliaryCoordinateSystems.CalcAlpha(levelSets);
+
+				nodalDoubleLevelSets[nodeID] = new double[] { phi, psi };
+			}
+		}
+
 		/// <summary>
 		/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 		/// section 5.3 
 		/// </summary>
-		/// <param name="element"></param>
-		public IElementDiscontinuityInteraction Intersect(IXFiniteElement element)
+		protected (RelativePositionCurveElement pos, bool containsTip) FindRelativePosition(IXFiniteElement element)
 		{
 			// Find min, max nodal values of a, b, r
 			double mina = double.MaxValue;
@@ -99,31 +166,14 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			{
 				if (mina * maxa < 0)
 				{
-					return new ImplicitCrackElementInteraction(
-						this.ID, element, RelativePositionCurveElement.Intersecting, true, null);
+					return (RelativePositionCurveElement.Intersecting, true);
 				}
 				else if (maxa < 0)
 				{
-					return new ImplicitCrackElementInteraction(
-						 this.ID, element, RelativePositionCurveElement.Intersecting, false, null);
+					return (RelativePositionCurveElement.Intersecting, false);
 				}
 			}
-			return new NullElementDiscontinuityInteraction(this.ID, element);
-		}
-
-		protected void CalcDoubleLevelSets()
-		{
-			this.nodalDoubleLevelSets = new Dictionary<int, double[]>();
-			foreach (var idLevelSetsPair in nodalTripleLevelSets)
-			{
-				int nodeID = idLevelSetsPair.Key;
-				double[] levelSets = idLevelSetsPair.Value;
-
-				double phi = levelSets[2];
-				double psi = AuxiliaryCoordinateSystems.CalcAlpha(levelSets);
-
-				nodalDoubleLevelSets[nodeID] = new double[] { phi, psi };
-			}
+			return (RelativePositionCurveElement.Disjoint, false);
 		}
 	}
 }
