@@ -293,6 +293,7 @@ namespace MGroup.XFEM.Elements
 				var xpoint = new XPoint(2);
 				xpoint.Element = this;
 				xpoint.ShapeFunctions = evalInterpolation.ShapeFunctions;
+				xpoint.ShapeFunctionDerivatives = evalInterpolation.ShapeGradientsCartesian;
 				xpoint.JacobianNaturalGlobal = evalInterpolation.Jacobian;
 
 				double dV = evalInterpolation.Jacobian.DirectDeterminant * Thickness;

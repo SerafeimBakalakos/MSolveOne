@@ -157,6 +157,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 				point.Coordinates[CoordinateSystem.ElementNatural] = gp.Coordinates;
 				point.ShapeFunctions = evalInterpolation.ShapeFunctions;
 				point.ShapeFunctionDerivatives = evalInterpolation.ShapeGradientsCartesian;
+				point.JacobianNaturalGlobal = evalInterpolation.Jacobian;
 				double[] cartesianCoords = point.MapCoordinates(point.ShapeFunctions, point.Element.Nodes);
 				point.Coordinates[CoordinateSystem.GlobalCartesian] = cartesianCoords;
 				double[] polarCoords = tipSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
