@@ -27,7 +27,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			double tol = MeshTolerance.CalcTolerance(element);
 			var intersections = new HashSet<double[]>();
 			IReadOnlyList<ElementEdge> edges = element.Edges;
-			Dictionary<int, XNode> nodes = ReorgarnizeElementNodes(element);
+			Dictionary<int, XNode> nodes = element.NodesAsDictionary();
 			for (int i = 0; i < edges.Count; ++i)
 			{
 				XNode node0 = nodes[edges[i].NodeIDs[0]];
@@ -83,16 +83,6 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			double levelSet = crack.GetNodalLevelSets(node)[0];
 			if (Math.Abs(levelSet) <= zeroTolerance) return 0.0;
 			else return levelSet;
-		}
-
-		private Dictionary<int, XNode> ReorgarnizeElementNodes(IXFiniteElement element)
-		{
-			var nodes = new Dictionary<int, XNode>();
-			foreach (XNode node in element.Nodes)
-			{
-				nodes[node.ID] = node;
-			}
-			return nodes;
 		}
 	}
 }

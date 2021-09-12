@@ -86,6 +86,7 @@ namespace MGroup.XFEM.Tests.Fracture.Comparisons
 			CreateGeometryModel(model);
 			SetupEnrichmentOutput(model);
 			RunAnalysis(model);
+			WriteCrackPath(model);
 		}
 
 		public static void CreateGeometryModel(XModel<IXCrackElement> model)
@@ -205,12 +206,21 @@ namespace MGroup.XFEM.Tests.Fracture.Comparisons
 
 		public static void WriteCrackPath(XModel<IXCrackElement> model)
 		{
-			var crack = (ExteriorLsmCrack2D)model.GeometryModel.GetDiscontinuity(0);
+			IReadOnlyList<double[]> crackPath = null;
+			IXDiscontinuity discontinuity = model.GeometryModel.GetDiscontinuity(0);
+			if (discontinuity is ExteriorLsmCrack2D lsmCrack)
+			{
+				crackPath = lsmCrack.CrackPath;
+			}
+			else if (discontinuity is TempEdgeCrack2D hybridCrack)
+			{
+				crackPath = hybridCrack.CrackPath;
+			}
 
 			Debug.WriteLine("Crack path:");
-			for (int i = 0; i < crack.CrackPath.Count; ++i)
+			for (int i = 0; i < crackPath.Count; ++i)
 			{
-				Debug.WriteLine($"{crack.CrackPath[i][0]} \t {crack.CrackPath[i][1]}");
+				Debug.WriteLine($"{crackPath[i][0]} \t {crackPath[i][1]}");
 			}
 		}
 	}

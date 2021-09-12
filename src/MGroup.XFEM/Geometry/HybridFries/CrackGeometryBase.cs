@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MGroup.XFEM.ElementGeometry;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Geometry.Primitives;
@@ -166,7 +167,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			{
 				if (mina * maxa < 0)
 				{
-					return (RelativePositionCurveElement.Intersecting, true);
+					return VerifyTipElement(element);
+					//return (RelativePositionCurveElement.Intersecting, true);
 				}
 				else if (maxa < 0)
 				{
@@ -174,6 +176,86 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				}
 			}
 			return (RelativePositionCurveElement.Disjoint, false);
+		}
+
+		/// <summary>
+		/// Addresses elements that are incorrectly characterized as tip elements, while they are actually intersected by the
+		/// crack or its extension.
+		/// </summary>
+		/// <param name="element"></param>
+		/// <returns></returns>
+		private (RelativePositionCurveElement pos, bool containsTip) VerifyTipElement(IXFiniteElement element)
+		{
+			int numIntersectionsPos = 0; 
+			int numIntersectionsNeg = 0; 
+			int numIntersectionsZero = 0;
+			IReadOnlyList<ElementEdge> edges = element.Edges;
+			Dictionary<int, XNode> nodes = element.NodesAsDictionary();
+			for (int i = 0; i < edges.Count; ++i)
+			{
+				XNode node0 = nodes[edges[i].NodeIDs[0]];
+				XNode node1 = nodes[edges[i].NodeIDs[1]];
+				double phi0 = GetNodalLevelSets(node0)[0];
+				double psi0 = GetNodalLevelSets(node0)[1];
+				double phi1 = GetNodalLevelSets(node1)[0];
+				double psi1 = GetNodalLevelSets(node1)[1];
+
+				if (phi0 * phi1 > 0.0) continue; // Edge is not intersected
+				else if (phi0 * phi1 < 0.0) // Edge is intersected but not at its nodes
+				{
+					// The intersection point between these nodes can be found using the linear interpolation, see 
+					// Sukumar 2001
+					double k = -phi0 / (phi1 - phi0);
+					double psi = psi0 + k * (psi1 - psi0);
+					IncrementNodeSetSize(psi, ref numIntersectionsPos, ref numIntersectionsNeg, ref numIntersectionsZero);
+				}
+				else if ((phi0 == 0) && (phi1 == 0)) // Curve is tangent to the element. Edge lies on the curve.
+				{
+					IncrementNodeSetSize(psi0, ref numIntersectionsPos, ref numIntersectionsNeg, ref numIntersectionsZero);
+					IncrementNodeSetSize(psi1, ref numIntersectionsPos, ref numIntersectionsNeg, ref numIntersectionsZero);
+				}
+				else if ((phi0 == 0) && (phi1 != 0)) // Curve runs through a node. Not sure if it is tangent yet.
+				{
+					IncrementNodeSetSize(psi0, ref numIntersectionsPos, ref numIntersectionsNeg, ref numIntersectionsZero);
+				}
+				else /*if ((levelSet0 != 0) && (levelSet1 == 0))*/ // Curve runs through a node. Not sure if it is tangent yet.
+				{
+					IncrementNodeSetSize(psi1, ref numIntersectionsPos, ref numIntersectionsNeg, ref numIntersectionsZero);
+				}
+			}
+
+			if (numIntersectionsNeg == 0)
+			{
+				// All intersections lie on the crack extension. The element does not contain points of the crack front.
+				return (RelativePositionCurveElement.Disjoint, false);
+			}
+			else if (numIntersectionsPos == 0)
+			{
+				// All intersections lie on the crack body. The element does not contain points of the crack front.
+				return (RelativePositionCurveElement.Intersecting, false);
+			}
+			else
+			{
+				// The element contains points of the crack front inside it or on its boundary.
+				return (RelativePositionCurveElement.Intersecting, true);
+			}
+		}
+
+		private void IncrementNodeSetSize(double intersectionPsi, 
+			ref int numIntersectionsPos, ref int numIntersectionsNeg, ref int numIntersectionsZero)
+		{
+			if (intersectionPsi > 0)
+			{
+				++numIntersectionsPos;
+			}
+			else if (intersectionPsi < 0)
+			{
+				++numIntersectionsNeg;
+			}
+			else
+			{
+				++numIntersectionsZero;
+			}
 		}
 	}
 }

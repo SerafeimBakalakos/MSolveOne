@@ -74,5 +74,15 @@ namespace MGroup.XFEM.Elements
 			IReadOnlyList<double[]> nodesNatural = element.Interpolation.NodalNaturalCoordinates;
 			return Utilities.FindCentroid(nodesNatural);
 		}
+
+		public static Dictionary<int, XNode> NodesAsDictionary(this IXFiniteElement element)
+		{
+			var nodes = new Dictionary<int, XNode>();
+			foreach (XNode node in element.Nodes)
+			{
+				nodes[node.ID] = node;
+			}
+			return nodes;
+		}
 	}
 }
