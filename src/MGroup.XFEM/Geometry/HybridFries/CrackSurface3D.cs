@@ -113,7 +113,10 @@ namespace MGroup.XFEM.Geometry.HybridFries
 					int sign = vertex.SignOfDistanceOf(node.Coordinates);
 
 					if (absDistance < phi1) phi1 = absDistance;
-					if (vertex.IsFront && (absDistance < phi2)) phi2 = absDistance;
+					if ((vertex.Position == VertexPosition.TipActive) && (absDistance < phi2))
+					{
+						phi2 = absDistance;
+					}
 
 					// Even if sign = 0, it does not mean that this is the min distance. We must ignore the sign altogether.
 					if (absDistance < minAbsPhi3)
@@ -141,7 +144,10 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				// No need to also process vertices of the extension, since they are too far away. 
 				foreach (Edge3D edge in CrackExtension.ExtensionEdges)
 				{
-					if (edge.Start.IsExtension && edge.End.IsExtension) continue; // This edge is too far away.
+					if ((edge.Start.Position == VertexPosition.Extension) && (edge.End.Position == VertexPosition.Extension))
+					{
+						continue; // This edge is too far away.
+					}
 
 					double absDistance = edge.UnsignedDistanceOf(node.Coordinates);
 					if (absDistance == double.NaN) continue; // The point's projection onto the crack does not lie inside this edge.

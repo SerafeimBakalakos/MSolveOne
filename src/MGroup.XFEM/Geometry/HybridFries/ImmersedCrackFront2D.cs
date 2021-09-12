@@ -53,7 +53,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			vertices.Add(crackCurve.Vertices[crackCurve.Vertices.Count - 1]);
 			foreach (Vertex2D vertex in vertices)
 			{
-				vertex.IsFront = true;
+				vertex.Position = VertexPosition.TipActive;
 			}
 			return vertices;
 		}
@@ -72,8 +72,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				var newTip = new Vertex2D(numOldVertices + v, newCoords, false);
 
 				// Replace it
-				oldTip.IsFront = false;
-				newTip.IsFront = true;
+				oldTip.Position = VertexPosition.Internal;
+				newTip.Position = VertexPosition.TipActive;
 				Vertices[v] = newTip;
 
 				// Create new cell

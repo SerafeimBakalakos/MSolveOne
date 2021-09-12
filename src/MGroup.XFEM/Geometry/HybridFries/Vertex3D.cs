@@ -12,7 +12,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		{
 			this.ID = id;
 			this.CoordsGlobal = globalCoordinates;
-			this.IsExtension = isExtension;
+			this.Position = isExtension ? VertexPosition.Extension : VertexPosition.Internal;
 		}
 
 		public int ID { get; }
@@ -23,11 +23,9 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public List<Edge3D> Edges { get; } = new List<Edge3D>();
 
-		public bool IsExtension { get; }
-
-		public bool IsFront { get; set; }
-
 		public double[] PseudoNormal { get; set; }
+
+		public VertexPosition Position { get; set; }
 
 		/// <summary>
 		/// Calculates the area regularized pseudonormal vector at this vertex.

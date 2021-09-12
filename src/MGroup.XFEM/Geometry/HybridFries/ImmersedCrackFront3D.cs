@@ -104,7 +104,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			{
 				foreach (Vertex3D oldTip in Vertices)
 				{
-					oldTip.IsFront = false;
+					oldTip.Position = VertexPosition.Internal;
 				}
 			}
 
@@ -115,7 +115,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			{
 				Vertex3D tip = edge.Start;
 				Vertices.Add(tip);
-				tip.IsFront = true;
+				tip.Position = VertexPosition.TipActive;
 			}
 
 			// The coordinate systems are determined by the vertices, edges and cells, without enforcing any specific movement.

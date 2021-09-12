@@ -94,7 +94,10 @@ namespace MGroup.XFEM.Geometry.HybridFries
 					int sign = vertex.SignOfDistanceOf(node.Coordinates);
 
 					if (absDistance < phi1) phi1 = absDistance;
-					if (vertex.IsFront && (absDistance < phi2)) phi2 = absDistance;
+					if ((vertex.Position == VertexPosition.TipActive) && (absDistance < phi2))
+					{
+						phi2 = absDistance;
+					};
 
 					// Even if sign = 0, it does not mean that this is the min distance. We must ignore the sign altogether.
 					if (absDistance < minAbsPhi3)

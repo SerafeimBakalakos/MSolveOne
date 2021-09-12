@@ -29,7 +29,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			{
 				Vertices.Add(edge.Start);
 				edge.IsFront = true;
-				edge.Start.IsFront = true;
+				edge.Start.Position = VertexPosition.TipActive;
 			}
 
 			// The coordinate systems are determined by the vertices, edges and cells, without enforcing any specific movement.
@@ -100,7 +100,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			for (int v = 0; v < Vertices.Count; ++v)
 			{
 				var newVertex = new Vertex3D(numVerticesTotal++, newFrontCoords[v], false);
-				newVertex.IsFront = true;
+				newVertex.Position = VertexPosition.TipActive;
 				newFrontVertices.Add(newVertex);
 			}
 
@@ -125,7 +125,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			// Replace current front vertices and edges
 			for (int v = 0; v < Vertices.Count; ++v)
 			{
-				Vertices[v].IsFront = false;
+				Vertices[v].Position = VertexPosition.Internal;
 				Vertices[v] = newFrontVertices[v];
 			}
 			for (int e = 0; e < Edges.Count; ++e)

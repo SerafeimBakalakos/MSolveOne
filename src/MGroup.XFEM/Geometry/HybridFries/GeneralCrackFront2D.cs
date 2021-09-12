@@ -63,8 +63,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				var newTip = new Vertex2D(numOldVertices + i, newCoords, false);
 
 				// Replace it
-				oldTip.IsFront = false;
-				newTip.IsFront = true;
+				oldTip.Position = VertexPosition.Internal;
 				Vertices[vertexIdx] = newTip;
 
 				// Create new cell
@@ -106,10 +105,15 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			ActiveTips.Clear();
 			for (int v = 0; v < Vertices.Count; ++v)
 			{
-				Vertices[v].IsFront = true;
-				if (domainBoundary.SurroundsPoint(Vertices[v].CoordsGlobal))
+				Vertex2D tip = Vertices[v];
+				if (domainBoundary.SurroundsPoint(tip.CoordsGlobal))
 				{
 					ActiveTips.Add(v);
+					tip.Position = VertexPosition.TipActive;
+				}
+				else
+				{
+					tip.Position = VertexPosition.TipInactive;
 				}
 			}
 
