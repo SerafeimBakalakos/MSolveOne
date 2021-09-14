@@ -306,7 +306,7 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 			analyzer.Analyze();
 		}
 
-		private class DomainBoundary : IDomainBoundary
+		private class DomainBoundary : IDomainBoundary2D
 		{
 			public DomainBoundary()
 			{

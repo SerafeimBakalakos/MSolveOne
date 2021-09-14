@@ -254,7 +254,7 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 			analyzer.Analyze();
 		}
 
-		private class FilletBoundary : IDomainBoundary
+		private class FilletBoundary : IDomainBoundary2D
 		{
 			private readonly double voidRectWidth, centerY, leftCenterX, rightCenterX;
 

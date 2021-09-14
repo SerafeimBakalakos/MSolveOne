@@ -93,14 +93,15 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			double crackHeight = /*0.40*/ 0.45 * (maxCoords[1] - minCoords[1]);
 
 			double[] pointA = { minCoords[0], crackHeight, minCoords[2] };
-			double[] pointB = { minCoords[0] + a, crackHeight, minCoords[2] };
-			double[] pointC = { minCoords[0], crackHeight, maxCoords[2] };
-			int numVerticesAlongAB = 3;
-			int numVerticesAlongAC = 7;
+			double[] pointB = { minCoords[0], crackHeight, maxCoords[2] };
+			double[] pointC = { minCoords[0] + a, crackHeight, minCoords[2] };
+			int numVerticesAlongAB = 7;
+			int numVerticesAlongAC = 3;
 			var initialCrackMesh = TriangleMesh3D.CreateForRectangle(pointA, pointB, pointC, numVerticesAlongAB, numVerticesAlongAC);
 
 			var crackGeometry = CrackSurface3D.CreateFromMesh(0, maxCoords[0] - minCoords[0], initialCrackMesh);
-			crackGeometry.CrackFront = new ImmersedCrackFront3D(crackGeometry);
+			var domainBoundary = new BoxDomainBoundary3D(minCoords, maxCoords, 1E-6);
+			crackGeometry.CrackFront = new EdgeCrackFront3D(crackGeometry, domainBoundary);
 			var crack = new HybridFriesCrack3D(model, crackGeometry, propagator);
 
 			return crack;

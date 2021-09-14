@@ -8,11 +8,11 @@ namespace MGroup.XFEM.Cracks.PropagationTermination
 {
     public class CrackExitsDomainTermination : IPropagationTermination
     {
-        private readonly IDomainBoundary boundary;
+        private readonly IDomainBoundary2D boundary;
 
         private bool mustTerminate;
 
-        public CrackExitsDomainTermination(IDomainBoundary boundary)
+        public CrackExitsDomainTermination(IDomainBoundary2D boundary)
         {
             this.boundary = boundary;
         }

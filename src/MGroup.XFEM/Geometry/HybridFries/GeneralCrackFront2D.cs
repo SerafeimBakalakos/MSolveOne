@@ -17,9 +17,9 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	public class GeneralCrackFront2D : ICrackFront2D
 	{
 		private readonly CrackCurve2D crackCurve;
-		private readonly IDomainBoundary domainBoundary;
+		private readonly IDomainBoundary2D domainBoundary;
 
-		public GeneralCrackFront2D(CrackCurve2D crackCurve, IDomainBoundary domainBoundary)
+		public GeneralCrackFront2D(CrackCurve2D crackCurve, IDomainBoundary2D domainBoundary)
 		{
 			this.crackCurve = crackCurve;
 			this.domainBoundary = domainBoundary;

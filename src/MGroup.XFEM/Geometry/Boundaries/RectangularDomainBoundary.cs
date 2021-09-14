@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MGroup.XFEM.Geometry.Boundaries
 {
-    public class RectangularDomainBoundary : IDomainBoundary
+    public class RectangularDomainBoundary : IDomainBoundary2D
     {
         private readonly double[] minCoords;
         private readonly double[] maxCoords;

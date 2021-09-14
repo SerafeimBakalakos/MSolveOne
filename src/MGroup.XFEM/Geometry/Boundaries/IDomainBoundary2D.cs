@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MGroup.XFEM.Geometry.Boundaries
 {
-	public interface IDomainBoundary
+	public interface IDomainBoundary2D
 	{
 		/// <summary>
 		/// Returns true if <paramref name="point"/> is strictly inside the domain. Returns false if <paramref name="point"/>
