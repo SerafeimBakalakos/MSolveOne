@@ -36,7 +36,7 @@ using MGroup.XFEM.Output.Mesh;
 using MGroup.XFEM.Output.Writers;
 using Xunit;
 
-namespace MGroup.XFEM.Tests.Fracture.Comparisons
+namespace MGroup.XFEM.Tests.Fracture.HybridFries
 {
 	public static class EdgeCrack2D
 	{

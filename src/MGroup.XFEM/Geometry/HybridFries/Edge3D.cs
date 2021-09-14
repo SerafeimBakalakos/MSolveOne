@@ -99,6 +99,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			return Math.Sign(p1p * n);
 		}
 
+		public override string ToString() => $"(v{Start.ID} - v{End.ID})";
+
 		// <summary>
 		/// Returns <see cref="double.NaN"/> if the projection of <paramref name="point"/> onto the edge's line does not lie 
 		/// between <see cref="Start"/> and <see cref="End"/>. Otherwise returns the actual distance.

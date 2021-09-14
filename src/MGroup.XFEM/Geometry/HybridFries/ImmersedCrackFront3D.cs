@@ -20,6 +20,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			this.crackSurface = crackSurface;
 		}
 
+		public List<int> ActiveTips { get; private set; }
+
 		/// <summary>
 		/// <see cref="Edges"/>[i] has vertices: start = <see cref="Vertices"/>[i], 
 		/// end = <see cref="Vertices"/>[(i+1) % <see cref="Vertices"/>.Count]
@@ -117,6 +119,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				Vertices.Add(tip);
 				tip.Position = VertexPosition.TipActive;
 			}
+
+			ActiveTips = Enumerable.Range(0, Vertices.Count).ToList();
 
 			// The coordinate systems are determined by the vertices, edges and cells, without enforcing any specific movement.
 			CoordinateSystems = new List<CrackFrontSystem3D>();

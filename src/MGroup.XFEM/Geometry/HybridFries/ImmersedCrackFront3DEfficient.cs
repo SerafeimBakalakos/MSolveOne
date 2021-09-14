@@ -31,6 +31,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				edge.IsFront = true;
 				edge.Start.Position = VertexPosition.TipActive;
 			}
+			ActiveTips = Enumerable.Range(0, Vertices.Count).ToList();
 
 			// The coordinate systems are determined by the vertices, edges and cells, without enforcing any specific movement.
 			CoordinateSystems = new List<CrackFrontSystem3D>();
@@ -44,6 +45,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				CoordinateSystems.Add(system);
 			}
 		}
+
+		public List<int> ActiveTips { get; private set; }
 
 		/// <summary>
 		/// <see cref="Edges"/>[i] has vertices: start = <see cref="Vertices"/>[i], 

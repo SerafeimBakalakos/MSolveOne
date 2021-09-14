@@ -6,6 +6,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 {
 	public interface ICrackFront3D
 	{
+		List<int> ActiveTips { get; }
+
 		//TODO: Perhaps this should be stored in the vertices.
 		List<CrackFrontSystem3D> CoordinateSystems { get; }
 

@@ -81,7 +81,7 @@ namespace MGroup.XFEM.Output.FriesHybridCrack
 			{
 				Vertex3D vertex = crackFront.Vertices[v];
 				var outVertex = new VtkPoint(v, vertex.CoordsGlobal);
-				outVertices[vertex.ID] = outVertex;
+				outVertices[v] = outVertex;
 				map[vertex] = outVertex;
 			}
 

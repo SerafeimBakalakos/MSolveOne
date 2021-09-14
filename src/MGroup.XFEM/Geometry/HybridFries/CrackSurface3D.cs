@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.MSolve.Meshes.Manifolds;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
@@ -53,6 +54,27 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		public List<Edge3D> Edges { get; }
 
 		public List<Vertex3D> Vertices { get; }
+
+		public static CrackSurface3D CreateFromMesh(int id, double maxDomainDimension, TriangleMesh3D initialMesh)
+		{
+			var vertices = new List<Vertex3D>(initialMesh.Vertices.Count);
+			for (int v = 0; v < initialMesh.Vertices.Count; ++v)
+			{
+				vertices.Add(new Vertex3D(v, initialMesh.Vertices[v], false));
+			}
+
+			var cells = new List<TriangleCell3D>(initialMesh.Cells.Count);
+			for (int c = 0; c < initialMesh.Cells.Count; ++c)
+			{
+				int[] connectivity = initialMesh.Cells[c];
+				Vertex3D v0 = vertices[connectivity[0]];
+				Vertex3D v1 = vertices[connectivity[1]];
+				Vertex3D v2 = vertices[connectivity[2]];
+				cells.Add(new TriangleCell3D(v0, v1, v2, false));
+			}
+
+			return new CrackSurface3D(id, maxDomainDimension, vertices, cells);
+		}
 
 		public void AlignCells()
 		{

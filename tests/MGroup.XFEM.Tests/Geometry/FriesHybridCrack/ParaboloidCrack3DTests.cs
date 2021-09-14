@@ -104,10 +104,8 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				compositeObserver.AddObservers(allCrackStepNodes, newCrackTipNodes, enrichmentPlotter);
 				model.GeometryModel.Enricher.Observers.Add(compositeObserver);
 
-				//// Plot element - phase boundaries interactions
-				//model.ModelObservers.Add(new LsmElementIntersectionsPlotter(outputDirectory, model));
-
 				// Plot element subcells
+				crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
 				model.ModelObservers.Add(new ConformingMeshPlotter(outputDirectory, model));
 
 				//// Plot bulk and boundary integration points of each element

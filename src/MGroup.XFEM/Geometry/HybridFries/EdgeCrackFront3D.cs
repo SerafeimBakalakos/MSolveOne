@@ -36,6 +36,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public List<Edge3D> Edges => throw new NotImplementedException();
 
+		public List<int> ActiveTips => throw new NotImplementedException();
+
 		public PropagationMesh3D CreatePropagationMesh(CrackFrontPropagation frontGrowth)
 		{
 			throw new NotImplementedException();

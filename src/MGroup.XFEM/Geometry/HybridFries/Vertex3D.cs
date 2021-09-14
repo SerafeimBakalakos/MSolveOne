@@ -92,6 +92,9 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			return Math.Sign(vp * n);
 		}
 
+		public override string ToString() => $"{ID} ({CoordsGlobal[0]}, {CoordsGlobal[1]}, {CoordsGlobal[2]})";
+
+
 		public double UnsignedDistanceOf(double[] point) => Utilities.Distance3D(CoordsGlobal, point);
 	}
 }

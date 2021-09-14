@@ -263,7 +263,7 @@ namespace MGroup.XFEM.Entities
 			foreach (IXFiniteElement element in Elements.Values) element.IdentifyDofs();
 
 			// Identify each element's integration points and the material properties at those points
-			foreach (IXFiniteElement element in Elements.Values) element.IdentifyIntegrationPointsAndMaterials();
+			//foreach (IXFiniteElement element in Elements.Values) element.IdentifyIntegrationPointsAndMaterials();
 
 			// Let observers read the current state and update themselves
 			foreach (IModelObserver observer in ModelObservers) observer.Update();
