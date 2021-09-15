@@ -251,12 +251,12 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			foreach (Edge3D edge in mesh.PropagationEdges) Edges.Add(edge);
 			foreach (TriangleCell3D cell in mesh.PropagationCells) Cells.Add(cell);
 			mesh.ConnectBidirectionallyVerticesEdgesCells();
-			CrackFront.Update();
-
 			if (calcPseudoNormals)
 			{
 				CalcPseudoNormals();
 			}
+			CrackFront.Update();
+			
 			this.CrackExtension = new CrackExtension3D(this, maxDomainDimension);
 
 			// Implicit description

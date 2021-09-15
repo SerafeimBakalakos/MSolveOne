@@ -5,106 +5,88 @@ using MGroup.LinearAlgebra.Vectors;
 
 namespace MGroup.XFEM.Geometry.HybridFries
 {
-    /// <summary>
-    /// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
-    /// section 3.2.5
-    /// </summary>
-    public class CrackExtension3D
-    {
-        public CrackExtension3D(CrackSurface3D crack, double maxDomainDimension)
-        {
-            // Vertices
-            ICrackFront3D crackFront = crack.CrackFront;
-            ExtensionVertices = new List<Vertex3D>(crackFront.Vertices.Count);
+	/// <summary>
+	/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
+	/// section 3.2.5
+	/// </summary>
+	public class CrackExtension3D
+	{
+		public CrackExtension3D(CrackSurface3D crack, double maxDomainDimension)
+		{
+			CreateExtensionVertices(crack, maxDomainDimension);
+			CreateExtensionCellsAndEdges(crack);
+		}
 
-            Dictionary<int, Vertex3D> frontToExtensionVertices = CreateExtensionVertices(crack, maxDomainDimension);
-            foreach (Vertex3D vertex in crackFront.Vertices)
-            {
-                Vertex3D extension = frontToExtensionVertices[vertex.ID];
-                extension.PseudoNormal = vertex.PseudoNormal;
-                ExtensionVertices.Add(extension);
-            }
+		public List<TriangleCell3D> Cells { get; private set; }
 
-            // Edges
-            ExtensionEdges = CreateEdges(crackFront, frontToExtensionVertices);
+		public List<Edge3D> ExtensionEdges { get; private set; }
 
-            // Cells
-            Cells = CreateCells(crackFront, frontToExtensionVertices);
-        }
+		public List<Vertex3D> ExtensionVertices { get; private set; }
 
-        public List<TriangleCell3D> Cells { get; }
+		private void CreateExtensionCellsAndEdges(CrackSurface3D crack)
+		{
+			ICrackFront3D crackFront = crack.CrackFront;
+			Cells = new List<TriangleCell3D>(2 * crackFront.Edges.Count);
+			ExtensionEdges = new List<Edge3D>(3 * crackFront.Edges.Count);
 
-        public List<Edge3D> ExtensionEdges { get; }
+			for (int i = 0; i < crackFront.Vertices.Count; ++i)
+			{
+				// Use 4 vertices to create edges and cells. 
+				// The order of extension vertices is identical to the order of front vertices.
+				int next = (i + 1) % crackFront.Vertices.Count;
+				Vertex3D vertexA = crackFront.Vertices[next];
+				Vertex3D vertexB = crackFront.Vertices[i];
+				Vertex3D vertexC = ExtensionVertices[i];
+				Vertex3D vertexD = ExtensionVertices[next];
+				Edge3D edgeBA = crackFront.Edges[i];
 
-        public List<Vertex3D> ExtensionVertices { get; }
+				// Edge "parallel" to front edge
+				ExtensionEdges.Add(new Edge3D(vertexC, vertexD, true) { PseudoNormal = edgeBA.PseudoNormal });
 
-        private static List<TriangleCell3D> CreateCells(ICrackFront3D crackFront, 
-            Dictionary<int, Vertex3D> frontToExtensionVertices)
-        {
-            var cells = new List<TriangleCell3D>(2 * crackFront.Edges.Count);
-            foreach (Edge3D edge in crackFront.Edges)
-            {
-                Vertex3D start = edge.Start;
-                Vertex3D end = edge.End;
-                cells.Add(new TriangleCell3D(end, start, frontToExtensionVertices[start.ID], true));
-                cells.Add(new TriangleCell3D(end, frontToExtensionVertices[start.ID], frontToExtensionVertices[end.ID], true));
-            }
+				// Edge from current front vertex to corresponding extension vertex
+				ExtensionEdges.Add(new Edge3D(vertexB, vertexC, true) { PseudoNormal = vertexB.PseudoNormal });
 
-            return cells;
-        }
+				// Split the quadrilateral into 2 triangles
+				var triangleABC = new TriangleCell3D(vertexA, vertexB, vertexC, true);
+				var triangleACD = new TriangleCell3D(vertexA, vertexC, vertexD, true);
+				var triangleBDA = new TriangleCell3D(vertexB, vertexD, vertexA, true);
+				var triangleBCD = new TriangleCell3D(vertexB, vertexC, vertexD, true);
+				double areaDiff0 = Math.Abs(triangleABC.Area - triangleACD.Area) / (triangleABC.Area + triangleACD.Area);
+				double areaDiff1 = Math.Abs(triangleBDA.Area - triangleBCD.Area) / (triangleBDA.Area + triangleBCD.Area);
+				if (areaDiff0 <= areaDiff1)
+				{
+					// The triangles ABC & ACD have more similar areas, and thus less degenerate angles than BDA & BCD.
+					Cells.Add(triangleABC);
+					Cells.Add(triangleACD);
+					ExtensionEdges.Add(new Edge3D(vertexA, vertexC) { PseudoNormal = edgeBA.PseudoNormal });
+				}
+				else
+				{
+					// The triangles BDA & BCD have more similar areas, and thus less degenerate angles than ABC & ACD.
+					Cells.Add(triangleBDA);
+					Cells.Add(triangleBCD);
+					ExtensionEdges.Add(new Edge3D(vertexB, vertexD) { PseudoNormal = edgeBA.PseudoNormal });
+				}
+			}
+		}
 
-        private static List<Edge3D> CreateEdges(ICrackFront3D crackFront, Dictionary<int, Vertex3D> frontToExtensionVertices)
-        {
-            // Front edges
-            var edges = new List<Edge3D>(3 * crackFront.Edges.Count);
-
-            // Edges parallel to front
-            foreach (Edge3D edge in crackFront.Edges)
-            {
-                Vertex3D start = frontToExtensionVertices[edge.Start.ID];
-                Vertex3D end = frontToExtensionVertices[edge.End.ID];
-                var extensionEdge = new Edge3D(start, end, true);
-                extensionEdge.PseudoNormal = edge.PseudoNormal;
-                edges.Add(extensionEdge);
-            }
-
-            // Edges from front to extension points
-            foreach (Vertex3D frontVertex in crackFront.Vertices)
-            {
-                Vertex3D extensionVertex = frontToExtensionVertices[frontVertex.ID];
-                var extensionEdge = new Edge3D(frontVertex, extensionVertex, true);
-                extensionEdge.PseudoNormal = frontVertex.PseudoNormal;
-                edges.Add(extensionEdge); 
-            }
-
-            // Edges to split each extension quad into 2 triangles
-            foreach (Edge3D edge in crackFront.Edges)
-            {
-                Vertex3D start = edge.End;
-                Vertex3D end = frontToExtensionVertices[edge.Start.ID];
-                var extensionEdge = new Edge3D(start, end, true);
-                extensionEdge.PseudoNormal = edge.PseudoNormal;
-                edges.Add(extensionEdge);
-            }
-
-            return edges;
-        }
-
-        private static Dictionary<int, Vertex3D> CreateExtensionVertices(CrackSurface3D crack, double maxDomainDimension)
-        {
-            ICrackFront3D crackFront = crack.CrackFront;
-            var frontToExtensionVertices = new Dictionary<int, Vertex3D>();
-            double extensionLength = 10 * maxDomainDimension;
-            int numVertices = crack.Vertices.Count;
-            for (int v = 0; v < crackFront.Vertices.Count; ++v)
-            {
-                var vertex = Vector.CreateFromArray(crackFront.Vertices[v].CoordsGlobal);
-                var extensionVector = Vector.CreateFromArray(crackFront.CoordinateSystems[v].Extension);
-                var newVertex = vertex.Axpy(extensionVector, extensionLength / extensionVector.Norm2());
-                frontToExtensionVertices[crackFront.Vertices[v].ID] = new Vertex3D(numVertices, newVertex.RawData, true);
-                ++numVertices;
-            }
-            return frontToExtensionVertices;
-        }
-    }
+		private void CreateExtensionVertices(CrackSurface3D crack, double maxDomainDimension)
+		{
+			ICrackFront3D crackFront = crack.CrackFront;
+			ExtensionVertices = new List<Vertex3D>(crackFront.Vertices.Count);
+			double extensionLength = 10 * maxDomainDimension;
+			int numVertices = crack.Vertices.Count;
+			for (int v = 0; v < crackFront.Vertices.Count; ++v)
+			{
+				Vertex3D originalVertex = crackFront.Vertices[v];
+				var originalCoords = Vector.CreateFromArray(originalVertex.CoordsGlobal);
+				var extensionVector = Vector.CreateFromArray(crackFront.CoordinateSystems[v].Extension);
+				var extensionsCoords = originalCoords.Axpy(extensionVector, extensionLength / extensionVector.Norm2());
+				var extensionVertex = new Vertex3D(numVertices, extensionsCoords.RawData, true);
+				extensionVertex.PseudoNormal = originalVertex.PseudoNormal;
+				ExtensionVertices.Add(extensionVertex);
+				++numVertices;
+			}
+		}
+	}
 }

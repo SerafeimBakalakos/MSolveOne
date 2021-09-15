@@ -65,6 +65,13 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			// Project the point onto the triangle's plane
 			(Vector projection, double distance) = ProjectPoint(point);
 
+			#region debug
+			if (double.IsNaN(distance))
+			{
+				Console.WriteLine();
+			}
+			#endregion
+
 			// Find the barycentric coordinates
 			if (IsInsideTriangle(projection)) return distance;
 			else return double.NaN;

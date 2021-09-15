@@ -13,6 +13,7 @@ using MGroup.XFEM.Enrichment.Enrichers;
 using MGroup.XFEM.Enrichment.Observers;
 using MGroup.XFEM.Enrichment.SingularityResolution;
 using MGroup.XFEM.Entities;
+using MGroup.XFEM.Geometry.Boundaries;
 using MGroup.XFEM.Geometry.HybridFries;
 using MGroup.XFEM.Geometry.LSM;
 using MGroup.XFEM.Geometry.Mesh;
@@ -123,7 +124,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 						model.Update(null, null);
 					}
 
-					CheckOutputFiles(t);
+					//CheckOutputFiles(t);
 				}
 			}
 			finally
@@ -275,7 +276,8 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 
 			double domainDimension = maxCoords[0] - minCoords[0];
 			var crack = new CrackSurface3D(0, domainDimension, vertices, cells/*, true*/);
-			crack.CrackFront = new ImmersedCrackFront3D(crack);
+			var domainBoundary = new BoxDomainBoundary3D(minCoords, maxCoords);
+			crack.CrackFront = new GeneralCrackFront3D(crack, domainBoundary);
 
 			return crack;
 		}

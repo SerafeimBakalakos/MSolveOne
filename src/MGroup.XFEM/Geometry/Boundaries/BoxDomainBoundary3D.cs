@@ -27,6 +27,43 @@ namespace MGroup.XFEM.Geometry.Boundaries
 			this.proximityTolerance = relativeTolerance * minSide;
 		}
 
+		/// <summary>
+		/// The normal vector points outwards
+		/// </summary>
+		/// <param name="point">A point that must lie on the domain's boundary.</param>
+		public double[] CalcNormalAtBoundaryPoint(double[] point)
+		{
+			BoxFace face = FindFaceOfPoint(point);
+			if (face == BoxFace.MinX)
+			{
+				return new double[] { -1, 0, 0 };
+			}
+			else if (face == BoxFace.MaxX)
+			{
+				return new double[] { +1, 0, 0 };
+			}
+			else if (face == BoxFace.MinY)
+			{
+				return new double[] { 0, -1, 0 };
+			}
+			else if (face == BoxFace.MaxY)
+			{
+				return new double[] { 0, +1, 0 };
+			}
+			else if (face == BoxFace.MinZ)
+			{
+				return new double[] { 0, 0, -1 };
+			}
+			else if (face == BoxFace.MaxZ)
+			{
+				return new double[] { 0, 0, +1 };
+			}
+			else
+			{
+				throw new ArgumentException("The point provided does not lie on the boundary");
+			}
+		}
+
 		public RelativePositionManifoldPoint FindRelativePositionOf(double[] point)
 		{
 			BoxFace face = FindFaceOfPoint(point);

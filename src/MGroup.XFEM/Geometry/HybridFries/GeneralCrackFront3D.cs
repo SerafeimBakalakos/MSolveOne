@@ -12,12 +12,12 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 	/// section 3.2.3
 	/// </summary>
-	public class EdgeCrackFront3D : ICrackFront3D
+	public class GeneralCrackFront3D : ICrackFront3D
 	{
 		private readonly CrackSurface3D crackSurface;
 		private readonly IDomainBoundary3D boundary;
 
-		public EdgeCrackFront3D(CrackSurface3D crackSurface, IDomainBoundary3D boundary)
+		public GeneralCrackFront3D(CrackSurface3D crackSurface, IDomainBoundary3D boundary)
 		{
 			this.crackSurface = crackSurface;
 			this.boundary = boundary;
@@ -120,7 +120,6 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			{
 				Vertex3D tip = edge.Start;
 				Vertices.Add(tip);
-				tip.Position = VertexPosition.TipActive;
 			}
 
 			FindActiveTips();
@@ -133,7 +132,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				Vertex3D next = Vertices[(v + 1) % Vertices.Count];
 				Vertex3D previous = Vertices[v == 0 ? Vertices.Count - 1 : v - 1];
 
-				var system = new CrackFrontSystem3D(current, previous, next);
+				var system = new CrackFrontSystem3D(current, previous, next, boundary);
 				CoordinateSystems.Add(system);
 			}
 		}
@@ -183,9 +182,13 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			ActiveTips = new List<int>(Vertices.Count);
 			for (int v = 0; v < Vertices.Count; ++v)
 			{
+				Vertex3D tip = Vertices[v];
+				tip.Position = VertexPosition.TipInactive;
+
 				if (positions[v] == RelativePositionManifoldPoint.Internal)
 				{
 					ActiveTips.Add(v);
+					tip.Position = VertexPosition.TipActive;
 				}
 				else if (positions[v] == RelativePositionManifoldPoint.Boundary)
 				{
@@ -195,17 +198,16 @@ namespace MGroup.XFEM.Geometry.HybridFries
 						|| (positions[next] == RelativePositionManifoldPoint.Internal))
 					{
 						ActiveTips.Add(v);
+						tip.Position = VertexPosition.TipActive;
 
 						// As the crack propagates, roundoff errors may cause these tips to offset slightly. If this repeats for
 						// many crack steps, then they might offset significantly and no longer be recognized as points on the 
 						// boundary. Therefore we should reset them to the nearest point on the boundary at each iteration.
-						boundary.MinimizeOffsetOfBoundaryPoint(Vertices[v].CoordsGlobal);
+						boundary.MinimizeOffsetOfBoundaryPoint(tip.CoordsGlobal);
 					}
 				}
 				else
 				{
-					Vertices[v].Position = VertexPosition.TipInactive;
-
 					if (positions[v] == RelativePositionManifoldPoint.External)
 					{
 						int next = (v + 1) % Vertices.Count;

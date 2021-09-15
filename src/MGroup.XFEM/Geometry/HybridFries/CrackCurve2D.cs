@@ -177,11 +177,11 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		{
 			// Explicit description
 			CrackFront.UpdateGeometry(frontGrowth);
-
 			if (calcPseudoNormals)
 			{
 				CalcPseudoNormals();
 			}
+
 			this.CrackExtension = new CrackExtension2D(this, maxDomainDimension);
 
 			// Implicit description
