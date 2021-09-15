@@ -77,6 +77,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			else return double.NaN;
 		}
 
+		public override string ToString() => $"{Vertices[0].ID}, {Vertices[1].ID},{Vertices[2].ID}";
+
 		private (Vector p0, double distance) ProjectPoint(double[] point)
 		{
 			var p = Vector.CreateFromArray(point);

@@ -247,7 +247,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			double domainDimension = maxCoords[0] - minCoords[0];
 			var domain = new RectangularDomainBoundary(minCoords, maxCoords);
 			var crack = new CrackCurve2D(0, domainDimension, vertices/*, true*/);
-			crack.CrackFront = new GeneralCrackFront2D(crack, domain);
+			crack.CrackFront = new CrackFront2D(crack, domain);
 			//crack.CrackFront = new ImmersedCrackFront2D(crack);
 
 			return crack;

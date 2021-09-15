@@ -138,7 +138,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 				crackVertices.Add(new Vertex2D(i, point));
 			}
 			var hybridGeometry = new CrackCurve2D(0, domainDimension, crackVertices);
-			hybridGeometry.CrackFront = new GeneralCrackFront2D(hybridGeometry, new RectangularDomainBoundary(minCoords, maxCoords));
+			hybridGeometry.CrackFront = new CrackFront2D(hybridGeometry, new RectangularDomainBoundary(minCoords, maxCoords));
 
 			var crack = new TempEdgeCrack2D(0, initialGeom, hybridGeometry, model, propagator);
 			return crack;

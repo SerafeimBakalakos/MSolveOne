@@ -12,12 +12,12 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 	/// section 3.2.3
 	/// </summary>
-	public class GeneralCrackFront3D : ICrackFront3D
+	public class CrackFront3D : ICrackFront3D
 	{
 		private readonly CrackSurface3D crackSurface;
 		private readonly IDomainBoundary3D boundary;
 
-		public GeneralCrackFront3D(CrackSurface3D crackSurface, IDomainBoundary3D boundary)
+		public CrackFront3D(CrackSurface3D crackSurface, IDomainBoundary3D boundary)
 		{
 			this.crackSurface = crackSurface;
 			this.boundary = boundary;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.MSolve.Meshes.Manifolds;
 using MGroup.MSolve.Meshes.Structured;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Cracks;
@@ -124,7 +125,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 						model.Update(null, null);
 					}
 
-					//CheckOutputFiles(t);
+					CheckOutputFiles(t);
 				}
 			}
 			finally
@@ -251,7 +252,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 				Vertex3D next = boundaryVertices[(v + 1) % numPointsBoundary];
 
 				// Find barycenter of this triangle
-				var barycenter = new Vertex3D(vertices.Count, new double[] { 0, 0, 0});
+				var barycenter = new Vertex3D(vertices.Count, new double[] { 0, 0, 0 });
 				for (int d = 0; d < 3; ++d)
 				{
 					barycenter.CoordsGlobal[d] += center.CoordsGlobal[d];
@@ -277,7 +278,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			double domainDimension = maxCoords[0] - minCoords[0];
 			var crack = new CrackSurface3D(0, domainDimension, vertices, cells/*, true*/);
 			var domainBoundary = new BoxDomainBoundary3D(minCoords, maxCoords);
-			crack.CrackFront = new GeneralCrackFront3D(crack, domainBoundary);
+			crack.CrackFront = new CrackFront3D(crack, domainBoundary);
 
 			return crack;
 		}

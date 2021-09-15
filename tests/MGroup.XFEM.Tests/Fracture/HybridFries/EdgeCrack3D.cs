@@ -101,7 +101,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 
 			var crackGeometry = CrackSurface3D.CreateFromMesh(0, maxCoords[0] - minCoords[0], initialCrackMesh);
 			var domainBoundary = new BoxDomainBoundary3D(minCoords, maxCoords, 1E-6);
-			crackGeometry.CrackFront = new GeneralCrackFront3D(crackGeometry, domainBoundary);
+			crackGeometry.CrackFront = new CrackFront3D(crackGeometry, domainBoundary);
 			var crack = new HybridFriesCrack3D(model, crackGeometry, propagator);
 
 			return crack;
