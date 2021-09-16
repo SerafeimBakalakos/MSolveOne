@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using MGroup.XFEM.Extensions;
 using MGroup.XFEM.Geometry.Boundaries;
+using TriangleNet.Geometry;
 
 namespace MGroup.XFEM.Geometry.HybridFries
 {
@@ -37,27 +38,40 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public PropagationMesh3D CreatePropagationMesh(CrackFrontPropagation frontPropagation)
 		{
-			var mesh = new PropagationMesh3D(Vertices, Edges);
+			Debug.Assert(frontPropagation.AnglesAtTips.Length == ActiveTips.Count);
+			Debug.Assert(frontPropagation.LengthsAtTips.Length == ActiveTips.Count);
+			var propMesh = new PropagationMesh3D(Vertices, Edges);
 
 			// Create the new tips
 			int numVerticesTotal = crackSurface.Vertices.Count; // excluding crack extension vertices, which will be removed.
-			for (int v = 0; v < Vertices.Count; ++v)
+			for (int i = 0; i < ActiveTips.Count; ++i)
 			{
-				double[] xOld = Vertices[v].CoordsGlobal;
-				double angle = frontPropagation.AnglesAtTips[v];
-				double length = frontPropagation.LengthsAtTips[v];
-				double[] xNew = CoordinateSystems[v].CalcNewTipCoords(xOld, angle, length);
+				double angle = frontPropagation.AnglesAtTips[i];
+				double length = frontPropagation.LengthsAtTips[i];
+				int vertexIdx = ActiveTips[i];
+				double[] xOld = Vertices[vertexIdx].CoordsGlobal;
+				double[] xNew = CoordinateSystems[vertexIdx].CalcNewTipCoords(xOld, angle, length);
 				var newVertex = new Vertex3D(numVerticesTotal++, xNew, false);
-				mesh.PropagationVertices.Add(newVertex);
+				propMesh.PropagationVertices.Add(newVertex);
 			}
 
 			// Create the new cells
-			for (int v = 0; v < Vertices.Count; ++v)
+			for (int i = 0; i < Edges.Count; ++i)
 			{
-				Vertex3D vertexOld0 = Vertices[v];
-				Vertex3D vertexOld1 = Vertices[(v + 1) % Vertices.Count];
-				Vertex3D vertexNew0 = mesh.PropagationVertices[v];
-				Vertex3D vertexNew1 = mesh.PropagationVertices[(v + 1) % Vertices.Count];
+				Vertex3D vertexB = Edges[i].Start;
+				Vertex3D vertexA = Edges[i].End;
+
+				if ((vertexB.Position != VertexPosition.TipActive) || (vertexA.Position != VertexPosition.TipActive))
+				{
+					// Since one or both of the vertices does not propagate, this edge will remain at the front and no cells
+					// will be created
+					continue;
+				}
+
+				int activeTipIdx = ActiveTips.FindIndex(idx => Vertices[idx] == vertexB);
+				Debug.Assert(Vertices[(ActiveTips[activeTipIdx] + 1) % Vertices.Count] == vertexA);
+				Vertex3D vertexC = propMesh.PropagationVertices[activeTipIdx];
+				Vertex3D vertexD = propMesh.PropagationVertices[(activeTipIdx + 1) % ActiveTips.Count];
 
 				// Cells (simplest case, but the front coordinate systems are not very accurate)
 				//mesh.PropagationCells.Add(new TriangleCell3D(vertexOld1, vertexOld0, vertexNew0, false));
@@ -65,24 +79,24 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 				// Find the centroid and add it to the mesh vertices
 				var coords = new double[4][];
-				coords[0] = vertexOld0.CoordsGlobal;
-				coords[1] = vertexOld1.CoordsGlobal;
-				coords[2] = vertexNew0.CoordsGlobal;
-				coords[3] = vertexNew1.CoordsGlobal;
+				coords[0] = vertexB.CoordsGlobal;
+				coords[1] = vertexA.CoordsGlobal;
+				coords[2] = vertexC.CoordsGlobal;
+				coords[3] = vertexD.CoordsGlobal;
 				double[] xC = Utilities.FindCentroid((IList<double[]>)coords);
 				var centroid = new Vertex3D(numVerticesTotal++, xC, false);
-				mesh.PropagationVertices.Add(centroid);
+				propMesh.PropagationVertices.Add(centroid);
 
 				// 4 triangles between the 5 vertices
-				mesh.PropagationCells.Add(new TriangleCell3D(vertexOld1, vertexOld0, centroid, false));
-				mesh.PropagationCells.Add(new TriangleCell3D(vertexOld0, vertexNew0, centroid, false));
-				mesh.PropagationCells.Add(new TriangleCell3D(vertexNew0, vertexNew1, centroid, false));
-				mesh.PropagationCells.Add(new TriangleCell3D(vertexNew1, vertexOld1, centroid, false));
+				propMesh.PropagationCells.Add(new TriangleCell3D(vertexA, vertexB, centroid, false));
+				propMesh.PropagationCells.Add(new TriangleCell3D(vertexB, vertexC, centroid, false));
+				propMesh.PropagationCells.Add(new TriangleCell3D(vertexC, vertexD, centroid, false));
+				propMesh.PropagationCells.Add(new TriangleCell3D(vertexD, vertexA, centroid, false));
 			}
 
 			// Create the new edges 
-			mesh.CreatePropagationEdges();
-			return mesh;
+			propMesh.CreatePropagationEdges();
+			return propMesh;
 		}
 
 

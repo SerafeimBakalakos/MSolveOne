@@ -136,14 +136,16 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements)
 		{
-			int numTips = CrackGeometry_v2.CrackFront.Vertices.Count;
+			ICrackFront3D crackFront = CrackGeometry_v2.CrackFront;
+			int numTips = crackFront.ActiveTips.Count;
 			var frontGrowth = new CrackFrontPropagation();
 			frontGrowth.AnglesAtTips = new double[numTips];
 			frontGrowth.LengthsAtTips = new double[numTips];
 			for (int i = 0; i < numTips; ++i)
 			{
-				double[] tipCoords = CrackGeometry_v2.CrackFront.Vertices[i].CoordsGlobal;
-				double[] extensionVector = CrackGeometry_v2.CrackFront.CoordinateSystems[i].Extension;
+				int vertexID = crackFront.ActiveTips[i];
+				double[] tipCoords = crackFront.Vertices[vertexID].CoordsGlobal;
+				double[] extensionVector = crackFront.CoordinateSystems[vertexID].Tangent;
 				(double growthAngle, double growthLength) = propagator.Propagate(
 					algebraicModel, totalDisplacements, tipCoords, extensionVector, TipElements);
 				frontGrowth.AnglesAtTips[i] = growthAngle;

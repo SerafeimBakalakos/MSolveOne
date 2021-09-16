@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using MGroup.Environments;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
@@ -51,7 +52,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 		private const double E = 2E7;
 		private const double v = 0.3;
 		private const double load = 197; // lbs
-		private const double a = 1.05, growthLength = 0.3;
+		private const double a = 1.05, growthLength = 0.3, growthAngle = -(10.0 / 180.0) * Math.PI;
 
 		private const double jIntegralRadiusRatio = 2.0;
 		private const double heavisideTol = 1E-4;
@@ -68,8 +69,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			XModel<IXCrackElement> model = CreatePhysicalModel();
 			CreateGeometryModel(model);
 			SetupEnrichmentOutput(model);
-			model.Initialize();
-			//RunAnalysis(model);
+			RunAnalysis(model);
 		}
 
 		public static void CreateGeometryModel(XModel<IXCrackElement> model)
@@ -80,7 +80,8 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			geometryModel.Enricher = new NodeEnricherIndependentCracks(
 				geometryModel, new RelativeAreaSingularityResolver(heavisideTol), tipEnrichmentArea);
 
-			HybridFriesCrack3D crack = CreateCrackGeometry(model, null);
+			HybridFriesCrack3D crack = CreateCrackGeometry(model, new MockPropagator());
+			crack.Observers.Add(new LevelSetObserver(model, crack.CrackGeometry_v2, outputDirectory));
 			crack.Observers.Add(new CrackLevelSetPlotter_v2(model, crack.CrackGeometry_v2, outputDirectory));
 			crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
 			crack.Observers.Add(new CrackBody3DObserver(crack.CrackGeometry_v2, outputDirectory));
@@ -141,7 +142,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 				model.NodalLoads.Add(
 					new Load() { Node = node, DOF = StructuralDof.TranslationY, Amount = +load / topLeftNodes.Length });
 			}
-
+			
 			XNode[] bottomLeftNodes = model.Nodes.Values.Where(
 				n => Math.Abs(n.X - minCoords[0]) <= tol && Math.Abs(n.Y - minCoords[1]) <= tol).ToArray();
 			foreach (XNode node in topLeftNodes)
@@ -155,18 +156,30 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 
 		public static void RunAnalysis(XModel<IXCrackElement> model)
 		{
-			// Solver
-			var factory = new SkylineSolver.Factory();
-			GlobalAlgebraicModel<SkylineMatrix> algebraicModel = factory.BuildAlgebraicModel(model);
-			var solver = factory.BuildSolver(algebraicModel);
+			for (int t = 0; t < maxIterations; ++t)
+			{
+				if (t == 0)
+				{
+					model.Initialize();
+				}
+				else
+				{
+					model.Update(null, null);
+				}
+			}
 
-			var domainBoundary = new RectangularDomainBoundary(minCoords, maxCoords);
-			var termination = new TerminationLogic.Or(
-				new FractureToughnessTermination(fractureToughness),
-				new CrackExitsDomainTermination(domainBoundary));
-			var analyzer = new QuasiStaticLefmAnalyzer(model, algebraicModel, solver, maxIterations, termination);
+			//// Solver
+			//var factory = new SkylineSolver.Factory();
+			//GlobalAlgebraicModel<SkylineMatrix> algebraicModel = factory.BuildAlgebraicModel(model);
+			//var solver = factory.BuildSolver(algebraicModel);
 
-			analyzer.Analyze();
+			//var domainBoundary = new RectangularDomainBoundary(minCoords, maxCoords);
+			//var termination = new TerminationLogic.Or(
+			//	new FractureToughnessTermination(fractureToughness),
+			//	new CrackExitsDomainTermination(domainBoundary));
+			//var analyzer = new QuasiStaticLefmAnalyzer(model, algebraicModel, solver, maxIterations, termination);
+
+			//analyzer.Analyze();
 		}
 
 		public static void SetupEnrichmentOutput(XModel<IXCrackElement> model)
@@ -179,6 +192,16 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			var compositeObserver = new CompositeEnrichmentObserver();
 			compositeObserver.AddObservers(allCrackStepNodes, newCrackTipNodes, enrichmentPlotter);
 			model.GeometryModel.Enricher.Observers.Add(compositeObserver);
+		}
+
+		private class MockPropagator : IPropagator
+		{
+			public (double growthAngle, double growthLength) Propagate(
+				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements,
+				double[] crackTip, double[] extensionVector, IEnumerable<IXCrackElement> tipElements)
+			{
+				return (growthAngle, growthLength);
+			}
 		}
 	}
 }

@@ -215,12 +215,6 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			var crack = new HybridFriesCrack3D(model, crackGeometry, new MockPropagator());
 			geometryModel.Cracks[crack.ID] = crack;
 
-			//var jIntegrationRule =
-			//    new IntegrationWithNonconformingSubhexahedra3D(8, GaussLegendre3D.GetQuadratureWithOrder(4, 4, 4));
-			//IPropagator propagator = null;
-			//var crack = new LsmCrack3D(0, lsmGeometry, model, propagator);
-			//geometryModel.Cracks[crack.ID] = crack;
-
 			return geometryModel;
 		}
 

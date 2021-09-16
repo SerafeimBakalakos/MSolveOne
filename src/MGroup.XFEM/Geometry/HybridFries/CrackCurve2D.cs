@@ -51,7 +51,6 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public CrackExtension2D CrackExtension { get; private set; }
 
-		//HERE:
 		//TODO: The front should also have an InitializeGeometry() method, instead of doing stuff in the constructor. 
 		//      Then it should be injected into the crack surface class's constructor, instead of this property.
 		public ICrackFront2D CrackFront { get; set; } 

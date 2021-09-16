@@ -56,7 +56,6 @@ namespace MGroup.XFEM.Output.Writers
 
 		public void Update()
 		{
-			//HERE: Also plot the tip gradients and Heaviside functions
 			List<double[]> pointsGlobal = pointGenerator.GeneratePointsGlobalCartesian();
 			List<XPoint> pointsNatural = pointGenerator.GeneratePointsNatural(pointsGlobal);
 

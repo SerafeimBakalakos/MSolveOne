@@ -36,9 +36,6 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 
 		public double EstimateResidualNormRatio(PcgAlgorithmBase pcg)
 		{
-			//HERE: I am doing something wrong here. PFETI-DP converges slowly or not all in heterogeneous problems with this, 
-			//		while the standard PCG criterion works great.
-
 			// Find displacements at free dofs
 			var Ub = (DistributedOverlappingVector)(pcg.Solution);
 			var Uf = new DistributedOverlappingVector(algebraicModel.FreeDofIndexer);

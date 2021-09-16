@@ -24,7 +24,7 @@ namespace MGroup.Solvers.DDM.Prototypes.FetiDP
 		{
 			var iterativeSolverBuilder = new LinearAlgebraExtensions.ReorthogonalizedPcg.Builder();
 			iterativeSolverBuilder.MaxIterationsProvider = new PercentageMaxIterationsProvider(1.0);
-			iterativeSolverBuilder.ResidualTolerance = 0.02 * pcgResidualTolerance; // HERE: Let user define this.
+			iterativeSolverBuilder.ResidualTolerance = 0.02 * pcgResidualTolerance;
 			IterativeSolver = iterativeSolverBuilder.Build();
 		}
 	}
