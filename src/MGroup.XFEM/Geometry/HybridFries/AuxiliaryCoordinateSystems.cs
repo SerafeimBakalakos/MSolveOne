@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using MGroup.LinearAlgebra.Commons;
 
 namespace MGroup.XFEM.Geometry.HybridFries
 {
@@ -44,18 +45,21 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 		/// section 5.1
 		/// </summary>
-		public static CrackedDomainRegion DetermineRegion(double[] tripleLevelSetsOfPoint)
+		public static CrackedDomainRegion DetermineRegion(double[] tripleLevelSetsOfPoint, double tolerance = 1E-10)
 		{
+			//TODO: use an informed tolerance value, such as by taking into account max/min level sets
+			var comparer = new ValueComparer(tolerance);
+
 			double phi1 = tripleLevelSetsOfPoint[0];
 			double phi2 = tripleLevelSetsOfPoint[1];
 			double phi3 = tripleLevelSetsOfPoint[2];
 
 			double phi3Abs = Math.Abs(phi3);
-			if (phi1 != phi3Abs)
+			if (!comparer.AreEqual(phi3Abs, phi1))
 			{
 				return CrackedDomainRegion.Omega1;
 			}
-			else if (phi2 != phi3Abs)
+			else if (!comparer.AreEqual(phi3Abs, phi2))
 			{
 				if (phi3 > 0)
 				{
