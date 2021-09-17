@@ -27,6 +27,8 @@ namespace MGroup.XFEM.Elements
 {
 	public class XCrackElement2D : IXCrackElement
 	{
+		private const bool storeGaussPoints = false;
+
 		private readonly IElementGeometry elementGeometry;
 		private readonly int id;
 		private readonly int numStandardDofs;
@@ -74,7 +76,8 @@ namespace MGroup.XFEM.Elements
 			(this.Edges, this.Faces) = elementGeometry.FindEdgesFaces(nodeIDs);
 		}
 
-		public IReadOnlyList<GaussPoint> BulkIntegrationPoints => gaussPointsBulk;
+		public IReadOnlyList<GaussPoint> BulkIntegrationPoints
+			=> storeGaussPoints? gaussPointsBulk : IntegrationBulk.GenerateIntegrationPoints(this);
 
 		public CellType CellType => Interpolation.CellType;
 
@@ -248,30 +251,23 @@ namespace MGroup.XFEM.Elements
 
 		public void IdentifyIntegrationPointsAndMaterials()
 		{
-			// Bulk integration
-			this.gaussPointsBulk = IntegrationBulk.GenerateIntegrationPoints(this);
-			int numPointsVolume = gaussPointsBulk.Count;
-
-			// Calculate and cache standard interpolation at integration points.
-			//TODO: for all standard elements of the same type, this should be cached only once
-			this.evalInterpolationsAtGPsVolume = new EvalInterpolation[numPointsVolume];
-			for (int i = 0; i < numPointsVolume; ++i)
+			if (storeGaussPoints)
 			{
-				evalInterpolationsAtGPsVolume[i] = Interpolation.EvaluateAllAt(Nodes, gaussPointsBulk[i].Coordinates);
-			}
-
-			// Create and cache materials at integration points.
-			this.materialsAtGPsBulk = new IContinuumMaterial[numPointsVolume];
-			for (int i = 0; i < numPointsVolume; ++i)
-			{
-				this.materialsAtGPsBulk[i] = MaterialField.FindMaterialAt(null);
+				CalcAndStoreIntegrationPointData();
 			}
 		}
+
+		
 
 		public IMatrix MassMatrix(IElement element) => throw new NotImplementedException();
 
 		public IMatrix StiffnessMatrix(IElement element)
 		{
+			if (!storeGaussPoints)
+			{
+				CalcAndStoreIntegrationPointData();
+			}
+
 			Matrix Kss = BuildStiffnessMatrixStandard();
 			IMatrix Ktotal;
 			if (numEnrichedDofs == 0) Ktotal = Kss;
@@ -279,6 +275,11 @@ namespace MGroup.XFEM.Elements
 			{
 				(Matrix Kee, Matrix Kse) = BuildStiffnessMatricesEnriched();
 				Ktotal = JoinStiffnesses(Kss, Kee, Kse);
+			}
+
+			if (!storeGaussPoints)
+			{
+				ClearIntegrationPointData();
 			}
 			return Ktotal;
 		}
@@ -346,6 +347,8 @@ namespace MGroup.XFEM.Elements
 			return Kss;
 		}
 
+		
+
 		private Matrix CalculateDeformationMatrixEnriched(int numEnrichedDofs, XPoint gaussPoint, 
 			EvalInterpolation evalInterpolation)
 		{
@@ -410,6 +413,36 @@ namespace MGroup.XFEM.Elements
 				deformation[2, col1] = dNdx;
 			}
 			return deformation;
+		}
+
+		private void CalcAndStoreIntegrationPointData()
+		{
+			// Bulk integration
+			this.gaussPointsBulk = IntegrationBulk.GenerateIntegrationPoints(this);
+			int numPointsVolume = gaussPointsBulk.Count;
+
+			// Calculate and cache standard interpolation at integration points.
+			//TODO: for all standard elements of the same type, this should be cached only once
+			this.evalInterpolationsAtGPsVolume = new EvalInterpolation[numPointsVolume];
+			for (int i = 0; i < numPointsVolume; ++i)
+			{
+				evalInterpolationsAtGPsVolume[i] = Interpolation.EvaluateAllAt(Nodes, gaussPointsBulk[i].Coordinates);
+			}
+
+			// Create and cache materials at integration points.
+			this.materialsAtGPsBulk = new IContinuumMaterial[numPointsVolume];
+			IContinuumMaterial material = MaterialField.FindMaterialAt(null);
+			for (int i = 0; i < numPointsVolume; ++i)
+			{
+				this.materialsAtGPsBulk[i] = material;
+			}
+		}
+
+		private void ClearIntegrationPointData()
+		{
+			this.gaussPointsBulk = null;
+			this.evalInterpolationsAtGPsVolume = null;
+			this.materialsAtGPsBulk = null;
 		}
 
 		//TODO: This can be used in all XFEM elements

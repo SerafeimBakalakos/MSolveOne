@@ -66,6 +66,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 		[Fact]
 		public static void RunExample()
 		{
+			//HERE: debug this, plot strains/stresses and make sure displacement plots are correct.
 			XModel<IXCrackElement> model = CreatePhysicalModel();
 			CreateGeometryModel(model);
 			SetupEnrichmentOutput(model);
@@ -156,30 +157,31 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 
 		public static void RunAnalysis(XModel<IXCrackElement> model)
 		{
-			for (int t = 0; t < maxIterations; ++t)
-			{
-				if (t == 0)
-				{
-					model.Initialize();
-				}
-				else
-				{
-					model.Update(null, null);
-				}
-			}
+			//for (int t = 0; t < maxIterations; ++t)
+			//{
+			//	if (t == 0)
+			//	{
+			//		model.Initialize();
+			//	}
+			//	else
+			//	{
+			//		model.Update(null, null);
+			//	}
+			//}
 
-			//// Solver
-			//var factory = new SkylineSolver.Factory();
-			//GlobalAlgebraicModel<SkylineMatrix> algebraicModel = factory.BuildAlgebraicModel(model);
-			//var solver = factory.BuildSolver(algebraicModel);
+			// Solver
+			var factory = new SkylineSolver.Factory();
+			GlobalAlgebraicModel<SkylineMatrix> algebraicModel = factory.BuildAlgebraicModel(model);
+			var solver = factory.BuildSolver(algebraicModel);
 
-			//var domainBoundary = new RectangularDomainBoundary(minCoords, maxCoords);
-			//var termination = new TerminationLogic.Or(
-			//	new FractureToughnessTermination(fractureToughness),
-			//	new CrackExitsDomainTermination(domainBoundary));
-			//var analyzer = new QuasiStaticLefmAnalyzer(model, algebraicModel, solver, maxIterations, termination);
+			var domainBoundary = new RectangularDomainBoundary(minCoords, maxCoords);
+			var termination = new TerminationLogic.Or(
+				new FractureToughnessTermination(fractureToughness),
+				new CrackExitsDomainTermination(domainBoundary));
+			var analyzer = new QuasiStaticLefmAnalyzer(model, algebraicModel, solver, maxIterations, termination);
+			analyzer.Results.Add(new DisplacementFieldWriter(model, outputDirectory));
 
-			//analyzer.Analyze();
+			analyzer.Analyze();
 		}
 
 		public static void SetupEnrichmentOutput(XModel<IXCrackElement> model)

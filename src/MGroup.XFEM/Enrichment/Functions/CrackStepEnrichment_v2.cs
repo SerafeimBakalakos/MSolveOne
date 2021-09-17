@@ -26,11 +26,11 @@ namespace MGroup.XFEM.Enrichment.Functions
 			double phi = levelSets[0];
 			if (phi >= 0)
 			{
-				return new EvaluatedFunction(+1, new double[2]);
+				return new EvaluatedFunction(+1, new double[point.Dimension]);
 			}
 			else
 			{
-				return new EvaluatedFunction(-1, new double[2]);
+				return new EvaluatedFunction(-1, new double[point.Dimension]);
 			}
 		}
 

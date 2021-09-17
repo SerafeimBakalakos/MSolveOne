@@ -40,7 +40,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 {
 	public static class EdgeCrack2D
 	{
-		private const bool useHybridCrack = false;
+		private const bool useHybridCrack = true;
 		private static string OutputDirectory 
 		{ 
 			get
