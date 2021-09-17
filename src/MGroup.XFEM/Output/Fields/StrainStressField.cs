@@ -26,11 +26,11 @@ namespace MGroup.XFEM.Output.Fields
 		private const double offsetTol = 1E-6;
 
 		private readonly int dimension;
-		private readonly XModel<IXMultiphaseElement> model;
+		private readonly IXModel model;
 		private readonly IAlgebraicModel algebraicModel;
 		private readonly ConformingOutputMesh outMesh;
 
-		public StrainStressField(XModel<IXMultiphaseElement> model, IAlgebraicModel algebraicModel, ConformingOutputMesh outMesh)
+		public StrainStressField(IXModel model, IAlgebraicModel algebraicModel, ConformingOutputMesh outMesh)
 		{
 			this.model = model;
 			this.algebraicModel = algebraicModel;
@@ -40,12 +40,11 @@ namespace MGroup.XFEM.Output.Fields
 
 		public (Dictionary<int, double[]> strains, Dictionary<int, double[]> stresses) CalcTensorsAtVertices(IGlobalVector solution)
 		{
-			if (model.Subdomains.Count != 1) throw new NotImplementedException();
-			XSubdomain<IXMultiphaseElement> subdomain = model.Subdomains.First().Value;
+			if (model.NumSubdomains != 1) throw new NotImplementedException();
 
 			var outStrainTensors = new Dictionary<int, double[]>();
 			var outStressTensors = new Dictionary<int, double[]>();
-			foreach (IXStructuralMultiphaseElement element in subdomain.Elements)
+			foreach (IXFiniteElement element in model.EnumerateElements())
 			{
 				IList<double[]> elementDisplacements = Utilities.ElementVectorToNodalVectors(element,
 						algebraicModel.ExtractElementVector(solution, element));
@@ -283,7 +282,7 @@ namespace MGroup.XFEM.Output.Fields
 
 		//TODO: Investigate using Bstd, Benr
 		public static (double[] strains, double[] stresss) CalcStrainsStressesAt(XPoint point,
-			IXStructuralMultiphaseElement element, IList<double[]> elementDisplacements, 
+			IXFiniteElement element, IList<double[]> elementDisplacements, 
 			IEnumerable<IEnrichmentFunction> elementEnrichments)
 		{
 			int dimension = point.Dimension;
@@ -301,8 +300,22 @@ namespace MGroup.XFEM.Output.Fields
 			else throw new NotImplementedException();
 
 			// Material
-			IPhase phase = element.FindPhaseAt(point);
-			IContinuumMaterial material = element.MaterialField.FindMaterialAt(phase);
+			//TODO: Do this in an OOP way. The element should expose a method that returns the material for a point or a 
+			//		material field that can do that.
+			IContinuumMaterial material;
+			if (element is IXStructuralMultiphaseElement multiphaseElement)
+			{
+				IPhase phase = multiphaseElement.FindPhaseAt(point);
+				material = multiphaseElement.MaterialField.FindMaterialAt(phase);
+			}
+			else if (element is IXCrackElement crackElement)
+			{
+				material = crackElement.MaterialField.FindMaterialAt(point);
+			}
+			else
+			{
+				throw new NotImplementedException();
+			}
 
 			// Stresses
 			double[] stresses = material.ConstitutiveMatrix.Multiply(strains);
@@ -310,7 +323,7 @@ namespace MGroup.XFEM.Output.Fields
 			return (strains, stresses);
 		}
 
-		public static XPoint PreparePoint(double[] pointNatural, IXStructuralMultiphaseElement element)
+		public static XPoint PreparePoint(double[] pointNatural, IXFiniteElement element)
 		{
 			int dimension = pointNatural.Length;
 			var point = new XPoint(dimension);
@@ -319,6 +332,7 @@ namespace MGroup.XFEM.Output.Fields
 			EvalInterpolation interpolation = element.Interpolation.EvaluateAllAt(element.Nodes, pointNatural);
 			point.ShapeFunctions = interpolation.ShapeFunctions;
 			point.ShapeFunctionDerivatives = interpolation.ShapeGradientsCartesian;
+			point.JacobianNaturalGlobal = interpolation.Jacobian;
 			return point;
 		}
 	}

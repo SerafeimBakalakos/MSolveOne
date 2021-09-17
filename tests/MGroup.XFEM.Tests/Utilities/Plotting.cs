@@ -47,7 +47,7 @@ namespace MGroup.XFEM.Tests.Utilities
 
 				var displacementField = new DisplacementField(model, algebraicModel, conformingMesh);
 				Dictionary<int, double[]> nodalDisplacements = displacementField.CalcValuesAtVertices(solution);
-				writer.WriteVector2DField("displacements", conformingMesh, v => nodalDisplacements[v.ID]);
+				writer.WriteVectorField("displacements", model.Dimension, conformingMesh, v => nodalDisplacements[v.ID]);
 
 				var strainStressField = new StrainStressField(model, algebraicModel, conformingMesh);
 				(Dictionary<int, double[]> strains, Dictionary<int, double[]> stresses) 

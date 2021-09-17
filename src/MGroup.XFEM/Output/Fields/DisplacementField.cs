@@ -22,11 +22,11 @@ namespace MGroup.XFEM.Output.Fields
 		private const double offsetTol = 1E-6;
 
 		private readonly int dimension;
-		private readonly XModel<IXMultiphaseElement> model;
+		private readonly IXModel model;
 		private readonly IAlgebraicModel algebraicModel;
 		private readonly ConformingOutputMesh outMesh;
 
-		public DisplacementField(XModel<IXMultiphaseElement> model, IAlgebraicModel algebraicModel, ConformingOutputMesh outMesh)
+		public DisplacementField(IXModel model, IAlgebraicModel algebraicModel, ConformingOutputMesh outMesh)
 		{
 			this.model = model;
 			this.algebraicModel = algebraicModel;
@@ -37,7 +37,7 @@ namespace MGroup.XFEM.Output.Fields
 		public Dictionary<int, double[]> CalcValuesAtVertices(IGlobalVector solution)
 		{
 			var outDisplacements = new Dictionary<int, double[]>();
-			foreach (IXFiniteElement element in model.Elements.Values)
+			foreach (IXFiniteElement element in model.EnumerateElements())
 			{
 				IEnumerable<ConformingOutputMesh.Subcell> subtriangles = outMesh.GetSubcellsForOriginal(element);
 				if (subtriangles.Count() == 0)

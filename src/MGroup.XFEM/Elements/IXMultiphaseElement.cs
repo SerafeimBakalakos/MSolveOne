@@ -12,8 +12,6 @@ namespace MGroup.XFEM.Elements
 {
     public interface IXMultiphaseElement : IXFiniteElement
     {
-        IReadOnlyList<GaussPoint> BulkIntegrationPoints { get; } //TODO: This should probably be in IXFiniteElement
-
         //TODO: This should probably be in IXFiniteElement.
         //TODO: This is only used for cohesive interfaces. Otherwise their computation is avoided. Not the best design.
         IReadOnlyList<GaussPoint> BoundaryIntegrationPoints { get; }

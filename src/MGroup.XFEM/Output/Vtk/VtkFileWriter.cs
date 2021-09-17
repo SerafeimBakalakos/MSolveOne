@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using MGroup.XFEM.Output.Mesh;
@@ -82,8 +83,9 @@ namespace MGroup.XFEM.Output.Vtk
 			writer.WriteLine();
 		}
 
-		public void WriteTensor2DField(string fieldName, IReadOnlyList<double[]> tensorsAtVertices)
+		public void WriteTensor2DField(string fieldName, int dimension, IReadOnlyList<double[]> tensorsAtVertices)
 		{
+			Debug.Assert(dimension == 2 || dimension == 3);
 			WriteFieldsHeader(tensorsAtVertices.Count);
 
 			// Component 11
@@ -192,6 +194,47 @@ namespace MGroup.XFEM.Output.Vtk
 			writer.WriteLine();
 		}
 
+		public void WriteTensor3DField(string fieldName, IOutputMesh mesh, Func<VtkPoint, double[]> getTensorValues)
+		{
+			WriteFieldsHeader(mesh.NumOutVertices);
+
+			// Component 11
+			writer.WriteLine($"SCALARS {fieldName}_11 double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (VtkPoint vertex in mesh.OutVertices) writer.WriteLine(getTensorValues(vertex)[0]);
+			writer.WriteLine();
+
+			// Component 22
+			writer.WriteLine($"SCALARS {fieldName}_22 double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (VtkPoint vertex in mesh.OutVertices) writer.WriteLine(getTensorValues(vertex)[1]);
+			writer.WriteLine();
+
+			// Component 33
+			writer.WriteLine($"SCALARS {fieldName}_33 double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (VtkPoint vertex in mesh.OutVertices) writer.WriteLine(getTensorValues(vertex)[2]);
+			writer.WriteLine();
+
+			// Component 12
+			writer.WriteLine($"SCALARS {fieldName}_12 double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (VtkPoint vertex in mesh.OutVertices) writer.WriteLine(getTensorValues(vertex)[3]);
+			writer.WriteLine();
+
+			// Component 23
+			writer.WriteLine($"SCALARS {fieldName}_23 double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (VtkPoint vertex in mesh.OutVertices) writer.WriteLine(getTensorValues(vertex)[4]);
+			writer.WriteLine();
+
+			// Component 13
+			writer.WriteLine($"SCALARS {fieldName}_13 double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (VtkPoint vertex in mesh.OutVertices) writer.WriteLine(getTensorValues(vertex)[5]);
+			writer.WriteLine();
+		}
+
 		public void WriteVector2DField(string fieldName, IOutputMesh mesh, IEnumerable<double[]> vectorsAtVertices)
 		{
 			WriteFieldsHeader(mesh.NumOutVertices);
@@ -200,48 +243,54 @@ namespace MGroup.XFEM.Output.Vtk
 			writer.WriteLine();
 		}
 
-		public void WriteVector2DField(string fieldName, IOutputMesh mesh, Func<VtkPoint, double[]> getVectorValue)
+		public void WriteVectorField(string fieldName, int dimension, IOutputMesh mesh, Func<VtkPoint, double[]> getVectorValue)
 		{
 			WriteFieldsHeader(mesh.NumOutVertices);
 			writer.WriteLine($"VECTORS {fieldName} double");
-			foreach (VtkPoint vertex in mesh.OutVertices)
+			if (dimension == 2)
 			{
-				double[] vector = getVectorValue(vertex);
-				writer.WriteLine($"{vector[0]} {vector[1]} 0.0");
+				foreach (VtkPoint vertex in mesh.OutVertices)
+				{
+					double[] vector = getVectorValue(vertex);
+					writer.WriteLine($"{vector[0]} {vector[1]} 0.0");
+				}
+			}
+			else if (dimension == 3)
+			{
+				foreach (VtkPoint vertex in mesh.OutVertices)
+				{
+					double[] vector = getVectorValue(vertex);
+					writer.WriteLine($"{vector[0]} {vector[1]} {vector[2]}");
+				}
+			}
+			else
+			{
+				throw new ArgumentException("Dimension must be 2 or 3");
 			}
 			writer.WriteLine();
 		}
 
-		public void WriteVector2DField(string fieldName, IReadOnlyList<double[]> vectorsAtVertices)
+		public void WriteVectorField(string fieldName, int dimension, IReadOnlyList<double[]> vectorsAtVertices)
 		{
 			WriteFieldsHeader(vectorsAtVertices.Count);
 			writer.WriteLine($"VECTORS {fieldName} double");
-			for (int i = 0; i < vectorsAtVertices.Count; ++i)
+			if (dimension == 2)
 			{
-				writer.WriteLine($"{vectorsAtVertices[i][0]} {vectorsAtVertices[i][1]} 0.0");
+				for (int i = 0; i < vectorsAtVertices.Count; ++i)
+				{
+					writer.WriteLine($"{vectorsAtVertices[i][0]} {vectorsAtVertices[i][1]} 0.0");
+				}
 			}
-			writer.WriteLine();
-		}
-
-		public void WriteVector3DField(string fieldName, IReadOnlyList<double[]> vectorsAtVertices)
-		{
-			WriteFieldsHeader(vectorsAtVertices.Count);
-			writer.WriteLine($"VECTORS {fieldName} double");
-			for (int i = 0; i < vectorsAtVertices.Count; ++i)
+			else if (dimension == 3)
 			{
-				writer.WriteLine($"{vectorsAtVertices[i][0]} {vectorsAtVertices[i][1]} {vectorsAtVertices[i][2]}");
+				for (int i = 0; i < vectorsAtVertices.Count; ++i)
+				{
+					writer.WriteLine($"{vectorsAtVertices[i][0]} {vectorsAtVertices[i][1]} {vectorsAtVertices[i][2]}");
+				}
 			}
-			writer.WriteLine();
-		}
-
-		public void WriteVector3DField(string fieldName, IOutputMesh mesh, Func<VtkPoint, double[]> getVectorValue)
-		{
-			WriteFieldsHeader(mesh.NumOutVertices);
-			writer.WriteLine($"VECTORS {fieldName} double");
-			foreach (VtkPoint vertex in mesh.OutVertices)
+			else
 			{
-				double[] vector = getVectorValue(vertex);
-				writer.WriteLine($"{vector[0]} {vector[1]} {vector[2]}");
+				throw new ArgumentException("Dimension must be 2 or 3");
 			}
 			writer.WriteLine();
 		}

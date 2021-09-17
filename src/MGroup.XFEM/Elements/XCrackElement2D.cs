@@ -74,6 +74,8 @@ namespace MGroup.XFEM.Elements
 			(this.Edges, this.Faces) = elementGeometry.FindEdgesFaces(nodeIDs);
 		}
 
+		public IReadOnlyList<GaussPoint> BulkIntegrationPoints => gaussPointsBulk;
+
 		public CellType CellType => Interpolation.CellType;
 
 		public IElementSubcell[] ConformingSubcells { get; set; }

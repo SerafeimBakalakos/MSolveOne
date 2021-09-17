@@ -8,14 +8,16 @@ using MGroup.MSolve.Solution.AlgebraicModel;
 
 namespace MGroup.XFEM.Entities
 {
-    public interface IXModel : IModel
-    {
-        Dictionary<int, XNode> Nodes { get; }
+	public interface IXModel : IModel
+	{
+		int Dimension { get; }
 
-        IEnumerable<IXFiniteElement> EnumerateElements();
+		Dictionary<int, XNode> Nodes { get; }
 
-        void Initialize();
+		IEnumerable<IXFiniteElement> EnumerateElements();
 
-        void Update(IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs);
-    }
+		void Initialize();
+
+		void Update(IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs);
+	}
 }

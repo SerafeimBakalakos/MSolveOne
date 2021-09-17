@@ -188,6 +188,58 @@ namespace MGroup.XFEM.Output.Vtk
 			writer.WriteLine();
 		}
 
+		public void WriteTensor3DField(string fieldName, IReadOnlyDictionary<double[], double[]> pointTensors)
+		{
+			// Points
+			writer.WriteLine("DATASET UNSTRUCTURED_GRID");
+			writer.WriteLine($"POINTS {pointTensors.Count} double");
+			foreach (double[] point in pointTensors.Keys)
+			{
+				if (point.Length == 2) writer.WriteLine($"{point[0]} {point[1]} 0.0");
+				else if (point.Length == 3) writer.WriteLine($"{point[0]} {point[1]} {point[2]}");
+				else throw new NotImplementedException();
+			}
+
+			// Values
+			writer.Write("\n\n");
+			writer.WriteLine($"POINT_DATA {pointTensors.Count}");
+			// Component 11
+			writer.WriteLine($"SCALARS {fieldName}_11 double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (double[] tensor in pointTensors.Values) writer.WriteLine(tensor[0]);
+			writer.WriteLine();
+
+			// Component 22
+			writer.WriteLine($"SCALARS {fieldName}_22 double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (double[] tensor in pointTensors.Values) writer.WriteLine(tensor[1]);
+			writer.WriteLine();
+
+			// Component 33
+			writer.WriteLine($"SCALARS {fieldName}_33 double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (double[] tensor in pointTensors.Values) writer.WriteLine(tensor[2]);
+			writer.WriteLine();
+
+			// Component 12
+			writer.WriteLine($"SCALARS {fieldName}_12 double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (double[] tensor in pointTensors.Values) writer.WriteLine(tensor[3]);
+			writer.WriteLine();
+
+			// Component 23
+			writer.WriteLine($"SCALARS {fieldName}_23 double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (double[] tensor in pointTensors.Values) writer.WriteLine(tensor[4]);
+			writer.WriteLine();
+
+			// Component 13
+			writer.WriteLine($"SCALARS {fieldName}_13 double 1");
+			writer.WriteLine("LOOKUP_TABLE default");
+			foreach (double[] tensor in pointTensors.Values) writer.WriteLine(tensor[5]);
+			writer.WriteLine();
+		}
+
 		public void WriteVectorField(string fieldName, IReadOnlyDictionary<double[], double[]> pointVectors)
 		{
 			// Points

@@ -13,6 +13,7 @@ using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Cracks.PropagationTermination;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
+using MGroup.XFEM.Output.Writers;
 
 namespace MGroup.XFEM.Analysis
 {
@@ -37,6 +38,8 @@ namespace MGroup.XFEM.Analysis
 			this.reanalysis = reanalysis;
 			this.elementMatrixProvider = new ElementStructuralStiffnessProvider();
 		}
+
+		public List<IResultsWriter> Results { get; } = new List<IResultsWriter>();
 
 		public string Status { get; private set; } = "Preparing";
 
@@ -88,6 +91,10 @@ namespace MGroup.XFEM.Analysis
 				// Solve the linear system
 				solver.Solve();
 				totalDisplacementsFreeDofs = solver.LinearSystem.Solution;
+				foreach (IResultsWriter writer in Results)
+				{
+					writer.WriteResults(algebraicModel, totalDisplacementsFreeDofs);
+				}
 			}
 			Status = $"Termination after all {maxIterations} required iterations completed.";
 		}

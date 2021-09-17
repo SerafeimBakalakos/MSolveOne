@@ -40,7 +40,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 {
 	public static class EdgeCrack2D
 	{
-		private const bool useHybridCrack = true;
+		private const bool useHybridCrack = false;
 		private static string OutputDirectory 
 		{ 
 			get
@@ -188,6 +188,8 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 				new FractureToughnessTermination(fractureToughness),
 				new CrackExitsDomainTermination(domainBoundary));
 			var analyzer = new QuasiStaticLefmAnalyzer(model, algebraicModel, solver, maxIterations, termination);
+			analyzer.Results.Add(new DisplacementFieldWriter(model, OutputDirectory));
+			analyzer.Results.Add(new StrainStressFieldWriter(model, OutputDirectory));
 
 			analyzer.Analyze();
 		}

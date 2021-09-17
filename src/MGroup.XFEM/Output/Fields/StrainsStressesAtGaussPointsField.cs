@@ -15,10 +15,10 @@ namespace MGroup.XFEM.Output.Fields
 {
 	public class StrainsStressesAtGaussPointsField
 	{
-		private readonly XModel<IXMultiphaseElement> model;
+		private readonly IXModel model;
 		private readonly IAlgebraicModel algebraicModel;
 
-		public StrainsStressesAtGaussPointsField(XModel<IXMultiphaseElement> model, IAlgebraicModel algebraicModel)
+		public StrainsStressesAtGaussPointsField(IXModel model, IAlgebraicModel algebraicModel)
 		{
 			this.model = model;
 			this.algebraicModel = algebraicModel;
@@ -27,12 +27,11 @@ namespace MGroup.XFEM.Output.Fields
 		public (Dictionary<double[], double[]> strains, Dictionary<double[], double[]> stresses) 
 			CalcTensorsAtPoints(IGlobalVector solution)
 		{
-			if (model.Subdomains.Count != 1) throw new NotImplementedException();
-			XSubdomain<IXMultiphaseElement> subdomain = model.Subdomains.First().Value;
+			if (model.NumSubdomains != 1) throw new NotImplementedException();
 
 			var allStrains = new Dictionary<double[], double[]>();
 			var allStresses = new Dictionary<double[], double[]>();
-			foreach (IXStructuralMultiphaseElement element in model.Elements.Values)
+			foreach (IXFiniteElement element in model.EnumerateElements())
 			{
 				IList<double[]> elementDisplacements = Utilities.ElementVectorToNodalVectors(element,
 						algebraicModel.ExtractElementVector(solution, element));

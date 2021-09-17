@@ -15,6 +15,8 @@ namespace MGroup.XFEM.Elements
 {
 	public interface IXFiniteElement : IElement, IElementType
 	{
+		IReadOnlyList<GaussPoint> BulkIntegrationPoints { get; } //TODO: This should probably be in IXFiniteElement
+
 		/// <summary>
 		/// Will be null for elements not intersected by any interfaces
 		/// </summary>
