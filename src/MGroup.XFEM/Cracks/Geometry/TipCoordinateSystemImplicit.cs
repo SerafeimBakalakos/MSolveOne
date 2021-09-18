@@ -37,7 +37,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 			Matrix jacobianLevelSet2Polar = CalcJacobianLevelSet2Polar(point);
 			Matrix jacobianGlobal2Polar = 
 				jacobianLevelSet2Polar * jacobianNatural2LevelSet * point.JacobianNaturalGlobal.InverseMatrix;
-			return jacobianGlobal2Polar.Multiply(gradientPolar);
+			return jacobianGlobal2Polar.Multiply(gradientPolar, true);
 		}
 
 		/// <remarks>
