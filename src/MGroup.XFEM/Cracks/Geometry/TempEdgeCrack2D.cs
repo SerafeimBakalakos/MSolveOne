@@ -21,7 +21,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 	public class TempEdgeCrack2D : ICrack
 	{
 		public readonly CrackCurve2D hybridGeometry;
-		private readonly TipCoordinateSystemImplicit TipCoordinateSystem;
+		public readonly TipCoordinateSystemImplicit hybridTipCoordinateSystem;
 
 		private readonly List<double[]> crackPath; //TODO: should this also be stored in the pure geometry class?
 		private readonly PolyLine2D initialCrack;
@@ -33,7 +33,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 			XModel<IXCrackElement> model, IPropagatorOLD propagator)
 		{
 			this.hybridGeometry = hybridGeometry;
-			this.TipCoordinateSystem = new TipCoordinateSystemImplicit(hybridGeometry);
+			this.hybridTipCoordinateSystem = new TipCoordinateSystemImplicit(hybridGeometry);
 
 			this.ID = id;
 			this.initialCrack = initialCrack;
@@ -96,10 +96,10 @@ namespace MGroup.XFEM.Cracks.Geometry
 			//TODO: For problems other than LEFM, use Abstract Factory pattern for tip enrichments, materials, propagators, etc.
 			ICrackTipEnrichment[] tipEnrichmentFuncs =
 			{
-				new IsotropicBrittleTipEnrichments_v2.Func0(TipCoordinateSystem),
-				new IsotropicBrittleTipEnrichments_v2.Func1(TipCoordinateSystem),
-				new IsotropicBrittleTipEnrichments_v2.Func2(TipCoordinateSystem),
-				new IsotropicBrittleTipEnrichments_v2.Func3(TipCoordinateSystem)
+				new IsotropicBrittleTipEnrichments_v2.Func0(hybridTipCoordinateSystem),
+				new IsotropicBrittleTipEnrichments_v2.Func1(hybridTipCoordinateSystem),
+				new IsotropicBrittleTipEnrichments_v2.Func2(hybridTipCoordinateSystem),
+				new IsotropicBrittleTipEnrichments_v2.Func3(hybridTipCoordinateSystem)
 			};
 			var tipEnrichedDofs = new List<IDofType>(4 * Dimension);
 			for (int i = 0; i < tipEnrichmentFuncs.Length; ++i)

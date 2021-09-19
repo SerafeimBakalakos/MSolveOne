@@ -12,7 +12,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	/// </summary>
 	public enum CrackedDomainRegion
 	{
-		Omega1, Omega2, Omega3, Omega4
+		Omega1 = 1, Omega2 = 2, Omega3 = 3, Omega4 = 4
 	}
 
 	public static class AuxiliaryCoordinateSystems
@@ -42,6 +42,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		}
 
 		/// <summary>
+		/// WARNING: This is correct only if <paramref name="tripleLevelSetsOfPoint"/> are calculated from the explicit 
+		/// description. Interpolating the level sets will cause gross errors.
 		/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 		/// section 5.1
 		/// </summary>

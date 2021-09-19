@@ -124,6 +124,8 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 				crack.Observers.Add(new CrackLevelSetPlotter_v2(model, crack.hybridGeometry, OutputDirectory));
 				crack.Observers.Add(new CrackInteractingElementsPlotter(crack, OutputDirectory));
 				geometryModel.Cracks[crack.ID] = crack;
+				model.ModelObservers.Add(new CoordinatesAtGaussPointsPlotter(
+					model, crack.hybridGeometry, crack.hybridTipCoordinateSystem, OutputDirectory));
 			}
 		}
 
@@ -152,7 +154,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 
 			// Materials, integration
 			var material = new HomogeneousFractureMaterialField2D(E, v, thickness, planeStress);
-			var enrichedIntegration = new IntegrationWithNonconformingQuads2D(16, GaussLegendre2D.GetQuadratureWithOrder(2, 2));
+			var enrichedIntegration = new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(2, 2));
 			var bulkIntegration = new CrackElementIntegrationStrategy(
 				enrichedIntegration, enrichedIntegration, enrichedIntegration);
 			var factory = new XCrackElementFactory2D(material, thickness, bulkIntegration);
@@ -188,8 +190,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 				new FractureToughnessTermination(fractureToughness),
 				new CrackExitsDomainTermination(domainBoundary));
 			var analyzer = new QuasiStaticLefmAnalyzer(model, algebraicModel, solver, maxIterations, termination);
-			analyzer.Results.Add(new DisplacementFieldWriter(model, OutputDirectory));
-			analyzer.Results.Add(new StrainStressFieldWriter(model, OutputDirectory));
+			analyzer.Results.Add(new StructuralFieldWriter(model, OutputDirectory));
 
 			analyzer.Analyze();
 		}

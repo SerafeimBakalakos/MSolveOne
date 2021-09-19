@@ -117,7 +117,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 
 			// Materials, integration
 			var material = new HomogeneousFractureMaterialField3D(E, v);
-			var enrichedIntegration = new IntegrationWithNonconformingHexa3D(16, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2));
+			var enrichedIntegration = new IntegrationWithNonconformingHexa3D(8, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2));
 			var bulkIntegration = new CrackElementIntegrationStrategy(
 				enrichedIntegration, enrichedIntegration, enrichedIntegration);
 			var factory = new XCrackElementFactory3D(material, bulkIntegration);
@@ -146,7 +146,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			
 			XNode[] bottomLeftNodes = model.Nodes.Values.Where(
 				n => Math.Abs(n.X - minCoords[0]) <= tol && Math.Abs(n.Y - minCoords[1]) <= tol).ToArray();
-			foreach (XNode node in topLeftNodes)
+			foreach (XNode node in bottomLeftNodes)
 			{
 				model.NodalLoads.Add(
 					new Load() { Node = node, DOF = StructuralDof.TranslationY, Amount = -load / bottomLeftNodes.Length });
@@ -170,16 +170,18 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			//}
 
 			// Solver
-			var factory = new SkylineSolver.Factory();
-			GlobalAlgebraicModel<SkylineMatrix> algebraicModel = factory.BuildAlgebraicModel(model);
+			//var factory = new SkylineSolver.Factory();
+			var factory = new SuiteSparseSolver.Factory();
+			var algebraicModel = factory.BuildAlgebraicModel(model);
 			var solver = factory.BuildSolver(algebraicModel);
+
 
 			var domainBoundary = new RectangularDomainBoundary(minCoords, maxCoords);
 			var termination = new TerminationLogic.Or(
 				new FractureToughnessTermination(fractureToughness),
 				new CrackExitsDomainTermination(domainBoundary));
 			var analyzer = new QuasiStaticLefmAnalyzer(model, algebraicModel, solver, maxIterations, termination);
-			analyzer.Results.Add(new DisplacementFieldWriter(model, outputDirectory));
+			analyzer.Results.Add(new StructuralFieldWriter(model, outputDirectory));
 
 			analyzer.Analyze();
 		}
