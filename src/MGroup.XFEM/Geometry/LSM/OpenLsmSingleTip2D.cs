@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -173,8 +173,8 @@ namespace MGroup.XFEM.Geometry.LSM
             double gradientY = 0.0;
             for (int n = 0; n < nodes.Count; ++n)
             {
-                double dNdx = point.ShapeFunctionDerivatives[n, 0];
-                double dNdy = point.ShapeFunctionDerivatives[n, 1];
+                double dNdx = point.ShapeFunctionDerivativesGlobal[n, 0];
+                double dNdy = point.ShapeFunctionDerivativesGlobal[n, 1];
 
                 double levelSet = LevelSetsBody[nodes[n].ID];
                 gradientX += dNdx * levelSet;

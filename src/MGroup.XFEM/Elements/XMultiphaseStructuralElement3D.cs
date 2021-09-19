@@ -270,7 +270,7 @@ namespace MGroup.XFEM.Elements
 					point.Element = this;
 					point.Coordinates[CoordinateSystem.ElementNatural] = gaussPointsBulk[i].Coordinates;
 					point.ShapeFunctions = evalInterpolationsAtGPsBulk[i].ShapeFunctions;
-					point.ShapeFunctionDerivatives = evalInterpolationsAtGPsBulk[i].ShapeGradientsCartesian;
+					point.ShapeFunctionDerivativesGlobal = evalInterpolationsAtGPsBulk[i].ShapeGradientsGlobal;
 					IPhase phase = this.FindPhaseAt(point);
 					point.PhaseID = phase.ID;
 					this.phasesAtGPsVolume[i] = phase;
@@ -342,7 +342,7 @@ namespace MGroup.XFEM.Elements
 				var gaussPointAlt = new XPoint(dim);
 				gaussPointAlt.Element = this;
 				gaussPointAlt.ShapeFunctions = evalInterpolation.ShapeFunctions;
-				gaussPointAlt.ShapeFunctionDerivatives = evalInterpolationsAtGPsBulk[i].ShapeGradientsCartesian;
+				gaussPointAlt.ShapeFunctionDerivativesGlobal = evalInterpolationsAtGPsBulk[i].ShapeGradientsGlobal;
 
 				double dV = evalInterpolation.Jacobian.DirectDeterminant;
 
@@ -425,9 +425,9 @@ namespace MGroup.XFEM.Elements
 			for (int nodeIdx = 0; nodeIdx < Nodes.Count; ++nodeIdx)
 			{
 				double N = evaluatedInterpolation.ShapeFunctions[nodeIdx];
-				double dNdx = evaluatedInterpolation.ShapeGradientsCartesian[nodeIdx, 0];
-				double dNdy = evaluatedInterpolation.ShapeGradientsCartesian[nodeIdx, 1];
-				double dNdz = evaluatedInterpolation.ShapeGradientsCartesian[nodeIdx, 2];
+				double dNdx = evaluatedInterpolation.ShapeGradientsGlobal[nodeIdx, 0];
+				double dNdy = evaluatedInterpolation.ShapeGradientsGlobal[nodeIdx, 1];
+				double dNdz = evaluatedInterpolation.ShapeGradientsGlobal[nodeIdx, 2];
 
 				foreach (var enrichmentValuePair in Nodes[nodeIdx].EnrichmentFuncs)
 				{
@@ -482,9 +482,9 @@ namespace MGroup.XFEM.Elements
 				int col1 = 3 * nodeIdx + 1;
 				int col2 = 3 * nodeIdx + 2;
 
-				double dNdx = evalInterpolation.ShapeGradientsCartesian[nodeIdx, 0];
-				double dNdy = evalInterpolation.ShapeGradientsCartesian[nodeIdx, 1];
-				double dNdz = evalInterpolation.ShapeGradientsCartesian[nodeIdx, 2];
+				double dNdx = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 0];
+				double dNdy = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 1];
+				double dNdz = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 2];
 
 				deformation[0, col0] = dNdx;
 				deformation[1, col1] = dNdy;

@@ -268,7 +268,7 @@ namespace MGroup.XFEM.Elements
 					point.Element = this;
 					point.Coordinates[CoordinateSystem.ElementNatural] = gaussPointsBulk[i].Coordinates;
 					point.ShapeFunctions = evalInterpolationsAtGPsBulk[i].ShapeFunctions;
-					point.ShapeFunctionDerivatives = evalInterpolationsAtGPsBulk[i].ShapeGradientsCartesian;
+					point.ShapeFunctionDerivativesGlobal = evalInterpolationsAtGPsBulk[i].ShapeGradientsGlobal;
 					IPhase phase = this.FindPhaseAt(point);
 					point.PhaseID = phase.ID;
 					this.phasesAtGPsVolume[i] = phase;
@@ -340,7 +340,7 @@ namespace MGroup.XFEM.Elements
 				var gaussPointAlt = new XPoint(dim);
 				gaussPointAlt.Element = this;
 				gaussPointAlt.ShapeFunctions = evalInterpolation.ShapeFunctions;
-				gaussPointAlt.ShapeFunctionDerivatives = evalInterpolationsAtGPsBulk[i].ShapeGradientsCartesian;
+				gaussPointAlt.ShapeFunctionDerivativesGlobal = evalInterpolationsAtGPsBulk[i].ShapeGradientsGlobal;
 
 				double dV = evalInterpolation.Jacobian.DirectDeterminant * Thickness;
 
@@ -423,8 +423,8 @@ namespace MGroup.XFEM.Elements
 			for (int nodeIdx = 0; nodeIdx < Nodes.Count; ++nodeIdx)
 			{
 				double N = evaluatedInterpolation.ShapeFunctions[nodeIdx];
-				double dNdx = evaluatedInterpolation.ShapeGradientsCartesian[nodeIdx, 0];
-				double dNdy = evaluatedInterpolation.ShapeGradientsCartesian[nodeIdx, 1];
+				double dNdx = evaluatedInterpolation.ShapeGradientsGlobal[nodeIdx, 0];
+				double dNdy = evaluatedInterpolation.ShapeGradientsGlobal[nodeIdx, 1];
 
 				foreach (var enrichmentValuePair in Nodes[nodeIdx].EnrichmentFuncs)
 				{
@@ -469,8 +469,8 @@ namespace MGroup.XFEM.Elements
 				int col0 = 2 * nodeIdx;
 				int col1 = 2 * nodeIdx + 1;
 
-				double dNdx = evalInterpolation.ShapeGradientsCartesian[nodeIdx, 0];
-				double dNdy = evalInterpolation.ShapeGradientsCartesian[nodeIdx, 1];
+				double dNdx = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 0];
+				double dNdy = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 1];
 				deformation[0, col0] = dNdx;
 				deformation[1, col1] = dNdy;
 				deformation[2, col0] = dNdy;

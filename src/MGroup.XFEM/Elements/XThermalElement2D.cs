@@ -245,7 +245,7 @@ namespace MGroup.XFEM.Elements
 					point.Element = this;
 					point.Coordinates[CoordinateSystem.ElementNatural] = gaussPointsBulk[i].Coordinates;
 					point.ShapeFunctions = evalInterpolationsAtGPsBulk[i].ShapeFunctions;
-					point.ShapeFunctionDerivatives = evalInterpolationsAtGPsBulk[i].ShapeGradientsCartesian;
+					point.ShapeFunctionDerivativesGlobal = evalInterpolationsAtGPsBulk[i].ShapeGradientsGlobal;
 					IPhase phase = this.FindPhaseAt(point);
 					point.PhaseID = phase.ID;
 					this.phasesAtGPsBulk[i] = phase;
@@ -314,7 +314,7 @@ namespace MGroup.XFEM.Elements
 				gaussPointAlt.Element = this;
 				gaussPointAlt.Coordinates[CoordinateSystem.ElementNatural] = gaussPoint.Coordinates;
 				gaussPointAlt.ShapeFunctions = evalInterpolation.ShapeFunctions;
-				gaussPointAlt.ShapeFunctionDerivatives = evalInterpolationsAtGPsBulk[i].ShapeGradientsCartesian;
+				gaussPointAlt.ShapeFunctionDerivativesGlobal = evalInterpolationsAtGPsBulk[i].ShapeGradientsGlobal;
 
 				double dV = evalInterpolation.Jacobian.DirectDeterminant * Thickness;
 
@@ -428,8 +428,8 @@ namespace MGroup.XFEM.Elements
 			int currentColumn = 0;
 			for (int nodeIdx = 0; nodeIdx < Nodes.Count; ++nodeIdx)
 			{
-				double dNdx = evaluatedInterpolation.ShapeGradientsCartesian[nodeIdx, 0];
-				double dNdy = evaluatedInterpolation.ShapeGradientsCartesian[nodeIdx, 1];
+				double dNdx = evaluatedInterpolation.ShapeGradientsGlobal[nodeIdx, 0];
+				double dNdy = evaluatedInterpolation.ShapeGradientsGlobal[nodeIdx, 1];
 
 				foreach (var enrichmentValuePair in Nodes[nodeIdx].EnrichmentFuncs)
 				{
@@ -469,7 +469,7 @@ namespace MGroup.XFEM.Elements
 
 			// The ones stored are [ N1,x N2,x N3,x ... ]. Therefore they need transposing
 			//                     [ N1,y N2,y N3,y ... ]
-			return evalInterpolation.ShapeGradientsCartesian.Transpose();
+			return evalInterpolation.ShapeGradientsGlobal.Transpose();
 		}
 
 		#region delete

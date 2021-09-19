@@ -152,9 +152,9 @@ namespace MGroup.XFEM.Elements
 				double uy = uStd[3 * nodeIdx + 1];
 				double uz = uStd[3 * nodeIdx + 2];
 
-				double dNdx = point.ShapeFunctionDerivatives[nodeIdx, 0];
-				double dNdy = point.ShapeFunctionDerivatives[nodeIdx, 1];
-				double dNdz = point.ShapeFunctionDerivatives[nodeIdx, 2];
+				double dNdx = point.ShapeFunctionDerivativesGlobal[nodeIdx, 0];
+				double dNdy = point.ShapeFunctionDerivativesGlobal[nodeIdx, 1];
+				double dNdz = point.ShapeFunctionDerivativesGlobal[nodeIdx, 2];
 				displacementGradient[0, 0] += dNdx * ux;
 				displacementGradient[0, 1] += dNdy * ux;
 				displacementGradient[0, 2] += dNdz * ux;
@@ -173,9 +173,9 @@ namespace MGroup.XFEM.Elements
 			for (int nodeIdx = 0; nodeIdx < Nodes.Count; ++nodeIdx)
 			{
 				double N = point.ShapeFunctions[nodeIdx];
-				double dNdx = point.ShapeFunctionDerivatives[nodeIdx, 0];
-				double dNdy = point.ShapeFunctionDerivatives[nodeIdx, 1];
-				double dNdz = point.ShapeFunctionDerivatives[nodeIdx, 2];
+				double dNdx = point.ShapeFunctionDerivativesGlobal[nodeIdx, 0];
+				double dNdy = point.ShapeFunctionDerivativesGlobal[nodeIdx, 1];
+				double dNdz = point.ShapeFunctionDerivativesGlobal[nodeIdx, 2];
 
 				foreach (var enrichmentValuePair in Nodes[nodeIdx].EnrichmentFuncs)
 				{
@@ -309,7 +309,7 @@ namespace MGroup.XFEM.Elements
 				var xpoint = new XPoint(3);
 				xpoint.Element = this;
 				xpoint.ShapeFunctions = evalInterpolation.ShapeFunctions;
-				xpoint.ShapeFunctionDerivatives = evalInterpolation.ShapeGradientsCartesian;
+				xpoint.ShapeFunctionDerivativesGlobal = evalInterpolation.ShapeGradientsGlobal;
 				xpoint.JacobianNaturalGlobal = evalInterpolation.Jacobian;
 
 				double dV = evalInterpolation.Jacobian.DirectDeterminant;
@@ -370,9 +370,9 @@ namespace MGroup.XFEM.Elements
 			for (int nodeIdx = 0; nodeIdx < Nodes.Count; ++nodeIdx)
 			{
 				double N = evalInterpolation.ShapeFunctions[nodeIdx];
-				double dNdx = evalInterpolation.ShapeGradientsCartesian[nodeIdx, 0];
-				double dNdy = evalInterpolation.ShapeGradientsCartesian[nodeIdx, 1];
-				double dNdz = evalInterpolation.ShapeGradientsCartesian[nodeIdx, 2];
+				double dNdx = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 0];
+				double dNdy = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 1];
+				double dNdz = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 2];
 
 				foreach (var enrichmentValuePair in Nodes[nodeIdx].EnrichmentFuncs)
 				{
@@ -427,9 +427,9 @@ namespace MGroup.XFEM.Elements
 				int col1 = 3 * nodeIdx + 1;
 				int col2 = 3 * nodeIdx + 2;
 
-				double dNdx = evalInterpolation.ShapeGradientsCartesian[nodeIdx, 0];
-				double dNdy = evalInterpolation.ShapeGradientsCartesian[nodeIdx, 1];
-				double dNdz = evalInterpolation.ShapeGradientsCartesian[nodeIdx, 2];
+				double dNdx = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 0];
+				double dNdy = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 1];
+				double dNdz = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 2];
 
 				deformation[0, col0] = dNdx;
 				deformation[1, col1] = dNdy;

@@ -39,7 +39,7 @@ namespace MGroup.XFEM.Interpolation
             this.ShapeFunctions = shapeFunctions;
             this.ShapeGradientsNatural = shapeGradientsNatural;
             this.Jacobian = jacobian;
-            this.ShapeGradientsCartesian = jacobian.TransformNaturalDerivativesToCartesian(shapeGradientsNatural);
+            this.ShapeGradientsGlobal = jacobian.TransformNaturalDerivativesToCartesian(shapeGradientsNatural);
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace MGroup.XFEM.Interpolation
         /// shape function. Each column corresponds to the derivatives of all shape functions with respect to a single 
         /// coordinate.
         /// </summary>
-        public Matrix ShapeGradientsCartesian { get; }
+        public Matrix ShapeGradientsGlobal { get; }
 
         /// <summary>
         /// A matrix that contains the 1st order shape function derivatives with respect to the natural coordinate 

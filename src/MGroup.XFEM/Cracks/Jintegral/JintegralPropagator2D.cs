@@ -156,7 +156,8 @@ namespace MGroup.XFEM.Cracks.Jintegral
 				point.Element = element;
 				point.Coordinates[CoordinateSystem.ElementNatural] = gp.Coordinates;
 				point.ShapeFunctions = evalInterpolation.ShapeFunctions;
-				point.ShapeFunctionDerivatives = evalInterpolation.ShapeGradientsCartesian;
+				point.ShapeFunctionDerivativesGlobal = evalInterpolation.ShapeGradientsGlobal;
+				point.ShapeFunctionDerivativesNatural = evalInterpolation.ShapeGradientsNatural;
 				point.JacobianNaturalGlobal = evalInterpolation.Jacobian;
 				double[] cartesianCoords = point.MapCoordinates(point.ShapeFunctions, point.Element.Nodes);
 				point.Coordinates[CoordinateSystem.GlobalCartesian] = cartesianCoords;
@@ -181,7 +182,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 				for (int nodeIdx = 0; nodeIdx < element.Nodes.Count; ++nodeIdx)
 				{
 					globalWeightGradient.AxpyIntoThis(
-						evalInterpolation.ShapeGradientsCartesian.GetRow(nodeIdx),
+						evalInterpolation.ShapeGradientsGlobal.GetRow(nodeIdx),
 						nodalWeights[nodeIdx]);
 				}
 				Vector localWeightGradient = 

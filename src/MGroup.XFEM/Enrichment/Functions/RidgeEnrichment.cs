@@ -38,7 +38,7 @@ namespace MGroup.XFEM.Enrichment.Functions
             double sum2 = 0.0; // sum(phi_i*Ni(x))
             var sum1Grad = new double[dim]; // sum(|phi_i|*Ni,x(x))
             var sum2Grad = new double[dim]; // sum(phi_i*Ni,x(x))`
-            Matrix gradN = point.ShapeFunctionDerivatives;
+            Matrix gradN = point.ShapeFunctionDerivativesGlobal;
             for (int n = 0; n < point.Element.Nodes.Count; ++n)
             {
                 XNode node = point.Element.Nodes[n];

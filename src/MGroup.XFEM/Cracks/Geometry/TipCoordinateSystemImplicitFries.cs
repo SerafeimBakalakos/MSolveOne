@@ -151,7 +151,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 				double[] levelSets = crack.GetTripleLevelSetsOf(nodes[n]);
 				for (int d = 0; d < dim; ++d)
 				{
-					double dN = point.ShapeFunctionDerivatives[n, d];
+					double dN = point.ShapeFunctionDerivativesNatural[n, d];
 					result[0, d] += dN * levelSets[0]; // phi1 derivative
 					result[1, d] += dN * levelSets[1]; // phi2 derivative
 					result[2, d] += dN * levelSets[2]; // phi3 derivative

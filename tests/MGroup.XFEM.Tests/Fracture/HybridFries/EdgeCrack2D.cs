@@ -71,7 +71,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 		private const double a = 1.05, growthLength = 0.3;
 
 		private const double jIntegralRadiusRatio = 2.0;
-		private const double heavisideTol = 1E-4;
+		private const double heavisideTol = 1E-3;
 		private const double tipEnrichmentArea = 0.0;
 		private const int maxIterations = 8;
 		private const double fractureToughness = double.MaxValue;

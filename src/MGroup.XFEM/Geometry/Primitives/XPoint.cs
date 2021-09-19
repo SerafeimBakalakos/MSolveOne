@@ -30,7 +30,10 @@ namespace MGroup.XFEM.Geometry.Primitives
 		/// With respect to global cartesian system. Each row is the gradient of a shape function. Each column is the the 
 		/// derivatives of all shape function with respect to the axis corresponding to that column.
 		/// </summary>
-		public Matrix ShapeFunctionDerivatives { get; set; }
+		public Matrix ShapeFunctionDerivativesGlobal { get; set; }
+
+		public Matrix ShapeFunctionDerivativesNatural { get; set; }
+
 
 		/// <summary>
 		/// The id of the material phases this point belongs to. For multiphase problems, points may belong to an enclosed phase

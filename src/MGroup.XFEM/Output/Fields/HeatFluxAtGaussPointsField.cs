@@ -69,7 +69,7 @@ namespace MGroup.XFEM.Output.Fields
 		public static double[] CalcTemperatureGradientAt(XPoint point, EvalInterpolation evalInterpolation,
 			IXFiniteElement element, IList<double[]> nodalTemperatures)
 		{
-			int dimension = evalInterpolation.ShapeGradientsCartesian.NumColumns;
+			int dimension = evalInterpolation.ShapeGradientsGlobal.NumColumns;
 			var gradient = new double[dimension];
 			for (int n = 0; n < element.Nodes.Count; ++n)
 			{
@@ -80,7 +80,7 @@ namespace MGroup.XFEM.Output.Fields
 				double stdTn = Tn[idx++];
 				for (int i = 0; i < dimension; ++i)
 				{
-					gradient[i] += evalInterpolation.ShapeGradientsCartesian[n, i] * stdTn;
+					gradient[i] += evalInterpolation.ShapeGradientsGlobal[n, i] * stdTn;
 				}
 
 				// Eniched temperatures
@@ -92,7 +92,7 @@ namespace MGroup.XFEM.Output.Fields
 
 					for (int i = 0; i < dimension; ++i)
 					{
-						gradient[i] += evalInterpolation.ShapeGradientsCartesian[n, i] * (psiVertex - psiNode) * enrTne;
+						gradient[i] += evalInterpolation.ShapeGradientsGlobal[n, i] * (psiVertex - psiNode) * enrTne;
 					}
 				}
 			}

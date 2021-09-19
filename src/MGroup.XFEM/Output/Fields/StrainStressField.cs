@@ -132,28 +132,28 @@ namespace MGroup.XFEM.Output.Fields
 			var gradient = new double[dimension, dimension];
 			for (int n = 0; n < element.Nodes.Count; ++n)
 			{
-				double[] uStd = elementDisplacements[n];
+				double[] u = elementDisplacements[n];
 				double N = point.ShapeFunctions[n];
 				var dN = new double[dimension];
 				for (int d = 0; d < dimension; ++d)
 				{
-					dN[d] = point.ShapeFunctionDerivatives[n, d];
+					dN[d] = point.ShapeFunctionDerivativesGlobal[n, d];
 				}
 
 				// Standard displacements
-				double ux = uStd[0];
-				double uy = uStd[1];
+				double ux = u[0];
+				double uy = u[1];
 				gradient[0, 0] += dN[0] * ux;
 				gradient[0, 1] += dN[1] * ux;
 				gradient[1, 0] += dN[0] * uy;
 				gradient[1, 1] += dN[1] * uy;
 
-				// Eniched displacements
+				// Enriched displacements
 				int dof = dimension;
 				foreach (IEnrichmentFunction enrichment in element.Nodes[n].EnrichmentFuncs.Keys)
 				{
-					ux = uStd[dof++];
-					uy = uStd[dof++];
+					ux = u[dof++];
+					uy = u[dof++];
 					EvaluatedFunction evalEnrichment = enrichmentValues[enrichment];
 					double psi = evalEnrichment.Value;
 					double[] dPsi = evalEnrichment.CartesianDerivatives;
@@ -192,18 +192,18 @@ namespace MGroup.XFEM.Output.Fields
 			var gradient = new double[dimension, dimension];
 			for (int n = 0; n < element.Nodes.Count; ++n)
 			{
-				double[] uStd = elementDisplacements[n];
+				double[] u = elementDisplacements[n];
 				double N = point.ShapeFunctions[n];
 				var dN = new double[dimension];
 				for (int d = 0; d < dimension; ++d)
 				{
-					dN[d] = point.ShapeFunctionDerivatives[n, d];
+					dN[d] = point.ShapeFunctionDerivativesGlobal[n, d];
 				}
 
 				// Standard displacements
-				double ux = uStd[0];
-				double uy = uStd[1];
-				double uz = uStd[2];
+				double ux = u[0];
+				double uy = u[1];
+				double uz = u[2];
 				gradient[0, 0] += dN[0] * ux;
 				gradient[0, 1] += dN[1] * ux;
 				gradient[0, 2] += dN[2] * ux;
@@ -214,13 +214,13 @@ namespace MGroup.XFEM.Output.Fields
 				gradient[2, 1] += dN[1] * uz;
 				gradient[2, 2] += dN[2] * uz;
 
-				// Eniched displacements
+				// Enriched displacements
 				int dof = dimension;
 				foreach (IEnrichmentFunction enrichment in element.Nodes[n].EnrichmentFuncs.Keys)
 				{
-					ux = uStd[dof++];
-					uy = uStd[dof++];
-					uz = uStd[dof++];
+					ux = u[dof++];
+					uy = u[dof++];
+					uz = u[dof++];
 					EvaluatedFunction evalEnrichment = enrichmentValues[enrichment];
 					double psi = evalEnrichment.Value;
 					double[] dPsi = evalEnrichment.CartesianDerivatives;
@@ -331,7 +331,8 @@ namespace MGroup.XFEM.Output.Fields
 			point.Coordinates[CoordinateSystem.ElementNatural] = pointNatural;
 			EvalInterpolation interpolation = element.Interpolation.EvaluateAllAt(element.Nodes, pointNatural);
 			point.ShapeFunctions = interpolation.ShapeFunctions;
-			point.ShapeFunctionDerivatives = interpolation.ShapeGradientsCartesian;
+			point.ShapeFunctionDerivativesGlobal = interpolation.ShapeGradientsGlobal;
+			point.ShapeFunctionDerivativesNatural = interpolation.ShapeGradientsNatural;
 			point.JacobianNaturalGlobal = interpolation.Jacobian;
 			return point;
 		}
