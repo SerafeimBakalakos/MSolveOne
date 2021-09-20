@@ -16,6 +16,7 @@ using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.Direct;
 using MGroup.XFEM.Analysis;
 using MGroup.XFEM.Cracks;
+using MGroup.XFEM.Cracks.FriesPropagation;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Cracks.Jintegral;
 using MGroup.XFEM.Cracks.PropagationCriteria;
@@ -121,6 +122,8 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			else
 			{
 				TempEdgeCrack2D crack = CreateCrackHybrid(model, propagator, initialGeom);
+				var mesh = new UniformCartesianMesh2D.Builder(minCoords, maxCoords, numElements).BuildMesh();
+				crack.friesPropagator = new FriesPropagator(model, mesh);
 				crack.Observers.Add(new CrackLevelSetPlotter_v2(model, crack.hybridGeometry, OutputDirectory));
 				crack.Observers.Add(new CrackInteractingElementsPlotter(crack, OutputDirectory));
 				geometryModel.Cracks[crack.ID] = crack;

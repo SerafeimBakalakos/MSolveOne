@@ -6,6 +6,7 @@ using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Solution.AlgebraicModel;
+using MGroup.XFEM.Cracks.FriesPropagation;
 using MGroup.XFEM.Cracks.PropagationTermination;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Enrichment;
@@ -22,6 +23,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 	{
 		public readonly CrackCurve2D hybridGeometry;
 		public readonly TipCoordinateSystemImplicit hybridTipCoordinateSystem;
+		public FriesPropagator friesPropagator;
 
 		private readonly List<double[]> crackPath; //TODO: should this also be stored in the pure geometry class?
 		private readonly PolyLine2D initialCrack;
@@ -174,6 +176,9 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements)
 		{
+			friesPropagator.Propagate(algebraicModel, totalDisplacements, hybridGeometry.CrackFront.Vertices[1].CoordsGlobal,
+				hybridGeometry.CrackFront.CoordinateSystems[1].Tangent, TipElements);
+
 			(double growthAngle, double growthLength) = propagator.Propagate(
 				algebraicModel, totalDisplacements, lsmGeometry.Tip, lsmGeometry.TipSystem, TipElements);
 			lsmGeometry.Update(model.Nodes.Values, growthAngle, growthLength);
