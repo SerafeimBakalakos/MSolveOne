@@ -22,6 +22,7 @@ using MGroup.XFEM.Materials;
 using MGroup.XFEM.Phases;
 using MGroup.XFEM.Materials.Duplicates;
 using MGroup.MSolve.Discretization.Loads;
+using System.Drawing;
 
 namespace MGroup.XFEM.Elements
 {
@@ -196,20 +197,30 @@ namespace MGroup.XFEM.Elements
 			return displacementGradient;
 		}
 
+		public (double[] strains, double[] stresses) CalcStrainsStressesAt(double[] naturalCoords, double[] nodalDisplacements)
+		{
+			(int[] stdDofIndices, int[] enrDofIndices) = MapDofsFromStdEnrToNodeMajor();
+			var u = Vector.CreateFromArray(nodalDisplacements);
+			Vector uStd = u.GetSubvector(stdDofIndices);
+			Vector uenr = u.GetSubvector(enrDofIndices);
+
+			EvalInterpolation evalInterpolation = Interpolation.EvaluateAllAt(this.Nodes, naturalCoords);
+			XPoint point = PreparePoint(evalInterpolation);
+			Matrix Bstd = CalcDeformationMatrixStandard(point.ShapeFunctionDerivativesGlobal);
+			Matrix Benr = CalcDeformationMatrixEnriched(point);
+
+			Vector strains = Bstd * uStd + Benr * uenr;
+			IContinuumMaterial material = MaterialField.FindMaterialAt(point);
+			IVector stresses = material.ConstitutiveMatrix.Multiply(strains);
+
+			return (strains.RawData, ((Vector)stresses).RawData);
+		}
+
 		public IMatrix DampingMatrix(IElement element) => throw new NotImplementedException();
 
 		public IReadOnlyList<IReadOnlyList<IDofType>> GetElementDofTypes(IElement element) => allDofTypes;
 
 		public override int GetHashCode() => ID.GetHashCode();
-
-		public XPoint EvaluateFunctionsAt(double[] naturalPoint)
-		{
-			var result = new XPoint(2);
-			result.Coordinates[CoordinateSystem.ElementNatural] = naturalPoint;
-			result.Element = this;
-			result.ShapeFunctions = Interpolation.EvaluateFunctionsAt(naturalPoint);
-			return result;
-		}
 
 		public double[] FindCentroidCartesian() => Utilities.FindCentroidCartesian(2, Nodes);
 
@@ -257,8 +268,6 @@ namespace MGroup.XFEM.Elements
 			}
 		}
 
-		
-
 		public IMatrix MassMatrix(IElement element) => throw new NotImplementedException();
 
 		public IMatrix StiffnessMatrix(IElement element)
@@ -292,13 +301,7 @@ namespace MGroup.XFEM.Elements
 			{
 				GaussPoint gaussPoint = gaussPointsBulk[i];
 				EvalInterpolation evalInterpolation = evalInterpolationsAtGPsVolume[i];
-
-				var xpoint = new XPoint(2);
-				xpoint.Element = this;
-				xpoint.ShapeFunctions = evalInterpolation.ShapeFunctions;
-				xpoint.ShapeFunctionDerivativesGlobal = evalInterpolation.ShapeGradientsGlobal;
-				xpoint.ShapeFunctionDerivativesNatural = evalInterpolation.ShapeGradientsNatural;
-				xpoint.JacobianNaturalGlobal = evalInterpolation.Jacobian;
+				XPoint xpoint = PreparePoint(evalInterpolation);
 
 				double dV = evalInterpolation.Jacobian.DirectDeterminant * Thickness;
 
@@ -306,8 +309,8 @@ namespace MGroup.XFEM.Elements
 				IMatrixView constitutive = materialsAtGPsBulk[i].ConstitutiveMatrix;
 
 				// Deformation matrices: Bs = grad(Ns), Be = grad(Ne)
-				Matrix Bstd = CalcDeformationMatrixStandard(evalInterpolation);
-				Matrix Benr = CalculateDeformationMatrixEnriched(numEnrichedDofs, xpoint, evalInterpolation);
+				Matrix Bstd = CalcDeformationMatrixStandard(evalInterpolation.ShapeGradientsGlobal);
+				Matrix Benr = CalcDeformationMatrixEnriched(xpoint);
 
 				// Contribution of this gauss point to the element stiffness matrices: 
 				// Kee = SUM(Benr^T * C * Benr  *  dV*w), Kse = SUM(Bstd^T * C * Benr  *  dV*w)
@@ -339,7 +342,7 @@ namespace MGroup.XFEM.Elements
 				IMatrixView constitutive = materialsAtGPsBulk[i].ConstitutiveMatrix;
 
 				// Deformation matrix:  Bs = grad(Ns)
-				Matrix deformation = CalcDeformationMatrixStandard(evalInterpolation);
+				Matrix deformation = CalcDeformationMatrixStandard(evalInterpolation.ShapeGradientsGlobal);
 
 				// Contribution of this gauss point to the element stiffness matrix: Kss = sum(Bs^T * c * Bs  *  dV*w)
 				Matrix partial = deformation.ThisTransposeTimesOtherTimesThis(constitutive);
@@ -348,20 +351,18 @@ namespace MGroup.XFEM.Elements
 			return Kss;
 		}
 
-		
 
-		private Matrix CalculateDeformationMatrixEnriched(int numEnrichedDofs, XPoint gaussPoint, 
-			EvalInterpolation evalInterpolation)
+		private Matrix CalcDeformationMatrixEnriched(XPoint point)
 		{
-			Dictionary<IEnrichmentFunction, EvaluatedFunction> enrichmentValues = EvaluateEnrichments(gaussPoint);
+			Dictionary<IEnrichmentFunction, EvaluatedFunction> enrichmentValues = EvaluateEnrichments(point);
 
 			var deformationMatrix = Matrix.CreateZero(3, numEnrichedDofs);
 			int currentColumn = 0;
 			for (int nodeIdx = 0; nodeIdx < Nodes.Count; ++nodeIdx)
 			{
-				double N = evalInterpolation.ShapeFunctions[nodeIdx];
-				double dNdx = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 0];
-				double dNdy = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 1];
+				double N = point.ShapeFunctions[nodeIdx];
+				double dNdx = point.ShapeFunctionDerivativesGlobal[nodeIdx, 0];
+				double dNdy = point.ShapeFunctionDerivativesGlobal[nodeIdx, 1];
 
 				foreach (var enrichmentValuePair in Nodes[nodeIdx].EnrichmentFuncs)
 				{
@@ -398,7 +399,7 @@ namespace MGroup.XFEM.Elements
 		/// </summary>
 		/// <param name="evaluatedInterpolation">The shape function derivatives calculated at a specific 
 		///     integration point</param>
-		private Matrix CalcDeformationMatrixStandard(EvalInterpolation evalInterpolation)
+		private Matrix CalcDeformationMatrixStandard(Matrix shapeGradientsGlobal/* EvalInterpolation evalInterpolation*/)
 		{
 			var deformation = Matrix.CreateZero(3, numStandardDofs);
 			for (int nodeIdx = 0; nodeIdx < Nodes.Count; ++nodeIdx)
@@ -406,8 +407,8 @@ namespace MGroup.XFEM.Elements
 				int col0 = 2 * nodeIdx;
 				int col1 = 2 * nodeIdx + 1;
 
-				double dNdx = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 0];
-				double dNdy = evalInterpolation.ShapeGradientsGlobal[nodeIdx, 1];
+				double dNdx = shapeGradientsGlobal[nodeIdx, 0];
+				double dNdy = shapeGradientsGlobal[nodeIdx, 1];
 				deformation[0, col0] = dNdx;
 				deformation[1, col1] = dNdy;
 				deformation[2, col0] = dNdy;
@@ -528,6 +529,17 @@ namespace MGroup.XFEM.Elements
 				}
 			}
 			return (stdDofIndices, enrDofIndices);
+		}
+
+		private XPoint PreparePoint(EvalInterpolation evalInterpolation)
+		{
+			var xpoint = new XPoint(2);
+			xpoint.Element = this;
+			xpoint.ShapeFunctions = evalInterpolation.ShapeFunctions;
+			xpoint.ShapeFunctionDerivativesGlobal = evalInterpolation.ShapeGradientsGlobal;
+			xpoint.ShapeFunctionDerivativesNatural = evalInterpolation.ShapeGradientsNatural;
+			xpoint.JacobianNaturalGlobal = evalInterpolation.Jacobian;
+			return xpoint;
 		}
 
 		#region non linear

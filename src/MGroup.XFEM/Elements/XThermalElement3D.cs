@@ -153,15 +153,6 @@ namespace MGroup.XFEM.Elements
 
 		public IMatrix DampingMatrix(IElement element) => throw new NotImplementedException();
 
-		public XPoint EvaluateFunctionsAt(double[] naturalPoint)
-		{
-			var result = new XPoint(3);
-			result.Coordinates[CoordinateSystem.ElementNatural] = naturalPoint;
-			result.Element = this;
-			result.ShapeFunctions = Interpolation.EvaluateFunctionsAt(naturalPoint);
-			return result;
-		}
-
 		public double[] FindCentroidCartesian() => Utilities.FindCentroidCartesian(3, Nodes);
 
 		public IReadOnlyList<IReadOnlyList<IDofType>> GetElementDofTypes(IElement element) => allDofTypes;

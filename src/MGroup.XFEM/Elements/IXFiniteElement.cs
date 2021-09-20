@@ -43,8 +43,6 @@ namespace MGroup.XFEM.Elements
 
 		double CalcBulkSizeNatural();
 
-		XPoint EvaluateFunctionsAt(double[] naturalPoint);
-
 		double[] FindCentroidCartesian();
 
 		void IdentifyDofs();

@@ -21,6 +21,8 @@ namespace MGroup.XFEM.Elements
 		Dictionary<ICrack, IElementDiscontinuityInteraction> InteractingCracks { get; }
 
 		Matrix CalcDisplacementFieldGradient(XPoint point, Vector nodalDisplacements);
+
+		(double[] strains, double[] stresses) CalcStrainsStressesAt(double[] naturalCoords, double[] nodalDisplacements);
 	}
 
 	//TODO: These should be converted to default interface implementations

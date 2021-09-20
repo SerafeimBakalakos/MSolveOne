@@ -234,11 +234,6 @@ namespace MGroup.XFEM.Elements
 			}
 		}
 
-		public XPoint EvaluateFunctionsAt(double[] naturalPoint)
-		{
-			throw new NotImplementedException();
-		}
-
 		public Dictionary<IPhaseBoundary, (IReadOnlyList<GaussPoint>, IReadOnlyList<ThermalInterfaceMaterial>)> 
 			GetMaterialsForBoundaryIntegration()
 		{

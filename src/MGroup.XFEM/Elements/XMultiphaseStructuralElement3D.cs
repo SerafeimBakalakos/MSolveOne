@@ -182,15 +182,6 @@ namespace MGroup.XFEM.Elements
 
 		public IReadOnlyList<IReadOnlyList<IDofType>> GetElementDofTypes(IElement element) => allDofTypes;
 
-		public XPoint EvaluateFunctionsAt(double[] naturalPoint)
-		{
-			var result = new XPoint(dim);
-			result.Coordinates[CoordinateSystem.ElementNatural] = naturalPoint;
-			result.Element = this;
-			result.ShapeFunctions = Interpolation.EvaluateFunctionsAt(naturalPoint);
-			return result;
-		}
-
 		public double[] FindCentroidCartesian() => Utilities.FindCentroidCartesian(dim, Nodes);
 
 
