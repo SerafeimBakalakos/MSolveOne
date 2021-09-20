@@ -214,15 +214,20 @@ namespace MGroup.XFEM.Elements
 		{
 			(int[] stdDofIndices, int[] enrDofIndices) = MapDofsFromStdEnrToNodeMajor();
 			var u = Vector.CreateFromArray(nodalDisplacements);
-			Vector uStd = u.GetSubvector(stdDofIndices);
-			Vector uenr = u.GetSubvector(enrDofIndices);
-
 			EvalInterpolation evalInterpolation = Interpolation.EvaluateAllAt(this.Nodes, naturalCoords);
 			XPoint point = PreparePoint(evalInterpolation);
-			Matrix Bstd = CalcDeformationMatrixStandard(point.ShapeFunctionDerivativesGlobal);
-			Matrix Benr = CalcDeformationMatrixEnriched(point);
 
-			Vector strains = Bstd * uStd + Benr * uenr;
+			Vector uStd = u.GetSubvector(stdDofIndices);
+			Matrix Bstd = CalcDeformationMatrixStandard(point.ShapeFunctionDerivativesGlobal);
+			Vector strains = Bstd * uStd;
+
+			if (enrDofIndices.Length > 0)
+			{
+				Vector uenr = u.GetSubvector(enrDofIndices);
+				Matrix Benr = CalcDeformationMatrixEnriched(point);
+				strains.AddIntoThis(Benr * uenr);
+			}
+
 			IContinuumMaterial material = MaterialField.FindMaterialAt(point);
 			IVector stresses = material.ConstitutiveMatrix.Multiply(strains);
 

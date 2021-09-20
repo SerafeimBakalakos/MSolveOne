@@ -37,7 +37,7 @@ namespace MGroup.XFEM.Output.Writers
 			var conformingMesh = new ConformingOutputMesh(model);
 			var displacementField = new DisplacementField(model, algebraicModel, conformingMesh);
 			Dictionary<int, double[]> displacements = displacementField.CalcValuesAtVertices(solution);
-			var strainStressField = new StrainStressField(model, algebraicModel, conformingMesh);
+			var strainStressField = new StrainStressField_v2(model, algebraicModel, conformingMesh);
 			(Dictionary<int, double[]> strains, Dictionary<int, double[]> stresses)
 				= strainStressField.CalcTensorsAtVertices(solution);
 			string path = Path.Combine(outputDirectory, $"displacements_strains_stresses_t{iteration}.vtk");
@@ -60,7 +60,7 @@ namespace MGroup.XFEM.Output.Writers
 
 		private void PlotTensorsAtGaussPoints(IAlgebraicModel algebraicModel, IGlobalVector solution)
 		{
-			var strainStressFieldAtGPs = new StrainsStressesAtGaussPointsField(model, algebraicModel);
+			var strainStressFieldAtGPs = new StrainsStressesAtGaussPointsField_v2(model, algebraicModel);
 			(Dictionary<double[], double[]> strainsAtGPs, Dictionary<double[], double[]> stressesAtGPs)
 				= strainStressFieldAtGPs.CalcTensorsAtPoints(solution);
 			if (model.Dimension == 2)
