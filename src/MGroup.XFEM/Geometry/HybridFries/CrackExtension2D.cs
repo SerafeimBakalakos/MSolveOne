@@ -22,24 +22,24 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			for (int v = 0; v < crackFront.Vertices.Count; ++v)
 			{
 				Vertex2D tip = crackFront.Vertices[v];
-				CrackTipSystem2D frontSystem = crackFront.CoordinateSystems[v];
+				CrackTipSystem2D tipSystem = crackFront.CoordinateSystems[v];
 
 				// Create extension vertex
 				var vertex = Vector.CreateFromArray(tip.CoordsGlobal);
-				var extensionVector = Vector.CreateFromArray(frontSystem.Extension);
+				var extensionVector = Vector.CreateFromArray(tipSystem.Extension);
 				var newVertex = vertex.Axpy(extensionVector, extensionLength);
 				var extension = new Vertex2D(numVertices++, newVertex.RawData, true);
 				extension.PseudoNormal = tip.PseudoNormal;
 				ExtensionVertices.Add(extension);
 
 				// Create extension cell
-				if (crackFront.CoordinateSystems[v].IsCounterClockwise) //TODO: the coordinate system could create both the vertex and the cell
+				if (tipSystem.IsCenteredAroundStartTip)
 				{
-					Cells.Add(new LineCell2D(tip, extension, true));
+					Cells.Add(new LineCell2D(extension, tip, true));
 				}
 				else
 				{
-					Cells.Add(new LineCell2D(extension, tip, true));
+					Cells.Add(new LineCell2D(tip, extension, true));
 				}
 			}
 		}

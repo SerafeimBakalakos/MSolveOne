@@ -67,7 +67,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 				// Create new cell
 				LineCell2D newCell;
-				if (!oldSystem.IsCounterClockwise)
+				if (oldSystem.IsCenteredAroundStartTip)
 				{
 					newCell = new LineCell2D(newTip, oldTip, false);
 				}
@@ -84,7 +84,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				CoordinateSystems[vertexIdx] = new CrackTipSystem2D(newTip);
 
 				// Add the new items to the crack curve
-				if (!oldSystem.IsCounterClockwise)
+				if (oldSystem.IsCenteredAroundStartTip)
 				{
 					crackCurve.Vertices.Insert(0, newTip);
 					crackCurve.Cells.Insert(0, newCell);

@@ -99,6 +99,11 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			return result.RawData;
 		}
 
+		public double[] RotateGlobalStressTensor(double[] globalStresses)
+		{
+			throw new NotImplementedException();
+		}
+
 		private static (double[] normal, double[] tangent, double[] extension) CalcConstrainedVectors(Vertex3D tip, 
 			Vertex3D otherBoundaryTip, IDomainBoundary3D boundary)
 		{
