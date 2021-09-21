@@ -32,7 +32,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		/// </summary>
 		public List<Edge3D> Edges { get; private set; }
 
-		public List<CrackFrontSystem3D> CoordinateSystems { get; private set; }
+		public List<CrackTipSystem3D> CoordinateSystems { get; private set; }
 
 		public List<Vertex3D> Vertices { get; private set; }
 
@@ -49,8 +49,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				double angle = frontPropagation.AnglesAtTips[i];
 				double length = frontPropagation.LengthsAtTips[i];
 				int vertexIdx = ActiveTips[i];
-				double[] xOld = Vertices[vertexIdx].CoordsGlobal;
-				double[] xNew = CoordinateSystems[vertexIdx].CalcNewTipCoords(xOld, angle, length);
+				double[] xNew = CoordinateSystems[vertexIdx].ExtendTowards(angle, length);
 				var newVertex = new Vertex3D(numVerticesTotal++, xNew, false);
 				propMesh.PropagationVertices.Add(newVertex);
 			}
@@ -139,14 +138,14 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			FindActiveTips();
 
 			// The coordinate systems are determined by the vertices, edges and cells, without enforcing any specific movement.
-			CoordinateSystems = new List<CrackFrontSystem3D>();
+			CoordinateSystems = new List<CrackTipSystem3D>();
 			for (int v = 0; v < Vertices.Count; ++v)
 			{
 				Vertex3D current = Vertices[v];
 				Vertex3D next = Vertices[(v + 1) % Vertices.Count];
 				Vertex3D previous = Vertices[v == 0 ? Vertices.Count - 1 : v - 1];
 
-				var system = new CrackFrontSystem3D(current, previous, next, boundary);
+				var system = new CrackTipSystem3D(current, previous, next, boundary);
 				CoordinateSystems.Add(system);
 			}
 		}

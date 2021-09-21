@@ -280,8 +280,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 		private class MockPropagator : IPropagator
 		{
 			public (double growthAngle, double growthLength) Propagate(
-				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements,
-				double[] crackTip, double[] extensionVector, IEnumerable<IXCrackElement> tipElements)
+				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, ICrackTipSystem crackTipSystem)
 			{
 				return (growthAngle, growthLength);
 			}

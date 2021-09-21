@@ -10,14 +10,17 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 	/// section 3.1.4
 	/// </summary>
-	public class CrackFrontSystem2D
+	public class CrackTipSystem2D : ICrackTipSystem
 	{
-		public CrackFrontSystem2D(Vertex2D tip)
+		private readonly Vertex2D tip;
+
+		public CrackTipSystem2D(Vertex2D tip)
 		{
 			if (tip.Cells.Count != 1)
 			{
 				throw new ArgumentException($"Vertex {tip.ID} is not a tip.");
 			}
+			this.tip = tip;
 
 			// The normal vector is the same as the line segment
 			LineCell2D segment = tip.Cells[0];
@@ -58,25 +61,26 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		/// </summary>
 		public double[] Tangent { get; }
 
+		public double[] TipCoordsGlobal => tip.CoordsGlobal;
+
 		/// <summary>
 		/// 
 		/// </summary>
-		/// <param name="oldTipCoords"></param>
 		/// <param name="angle">Counter-clockwise angle from the current <see cref="Tangent"/> to the propagation vector.</param>
 		/// <param name="length"></param>
-		public double[] CalcNewTipCoords(double[] oldTipCoords, double angle, double length)
+		public double[] ExtendTowards(double angle, double length)
 		{
 			double cT = length * Math.Cos(angle);
 			double cN = length * Math.Sin(angle);
-			var newTipCoords = new double[2];
+			var result = new double[2];
 			if (IsCounterClockwise)
 			{
 				// p1 = l * cosa * t
 				// p2 = l * sina * n
 				// p = p1 + p2
 				// x1 = x0 + p
-				newTipCoords[0] = oldTipCoords[0] + cT * Tangent[0] + cN * Normal[0];
-				newTipCoords[1] = oldTipCoords[1] + cT * Tangent[1] + cN * Normal[1];
+				result[0] = tip.CoordsGlobal[0] + cT * Tangent[0] + cN * Normal[0];
+				result[1] = tip.CoordsGlobal[1] + cT * Tangent[1] + cN * Normal[1];
 			}
 			else
 			{
@@ -84,10 +88,10 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				// p2 = - l * sina * n
 				// p = p1 + p2
 				// x1 = x0 + p
-				newTipCoords[0] = oldTipCoords[0] + cT * Tangent[0] - cN * Normal[0];
-				newTipCoords[1] = oldTipCoords[1] + cT * Tangent[1] - cN * Normal[1];
+				result[0] = tip.CoordsGlobal[0] + cT * Tangent[0] - cN * Normal[0];
+				result[1] = tip.CoordsGlobal[1] + cT * Tangent[1] - cN * Normal[1];
 			}
-			return newTipCoords;
+			return result;
 		}
 	}
 }

@@ -12,10 +12,13 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 	/// section 3.2.4
 	/// </summary>
-	public class CrackFrontSystem3D
+	public class CrackTipSystem3D : ICrackTipSystem
 	{
-		public CrackFrontSystem3D(Vertex3D vertex, Vertex3D previous, Vertex3D next, IDomainBoundary3D boundary)
+		private readonly Vertex3D tip;
+
+		public CrackTipSystem3D(Vertex3D vertex, Vertex3D previous, Vertex3D next, IDomainBoundary3D boundary)
 		{
+			this.tip = vertex;
 			if (vertex.Position == VertexPosition.TipActive)
 			{
 				if ((previous.Position == VertexPosition.TipActive) && (next.Position == VertexPosition.TipActive))
@@ -68,6 +71,9 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		/// </summary>
 		public double[] Tangent { get; }
 
+		public double[] TipCoordsGlobal => tip.CoordsGlobal;
+
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -76,7 +82,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		/// Counter-clockwise angle from the current <see cref="Extension"/> to the propagation vector.
 		/// </param>
 		/// <param name="length"></param>
-		public double[] CalcNewTipCoords(double[] oldTipCoords, double angle, double length)
+		public double[] ExtendTowards(double angle, double length)
 		{
 			// Params angle and length are given in the coordinate system of each vertex, where the extension vector is 
 			// local axis x and the normal vector is local axis y.
@@ -90,9 +96,9 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			Vector propagation = et + en;
 
 			// Find the coordinates of the new vertex
-			var oldVertex = Vector.CreateFromArray(oldTipCoords);
-			Vector newVertex = oldVertex + propagation;
-			return newVertex.RawData;
+			var tipCoords = Vector.CreateFromArray(tip.CoordsGlobal);
+			Vector result = tipCoords + propagation;
+			return result.RawData;
 		}
 
 		private static (double[] normal, double[] tangent, double[] extension) CalcConstrainedVectors(Vertex3D tip, 

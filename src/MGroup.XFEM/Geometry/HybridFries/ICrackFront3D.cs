@@ -9,7 +9,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 		List<int> ActiveTips { get; }
 
 		//TODO: Perhaps this should be stored in the vertices.
-		List<CrackFrontSystem3D> CoordinateSystems { get; }
+		List<CrackTipSystem3D> CoordinateSystems { get; }
 
 		List<Edge3D> Edges { get; }
 		

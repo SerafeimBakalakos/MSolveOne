@@ -143,11 +143,9 @@ namespace MGroup.XFEM.Cracks.Geometry
 			frontGrowth.LengthsAtTips = new double[numTips];
 			for (int i = 0; i < numTips; ++i)
 			{
-				int vertexID = crackFront.ActiveTips[i];
-				double[] tipCoords = crackFront.Vertices[vertexID].CoordsGlobal;
-				double[] extensionVector = crackFront.CoordinateSystems[vertexID].Tangent;
+				int vertexIdx = crackFront.ActiveTips[i];
 				(double growthAngle, double growthLength) = propagator.Propagate(
-					algebraicModel, totalDisplacements, tipCoords, extensionVector, TipElements);
+					algebraicModel, totalDisplacements, crackFront.CoordinateSystems[vertexIdx]);
 				frontGrowth.AnglesAtTips[i] = growthAngle;
 				frontGrowth.LengthsAtTips[i] = growthLength;
 			}

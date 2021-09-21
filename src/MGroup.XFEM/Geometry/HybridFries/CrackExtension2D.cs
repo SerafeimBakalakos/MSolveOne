@@ -22,7 +22,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			for (int v = 0; v < crackFront.Vertices.Count; ++v)
 			{
 				Vertex2D tip = crackFront.Vertices[v];
-				CrackFrontSystem2D frontSystem = crackFront.CoordinateSystems[v];
+				CrackTipSystem2D frontSystem = crackFront.CoordinateSystems[v];
 
 				// Create extension vertex
 				var vertex = Vector.CreateFromArray(tip.CoordsGlobal);

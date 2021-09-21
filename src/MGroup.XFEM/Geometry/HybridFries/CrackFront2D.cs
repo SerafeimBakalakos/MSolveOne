@@ -32,17 +32,17 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			DetermineActiveTips();
 
 			// The coordinate systems are determined by the vertices, edges and cells, without enforcing any specific movement.
-			CoordinateSystems = new List<CrackFrontSystem2D>();
+			CoordinateSystems = new List<CrackTipSystem2D>();
 			for (int v = 0; v < Vertices.Count; ++v)
 			{
-				var system = new CrackFrontSystem2D(Vertices[v]);
+				var system = new CrackTipSystem2D(Vertices[v]);
 				CoordinateSystems.Add(system);
 			}
 		}
 
 		public List<int> ActiveTips { get; }
 
-		public List<CrackFrontSystem2D> CoordinateSystems { get; }
+		public List<CrackTipSystem2D> CoordinateSystems { get; }
 
 		public List<Vertex2D> Vertices { get; }
 
@@ -55,11 +55,10 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			{
 				int vertexIdx = ActiveTips[i];
 				Vertex2D oldTip = Vertices[vertexIdx];
-				CrackFrontSystem2D oldSystem = CoordinateSystems[vertexIdx];
+				CrackTipSystem2D oldSystem = CoordinateSystems[vertexIdx];
 
 				// Create new tip
-				double[] newCoords = oldSystem.CalcNewTipCoords(
-						oldTip.CoordsGlobal, frontPropagation.AnglesAtTips[i], frontPropagation.LengthsAtTips[i]);
+				double[] newCoords = oldSystem.ExtendTowards(frontPropagation.AnglesAtTips[i], frontPropagation.LengthsAtTips[i]);
 				var newTip = new Vertex2D(numOldVertices + i, newCoords, false);
 
 				// Replace it
@@ -82,7 +81,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				newTip.Cells.Add(newCell);
 
 				// Update coordinate system (after completing connectivity data) 
-				CoordinateSystems[vertexIdx] = new CrackFrontSystem2D(newTip);
+				CoordinateSystems[vertexIdx] = new CrackTipSystem2D(newTip);
 
 				// Add the new items to the crack curve
 				if (!oldSystem.IsCounterClockwise)

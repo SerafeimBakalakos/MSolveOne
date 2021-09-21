@@ -152,6 +152,7 @@ namespace MGroup.XFEM.Output.Writers
 				EvalInterpolation interpolation = point.Element.Interpolation.EvaluateAllAt(
 					point.Element.Nodes, point.Coordinates[CoordinateSystem.ElementNatural]);
 				point.ShapeFunctionDerivativesGlobal = interpolation.ShapeGradientsGlobal;
+				point.ShapeFunctionDerivativesNatural = interpolation.ShapeGradientsNatural;
 				point.JacobianNaturalGlobal = interpolation.Jacobian;
 
 				double[] df0 = tipEnrichments[0].EvaluateAllAt(point).CartesianDerivatives;

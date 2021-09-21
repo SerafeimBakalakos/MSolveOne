@@ -123,7 +123,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			{
 				TempEdgeCrack2D crack = CreateCrackHybrid(model, propagator, initialGeom);
 				var mesh = new UniformCartesianMesh2D.Builder(minCoords, maxCoords, numElements).BuildMesh();
-				crack.friesPropagator = new FriesPropagator(model, mesh);
+				crack.friesPropagator = new FriesPropagator(model, mesh, growthLength, 1.0 * growthLength, 50);
 				crack.Observers.Add(new CrackLevelSetPlotter_v2(model, crack.hybridGeometry, OutputDirectory));
 				crack.Observers.Add(new CrackInteractingElementsPlotter(crack, OutputDirectory));
 				geometryModel.Cracks[crack.ID] = crack;

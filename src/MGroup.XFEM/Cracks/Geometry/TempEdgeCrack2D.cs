@@ -176,8 +176,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements)
 		{
-			friesPropagator.Propagate(algebraicModel, totalDisplacements, hybridGeometry.CrackFront.Vertices[1].CoordsGlobal,
-				hybridGeometry.CrackFront.CoordinateSystems[1].Tangent, TipElements);
+			friesPropagator.Propagate(algebraicModel, totalDisplacements, hybridGeometry.CrackFront.CoordinateSystems[1]);
 
 			(double growthAngle, double growthLength) = propagator.Propagate(
 				algebraicModel, totalDisplacements, lsmGeometry.Tip, lsmGeometry.TipSystem, TipElements);
