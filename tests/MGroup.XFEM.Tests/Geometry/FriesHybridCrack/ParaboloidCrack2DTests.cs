@@ -258,7 +258,7 @@ namespace MGroup.XFEM.Tests.Geometry.FriesHybridCrack
 			public (double growthAngle, double growthLength) Propagate(
 				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, ICrackTipSystem crackTipSystem)
 			{
-				double[] extensionVector = ((CrackTipSystem2D)crackTipSystem).Tangent;
+				double[] extensionVector = ((CrackTipSystem2D)crackTipSystem).Extension;
 				if (extensionVector[0] > 0)
 				{
 					return (growthAngle, growthLength);

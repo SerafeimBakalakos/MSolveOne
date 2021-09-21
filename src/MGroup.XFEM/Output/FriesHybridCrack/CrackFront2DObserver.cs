@@ -28,7 +28,7 @@ namespace MGroup.XFEM.Output.FriesHybridCrack
 			using (var writer = new VtkPointWriter(pathSystems))
 			{
 				List<VtkPoint> points = crack.CrackFront.Vertices.Select(v => new VtkPoint(v.ID, v.CoordsGlobal)).ToList();
-				List<double[]> tangentVectors = crack.CrackFront.CoordinateSystems.Select(sys => sys.Tangent).ToList();
+				List<double[]> tangentVectors = crack.CrackFront.CoordinateSystems.Select(sys => sys.Extension).ToList();
 				List<double[]> normalVectors = crack.CrackFront.CoordinateSystems.Select(sys => sys.Normal).ToList();
 
 				writer.WritePoints(points, true);

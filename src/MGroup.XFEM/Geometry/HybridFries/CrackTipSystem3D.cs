@@ -56,23 +56,22 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			}
 		}
 
-		/// <summary>
-		/// This is not necessarily a unit vector. It is orthogonal to <see cref="Normal"/> and <see cref="Tangent"/>.
-		/// </summary>
+		/// <remarks>
+		/// It is also orthogonal to <see cref="Tangent"/>.
+		/// </remarks>
 		public double[] Extension { get; }
 
-		/// <summary>
-		/// Unit vector. Orthogonal to <see cref="Extension"/> and linearly independent to <see cref="Tangent"/>.
-		/// </summary>
+		/// <remarks>
+		/// It is also linearly independent from <see cref="Tangent"/>.
+		/// </remarks>
 		public double[] Normal { get; }
 
 		/// <summary>
-		/// Unit vector. Orthogonal to <see cref="Extension"/> and linearly independent to <see cref="Normal"/>.
+		/// Unit vector. Orthogonal to <see cref="Extension"/> and linearly independent from <see cref="Normal"/>.
 		/// </summary>
 		public double[] Tangent { get; }
 
 		public double[] TipCoordsGlobal => tip.CoordsGlobal;
-
 
 		/// <summary>
 		/// 
@@ -87,11 +86,10 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			// Params angle and length are given in the coordinate system of each vertex, where the extension vector is 
 			// local axis x and the normal vector is local axis y.
 			var t = Vector.CreateFromArray(Extension);
-			var unitT = t.Scale(1.0 / t.Norm2());
 			var n = Vector.CreateFromArray(Normal); // already unit
 
 			// Find the propagation vector in 3D.
-			Vector et = (length * Math.Cos(angle)) * unitT;
+			Vector et = (length * Math.Cos(angle)) * t;
 			Vector en = (length * Math.Sin(angle)) * n;
 			Vector propagation = et + en;
 
@@ -158,6 +156,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 			// Extension
 			Vector extension = tangent.CrossProduct(Vector.CreateFromArray(normal));
+			extension.ScaleIntoThis(1.0 / extension.Norm2());
 
 			return (normal, tangent.RawData, extension.RawData);
 		}

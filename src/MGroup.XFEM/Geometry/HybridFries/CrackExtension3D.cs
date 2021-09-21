@@ -81,7 +81,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				Vertex3D originalVertex = crackFront.Vertices[v];
 				var originalCoords = Vector.CreateFromArray(originalVertex.CoordsGlobal);
 				var extensionVector = Vector.CreateFromArray(crackFront.CoordinateSystems[v].Extension);
-				var extensionsCoords = originalCoords.Axpy(extensionVector, extensionLength / extensionVector.Norm2());
+				var extensionsCoords = originalCoords.Axpy(extensionVector, extensionLength);
 				var extensionVertex = new Vertex3D(numVertices, extensionsCoords.RawData, true);
 				extensionVertex.PseudoNormal = originalVertex.PseudoNormal;
 				ExtensionVertices.Add(extensionVertex);

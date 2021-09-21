@@ -26,7 +26,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 				// Create extension vertex
 				var vertex = Vector.CreateFromArray(tip.CoordsGlobal);
-				var extensionVector = Vector.CreateFromArray(frontSystem.Tangent);
+				var extensionVector = Vector.CreateFromArray(frontSystem.Extension);
 				var newVertex = vertex.Axpy(extensionVector, extensionLength);
 				var extension = new Vertex2D(numVertices++, newVertex.RawData, true);
 				extension.PseudoNormal = tip.PseudoNormal;

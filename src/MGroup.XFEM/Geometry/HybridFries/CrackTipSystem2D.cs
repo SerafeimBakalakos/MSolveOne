@@ -44,29 +44,23 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			// Calculate the tangent vector
 			var v0 = Vector.CreateFromArray(start.CoordsGlobal);
 			var v1 = Vector.CreateFromArray(end.CoordsGlobal);
-			Vector tangent = v1 - v0;
-			tangent.ScaleIntoThis(1.0 / segment.Length);
-			this.Tangent = tangent.RawData;
+			Vector extension = v1 - v0;
+			extension.ScaleIntoThis(1.0 / segment.Length);
+			this.Extension = extension.RawData;
 		}
 
 		public bool IsCounterClockwise { get; }
 
-		/// <summary>
-		/// Unit vector. Orthogonal to <see cref="Tangent"/>.
-		/// </summary>
 		public double[] Normal { get; }
 
-		/// <summary>
-		/// Unit vector. Orthogonal to <see cref="Normal"/>.
-		/// </summary>
-		public double[] Tangent { get; }
+		public double[] Extension { get; }
 
 		public double[] TipCoordsGlobal => tip.CoordsGlobal;
 
 		/// <summary>
 		/// 
 		/// </summary>
-		/// <param name="angle">Counter-clockwise angle from the current <see cref="Tangent"/> to the propagation vector.</param>
+		/// <param name="angle">Counter-clockwise angle from the current <see cref="Extension"/> to the propagation vector.</param>
 		/// <param name="length"></param>
 		public double[] ExtendTowards(double angle, double length)
 		{
@@ -79,8 +73,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				// p2 = l * sina * n
 				// p = p1 + p2
 				// x1 = x0 + p
-				result[0] = tip.CoordsGlobal[0] + cT * Tangent[0] + cN * Normal[0];
-				result[1] = tip.CoordsGlobal[1] + cT * Tangent[1] + cN * Normal[1];
+				result[0] = tip.CoordsGlobal[0] + cT * Extension[0] + cN * Normal[0];
+				result[1] = tip.CoordsGlobal[1] + cT * Extension[1] + cN * Normal[1];
 			}
 			else
 			{
@@ -88,8 +82,8 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				// p2 = - l * sina * n
 				// p = p1 + p2
 				// x1 = x0 + p
-				result[0] = tip.CoordsGlobal[0] + cT * Tangent[0] - cN * Normal[0];
-				result[1] = tip.CoordsGlobal[1] + cT * Tangent[1] - cN * Normal[1];
+				result[0] = tip.CoordsGlobal[0] + cT * Extension[0] - cN * Normal[0];
+				result[1] = tip.CoordsGlobal[1] + cT * Extension[1] - cN * Normal[1];
 			}
 			return result;
 		}
