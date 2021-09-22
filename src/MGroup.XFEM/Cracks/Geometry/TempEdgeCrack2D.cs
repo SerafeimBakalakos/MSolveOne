@@ -176,10 +176,14 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements)
 		{
-			friesPropagator.Propagate(algebraicModel, totalDisplacements, hybridGeometry.CrackFront.CoordinateSystems[1]);
+			double growthAngle, growthLength;
+			(growthAngle, growthLength) = friesPropagator.Propagate(
+				algebraicModel, totalDisplacements, hybridGeometry.CrackFront.CoordinateSystems[1]);
+			Debug.WriteLine($"Fries:      Growth angle = {growthAngle}, Growth length = {growthLength}");
 
-			(double growthAngle, double growthLength) = propagator.Propagate(
+			(growthAngle, growthLength) = propagator.Propagate(
 				algebraicModel, totalDisplacements, lsmGeometry.Tip, lsmGeometry.TipSystem, TipElements);
+			Debug.WriteLine($"J-integral: Growth angle = {growthAngle}, Growth length = {growthLength}");
 			lsmGeometry.Update(model.Nodes.Values, growthAngle, growthLength);
 			crackPath.Add(lsmGeometry.Tip);
 

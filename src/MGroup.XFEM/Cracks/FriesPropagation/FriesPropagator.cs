@@ -15,20 +15,48 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 {
 	public class FriesPropagator : IPropagator
 	{
-		private const double minGrowthAngle = -75.0 * Math.PI / 180.0;
-		private const double maxGrowthAngle = +75.0 * Math.PI / 180.0;
+		/// <summary>
+		/// 75 or 70.529 degrees.
+		/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
+		/// section 6.1
+		/// </summary>
+		private const double growthAngleLimitDefault = 70.529; 
 
-		private readonly ICartesianMesh mesh;
+		private readonly int dimension;
+		private double growthAngleMax;
+		private double growthAngleMin;
 		private readonly double growthLength;
+		private readonly ICartesianMesh mesh;
+		private readonly IGrowthAngleCriterion growthAngleCriterion;
 		private readonly XModel<IXCrackElement> model;
 		private readonly int numTrialPointsPerTip;
 		private readonly double trialPointRadius;
+		private int iteration;
 
-		public FriesPropagator(XModel<IXCrackElement> model, ICartesianMesh mesh, 
-			double growthLength, double trialPointRadius, int numTrialPointsPerTip)
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="model"></param>
+		/// <param name="mesh"></param>
+		/// <param name="growthLength"></param>
+		/// <param name="trialPointRadius"></param>
+		/// <param name="numTrialPointsPerTip"></param>
+		/// <param name="growthAngleLimit">
+		/// In degrees, not radd. Trials points will be generated between 
+		/// (-<paramref name="growthAngleLimit"/>, + <paramref name="growthAngleLimit"/>)
+		/// </param>
+		public FriesPropagator(XModel<IXCrackElement> model, ICartesianMesh mesh, IGrowthAngleCriterion growthAngleCriterion, 
+			double growthLength, double trialPointRadius, int numTrialPointsPerTip, 
+			double growthAngleLimit = growthAngleLimitDefault)
 		{
 			this.model = model;
 			this.mesh = mesh;
+			this.growthAngleCriterion = growthAngleCriterion;
+			if ((model.Dimension != 2) && (model.Dimension != 3))
+			{
+				throw new ArgumentException("The dimension of the model must be 2 or 3");
+			}
+			this.dimension = model.Dimension;
 
 			this.growthLength = growthLength;
 			this.trialPointRadius = trialPointRadius;
@@ -38,37 +66,98 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 				throw new ArgumentException();
 			}
 			this.numTrialPointsPerTip = numTrialPointsPerTip;
+
+			this.growthAngleMin = -growthAngleLimit * Math.PI / 180.0;
+			this.growthAngleMax = +growthAngleLimit * Math.PI / 180.0;
 		}
 
 		public (double growthAngle, double growthLength) Propagate(IAlgebraicModel algebraicModel, 
 			IGlobalVector totalDisplacements, ICrackTipSystem crackTipSystem)
 		{
-			List<double[]> trialPointsGlobal = FindTrialPointsGlobal(crackTipSystem);
-			var stressField = new LocalizedStressField(model.Dimension, algebraicModel, totalDisplacements);
+			(List<double> anglesTheta, List<double[]> coordsGlobal) = FindTrialPointsGlobal(crackTipSystem);
+			var stressField = new LocalizedStressField(dimension, algebraicModel, totalDisplacements);
+			var stressesThetaTheta = new List<double>();
+			var stressesRTheta = new List<double>();
+
+			#region plot
 			var stressesGlobalAtPoints = new Dictionary<double[], double[]>();
-			foreach (double[] pointGlobal in trialPointsGlobal)
+			#endregion
+
+			for (int i = 0; i < anglesTheta.Count; ++i)
 			{
-				(int elementID, double[] pointNatural) = mesh.FindElementContaining(pointGlobal);
+				(int elementID, double[] coordsNatural) = mesh.FindElementContaining(coordsGlobal[i]);
 				IXCrackElement element = model.Elements[elementID];
-				stressesGlobalAtPoints[pointGlobal] = stressField.CalcStressesAtPoint(pointNatural, element);
+				double[] globalStressTensor = stressField.CalcStressesAtPoint(coordsNatural, element);
+				(double stressThetaTheta, double stressRTheta) = 
+					CalcPolarStresses(globalStressTensor, anglesTheta[i], crackTipSystem);
+				stressesThetaTheta.Add(stressThetaTheta);
+				stressesRTheta.Add(stressRTheta);
+
+				#region plot
+				stressesGlobalAtPoints[coordsGlobal[i]] = globalStressTensor;
+				#endregion
 			}
 
-			PlotNodalStresses(stressField, stressesGlobalAtPoints);
-			return (0, 0);
+			PlotNodalStresses(stressField, coordsGlobal, stressesGlobalAtPoints, stressesThetaTheta, stressesRTheta);
+
+			int pointIndex = growthAngleCriterion.FindIndexOfPropagationAngle(anglesTheta, stressesThetaTheta, stressesRTheta);
+			return (anglesTheta[pointIndex], growthLength);
 		}
 
-		private List<double[]> FindTrialPointsGlobal(ICrackTipSystem crackTipSystem)
+		/// <summary>
+		/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
+		/// eq. 6.1, 6.2
+		/// </summary>
+		/// <param name="globalStressTensor"></param>
+		/// <param name="crackTipSystem"></param>
+		/// <returns></returns>
+		private (double stressThetaTheta, double stressRTheta) CalcPolarStresses(
+			double[] globalStressTensor, double theta, ICrackTipSystem crackTipSystem)
+		{
+			// Stress tensor in local cartesian system (its x1 axis coincides with the extension vector)
+			double[] localCartesianStressTensor = crackTipSystem.RotateGlobalStressTensor(globalStressTensor);
+			double snn, stt, snt;
+			if (dimension == 2)
+			{
+				// Stress tensor is [stt snn snt]
+				stt = localCartesianStressTensor[0];
+				snn = localCartesianStressTensor[1];
+				snt = localCartesianStressTensor[2];
+			}
+			else
+			{
+				// Stress tensor is [stt sqq snn stq sqn snt]
+				stt = localCartesianStressTensor[0];
+				snn = localCartesianStressTensor[2];
+				snt = localCartesianStressTensor[5];
+			}
+
+			// Stress in polar system
+			double cos = Math.Cos(theta);
+			double sin = Math.Sin(theta);
+			double cos2 = Math.Cos(2 * theta);
+			double sin2 = Math.Sin(2 * theta);
+			double sThetaTheta = snn * sin * sin + stt * cos * cos - snt * sin2;
+			double sRTheta = sin * cos * (snn - stt) + snt * cos2;
+
+			return (sThetaTheta, sRTheta);
+		}
+
+		private (List<double> anglesTheta, List<double[]> coordsGlobal) FindTrialPointsGlobal(ICrackTipSystem crackTipSystem)
 		{
 			//TODO: generalize this for 3D
-			var points = new List<double[]>();
-			double dTheta = (maxGrowthAngle - minGrowthAngle) / (numTrialPointsPerTip - 1);
+			var anglesTheta = new List<double>();
+			var coordsGlobal = new List<double[]>();
+			double dTheta = (growthAngleMax - growthAngleMin) / (numTrialPointsPerTip - 1);
 			for (int i = 0; i < numTrialPointsPerTip; ++i)
 			{
-				double theta = minGrowthAngle + i * dTheta;
+				double theta = growthAngleMin + i * dTheta;
 				double[] point = crackTipSystem.ExtendTowards(theta, trialPointRadius);
-				points.Add(point);
+
+				anglesTheta.Add(theta);
+				coordsGlobal.Add(point);
 			}
-			return points;
+			return (anglesTheta, coordsGlobal);
 
 			//var points = new List<double[]>();
 			//points.Add(new double[] { 1.187525, 2.0624750 });
@@ -88,9 +177,11 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 		//	HERE
 		//}
 
-		private void PlotNodalStresses(LocalizedStressField stressField, Dictionary<double[], double[]> stressesAtTrialPoints)
+		private void PlotNodalStresses(LocalizedStressField stressField, List<double[]> pointsGlobal,
+			Dictionary<double[], double[]> stressesAtTrialPoints, List<double> stressesThetaTheta, List<double> stressesRTheta)
 		{
-			using (var writer = new VtkPointWriter(@"C:\Users\Serafeim\Desktop\xfem 3d\plots\edge_crack_2D_hybrid\stresses_at_nodes.vtk"))
+			string directory = @"C:\Users\Serafeim\Desktop\xfem 3d\plots\edge_crack_2D_hybrid\";
+			using (var writer = new VtkPointWriter(directory + $"stresses_at_nodes_t{iteration}.vtk"))
 			{
 				var nodalStresses = new Dictionary<double[], double[]>();
 				foreach (var pair in stressField.StoredNodalStresses)
@@ -101,7 +192,7 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 					nodalStresses[coords] = stresses;
 				}
 
-				if (model.Dimension == 2)
+				if (dimension == 2)
 				{
 					writer.WriteTensor2DField("stresses", nodalStresses);
 				}
@@ -111,9 +202,9 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 				}
 			}
 
-			using (var writer = new VtkPointWriter(@"C:\Users\Serafeim\Desktop\xfem 3d\plots\edge_crack_2D_hybrid\stresses_at_trial_points.vtk"))
+			using (var writer = new VtkPointWriter(directory + $"stresses_at_trial_points_t{iteration}.vtk"))
 			{
-				if (model.Dimension == 2)
+				if (dimension == 2)
 				{
 					writer.WriteTensor2DField("stresses", stressesAtTrialPoints);
 				}
@@ -122,6 +213,15 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 					writer.WriteTensor3DField("stresses", stressesAtTrialPoints);
 				}
 			}
+
+			using (var writer = new VtkPointWriter(directory + $"stresses_polar_at_trial_points_t{iteration}.vtk"))
+			{
+				writer.WritePoints(pointsGlobal, true);
+				writer.WriteScalarField("sThetaTheta", stressesThetaTheta);
+				writer.WriteScalarField("sRTheta", stressesRTheta);
+			}
+
+			++iteration;
 		}
 	}
 }

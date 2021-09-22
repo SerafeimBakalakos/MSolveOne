@@ -15,6 +15,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 	public class CrackTipSystem2D : ICrackTipSystem
 	{
 		private readonly Vertex2D tip;
+		private readonly double cos2a, sin2a;
 
 		public CrackTipSystem2D(Vertex2D tip)
 		{
@@ -50,6 +51,12 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			Vector extension = v1 - v0;
 			extension.ScaleIntoThis(1.0 / segment.Length);
 			this.Extension = extension.RawData;
+
+			// Calculate angle data for rotations
+			double cosa = Extension[0];
+			double sina = Extension[1];
+			this.cos2a = 2 * cosa * cosa - 1;
+			this.sin2a = 2 * cosa * sina;
 		}
 
 		public bool IsCenteredAroundStartTip { get; }
@@ -99,11 +106,6 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			double t11 = globalStresses[0];
 			double t22 = globalStresses[1];
 			double t12 = globalStresses[2];
-
-			double cosa = Extension[0];
-			double sina = Extension[1];
-			double cos2a = 2 * cosa * cosa - 1;
-			double sin2a = 2 * cosa * sina;
 
 			var result = new double[3];
 			result[0] = 0.5 * (t11 + t22) + 0.5 * (t11 - t22) * cos2a + t12 * sin2a;
