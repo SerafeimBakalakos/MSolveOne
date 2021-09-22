@@ -138,17 +138,17 @@ namespace MGroup.XFEM.Cracks.Geometry
 		{
 			ICrackFront3D crackFront = CrackGeometry_v2.CrackFront;
 			int numTips = crackFront.ActiveTips.Count;
-			var frontGrowth = new CrackFrontPropagation();
-			frontGrowth.AnglesAtTips = new double[numTips];
-			frontGrowth.LengthsAtTips = new double[numTips];
+			var tipSystems = new ICrackTipSystem[numTips];
 			for (int i = 0; i < numTips; ++i)
 			{
 				int vertexIdx = crackFront.ActiveTips[i];
-				(double growthAngle, double growthLength) = propagator.Propagate(
-					algebraicModel, totalDisplacements, crackFront.CoordinateSystems[vertexIdx]);
-				frontGrowth.AnglesAtTips[i] = growthAngle;
-				frontGrowth.LengthsAtTips[i] = growthLength;
+				tipSystems[i] = crackFront.CoordinateSystems[vertexIdx];
 			}
+
+			var frontGrowth = new CrackFrontPropagation();
+			(frontGrowth.AnglesAtTips, frontGrowth.LengthsAtTips) =
+				propagator.Propagate(algebraicModel, totalDisplacements, tipSystems);
+
 			CrackGeometry_v2.PropagateCrack(model.Nodes.Values, frontGrowth);
 			CrackGeometry_v2.CheckAnglesBetweenCells();
 		}

@@ -72,7 +72,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 		private const double a = 1.05, growthLength = 0.3;
 
 		private const int numTrialPoints = 100;
-		private const double trialPointRadius = 1.0 * growthLength;
+		private const double trialPointRadius = 0.4 * growthLength;
 		private const double jIntegralRadiusRatio = 2.0;
 
 		private const double heavisideTol = 1E-3;

@@ -37,6 +37,10 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 			}
 			else
 			{
+				if (stressesThetaTheta[resultIndex] < 0)
+				{
+					throw new Exception("Cound not find any point with: (r-theta stress = 0) AND (theta-theta stress > 0)");
+				}
 				return resultIndex;
 			}
 		}

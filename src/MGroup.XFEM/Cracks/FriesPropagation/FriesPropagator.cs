@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Matrices;
@@ -71,11 +72,38 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 			this.growthAngleMax = +growthAngleLimit * Math.PI / 180.0;
 		}
 
-		public (double growthAngle, double growthLength) Propagate(IAlgebraicModel algebraicModel, 
+		public (double[] growthAngles, double[] growthLengths) Propagate(
+			IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, ICrackTipSystem[] crackTipSystems)
+		{
+			int numTips = crackTipSystems.Length;
+			var growthAngles = new double[numTips];
+			var hoopStresses = new double[numTips];
+			double maxHoopStress = double.MinValue;
+			for (int i = 0; i < numTips; ++i)
+			{
+				(double growthAngle, double stressThetaTheta) = 
+					PropagateTip(algebraicModel, totalDisplacements, crackTipSystems[i]);
+				Debug.Assert(stressThetaTheta > 0);
+
+				growthAngles[i] = growthAngle;
+				hoopStresses[i] = stressThetaTheta;
+				maxHoopStress = Math.Max(maxHoopStress, stressThetaTheta);
+			}
+
+			var growthLengths = new double[numTips];
+			for (int i = 0; i < numTips; ++i)
+			{
+				growthLengths[i] = this.growthLength * hoopStresses[i] / maxHoopStress;
+			}
+
+			return (growthAngles, growthLengths);
+		}
+
+		private (double growthAngle, double stressThetaTheta) PropagateTip(IAlgebraicModel algebraicModel, 
 			IGlobalVector totalDisplacements, ICrackTipSystem crackTipSystem)
 		{
 			(List<double> anglesTheta, List<double[]> coordsGlobal) = FindTrialPointsGlobal(crackTipSystem);
-			var stressField = new LocalizedStressField(dimension, algebraicModel, totalDisplacements);
+			var stressField = new LocalizedStressField(dimension, algebraicModel, totalDisplacements); //TODO: use the same object for all tips.
 			var stressesThetaTheta = new List<double>();
 			var stressesRTheta = new List<double>();
 
@@ -98,10 +126,10 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 				#endregion
 			}
 
-			PlotNodalStresses(stressField, coordsGlobal, stressesGlobalAtPoints, stressesThetaTheta, stressesRTheta);
+			PlotStresses(stressField, coordsGlobal, stressesGlobalAtPoints, stressesThetaTheta, stressesRTheta);
 
 			int pointIndex = growthAngleCriterion.FindIndexOfPropagationAngle(anglesTheta, stressesThetaTheta, stressesRTheta);
-			return (anglesTheta[pointIndex], growthLength);
+			return (anglesTheta[pointIndex], stressesThetaTheta[pointIndex]);
 		}
 
 		/// <summary>
@@ -177,7 +205,7 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 		//	HERE
 		//}
 
-		private void PlotNodalStresses(LocalizedStressField stressField, List<double[]> pointsGlobal,
+		private void PlotStresses(LocalizedStressField stressField, List<double[]> pointsGlobal,
 			Dictionary<double[], double[]> stressesAtTrialPoints, List<double> stressesThetaTheta, List<double> stressesRTheta)
 		{
 			string directory = @"C:\Users\Serafeim\Desktop\xfem 3d\plots\edge_crack_2D_hybrid\";

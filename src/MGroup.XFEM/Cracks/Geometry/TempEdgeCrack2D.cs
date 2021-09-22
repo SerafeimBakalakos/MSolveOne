@@ -176,19 +176,29 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements)
 		{
-			double growthAngle, growthLength;
-			(growthAngle, growthLength) = friesPropagator.Propagate(
-				algebraicModel, totalDisplacements, hybridGeometry.CrackFront.CoordinateSystems[1]);
-			Debug.WriteLine($"Fries:      Growth angle = {growthAngle}, Growth length = {growthLength}");
+			ICrackFront2D crackFront = hybridGeometry.CrackFront;
+			Debug.Assert(crackFront.ActiveTips.Count == 1 && crackFront.ActiveTips[0] == 1);
 
-			(growthAngle, growthLength) = propagator.Propagate(
+			double growthAngle, growthLength;
+			{
+				// J-integral propagator
+				(growthAngle, growthLength) = propagator.Propagate(
 				algebraicModel, totalDisplacements, lsmGeometry.Tip, lsmGeometry.TipSystem, TipElements);
-			Debug.WriteLine($"J-integral: Growth angle = {growthAngle}, Growth length = {growthLength}");
+				Debug.WriteLine($"J-integral: Growth angle = {growthAngle}, Growth length = {growthLength}");
+			}
+			{
+				// Fries propagator
+				var tipSystems = new ICrackTipSystem[] { crackFront.CoordinateSystems[1] };
+				(double[] growthAngles, double[] growthLengths) = friesPropagator.Propagate(
+					algebraicModel, totalDisplacements, tipSystems);
+				growthAngle = growthAngles[0];
+				growthLength = growthLengths[0];
+				Debug.WriteLine($"Fries:      Growth angle = {growthAngle}, Growth length = {growthLength}");
+			}
+
 			lsmGeometry.Update(model.Nodes.Values, growthAngle, growthLength);
 			crackPath.Add(lsmGeometry.Tip);
 
-			ICrackFront2D crackFront = hybridGeometry.CrackFront;
-			Debug.Assert(crackFront.ActiveTips.Count == 1 && crackFront.ActiveTips[0] == 1);
 			var frontGrowth = new CrackFrontPropagation();
 			frontGrowth.AnglesAtTips = new double[] { growthAngle };
 			frontGrowth.LengthsAtTips = new double[] { growthLength };

@@ -18,6 +18,7 @@ using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.Direct;
 using MGroup.XFEM.Analysis;
 using MGroup.XFEM.Cracks;
+using MGroup.XFEM.Cracks.FriesPropagation;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Cracks.Jintegral;
 using MGroup.XFEM.Cracks.PropagationCriteria;
@@ -54,7 +55,10 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 		private const double load = 197; // lbs
 		private const double a = 1.05, growthLength = 0.3, growthAngle = -(10.0 / 180.0) * Math.PI;
 
-		private const double jIntegralRadiusRatio = 2.0;
+		private const bool useFixedPropagator = false;
+		private const int numTrialPoints = 100;
+		private const double trialPointRadius = 0.4 * growthLength;
+
 		private const double heavisideTol = 1E-4;
 		private const double tipEnrichmentArea = 0.0;
 		private const int maxIterations = 8;
@@ -73,7 +77,21 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			RunAnalysis(model);
 		}
 
-		public static void CreateGeometryModel(XModel<IXCrackElement> model)
+		private static IPropagator ChooseCrackPropagator(XModel<IXCrackElement> model)
+		{
+			if (useFixedPropagator)
+			{
+				return new MockPropagator();
+			}
+			else
+			{
+				var growthAngleCriterion = new DefaultGrowthAngleCriterion(5E-2);
+				var mesh = new UniformCartesianMesh3D.Builder(minCoords, maxCoords, numElements).BuildMesh();
+				return new FriesPropagator(model, mesh, growthAngleCriterion, growthLength, trialPointRadius, numTrialPoints);
+			}
+		}
+
+		private static void CreateGeometryModel(XModel<IXCrackElement> model)
 		{
 			// Crack, enrichments
 			var geometryModel = new CrackGeometryModel(model);
@@ -81,7 +99,8 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			geometryModel.Enricher = new NodeEnricherIndependentCracks(
 				geometryModel, new RelativeAreaSingularityResolver(heavisideTol), tipEnrichmentArea);
 
-			HybridFriesCrack3D crack = CreateCrackGeometry(model, new MockPropagator());
+			IPropagator propagator = ChooseCrackPropagator(model);
+			HybridFriesCrack3D crack = CreateCrackGeometry(model, propagator);
 			crack.Observers.Add(new LevelSetObserver(model, crack.CrackGeometry_v2, outputDirectory));
 			crack.Observers.Add(new CrackLevelSetPlotter_v2(model, crack.CrackGeometry_v2, outputDirectory));
 			crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
@@ -90,7 +109,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			geometryModel.Cracks[crack.ID] = crack;
 		}
 
-		public static HybridFriesCrack3D CreateCrackGeometry(XModel<IXCrackElement> model, IPropagator propagator)
+		private static HybridFriesCrack3D CreateCrackGeometry(XModel<IXCrackElement> model, IPropagator propagator)
 		{
 			double crackHeight = /*0.40*/ 0.45 * (maxCoords[1] - minCoords[1]);
 
@@ -109,7 +128,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			return crack;
 		}
 
-		public static XModel<IXCrackElement> CreatePhysicalModel()
+		private static XModel<IXCrackElement> CreatePhysicalModel()
 		{
 			var model = new XModel<IXCrackElement>(3);
 			model.Subdomains[subdomainID] = new XSubdomain<IXCrackElement>(subdomainID);
@@ -155,7 +174,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			return model;
 		}
 
-		public static void RunAnalysis(XModel<IXCrackElement> model)
+		private static void RunAnalysis(XModel<IXCrackElement> model)
 		{
 			//for (int t = 0; t < maxIterations; ++t)
 			//{
@@ -186,7 +205,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			analyzer.Analyze();
 		}
 
-		public static void SetupEnrichmentOutput(XModel<IXCrackElement> model)
+		private static void SetupEnrichmentOutput(XModel<IXCrackElement> model)
 		{
 			// Enrichments
 			var allCrackStepNodes = new AllCrackStepNodesObserver();
@@ -200,10 +219,17 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 
 		private class MockPropagator : IPropagator
 		{
-			public (double growthAngle, double growthLength) Propagate(
-				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, ICrackTipSystem crackTipSystem)
+			public (double[] growthAngles, double[] growthLengths) Propagate(
+				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, ICrackTipSystem[] crackTipSystems)
 			{
-				return (growthAngle, growthLength);
+				var growthAngles = new double[crackTipSystems.Length];
+				var growthLengths = new double[crackTipSystems.Length];
+				for (int i = 0; i < crackTipSystems.Length; ++i)
+				{
+					growthAngles[i] = growthAngle;
+					growthLengths[i] = growthLength;
+				}
+				return (growthAngles, growthLengths);
 			}
 		}
 	}

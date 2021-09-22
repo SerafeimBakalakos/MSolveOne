@@ -10,9 +10,9 @@ using MGroup.XFEM.Geometry.HybridFries;
 
 namespace MGroup.XFEM.Cracks
 {
-    public interface IPropagator
-    {
-        (double growthAngle, double growthLength) Propagate(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, 
-            ICrackTipSystem crackTipSystem);
-    }
+	public interface IPropagator
+	{
+		(double[] growthAngles, double[] growthLengths) Propagate(
+			IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, ICrackTipSystem[] crackTipSystems);
+	}
 }
