@@ -37,7 +37,20 @@ namespace MGroup.MSolve.Meshes.Structured
 				double xMin = MinCoordinates[d];
 				double dx = DistancesBetweenPoints[d];
 				elementIdx[d] = (int)Math.Floor((x - xMin) / dx);
-				naturalCoords[d] = 2 * (x - xMin) / dx - 2 * elementIdx[d] - 1;
+				
+				if (elementIdx[d] > NumElements[d])
+				{
+					throw new Exception($"Point ({globalCoords[0]}, {globalCoords[1]}, {globalCoords[2]}) is outside the mesh");
+				}
+				else if (elementIdx[d] == NumElements[d])
+				{
+					elementIdx[d] -= 1;
+					naturalCoords[d] = 1.0;
+				}
+				else
+				{
+					naturalCoords[d] = 2 * (x - xMin) / dx - 2 * elementIdx[d] - 1;
+				}
 			}
 
 			return (GetElementID(elementIdx), naturalCoords);
