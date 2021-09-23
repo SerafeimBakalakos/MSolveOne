@@ -55,7 +55,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 		private const double load = 197; // lbs
 		private const double a = 1.05, growthLength = 0.3, growthAngle = -(10.0 / 180.0) * Math.PI;
 
-		private const bool useFixedPropagator = false;
+		private const bool useFixedPropagator = true;
 		private const int numTrialPoints = 100;
 		private const double trialPointRadius = 0.4 * growthLength;
 

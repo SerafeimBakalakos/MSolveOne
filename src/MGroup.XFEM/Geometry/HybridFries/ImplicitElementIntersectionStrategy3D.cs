@@ -6,6 +6,7 @@ using MGroup.XFEM.ElementGeometry;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Geometry.LSM;
+using MGroup.XFEM.Geometry.Primitives;
 using MGroup.XFEM.Geometry.Tolerances;
 
 namespace MGroup.XFEM.Geometry.HybridFries
@@ -24,7 +25,7 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public IElementDiscontinuityInteraction FindIntersectionWithCutElement(IXFiniteElement element, bool isTipElement)
 		{
-			Dictionary<int, double> levelSetSubset = FindLevelSetsOfElementNodes(element);
+			Dictionary<int, double> levelSetSubset = FindBodyLevelSetsOfElementNodes(element);
 
 			ElementFace[] allFaces = element.Faces;
 			var intersectionPoints = new Dictionary<double[], HashSet<ElementFace>>();
@@ -54,13 +55,31 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 			// Create mesh
 			var intersectionMesh = IntersectionMesh3D_OLD.CreateMultiCellMesh3D(intersectionPoints);
+			if (isTipElement)
+			{
+				intersectionMesh = FindIntersectionsWithTipLevelSet(intersectionMesh, element);
+			}
 			var intersection = new LsmElementIntersection3D(
 				crack.ID, RelativePositionCurveElement.Intersecting, element, intersectionMesh);
 			intersection.BoundaryOfGeometryInteractsWithElement = isTipElement;
 			return intersection;
 		}
 
-		private Dictionary<int, double> FindLevelSetsOfElementNodes(IXFiniteElement element)
+		private double[] CalcPsiLevelSets(IList<double[]> pointsNatural, IXFiniteElement element)
+		{
+			var psiLevelSets = new double[pointsNatural.Count];
+			for (int i = 0; i < pointsNatural.Count; ++i)
+			{
+				var point = new XPoint(2);
+				point.Element = element;
+				point.ShapeFunctions = element.Interpolation.EvaluateFunctionsAt(pointsNatural[i]);
+				double[] levelSets = crack.InterpolateLevelSets(point);
+				psiLevelSets[i] = levelSets[1];
+			}
+			return psiLevelSets;
+		}
+
+		private Dictionary<int, double> FindBodyLevelSetsOfElementNodes(IXFiniteElement element)
 		{
 			var levelSetSubset = new Dictionary<int, double>();
 			foreach (XNode node in element.Nodes)
@@ -69,6 +88,14 @@ namespace MGroup.XFEM.Geometry.HybridFries
 				levelSetSubset[node.ID] = nodeLevelSets[0];
 			}
 			return levelSetSubset;
+		}
+
+		private IntersectionMesh3D_OLD FindIntersectionsWithTipLevelSet(
+			IntersectionMesh3D_OLD intersectionsWithCrackBody, IXFiniteElement element)
+		{
+			double[] psiLevelSets = CalcPsiLevelSets(intersectionsWithCrackBody.Vertices, element);
+			var intersector = new IntersectionMesh3DIntersector(intersectionsWithCrackBody, psiLevelSets);
+			return intersector.IntersectMesh();
 		}
 
 		private static double[] IntersectEdgeExcludingNodes(ElementEdge edge, Dictionary<int, double> levelSetSubset)
