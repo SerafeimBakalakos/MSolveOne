@@ -59,7 +59,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public HashSet<IXCrackElement> TipElements { get; } = new HashSet<IXCrackElement>();
 
-		public TipCoordinateSystemExplicit TipSystem => lsmGeometry.TipSystem;
+		public FrontCoordinateSystemExplicit FrontSystem => lsmGeometry.FrontSystem;
 
 		public void CheckPropagation(IPropagationTermination termination)
 		{
@@ -83,7 +83,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 			// Crack tip enrichments
 			//TODO: For problems other than LEFM, use Abstract Factory pattern for tip enrichments, materials, propagators, etc.
-			var tipEnrichment = new IsotropicBrittleTipEnrichments2D(() => lsmGeometry.TipSystem);
+			var tipEnrichment = new IsotropicBrittleTipEnrichments2D(() => lsmGeometry.FrontSystem);
 			ICrackTipEnrichment[] tipEnrichmentFuncs = tipEnrichment.Functions;
 			var tipEnrichedDofs = new List<IDofType>(8);
 			for (int i = 0; i < tipEnrichmentFuncs.Length; ++i)
@@ -149,7 +149,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 		public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements)
 		{
 			(double growthAngle, double growthLength) = propagator.Propagate(
-				algebraicModel, totalDisplacements, lsmGeometry.Tip, lsmGeometry.TipSystem, TipElements);
+				algebraicModel, totalDisplacements, lsmGeometry.Tip, lsmGeometry.FrontSystem, TipElements);
 			lsmGeometry.Update(model.Nodes.Values, growthAngle, growthLength);
 			crackPath.Add(lsmGeometry.Tip);
 		}

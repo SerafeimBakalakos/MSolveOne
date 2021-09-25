@@ -18,8 +18,8 @@ namespace MGroup.XFEM.Output.Writers
 		private readonly string outputDirectory;
 		private readonly UniformPointGenerator pointGenerator;
 		private readonly IHybridFriesCrackDescription crack;
-		private readonly TipCoordinateSystemImplicit tipCoordinateSystem;
-		private readonly TipCoordinateSystemImplicitFries tipCoordinateSystemFries;
+		private readonly FrontCoordinateSystemImplicit frontCoordinateSystem;
+		private readonly FrontCoordinateSystemImplicitFries frontCoordinateSystemFries;
 		private int iteration;
 
 		public PolarCoordsAtPointsPlotter(UniformPointGenerator pointGenerator, IHybridFriesCrackDescription crack, 
@@ -28,8 +28,8 @@ namespace MGroup.XFEM.Output.Writers
 			this.crack = crack;
 			this.pointGenerator = pointGenerator;
 			this.outputDirectory = outputDirectory;
-			this.tipCoordinateSystem = new TipCoordinateSystemImplicit(crack);
-			this.tipCoordinateSystemFries = new TipCoordinateSystemImplicitFries(crack);
+			this.frontCoordinateSystem = new FrontCoordinateSystemImplicit(crack);
+			this.frontCoordinateSystemFries = new FrontCoordinateSystemImplicitFries(crack);
 
 			iteration = 0;
 		}
@@ -39,7 +39,7 @@ namespace MGroup.XFEM.Output.Writers
 
 			List<double[]> pointsGlobal = pointGenerator.GeneratePointsGlobalCartesian();
 			List<XPoint> pointsNatural = pointGenerator.GeneratePointsNatural(pointsGlobal);
-			(List<double> r, List<double> theta) = CalcPolarCoords(tipCoordinateSystem, pointsNatural);
+			(List<double> r, List<double> theta) = CalcPolarCoords(frontCoordinateSystem, pointsNatural);
 
 			string path = $"{outputDirectory}\\polar_coords_{crack.ID}_t{iteration}.vtk";
 			using (var writer = new VtkPointWriter(path))
@@ -49,7 +49,7 @@ namespace MGroup.XFEM.Output.Writers
 				writer.WriteScalarField("theta", theta);
 			}
 
-			(List<double> rFries, List<double> thetaFries) = CalcPolarCoords(tipCoordinateSystemFries, pointsNatural);
+			(List<double> rFries, List<double> thetaFries) = CalcPolarCoords(frontCoordinateSystemFries, pointsNatural);
 			string pathFries = $"{outputDirectory}\\polar_coords_fries{crack.ID}_t{iteration}.vtk";
 			using (var writer = new VtkPointWriter(pathFries))
 			{
@@ -61,7 +61,7 @@ namespace MGroup.XFEM.Output.Writers
 			++iteration;
 		}
 
-		private static (List<double> r, List<double> theta) CalcPolarCoords(ITipCoordinateSystem tipCoordinateSystem, 
+		private static (List<double> r, List<double> theta) CalcPolarCoords(IFrontCoordinateSystem tipCoordinateSystem, 
 			List<XPoint> pointsNatural)
 		{
 			var allR = new List<double>(pointsNatural.Count);

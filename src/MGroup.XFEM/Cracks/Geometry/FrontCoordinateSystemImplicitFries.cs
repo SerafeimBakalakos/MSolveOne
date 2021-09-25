@@ -13,11 +13,11 @@ namespace MGroup.XFEM.Cracks.Geometry
 	/// <summary>
 	/// There are serious bugs in this. Theta is grossly incorrect in elements intersected by the crack.
 	/// </summary>
-	public class TipCoordinateSystemImplicitFries : ITipCoordinateSystem
+	public class FrontCoordinateSystemImplicitFries : IFrontCoordinateSystem
 	{
 		private readonly IHybridFriesCrackDescription crack;
 
-		public TipCoordinateSystemImplicitFries(IHybridFriesCrackDescription crack)
+		public FrontCoordinateSystemImplicitFries(IHybridFriesCrackDescription crack)
 		{
 			this.crack = crack;
 		}

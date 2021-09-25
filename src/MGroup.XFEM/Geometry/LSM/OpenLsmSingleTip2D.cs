@@ -32,7 +32,7 @@ namespace MGroup.XFEM.Geometry.LSM
 
         public double[] Tip { get; private set; }
 
-        public TipCoordinateSystemExplicit TipSystem { get; private set; }
+        public FrontCoordinateSystemExplicit FrontSystem { get; private set; }
 
         public void Initialize(IEnumerable<XNode> nodes, PolyLine2D initialCurve)
         {
@@ -47,7 +47,7 @@ namespace MGroup.XFEM.Geometry.LSM
             tangentY /= length;
 
             this.Tip = tip;
-            this.TipSystem = new TipCoordinateSystemExplicit(tip, tangentSlope);
+            this.FrontSystem = new FrontCoordinateSystemExplicit(tip, tangentSlope);
 
             foreach (XNode node in nodes)
             {
@@ -185,13 +185,13 @@ namespace MGroup.XFEM.Geometry.LSM
 
         public void Update(IEnumerable<XNode> nodes, double localGrowthAngle, double growthLength)
         {
-            double globalGrowthAngle = Utilities.WrapAngle(localGrowthAngle + TipSystem.RotationAngle);
+            double globalGrowthAngle = Utilities.WrapAngle(localGrowthAngle + FrontSystem.RotationAngle);
             double dx = growthLength * Math.Cos(globalGrowthAngle);
             double dy = growthLength * Math.Sin(globalGrowthAngle);
             var oldTip = this.Tip;
             var newTip = new double[] { oldTip[0] + dx, oldTip[1] + dy };
             this.Tip = newTip;
-            this.TipSystem = new TipCoordinateSystemExplicit(newTip, globalGrowthAngle);
+            this.FrontSystem = new FrontCoordinateSystemExplicit(newTip, globalGrowthAngle);
 
             levelSetUpdater.Update(oldTip, newTip, nodes, LevelSetsBody, LevelSetsTip);
         }

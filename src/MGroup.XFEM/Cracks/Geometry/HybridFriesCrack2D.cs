@@ -26,7 +26,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 			this.CrackGeometry_v2 = crackGeometry;
 			this.propagator = propagator;
 
-			this.TipCoordinateSystem = new TipCoordinateSystemImplicit(crackGeometry);
+			this.FrontCoordinateSystem = new FrontCoordinateSystemImplicit(crackGeometry);
 		}
 
 		public List<ICrackObserver> Observers { get; } = new List<ICrackObserver>();
@@ -49,9 +49,9 @@ namespace MGroup.XFEM.Cracks.Geometry
 
 		public HashSet<IXCrackElement> TipElements { get; } = new HashSet<IXCrackElement>();
 
-		public ITipCoordinateSystem TipCoordinateSystem { get; }
+		public IFrontCoordinateSystem FrontCoordinateSystem { get; }
 
-		public TipCoordinateSystemExplicit TipSystem => null;
+		public FrontCoordinateSystemExplicit FrontSystem => null;
 
 		public int ID => CrackGeometry_v2.ID;
 
@@ -79,10 +79,10 @@ namespace MGroup.XFEM.Cracks.Geometry
 			//TODO: For problems other than LEFM, use Abstract Factory pattern for tip enrichments, materials, propagators, etc.
 			ICrackTipEnrichment[] tipEnrichmentFuncs = 
 			{ 
-				new IsotropicBrittleTipEnrichments_v2.Func0(TipCoordinateSystem), 
-				new IsotropicBrittleTipEnrichments_v2.Func1(TipCoordinateSystem), 
-				new IsotropicBrittleTipEnrichments_v2.Func2(TipCoordinateSystem), 
-				new IsotropicBrittleTipEnrichments_v2.Func3(TipCoordinateSystem) 
+				new IsotropicBrittleTipEnrichments_v2.Func0(FrontCoordinateSystem), 
+				new IsotropicBrittleTipEnrichments_v2.Func1(FrontCoordinateSystem), 
+				new IsotropicBrittleTipEnrichments_v2.Func2(FrontCoordinateSystem), 
+				new IsotropicBrittleTipEnrichments_v2.Func3(FrontCoordinateSystem) 
 			};
 			var tipEnrichedDofs = new List<IDofType>(4 * Dimension);
 			for (int i = 0; i < tipEnrichmentFuncs.Length; ++i)

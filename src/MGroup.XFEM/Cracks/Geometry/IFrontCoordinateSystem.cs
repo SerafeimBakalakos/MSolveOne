@@ -6,7 +6,7 @@ using MGroup.XFEM.Geometry.Primitives;
 
 namespace MGroup.XFEM.Cracks.Geometry
 {
-	public interface ITipCoordinateSystem
+	public interface IFrontCoordinateSystem
 	{
 		double[] MapPointToLocalPolar(XNode node);
 

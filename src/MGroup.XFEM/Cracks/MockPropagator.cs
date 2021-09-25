@@ -58,7 +58,7 @@ namespace MGroup.XFEM.Cracks
 		
 		public (double growthAngle, double growthLength) Propagate(
 			IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements,
-			double[] crackTipGlobal, TipCoordinateSystemExplicit tipSystem, IEnumerable<IXCrackElement> tipElements)
+			double[] crackTipGlobal, FrontCoordinateSystemExplicit frontSystem, IEnumerable<IXCrackElement> tipElements)
 		{
 			if (iteration >= Logger.GrowthLengths.Count)
 			{

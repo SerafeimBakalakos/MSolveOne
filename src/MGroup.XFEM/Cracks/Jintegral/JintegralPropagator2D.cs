@@ -59,10 +59,10 @@ namespace MGroup.XFEM.Cracks.Jintegral
 
 		public (double growthAngle, double growthLength) Propagate(
 			IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, 
-			double[] crackTipGlobal, TipCoordinateSystemExplicit tipSystem, IEnumerable<IXCrackElement> tipElements)
+			double[] crackTipGlobal, FrontCoordinateSystemExplicit frontSystem, IEnumerable<IXCrackElement> tipElements)
 		{
 			// TODO: Also check if the sifs do not violate the material toughness
-			double[] sifs = ComputeSIFS(algebraicModel, totalDisplacements, crackTipGlobal, tipSystem, tipElements);
+			double[] sifs = ComputeSIFS(algebraicModel, totalDisplacements, crackTipGlobal, frontSystem, tipElements);
 			double growthAngle = growthDirectionCriterion.ComputeGrowthAngle(sifs);
 			double growthLength = growthLengthCriterion.ComputeGrowthLength(sifs);
 			Logger.GrowthAngles.Add(growthAngle);
@@ -72,7 +72,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 		}
 
 		private double[] ComputeSIFS(IAlgebraicModel algebraicModel, IGlobalVector totalFreeDisplacements,
-			double[] crackTip, TipCoordinateSystemExplicit tipSystem, IEnumerable<IXCrackElement> tipElements)
+			double[] crackTip, FrontCoordinateSystemExplicit frontSystem, IEnumerable<IXCrackElement> tipElements)
 		{
 			var contour = new Circle2D(crackTip[0], crackTip[1], ComputeRadiusOfJintegralOuterContour(tipElements));
 
@@ -82,7 +82,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 				double[] nodalWeights = CalcNodalWeights(contour, element);
 				double[] elementDisplacements = algebraicModel.ExtractElementVector(totalFreeDisplacements, element);
 				double[] elementIntegrals = ComputeInteractionIntegrals(
-					element, Vector.CreateFromArray(elementDisplacements), nodalWeights, tipSystem);
+					element, Vector.CreateFromArray(elementDisplacements), nodalWeights, frontSystem);
 				return elementIntegrals;
 			};
 			double[] interactionIntegrals = algebraicModel.ReduceSumPerElement(
@@ -140,7 +140,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 		}
 
 		private double[] ComputeInteractionIntegrals(IXCrackElement element, Vector nodalDisplacements,
-			double[] nodalWeights, TipCoordinateSystemExplicit tipSystem)
+			double[] nodalWeights, FrontCoordinateSystemExplicit frontSystem)
 		{
 			double integralMode1 = 0.0;
 			double integralMode2 = 0.0;
@@ -161,8 +161,8 @@ namespace MGroup.XFEM.Cracks.Jintegral
 				point.JacobianNaturalGlobal = evalInterpolation.Jacobian;
 				double[] cartesianCoords = point.MapCoordinates(point.ShapeFunctions, point.Element.Nodes);
 				point.Coordinates[CoordinateSystem.GlobalCartesian] = cartesianCoords;
-				double[] polarCoords = tipSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
-				TipJacobiansExplicit tipJacobians = tipSystem.CalcJacobiansAt(polarCoords);
+				double[] polarCoords = frontSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
+				TipJacobiansExplicit tipJacobians = frontSystem.CalcJacobiansAt(polarCoords);
 
 				// Material properties
 				IMatrixView constitutive = material.FindMaterialAt(point).ConstitutiveMatrix;
@@ -170,9 +170,9 @@ namespace MGroup.XFEM.Cracks.Jintegral
 				// State 1
 				Matrix globalDisplacementGradState1 = element.CalcDisplacementFieldGradient(point, nodalDisplacements);
 				Tensor2D globalStressState1 = CalcStressTensor(globalDisplacementGradState1, constitutive);
-				Matrix localDisplacementGradState1 = tipSystem.
+				Matrix localDisplacementGradState1 = frontSystem.
 					TransformVectorFieldDerivativesGlobalCartesianToLocalCartesian(globalDisplacementGradState1);
-				Tensor2D localStressTensorState1 = tipSystem.
+				Tensor2D localStressTensorState1 = frontSystem.
 					TransformTensorGlobalCartesianToLocalCartesian(globalStressState1);
 
 				// Weight Function
@@ -186,7 +186,7 @@ namespace MGroup.XFEM.Cracks.Jintegral
 						nodalWeights[nodeIdx]);
 				}
 				Vector localWeightGradient = 
-					tipSystem.TransformScalarFieldDerivativesGlobalCartesianToLocalCartesian(globalWeightGradient);
+					frontSystem.TransformScalarFieldDerivativesGlobalCartesianToLocalCartesian(globalWeightGradient);
 
 				// State 2
 				// TODO: XCrackElement shouldn't have to pass tipCoordinate system to auxiliaryStates. 

@@ -11,9 +11,9 @@ namespace MGroup.XFEM.Enrichment.Functions
 {
 	public abstract class IsotropicBrittleTipEnrichments_v2 : ICrackTipEnrichment
 	{
-		private readonly ITipCoordinateSystem tipCoordSystem;
+		private readonly IFrontCoordinateSystem tipCoordSystem;
 
-		protected IsotropicBrittleTipEnrichments_v2(ITipCoordinateSystem tipCoordSystem)
+		protected IsotropicBrittleTipEnrichments_v2(IFrontCoordinateSystem tipCoordSystem)
 		{
 			this.tipCoordSystem = tipCoordSystem;
 		}
@@ -49,7 +49,7 @@ namespace MGroup.XFEM.Enrichment.Functions
 
 		public class Func0 : IsotropicBrittleTipEnrichments_v2
 		{
-			public Func0(ITipCoordinateSystem tipCoordSystem) : base(tipCoordSystem)
+			public Func0(IFrontCoordinateSystem tipCoordSystem) : base(tipCoordSystem)
 			{
 			}
 
@@ -76,7 +76,7 @@ namespace MGroup.XFEM.Enrichment.Functions
 
 		public class Func1 : IsotropicBrittleTipEnrichments_v2
 		{
-			public Func1(ITipCoordinateSystem tipCoordSystem) : base(tipCoordSystem)
+			public Func1(IFrontCoordinateSystem tipCoordSystem) : base(tipCoordSystem)
 			{
 			}
 
@@ -103,7 +103,7 @@ namespace MGroup.XFEM.Enrichment.Functions
 
 		public class Func2 : IsotropicBrittleTipEnrichments_v2
 		{
-			public Func2(ITipCoordinateSystem tipCoordSystem) : base(tipCoordSystem)
+			public Func2(IFrontCoordinateSystem tipCoordSystem) : base(tipCoordSystem)
 			{
 			}
 
@@ -132,7 +132,7 @@ namespace MGroup.XFEM.Enrichment.Functions
 
 		public class Func3 : IsotropicBrittleTipEnrichments_v2
 		{
-			public Func3(ITipCoordinateSystem tipCoordSystem) : base(tipCoordSystem)
+			public Func3(IFrontCoordinateSystem tipCoordSystem) : base(tipCoordSystem)
 			{
 			}
 

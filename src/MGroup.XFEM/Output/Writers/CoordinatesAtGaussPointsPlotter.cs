@@ -16,12 +16,12 @@ namespace MGroup.XFEM.Output.Writers
 	{
 		private readonly IXModel model;
 		private readonly IHybridFriesCrackDescription crack;
-		private readonly ITipCoordinateSystem tipCoordinateSystem;
+		private readonly IFrontCoordinateSystem tipCoordinateSystem;
 		private readonly string outputDirectory;
 		private int iteration;
 
 		public CoordinatesAtGaussPointsPlotter(IXModel model, IHybridFriesCrackDescription crack, 
-			ITipCoordinateSystem tipCoordinateSystem, string outputDirectory)
+			IFrontCoordinateSystem tipCoordinateSystem, string outputDirectory)
 		{
 			this.model = model;
 			this.crack = crack;

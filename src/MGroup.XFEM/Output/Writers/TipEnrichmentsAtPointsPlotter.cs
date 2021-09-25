@@ -33,22 +33,22 @@ namespace MGroup.XFEM.Output.Writers
 			this.pointGenerator = pointGenerator;
 			this.outputDirectory = outputDirectory;
 
-			var tipCoordSystem = new TipCoordinateSystemImplicit(crack);
+			var frontCoordSystem = new FrontCoordinateSystemImplicit(crack);
 			this.tipEnrichments = new ICrackTipEnrichment[]
 			{
-				new IsotropicBrittleTipEnrichments_v2.Func0(tipCoordSystem),
-				new IsotropicBrittleTipEnrichments_v2.Func1(tipCoordSystem),
-				new IsotropicBrittleTipEnrichments_v2.Func2(tipCoordSystem),
-				new IsotropicBrittleTipEnrichments_v2.Func3(tipCoordSystem)
+				new IsotropicBrittleTipEnrichments_v2.Func0(frontCoordSystem),
+				new IsotropicBrittleTipEnrichments_v2.Func1(frontCoordSystem),
+				new IsotropicBrittleTipEnrichments_v2.Func2(frontCoordSystem),
+				new IsotropicBrittleTipEnrichments_v2.Func3(frontCoordSystem)
 			};
 
-			var tipCoordSystemFries = new TipCoordinateSystemImplicitFries(crack);
+			var frontCoordSystemFries = new FrontCoordinateSystemImplicitFries(crack);
 			this.tipEnrichmentsFries = new ICrackTipEnrichment[]
 			{
-				new IsotropicBrittleTipEnrichments_v2.Func0(tipCoordSystemFries),
-				new IsotropicBrittleTipEnrichments_v2.Func1(tipCoordSystemFries),
-				new IsotropicBrittleTipEnrichments_v2.Func2(tipCoordSystemFries),
-				new IsotropicBrittleTipEnrichments_v2.Func3(tipCoordSystemFries)
+				new IsotropicBrittleTipEnrichments_v2.Func0(frontCoordSystemFries),
+				new IsotropicBrittleTipEnrichments_v2.Func1(frontCoordSystemFries),
+				new IsotropicBrittleTipEnrichments_v2.Func2(frontCoordSystemFries),
+				new IsotropicBrittleTipEnrichments_v2.Func3(frontCoordSystemFries)
 			};
 
 			iteration = 0;

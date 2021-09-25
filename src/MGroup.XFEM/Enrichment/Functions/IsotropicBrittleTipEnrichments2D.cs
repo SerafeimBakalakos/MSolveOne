@@ -13,11 +13,11 @@ namespace MGroup.XFEM.Enrichment.Functions
 {
 	public class IsotropicBrittleTipEnrichments2D
 	{
-		private readonly Func<TipCoordinateSystemExplicit> getTipSystem;
+		private readonly Func<FrontCoordinateSystemExplicit> getFrontSystem;
 
-		public IsotropicBrittleTipEnrichments2D(Func<TipCoordinateSystemExplicit> getTipSystem)
+		public IsotropicBrittleTipEnrichments2D(Func<FrontCoordinateSystemExplicit> getFrontSystem)
 		{
-			this.getTipSystem = getTipSystem;
+			this.getFrontSystem = getFrontSystem;
 
 			Functions = new ICrackTipEnrichment[4];
 			Functions[0] = new Func0(this);
@@ -31,25 +31,25 @@ namespace MGroup.XFEM.Enrichment.Functions
 		//TODO: Perhaps these methods should be in a separate class, not the one that contains the function classes.
 		private double[] CalcPolarCoordinates(XNode node)
 		{
-			TipCoordinateSystemExplicit tipSystem = getTipSystem();
-			var polarCoords = tipSystem.MapPointGlobalCartesianToLocalPolar(node.Coordinates);
+			FrontCoordinateSystemExplicit frontSystem = getFrontSystem();
+			var polarCoords = frontSystem.MapPointGlobalCartesianToLocalPolar(node.Coordinates);
 			return polarCoords;
 		}
 
 		private double[] CalcPolarCoordinates(XPoint point)
 		{
-			TipCoordinateSystemExplicit tipSystem = getTipSystem();
+			FrontCoordinateSystemExplicit frontSystem = getFrontSystem();
 			double[] cartesianCoords = GetGlobalCartesianCoords(point);
-			var polarCoords = tipSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
+			var polarCoords = frontSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
 			return polarCoords;
 		}
 
 		private (double[] coords, TipJacobiansExplicit jacobians) CalcPolarCoordinatesAndJacobians(XPoint point)
 		{
-			TipCoordinateSystemExplicit tipSystem = getTipSystem();
+			FrontCoordinateSystemExplicit frontSystem = getFrontSystem();
 			double[] cartesianCoords = GetGlobalCartesianCoords(point);
-			double[] polarCoords = tipSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
-			TipJacobiansExplicit jacobians = tipSystem.CalcJacobiansAt(polarCoords);
+			double[] polarCoords = frontSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
+			TipJacobiansExplicit jacobians = frontSystem.CalcJacobiansAt(polarCoords);
 			return (polarCoords, jacobians);
 		}
 

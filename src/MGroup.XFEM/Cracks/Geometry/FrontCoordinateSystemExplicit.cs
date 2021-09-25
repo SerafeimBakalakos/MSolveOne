@@ -6,7 +6,7 @@ using MGroup.MSolve.DataStructures;
 //TODO: This is the explicit implementation for 2D problems. Use an interface to allow for other implementations.
 namespace MGroup.XFEM.Cracks.Geometry
 {
-    public class TipCoordinateSystemExplicit
+    public class FrontCoordinateSystemExplicit
     {
         private readonly Vector localCoordinatesOfGlobalOrigin;
 
@@ -26,7 +26,7 @@ namespace MGroup.XFEM.Cracks.Geometry
         /// <param name="tipCoordinates">Coordinates of the crack tip in the global cartesian system.</param>
         /// <param name="tipRotationAngle">Counter-clockwise angle from the O-x axis of the global cartesian system to  
         ///     the T-x1 axis of the local corrdinate system of the tip (T being the tip point)</param>
-        public TipCoordinateSystemExplicit(double[] tipCoordinates, double tipRotationAngle)
+        public FrontCoordinateSystemExplicit(double[] tipCoordinates, double tipRotationAngle)
         {
             this.RotationAngle = tipRotationAngle;
 

@@ -290,7 +290,7 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 				new MaximumCircumferentialTensileStressCriterion(), 
 				new ConstantIncrement2D(1.5 * jIntegralRadiusRatio * elementSize));
 			(double growthAngle, double growthLength) = propagator.Propagate(algebraicModel, globalU,
-				crack.TipCoordinates, crack.TipSystem, crack.TipElements);
+				crack.TipCoordinates, crack.FrontSystem, crack.TipElements);
 
 			double sifMode1 = propagator.Logger.SIFsMode1[0];
 			double sifMode2 = propagator.Logger.SIFsMode2[0];
@@ -455,7 +455,7 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 
 			public HashSet<IXCrackElement> TipElements => crack.TipElements;
 
-			public TipCoordinateSystemExplicit TipSystem => crack.TipSystem;
+			public FrontCoordinateSystemExplicit FrontSystem => crack.FrontSystem;
 
 			public int ID => crack.ID;
 

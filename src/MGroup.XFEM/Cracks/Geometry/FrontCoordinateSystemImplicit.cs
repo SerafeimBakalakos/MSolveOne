@@ -8,11 +8,11 @@ using MGroup.XFEM.Geometry.Primitives;
 
 namespace MGroup.XFEM.Cracks.Geometry
 {
-	public class TipCoordinateSystemImplicit : ITipCoordinateSystem
+	public class FrontCoordinateSystemImplicit : IFrontCoordinateSystem
 	{
 		private readonly IImplicitCrackGeometry crack;
 
-		public TipCoordinateSystemImplicit(IImplicitCrackGeometry crack)
+		public FrontCoordinateSystemImplicit(IImplicitCrackGeometry crack)
 		{
 			this.crack = crack;
 		}

@@ -133,7 +133,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 				crack.Observers.Add(new CrackInteractingElementsPlotter(crack, OutputDirectory));
 				geometryModel.Cracks[crack.ID] = crack;
 				model.ModelObservers.Add(new CoordinatesAtGaussPointsPlotter(
-					model, crack.hybridGeometry, crack.hybridTipCoordinateSystem, OutputDirectory));
+					model, crack.hybridGeometry, crack.hybridFrontCoordinateSystem, OutputDirectory));
 			}
 		}
 

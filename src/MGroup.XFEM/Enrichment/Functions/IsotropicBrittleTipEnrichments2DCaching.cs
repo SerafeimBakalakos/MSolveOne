@@ -18,14 +18,14 @@ namespace MGroup.XFEM.Enrichment.Functions
 	/// </summary>
 	public class IsotropicBrittleTipEnrichments2DCaching
 	{
-		private readonly Func<TipCoordinateSystemExplicit> getTipSystem;
+		private readonly Func<FrontCoordinateSystemExplicit> getFrontSystem;
 
 		private NodePolarDataCache nodeCache;
 		private PointPolarDataCache pointCache;
 
-		public IsotropicBrittleTipEnrichments2DCaching(Func<TipCoordinateSystemExplicit> getTipSystem)
+		public IsotropicBrittleTipEnrichments2DCaching(Func<FrontCoordinateSystemExplicit> getFrontSystem)
 		{
-			this.getTipSystem = getTipSystem;
+			this.getFrontSystem = getFrontSystem;
 
 			Functions = new ICrackTipEnrichment[4];
 			Functions[0] = new Func0(this);
@@ -41,10 +41,10 @@ namespace MGroup.XFEM.Enrichment.Functions
 		{
 			if ((pointCache == null) || (pointCache.originalPoint != point))
 			{
-				TipCoordinateSystemExplicit tipSystem = getTipSystem();
+				FrontCoordinateSystemExplicit frontSystem = getFrontSystem();
 				double[] cartesianCoords = GetGlobalCartesianCoords(point);
-				var polarCoords = tipSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
-				TipJacobiansExplicit jacobians = tipSystem.CalcJacobiansAt(polarCoords);
+				var polarCoords = frontSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
+				TipJacobiansExplicit jacobians = frontSystem.CalcJacobiansAt(polarCoords);
 				pointCache = new PointPolarDataCache(point, polarCoords, jacobians);
 			}
 			return (pointCache.polarCoords, pointCache.polarJacobians);
@@ -54,8 +54,8 @@ namespace MGroup.XFEM.Enrichment.Functions
 		{
 			if ((nodeCache == null) || (nodeCache.originalNode != node))
 			{
-				TipCoordinateSystemExplicit tipSystem = getTipSystem();
-				var polarCoords = tipSystem.MapPointGlobalCartesianToLocalPolar(node.Coordinates);
+				FrontCoordinateSystemExplicit frontSystem = getFrontSystem();
+				var polarCoords = frontSystem.MapPointGlobalCartesianToLocalPolar(node.Coordinates);
 				nodeCache = new NodePolarDataCache(node, polarCoords);
 			}
 			return nodeCache.polarCoords;
@@ -65,9 +65,9 @@ namespace MGroup.XFEM.Enrichment.Functions
 		{
 			if ((pointCache == null) || (pointCache.originalPoint != point))
 			{
-				TipCoordinateSystemExplicit tipSystem = getTipSystem();
+				FrontCoordinateSystemExplicit frontSystem = getFrontSystem();
 				double[] cartesianCoords = GetGlobalCartesianCoords(point);
-				var polarCoords = tipSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
+				var polarCoords = frontSystem.MapPointGlobalCartesianToLocalPolar(cartesianCoords);
 				pointCache = new PointPolarDataCache(point, polarCoords, null);
 			}
 			return pointCache.polarCoords;
