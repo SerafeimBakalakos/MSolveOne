@@ -8,7 +8,8 @@ using MGroup.LinearAlgebra.Vectors;
 namespace MGroup.XFEM.Geometry.HybridFries
 {
 	/// <summary>
-	/// Counter-clockwise coordinate system centered around a crack tip.
+	/// Counter-clockwise coordinate system centered around a crack tip. Axis x1 is given by <see cref="Extension"/> vector. 
+	/// Axis x2 is given by <see cref="Normal"/> vector.
 	/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 	/// section 3.1.4
 	/// </summary>

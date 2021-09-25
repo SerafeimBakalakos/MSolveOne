@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Geometry.Boundaries;
 
@@ -9,12 +10,15 @@ using MGroup.XFEM.Geometry.Boundaries;
 namespace MGroup.XFEM.Geometry.HybridFries
 {
 	/// <summary>
+	/// The right-handed coordinate system centered around a crack tip. Axis x1 is given by <see cref="Extension"/> vector. 
+	/// Axis x2 is given by <see cref="Tangent"/> vector. Axis x3 is given by <see cref="Normal"/> vector.
 	/// See "Crack propagation with the XFEM and a hybrid explicit-implicit crack description, Fries & Baydoun, 2012", 
 	/// section 3.2.4
 	/// </summary>
 	public class CrackTipSystem3D : ICrackTipSystem
 	{
 		private readonly Vertex3D tip;
+		private readonly Matrix rotation;
 
 		public CrackTipSystem3D(Vertex3D vertex, Vertex3D previous, Vertex3D next, IDomainBoundary3D boundary)
 		{
@@ -54,6 +58,13 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			{
 				throw new ArgumentException("The vertex provided is not a tip.");
 			}
+
+			this.rotation = Matrix.CreateFromArray(new double[,]
+			{
+				{ Extension[0], Tangent[0], Normal[0] }, 
+				{ Extension[1], Tangent[1], Normal[1] }, 
+				{ Extension[2], Tangent[2], Normal[2] }
+			});
 		}
 
 		/// <remarks>
@@ -101,7 +112,22 @@ namespace MGroup.XFEM.Geometry.HybridFries
 
 		public double[] RotateGlobalStressTensor(double[] globalStresses)
 		{
-			throw new NotImplementedException();
+			//TODO: Hardcode this multiplication with using the 6 tensor items only
+			var globalStressMatrix = Matrix.CreateFromArray(new double[,]
+			{
+				{ globalStresses[0], globalStresses[3], globalStresses[5] },
+				{ globalStresses[3], globalStresses[1], globalStresses[4] },
+				{ globalStresses[5], globalStresses[4], globalStresses[2] }
+			});
+
+			Matrix localStressMatrix = rotation.ThisTransposeTimesOtherTimesThis(globalStressMatrix);
+			double[] localStresses = new double[]
+			{
+				localStressMatrix[0, 0], localStressMatrix[1, 1], localStressMatrix[2, 2],
+				localStressMatrix[0, 1], localStressMatrix[1, 2], localStressMatrix[2, 0]
+			};
+
+			return localStresses;
 		}
 
 		private static (double[] normal, double[] tangent, double[] extension) CalcConstrainedVectors(Vertex3D tip, 
