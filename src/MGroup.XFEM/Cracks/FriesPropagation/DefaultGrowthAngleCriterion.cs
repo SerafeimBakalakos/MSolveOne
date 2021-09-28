@@ -13,13 +13,14 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 			this.relativeStressRThetaTolerance = relativeStressRThetaTolerance;
 		}
 
-		public int FindIndexOfPropagationAngle(
-			List<double> trialAngles, List<double> stressesThetaTheta, List<double> stressesRTheta)
+		public void FindPropagationAngle(TrialPointStresses trialPointStresses)
 		{
-			double tolerance = CalcZeroTolerance(stressesRTheta);
+			double tolerance = CalcZeroTolerance(trialPointStresses);
 			int resultIndex = -1;
 			double maxStressThetaTheta = double.MinValue;
-			for (int i = 0; i < trialAngles.Count; ++i)
+			List<double> stressesThetaTheta = trialPointStresses.StressesThetaTheta;
+			List<double> stressesRTheta = trialPointStresses.StressesRTheta;
+			for (int i = 0; i < stressesRTheta.Count; ++i)
 			{
 				if (Math.Abs(stressesRTheta[i]) <= tolerance)
 				{
@@ -41,14 +42,14 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 				{
 					throw new Exception("Cound not find any point with: (r-theta stress = 0) AND (theta-theta stress > 0)");
 				}
-				return resultIndex;
+				trialPointStresses.CriticalAngleIndex = resultIndex;
 			}
 		}
 
-		private double CalcZeroTolerance(List<double> stressesRTheta)
+		private double CalcZeroTolerance(TrialPointStresses trialPointStresses)
 		{
 			double maxStressRTheta = double.MinValue;
-			foreach (double s in stressesRTheta)
+			foreach (double s in trialPointStresses.StressesRTheta)
 			{
 				if (s > maxStressRTheta)
 				{

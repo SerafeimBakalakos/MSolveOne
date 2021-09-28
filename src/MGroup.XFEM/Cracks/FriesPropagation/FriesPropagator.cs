@@ -32,7 +32,10 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 		private readonly XModel<IXCrackElement> model;
 		private readonly int numTrialPointsPerTip;
 		private readonly double trialPointRadius;
-		private int iteration;
+
+		#region debug
+		public TrialPointsPlotter plotter;
+		#endregion
 
 		/// <summary>
 		/// 
@@ -79,57 +82,57 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 			var growthAngles = new double[numTips];
 			var hoopStresses = new double[numTips];
 			double maxHoopStress = double.MinValue;
+			var stressField = new LocalizedStressField(dimension, algebraicModel, totalDisplacements);
+			var allTrialPoints = new List<TrialPointStresses>();
 			for (int i = 0; i < numTips; ++i)
 			{
-				(double growthAngle, double stressThetaTheta) = 
-					PropagateTip(algebraicModel, totalDisplacements, crackTipSystems[i]);
-				Debug.Assert(stressThetaTheta > 0);
+				TrialPointStresses trialPointStresses = PropagateTip(crackTipSystems[i], stressField);
+				allTrialPoints.Add(trialPointStresses);
 
-				growthAngles[i] = growthAngle;
-				hoopStresses[i] = stressThetaTheta;
-				maxHoopStress = Math.Max(maxHoopStress, stressThetaTheta);
+				int criticalPointIdx = trialPointStresses.CriticalAngleIndex;
+				growthAngles[i] = trialPointStresses.Angles[criticalPointIdx];
+				double hoopStress = trialPointStresses.StressesThetaTheta[criticalPointIdx];
+				Debug.Assert(hoopStress > 0);
+
+				hoopStresses[i] = hoopStress;
+				maxHoopStress = Math.Max(maxHoopStress, hoopStress);
 			}
 
 			var growthLengths = new double[numTips];
 			for (int i = 0; i < numTips; ++i)
 			{
 				growthLengths[i] = this.growthLength * hoopStresses[i] / maxHoopStress;
+				allTrialPoints[i].GrowthLength = growthLengths[i];
 			}
 
+			if (plotter != null)
+			{
+				plotter.PlotData(model, stressField, allTrialPoints);
+			}
 			return (growthAngles, growthLengths);
 		}
 
-		private (double growthAngle, double stressThetaTheta) PropagateTip(IAlgebraicModel algebraicModel, 
-			IGlobalVector totalDisplacements, ICrackTipSystem crackTipSystem)
+		private TrialPointStresses PropagateTip(ICrackTipSystem crackTipSystem, LocalizedStressField stressField)
 		{
 			(List<double> anglesTheta, List<double[]> coordsGlobal) = FindTrialPointsGlobal(crackTipSystem);
-			var stressField = new LocalizedStressField(dimension, algebraicModel, totalDisplacements); //TODO: use the same object for all tips.
-			var stressesThetaTheta = new List<double>();
-			var stressesRTheta = new List<double>();
-
-			#region plot
-			var stressesGlobalAtPoints = new Dictionary<double[], double[]>();
-			#endregion
-
+			var result = new TrialPointStresses(crackTipSystem.TipCoordsGlobal);
 			for (int i = 0; i < anglesTheta.Count; ++i)
 			{
 				(int elementID, double[] coordsNatural) = mesh.FindElementContaining(coordsGlobal[i]);
 				IXCrackElement element = model.Elements[elementID];
 				double[] globalStressTensor = stressField.CalcStressesAtPoint(coordsNatural, element);
-				(double stressThetaTheta, double stressRTheta) = 
+				(double stressThetaTheta, double stressRTheta) =
 					CalcPolarStresses(globalStressTensor, anglesTheta[i], crackTipSystem);
-				stressesThetaTheta.Add(stressThetaTheta);
-				stressesRTheta.Add(stressRTheta);
 
-				#region plot
-				stressesGlobalAtPoints[coordsGlobal[i]] = globalStressTensor;
-				#endregion
+				result.Angles.Add(anglesTheta[i]);
+				result.CoordinatesGlobal.Add(coordsGlobal[i]);
+				result.StressesGlobal.Add(globalStressTensor);
+				result.StressesThetaTheta.Add(stressThetaTheta);
+				result.StressesRTheta.Add(stressRTheta);
 			}
 
-			PlotStresses(stressField, coordsGlobal, stressesGlobalAtPoints, stressesThetaTheta, stressesRTheta);
-
-			int pointIndex = growthAngleCriterion.FindIndexOfPropagationAngle(anglesTheta, stressesThetaTheta, stressesRTheta);
-			return (anglesTheta[pointIndex], stressesThetaTheta[pointIndex]);
+			growthAngleCriterion.FindPropagationAngle(result);
+			return result;
 		}
 
 		/// <summary>
@@ -186,70 +189,6 @@ namespace MGroup.XFEM.Cracks.FriesPropagation
 				coordsGlobal.Add(point);
 			}
 			return (anglesTheta, coordsGlobal);
-
-			//var points = new List<double[]>();
-			//points.Add(new double[] { 1.187525, 2.0624750 });
-			//points.Add(new double[] { 1.229175, 2.0208250 });
-			//points.Add(new double[] { 1.2708325, 1.9791675 });
-			//points.Add(new double[] { 1.291665, 1.9375025 });
-			//points.Add(new double[] { 1.291665, 1.8958350 });
-			//points.Add(new double[] { 1.291665, 1.8541650 });
-			//points.Add(new double[] { 1.291665, 1.8124975 });
-			//points.Add(new double[] { 1.291665, 1.7708325 });
-			//return points;
-		}
-
-		////TODO: These should be done by the crack front coordinate system. Same for allocating points. Then
-		//private (Matrix Q, Vector b) CalcLocalCartesianSystem(double[] crackTip, double[] extensionVector)
-		//{
-		//	HERE
-		//}
-
-		private void PlotStresses(LocalizedStressField stressField, List<double[]> pointsGlobal,
-			Dictionary<double[], double[]> stressesAtTrialPoints, List<double> stressesThetaTheta, List<double> stressesRTheta)
-		{
-			string directory = @"C:\Users\Serafeim\Desktop\xfem 3d\plots\edge_crack_2D_hybrid\";
-			using (var writer = new VtkPointWriter(directory + $"stresses_at_nodes_t{iteration}.vtk"))
-			{
-				var nodalStresses = new Dictionary<double[], double[]>();
-				foreach (var pair in stressField.StoredNodalStresses)
-				{
-					int nodeID = pair.Key;
-					double[] stresses = pair.Value;
-					double[] coords = model.Nodes[nodeID].Coordinates;
-					nodalStresses[coords] = stresses;
-				}
-
-				if (dimension == 2)
-				{
-					writer.WriteTensor2DField("stresses", nodalStresses);
-				}
-				else
-				{
-					writer.WriteTensor3DField("stresses", nodalStresses);
-				}
-			}
-
-			using (var writer = new VtkPointWriter(directory + $"stresses_at_trial_points_t{iteration}.vtk"))
-			{
-				if (dimension == 2)
-				{
-					writer.WriteTensor2DField("stresses", stressesAtTrialPoints);
-				}
-				else
-				{
-					writer.WriteTensor3DField("stresses", stressesAtTrialPoints);
-				}
-			}
-
-			using (var writer = new VtkPointWriter(directory + $"stresses_polar_at_trial_points_t{iteration}.vtk"))
-			{
-				writer.WritePoints(pointsGlobal, true);
-				writer.WriteScalarField("sThetaTheta", stressesThetaTheta);
-				writer.WriteScalarField("sRTheta", stressesRTheta);
-			}
-
-			++iteration;
 		}
 	}
 }

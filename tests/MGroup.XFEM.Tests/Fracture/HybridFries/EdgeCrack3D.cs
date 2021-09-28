@@ -57,7 +57,8 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 
 		private const bool useFixedPropagator = false;
 		private const int numTrialPoints = 100;
-		private const double trialPointRadius = 0.4 * growthLength;
+		private const double trialPointRadius = 1.5 * growthLength;
+		private const double zeroStresRThetaTolerance = 5E-2;
 
 		private const double heavisideTol = 1E-4;
 		private const double tipEnrichmentArea = 0.0;
@@ -85,9 +86,12 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			}
 			else
 			{
-				var growthAngleCriterion = new DefaultGrowthAngleCriterion(5E-2);
+				var growthAngleCriterion = new DefaultGrowthAngleCriterion(zeroStresRThetaTolerance);
 				var mesh = new UniformCartesianMesh3D.Builder(minCoords, maxCoords, numElements).BuildMesh();
-				return new FriesPropagator(model, mesh, growthAngleCriterion, growthLength, trialPointRadius, numTrialPoints);
+				var propagator = new FriesPropagator(
+					model, mesh, growthAngleCriterion, growthLength, trialPointRadius, numTrialPoints);
+				propagator.plotter = new TrialPointsPlotter(outputDirectory);
+				return propagator;
 			}
 		}
 

@@ -73,6 +73,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 
 		private const int numTrialPoints = 100;
 		private const double trialPointRadius = 0.4 * growthLength;
+		private const double zeroStresRThetaTolerance = 5E-2;
 		private const double jIntegralRadiusRatio = 2.0;
 
 		private const double heavisideTol = 1E-3;
@@ -126,9 +127,10 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 			{
 				TempEdgeCrack2D crack = CreateCrackHybrid(model, propagator, initialGeom);
 				var mesh = new UniformCartesianMesh2D.Builder(minCoords, maxCoords, numElements).BuildMesh();
-				var growthAngleCriterion = new DefaultGrowthAngleCriterion(5E-2);
+				var growthAngleCriterion = new DefaultGrowthAngleCriterion(zeroStresRThetaTolerance);
 				crack.friesPropagator = new FriesPropagator(
 					model, mesh, growthAngleCriterion, growthLength, trialPointRadius, numTrialPoints);
+				crack.friesPropagator.plotter = new TrialPointsPlotter(OutputDirectory);
 				crack.Observers.Add(new CrackLevelSetPlotter_v2(model, crack.hybridGeometry, OutputDirectory));
 				crack.Observers.Add(new CrackInteractingElementsPlotter(crack, OutputDirectory));
 				geometryModel.Cracks[crack.ID] = crack;
