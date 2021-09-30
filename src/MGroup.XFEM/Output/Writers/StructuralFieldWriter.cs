@@ -15,19 +15,30 @@ namespace MGroup.XFEM.Output.Writers
 	{
 		private readonly IXModel model;
 		private readonly string outputDirectory;
+		private readonly bool plotFields;
+		private readonly bool plotTensorsAtGaussPoints;
 		private int iteration;
 
-		public StructuralFieldWriter(IXModel model, string outputDirectory)
+		public StructuralFieldWriter(IXModel model, string outputDirectory, bool plotFields = true, 
+			bool plotTensorsAtGaussPoints = true)
 		{
 			this.iteration = 0;
 			this.model = model;
 			this.outputDirectory = outputDirectory;
+			this.plotFields = plotFields;
+			this.plotTensorsAtGaussPoints = plotTensorsAtGaussPoints;
 		}
 
 		public void WriteResults(IAlgebraicModel algebraicModel, IGlobalVector solution)
 		{
-			PlotFields(algebraicModel, solution);
-			PlotTensorsAtGaussPoints(algebraicModel, solution);
+			if (plotFields)
+			{
+				PlotFields(algebraicModel, solution);
+			}
+			if (plotTensorsAtGaussPoints)
+			{
+				PlotTensorsAtGaussPoints(algebraicModel, solution);
+			}
 
 			++iteration;
 		}

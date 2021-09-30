@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using MGroup.LinearAlgebra.Distributed;
+using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Discretization.Mesh;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Elements;
@@ -40,6 +41,10 @@ namespace MGroup.XFEM.Output.Fields
 			foreach (IXFiniteElement element in model.EnumerateElements())
 			{
 				IEnumerable<ConformingOutputMesh.Subcell> subtriangles = outMesh.GetSubcellsForOriginal(element);
+				double[] elementVector = algebraicModel.ExtractElementVector(solution, element);
+				DirichletElementLoad.ApplyBoundaryConditions(element, elementVector);
+				IList<double[]> elementDisplacements = Utilities.ElementVectorToNodalVectors(element, elementVector);
+
 				if (subtriangles.Count() == 0)
 				{
 					//TODO: This is incorrect for blending elements: 1) enriched dofs are not irrelevant, 2) using the
@@ -47,8 +52,7 @@ namespace MGroup.XFEM.Output.Fields
 					//      calculate the displacement at their vertices and then let ParaView interpolate that (inaccurately).
 					//      However some enrichments (step, ridge) do not produce blending elements (although in code, there will
 					//      be elements where only some nodes are enriched). Thus the user should choose for now.
-					IList<double[]> elementDisplacements = Utilities.ElementVectorToNodalVectors(element,
-						algebraicModel.ExtractElementVector(solution, element));
+					
 					Debug.Assert(outMesh.GetOutCellsForOriginal(element).Count() == 1);
 					VtkCell outCell = outMesh.GetOutCellsForOriginal(element).First();
 					for (int n = 0; n < element.Nodes.Count; ++n)
@@ -58,10 +62,7 @@ namespace MGroup.XFEM.Output.Fields
 				}
 				else
 				{
-					IList<double[]> elementDisplacements = Utilities.ElementVectorToNodalVectors(element, 
-						algebraicModel.ExtractElementVector(solution, element));
 					HashSet<IEnrichmentFunction> elementEnrichments = element.FindEnrichments();
-
 					foreach (ConformingOutputMesh.Subcell subcell in subtriangles)
 					{
 						//TODO: Not sure what happens for 2nd order elements
