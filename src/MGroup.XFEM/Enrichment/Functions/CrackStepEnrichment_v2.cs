@@ -12,10 +12,21 @@ namespace MGroup.XFEM.Enrichment.Functions
 	public class CrackStepEnrichment_v2 : IEnrichmentFunction
 	{
 		private readonly IImplicitCrackGeometry crack;
+		private readonly double valuePos, valueNeg;
 
-		public CrackStepEnrichment_v2(IImplicitCrackGeometry crack)
+		public CrackStepEnrichment_v2(IImplicitCrackGeometry crack, bool oppositeSign = false)
 		{
 			this.crack = crack;
+			if (oppositeSign)
+			{
+				valuePos = -1.0;
+				valueNeg = +1.0;
+			}
+			else
+			{
+				valuePos = +1.0;
+				valueNeg = -1.0;
+			}
 		}
 
 		public EvaluatedFunction EvaluateAllAt(XPoint point)
@@ -26,11 +37,11 @@ namespace MGroup.XFEM.Enrichment.Functions
 			double phi = levelSets[0];
 			if (phi >= 0)
 			{
-				return new EvaluatedFunction(+1, new double[point.Dimension]);
+				return new EvaluatedFunction(valuePos, new double[point.Dimension]);
 			}
 			else
 			{
-				return new EvaluatedFunction(-1, new double[point.Dimension]);
+				return new EvaluatedFunction(valueNeg, new double[point.Dimension]);
 			}
 		}
 
@@ -52,7 +63,7 @@ namespace MGroup.XFEM.Enrichment.Functions
 		{
 			if (discontinuity == crack)
 			{
-				return 2.0; // +1 - (-1)
+				return valuePos - valueNeg;
 			}
 			else
 			{
@@ -65,11 +76,11 @@ namespace MGroup.XFEM.Enrichment.Functions
 			double phi = levelSets[0];
 			if (phi >= 0)
 			{
-				return +1;
+				return valuePos;
 			}
 			else
 			{
-				return -1;
+				return valueNeg;
 			}
 		}
 

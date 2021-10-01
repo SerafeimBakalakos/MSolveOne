@@ -29,10 +29,11 @@ namespace MGroup.XFEM.Cracks.Geometry
 		private readonly PolyLine2D initialCrack;
 		private readonly OpenLsmSingleTip2D lsmGeometry; //TODO: Abstract this
 		private readonly XModel<IXCrackElement> model;
+		private readonly bool oppositeHeavisideFunc;
 		private readonly IPropagatorOLD propagator;
 
 		public TempEdgeCrack2D(int id, PolyLine2D initialCrack, CrackCurve2D hybridGeometry, 
-			XModel<IXCrackElement> model, IPropagatorOLD propagator)
+			XModel<IXCrackElement> model, IPropagatorOLD propagator, bool oppositeHeavisideFunc = false)
 		{
 			this.hybridGeometry = hybridGeometry;
 			this.hybridFrontCoordinateSystem = new FrontCoordinateSystemImplicit(hybridGeometry);
@@ -45,6 +46,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 			this.lsmGeometry = new OpenLsmSingleTip2D(id);
 			this.crackPath = new List<double[]>();
 			this.propagator = propagator;
+			this.oppositeHeavisideFunc = oppositeHeavisideFunc;
 		}
 
 		public HashSet<IXCrackElement> ConformingElements { get; } = new HashSet<IXCrackElement>();
@@ -85,7 +87,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 			int enrichmentID = numCurrentEnrichments;
 
 			// Crack body enrichment
-			var stepEnrichmentFunc = new CrackStepEnrichment_v2(hybridGeometry);
+			var stepEnrichmentFunc = new CrackStepEnrichment_v2(hybridGeometry, oppositeHeavisideFunc);
 			var stepEnrichedDofs = new IDofType[Dimension];
 			for (int d = 0; d < Dimension; ++d)
 			{

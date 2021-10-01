@@ -5,6 +5,8 @@ using System.Linq;
 using MGroup.Constitutive.Structural;
 using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Matrices;
+using MGroup.LinearAlgebra.Output;
+using MGroup.LinearAlgebra.Output.Formatting;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
@@ -27,17 +29,21 @@ using MGroup.XFEM.Enrichment.Functions;
 using MGroup.XFEM.Enrichment.SingularityResolution;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Geometry;
+using MGroup.XFEM.Geometry.Boundaries;
+using MGroup.XFEM.Geometry.HybridFries;
 using MGroup.XFEM.Geometry.Mesh;
 using MGroup.XFEM.Geometry.Primitives;
 using MGroup.XFEM.Integration;
 using MGroup.XFEM.Integration.Quadratures;
 using MGroup.XFEM.Materials;
+using MGroup.XFEM.Output.FriesHybridCrack;
+using MGroup.XFEM.Output.Writers;
 using MGroup.XFEM.Tests.Utilities;
 using Xunit;
 
 namespace MGroup.XFEM.Tests.Fracture.Khoei
 {
-	public static class Example_7_6_1
+	public static class Example_7_6_1_v2
 	{
 		private static readonly double[] minCoords = new double[] { 0, 0 };
 		private static readonly double[] maxCoords = new double[] { 60, 20 };
@@ -244,6 +250,15 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 			// Check matrices
 			double tol = 1E-13;
 			Func<double, double> round = x => 1E6 * Math.Round(x * 1E-6, 3);
+			#region debug
+			string directory = @"C:\Users\Serafeim\Desktop\xfem 3d\matrices\";
+			var writer = new FullMatrixWriter();
+			writer.NumericFormat = new GeneralNumericFormat();
+			writer.WriteToFile(node7Elem1Stiffness, directory + "K7_tip.txt");
+			writer.WriteToFile(node7Elem2Stiffness, directory + "K7_blending.txt");
+			writer.WriteToFile(node7GlobalStiffness, directory + "K7_total.txt");
+//HERE: some tip enriched entries are the opposite of the expected ones
+			#endregion
 			Assert.True(node6StiffnessExpected.Equals(node6Stiffness.DoToAllEntries(round), tol));
 			Assert.True(node7Elem1StiffnessExpected.Equals(node7Elem1Stiffness.DoToAllEntries(round), tol));
 			Assert.True(node7Elem2StiffnessExpected.Equals(node7Elem2Stiffness.DoToAllEntries(round), tol));
@@ -319,6 +334,37 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 			}
 		}
 
+		private static TempEdgeCrack2D CreateCrack(XModel<IXCrackElement> model, IPropagatorOLD propagator)
+		{
+			double crackHeight = 0.5 * (minCoords[1] + maxCoords[1]);
+			var crackTip = new double[] { 0.5 * (minCoords[0] + maxCoords[0]), crackHeight };
+			var crackMouth = new double[] { maxCoords[0], crackHeight };
+			var initialGeom = new PolyLine2D(crackMouth, crackTip);
+
+			double domainDimension = maxCoords[0] - minCoords[0];
+			var crackVertices = new List<Vertex2D>();
+			for (int i = 0; i < initialGeom.Vertices.Count; ++i)
+			{
+				double[] point = initialGeom.Vertices[i];
+				crackVertices.Add(new Vertex2D(i, point));
+			}
+			var hybridGeometry = new CrackCurve2D(0, domainDimension, crackVertices);
+			hybridGeometry.CrackFront = new CrackFront2D(hybridGeometry, new RectangularDomainBoundary(minCoords, maxCoords));
+
+			var crack = new TempEdgeCrack2D(0, initialGeom, hybridGeometry, model, propagator, true);
+
+			#region plot
+			//string outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\matrices";
+			//crack.Observers.Add(new CrackBody2DObserver(crack.hybridGeometry, outputDirectory));
+			//crack.Observers.Add(new CrackFront2DObserver(crack.hybridGeometry, outputDirectory));
+			//crack.Observers.Add(new CrackLevelSetPlotter_v2(model, crack.hybridGeometry, outputDirectory));
+			//model.ModelObservers.Add(new CoordinatesAtGaussPointsPlotter(
+			//		model, crack.hybridGeometry, crack.hybridFrontCoordinateSystem, outputDirectory));
+			#endregion
+
+			return crack;
+		}
+
 		private static XModel<IXCrackElement> CreateModel3x1()
 		{
 			var model = new XModel<IXCrackElement>(2);
@@ -370,7 +416,8 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 			var geometryModel = new CrackGeometryModel(model);
 			model.GeometryModel = geometryModel;
 			geometryModel.Enricher = new NodeEnricherIndependentCracks(geometryModel, new NullSingularityResolver());
-			var crack = new Crack(model);
+			//var crack = new Crack(model);
+			var crack = CreateCrack(model, null);
 			geometryModel.Cracks[crack.ID] = crack;
 
 			return model;
@@ -398,7 +445,8 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 			var geometryModel = new CrackGeometryModel(model);
 			model.GeometryModel = geometryModel;
 			geometryModel.Enricher = new NodeEnricherIndependentCracks(geometryModel, new NullSingularityResolver());
-			var crack = new Crack(model);
+			//var crack = new Crack(model);
+			var crack = CreateCrack(model, null);
 			geometryModel.Cracks[crack.ID] = crack;
 
 			return model;

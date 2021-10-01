@@ -18,14 +18,16 @@ namespace MGroup.XFEM.Cracks.Geometry
 	public class HybridFriesCrack2D : ICrack
 	{
 		private readonly XModel<IXCrackElement> model;
+		private readonly bool oppositeHeavisideFunc;
 		private readonly IPropagator propagator;
 
-		public HybridFriesCrack2D(XModel<IXCrackElement> model, CrackCurve2D crackGeometry, IPropagator propagator)
+		public HybridFriesCrack2D(XModel<IXCrackElement> model, CrackCurve2D crackGeometry, IPropagator propagator, 
+			bool oppositeHeavisideFunc = false)
 		{
 			this.model = model;
 			this.CrackGeometry_v2 = crackGeometry;
 			this.propagator = propagator;
-
+			this.oppositeHeavisideFunc = oppositeHeavisideFunc;
 			this.FrontCoordinateSystem = new FrontCoordinateSystemImplicit(crackGeometry);
 		}
 
@@ -66,7 +68,7 @@ namespace MGroup.XFEM.Cracks.Geometry
 			int enrichmentID = numCurrentEnrichments;
 
 			// Crack body enrichment
-			var stepEnrichmentFunc = new CrackStepEnrichment_v2(CrackGeometry_v2);
+			var stepEnrichmentFunc = new CrackStepEnrichment_v2(CrackGeometry_v2, oppositeHeavisideFunc);
 			var stepEnrichedDofs = new IDofType[Dimension];
 			for (int d = 0; d < Dimension; ++d)
 			{
