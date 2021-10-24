@@ -66,13 +66,6 @@ namespace MGroup.XFEM.Geometry.HybridFries
 			this.nodalTripleLevelSets = new Dictionary<int, double[]>();
 			foreach (XNode node in nodes)
 			{
-				#region debug
-				if (node.ID == 1091)
-				{
-					Console.WriteLine();
-				}
-				#endregion
-
 				double phi1 = double.MaxValue; // unsigned distance to the crack surface, excluding the extension
 				double phi2 = double.MaxValue; // unsigned distance to the crack front
 				double phi3 = double.NaN; // signed distance to the crack surface, including the extension

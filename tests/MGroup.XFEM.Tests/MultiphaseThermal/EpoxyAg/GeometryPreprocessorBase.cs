@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.XFEM.Elements;
@@ -40,7 +40,7 @@ namespace MGroup.XFEM.Tests.MultiphaseThermal.EpoxyAg
         public Dictionary<string, double> CalcPhaseVolumes()
         {
             var volumes = new Dictionary<string, double>();
-            Dictionary<int, double> phaseVolumes = Output.Fields.Utilities.CalcBulkSizeOfEachPhase(physicalModel, GeometryModel);
+            Dictionary<int, double> phaseVolumes = XFEM.Output.Fields.Utilities.CalcBulkSizeOfEachPhase(physicalModel, GeometryModel);
 
             volumes[MatrixPhaseName] = phaseVolumes[MatrixPhaseID];
 

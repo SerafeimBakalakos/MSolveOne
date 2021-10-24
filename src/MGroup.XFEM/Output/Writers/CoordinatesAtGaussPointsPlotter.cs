@@ -58,13 +58,6 @@ namespace MGroup.XFEM.Output.Writers
 					double[] coords = point.MapCoordinates(point.ShapeFunctions, element.Nodes);
 					globalCoords.Add(coords);
 
-					#region debug
-					if (coords[0] > 0.917 && coords[0] < 0.95 && coords[1] > 1.82 && coords[1] < 1.833)
-					{
-						Console.WriteLine();
-					}
-					#endregion
-
 					double[] regularLevelSets = crack.InterpolateLevelSets(point);
 					phi.Add(regularLevelSets[0]);
 					psi.Add(regularLevelSets[1]);

@@ -302,34 +302,35 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 		public static void TestJintegral(int numElementsY, double jIntegralRadiusRatio, 
 			double expectedJintegral, double expectedSifMode1)
 		{
-			// Create and analyze model
-			int[] numElements = { 3 * numElementsY, numElementsY };
-			XModel<IXCrackElement> model = CreateModel(numElements);
-			model.Initialize();
-			var crack = (Crack)model.GeometryModel.GetDiscontinuity(0);
-			(IAlgebraicModel algebraicModel, IGlobalVector globalU, IMatrixView globalK) = RunAnalysis(model);
+			throw new NotImplementedException();
+			//// Create and analyze model
+			//int[] numElements = { 3 * numElementsY, numElementsY };
+			//XModel<IXCrackElement> model = CreateModel(numElements);
+			//model.Initialize();
+			//var crack = (Crack)model.GeometryModel.GetDiscontinuity(0);
+			//(IAlgebraicModel algebraicModel, IGlobalVector globalU, IMatrixView globalK) = RunAnalysis(model);
 
-			// Calculate J-integral and SIFs
-			var material = new HomogeneousFractureMaterialField2D(E, v, thickness, false);
-			var jIntegrationRule = new JintegrationStrategy(
-				GaussLegendre2D.GetQuadratureWithOrder(4, 4),
-				new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(2, 2)));
+			//// Calculate J-integral and SIFs
+			//var material = new HomogeneousFractureMaterialField2D(E, v, thickness, false);
+			//var jIntegrationRule = new JintegrationStrategy(
+			//	GaussLegendre2D.GetQuadratureWithOrder(4, 4),
+			//	new IntegrationWithNonconformingQuads2D(8, GaussLegendre2D.GetQuadratureWithOrder(2, 2)));
 
-			double elementSize = Math.Max(maxCoords[0] / numElements[0], maxCoords[1] / numElements[1]);
+			//double elementSize = Math.Max(maxCoords[0] / numElements[0], maxCoords[1] / numElements[1]);
 
-			var propagator = new JintegralPropagator2D(model, jIntegralRadiusRatio, jIntegrationRule, material, 
-				new MaximumCircumferentialTensileStressCriterion(), 
-				new ConstantIncrement2D(1.5 * jIntegralRadiusRatio * elementSize));
-			(double growthAngle, double growthLength) = propagator.Propagate(algebraicModel, globalU,
-				crack.TipCoordinates, crack.FrontSystem, crack.TipElements);
+			//var propagator = new JintegralPropagator2D(model, jIntegralRadiusRatio, jIntegrationRule, material, 
+			//	new MaximumCircumferentialTensileStressCriterion(), 
+			//	new ConstantIncrement2D(1.5 * jIntegralRadiusRatio * elementSize));
+			//(double growthAngle, double growthLength) = propagator.Propagate(algebraicModel, globalU,
+			//	crack.TipCoordinates, crack.FrontSystem, crack.TipElements);
 
-			double sifMode1 = propagator.Logger.SIFsMode1[0];
-			double sifMode2 = propagator.Logger.SIFsMode2[0];
-			double jIntegral = (Math.Pow(sifMode1, 2) + Math.Pow(sifMode2, 2)) / material.EquivalentYoungModulus;
+			//double sifMode1 = propagator.Logger.SIFsMode1[0];
+			//double sifMode2 = propagator.Logger.SIFsMode2[0];
+			//double jIntegral = (Math.Pow(sifMode1, 2) + Math.Pow(sifMode2, 2)) / material.EquivalentYoungModulus;
 
-			// Check. Note that I allow better values than the reference solution, since my implementation could converge faster.
-			Assert.InRange(Math.Round(jIntegral, 3), 2.100, expectedJintegral);
-			Assert.InRange(Math.Round(sifMode1, 3), 2148.523, expectedSifMode1);
+			//// Check. Note that I allow better values than the reference solution, since my implementation could converge faster.
+			//Assert.InRange(Math.Round(jIntegral, 3), 2.100, expectedJintegral);
+			//Assert.InRange(Math.Round(sifMode1, 3), 2148.523, expectedSifMode1);
 		}
 
 		private static void ApplyBoundaryConditions(XModel<IXCrackElement> model)
@@ -488,128 +489,6 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 			parentAnalyzer.Solve();
 
 			return (algebraicModel, algebraicModel.LinearSystem.Solution, algebraicModel.LinearSystem.Matrix.SingleMatrix);
-		}
-
-		private class Crack : ICrack
-		{
-			private readonly ExteriorLsmCrack2D crack;
-			private readonly double[] mouth, tip;
-			private readonly XModel<IXCrackElement> model;
-
-			public Crack(XModel<IXCrackElement> model)
-			{
-				this.mouth = new double[] { maxCoords[0], 0.5 * maxCoords[1] };
-				this.tip = new double[] { 0.5 * maxCoords[0], 0.5 * maxCoords[1] };
-				var initialGeom = new PolyLine2D(mouth, tip);
-				this.crack = new ExteriorLsmCrack2D(0, initialGeom, model, null);
-				this.model = model;
-			}
-
-			public HashSet<IXCrackElement> ConformingElements => crack.ConformingElements;
-
-			public EnrichmentItem CrackBodyEnrichment { get; private set; }
-
-			public IXGeometryDescription CrackGeometry => crack.CrackGeometry;
-
-			public EnrichmentItem CrackTipEnrichments => crack.CrackTipEnrichments;
-
-			public HashSet<IXCrackElement> IntersectedElements => crack.IntersectedElements;
-
-			public double[] TipCoordinates => crack.TipCoordinates;
-
-			public HashSet<IXCrackElement> TipElements => crack.TipElements;
-
-			public FrontCoordinateSystemExplicit FrontSystem => crack.FrontSystem;
-
-			public int ID => crack.ID;
-
-			public int MouthElementID { get; set; }
-
-			public void CheckPropagation(IPropagationTermination termination) => crack.CheckPropagation(termination);
-
-			public IList<EnrichmentItem> DefineEnrichments(int numCurrentEnrichments)
-			{
-				IList<EnrichmentItem> enrichments = crack.DefineEnrichments(numCurrentEnrichments);
-
-				// Different crack body enrichment
-				var stepEnrichmentFunc = new OppositeStepEnrichment(this);
-				IDofType[] stepEnrichedDofs =
-				{
-				new EnrichedDof(stepEnrichmentFunc, StructuralDof.TranslationX),
-				new EnrichedDof(stepEnrichmentFunc, StructuralDof.TranslationY)
-				};
-				this.CrackBodyEnrichment = new EnrichmentItem(
-					crack.CrackBodyEnrichment.ID, new IEnrichmentFunction[] { stepEnrichmentFunc }, stepEnrichedDofs);
-
-				enrichments[0] = this.CrackBodyEnrichment;
-				return enrichments;
-			}
-
-			public HashSet<XNode> FindNodesNearFront(double maxDistance)
-			{
-				var circle = new Circle2D(TipCoordinates, maxDistance); //TODO: This needs adapting for 3D
-				return MeshUtilities.FindNodesInsideCircle(circle, TipElements.First());
-			}
-
-			public void InitializeGeometry()
-			{
-				crack.InitializeGeometry();
-			}
-
-			public void InteractWithMesh()
-			{
-				crack.InteractWithMesh();
-				foreach (XCrackElement2D element in model.Elements.Values)
-				{
-					if (element.InteractingCracks.ContainsKey(crack))
-					{
-						element.InteractingCracks[this] = element.InteractingCracks[crack];
-						element.InteractingCracks.Remove(crack);
-					}
-					if (IsMouthElement(element.Nodes))
-					{
-						MouthElementID = element.ID;
-					}
-				}
-			}
-
-			public void UpdateGeometry(IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements)
-			{
-				crack.UpdateGeometry(algebraicModel, totalDisplacements);
-			}
-
-			private bool IsMouthElement(IReadOnlyList<XNode> nodes)
-			{
-				double tol = 1E-6;
-				bool result = (nodes[0].Coordinates[0] < mouth[0]) && (nodes[0].Coordinates[1] < mouth[1]);
-				result &= (Math.Abs(nodes[1].Coordinates[0] - mouth[0]) <= tol) && (nodes[1].Coordinates[1] < mouth[1]);
-				result &= (Math.Abs(nodes[2].Coordinates[0] - mouth[0]) <= tol) && (nodes[2].Coordinates[1] > mouth[1]);
-				result &= (nodes[3].Coordinates[0] < mouth[0]) && (nodes[3].Coordinates[1] > mouth[1]);
-				return result;
-			}
-		}
-
-		private class OppositeStepEnrichment : IEnrichmentFunction
-		{
-			private CrackStepEnrichment enrichment;
-
-			public OppositeStepEnrichment(ICrack crack)
-			{
-				this.enrichment = new CrackStepEnrichment(crack);
-			}
-
-			public EvaluatedFunction EvaluateAllAt(XPoint point)
-			{
-				var oppositeResult = enrichment.EvaluateAllAt(point);
-				return new EvaluatedFunction(-oppositeResult.Value, oppositeResult.CartesianDerivatives);
-			}
-
-			public double EvaluateAt(XNode node) => -enrichment.EvaluateAt(node);
-
-			public double EvaluateAt(XPoint point) => -enrichment.EvaluateAt(point);
-
-			public double EvaluateJumpAcross(IXDiscontinuity discontinuity, XPoint point)
-				=> enrichment.EvaluateJumpAcross(discontinuity, point);
 		}
 	}
 }

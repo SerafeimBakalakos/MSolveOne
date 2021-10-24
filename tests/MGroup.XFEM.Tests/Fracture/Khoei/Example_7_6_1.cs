@@ -32,6 +32,7 @@ using MGroup.XFEM.Geometry.Primitives;
 using MGroup.XFEM.Integration;
 using MGroup.XFEM.Integration.Quadratures;
 using MGroup.XFEM.Materials;
+using MGroup.XFEM.Output.Writers;
 using MGroup.XFEM.Tests.Utilities;
 using Xunit;
 
@@ -44,6 +45,21 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 		private const double thickness = 1.0;
 		private const double E = 2E6, v = 0.3;
 		private const int subdomainID = 0;
+
+		[Fact]
+		public static void PlotSolution135x45()
+		{
+			// Create and analyze model, in order to get the solution vector
+			int[] numElements = { 135, 45 };
+			XModel<IXCrackElement> model = CreateModel(numElements);
+			model.Initialize();
+			(IAlgebraicModel algebraicModel, IGlobalVector globalU, IMatrixView globalK) = RunAnalysis(model);
+
+			// Plot
+			string outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\plots\khoei_7_6_1";
+			var writer = new StructuralFieldWriter(model, outputDirectory, false, false, true);
+			writer.WriteResults(algebraicModel, globalU);
+		}
 
 		[Fact]
 		public static void TestSolution3x1()
