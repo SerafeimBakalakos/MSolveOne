@@ -150,8 +150,9 @@ namespace MGroup.XFEM.Output.Mesh
 
 			if (nearbyEdges.Count == 0)
 			{
-				throw new NotImplementedException(
-					"This intersection point lies on the interior of the element instead of an edge");
+				return null;
+				//throw new NotImplementedException(
+				//	"This intersection point lies on the interior of the element instead of an edge");
 			}
 			else if (nearbyEdges.Count == 1)
 			{
@@ -323,23 +324,46 @@ namespace MGroup.XFEM.Output.Mesh
 		{
 			foreach (IntersectionPoint point in IntersectionPoints)
 			{
-				// Find the node that lies on the same side as the point
-				(XNode nodeSameSide, XNode nodeOppositeSide) = point.FindNodeAtEachSide(model, Discontinuity);
-
-				// Offset global coordinates
-				OffsetPoint(Vertices[point.VertexID].Coordinates, nodeSameSide.Coordinates, nodeOppositeSide.Coordinates);
-
-				// Offset natural coordinates and store them
-				var vertexCoords = new VertexCoordinates();
-				foreach (IXFiniteElement element in point.CoordsNatural.Keys)
+				if (point.IsInternalPoint)
 				{
+					// Find the node that lies on the same side as the point
+					IXFiniteElement element = point.CoordsNatural.Keys.First();
+					XNode nodeSameSide = point.FindNodeSameSide(element, Discontinuity);
+
+					// Offset global coordinates
+					double[] pointGlobal = Vertices[point.VertexID].Coordinates;
+					OffsetPoint(pointGlobal, nodeSameSide.Coordinates, CopyArray(pointGlobal));
+
+					// Offset natural coordinates and store them
+					var vertexCoords = new VertexCoordinates();
 					double[] pointNatural = point.CoordsNatural[element];
 					double[] nodeANatural = FindNaturalCoordsOfNode(nodeSameSide.ID, element);
-					double[] nodeBNatural = FindNaturalCoordsOfNode(nodeOppositeSide.ID, element);
-					OffsetPoint(pointNatural, nodeANatural, nodeBNatural);
+					OffsetPoint(pointNatural, nodeANatural, CopyArray(pointNatural));
 					vertexCoords.NaturalCoords[element] = pointNatural;
+					VerticesCoordinates[point.VertexID] = vertexCoords;
 				}
-				VerticesCoordinates[point.VertexID] = vertexCoords;
+				else
+				{
+					// Find the node that lies on the same side as the point
+					(XNode nodeSameSide, XNode nodeOppositeSide) = point.FindNodeAtEachSide(model, Discontinuity);
+
+					// Offset global coordinates
+					OffsetPoint(Vertices[point.VertexID].Coordinates, nodeSameSide.Coordinates, nodeOppositeSide.Coordinates);
+
+					// Offset natural coordinates and store them
+					var vertexCoords = new VertexCoordinates();
+					foreach (IXFiniteElement element in point.CoordsNatural.Keys)
+					{
+						double[] pointNatural = point.CoordsNatural[element];
+						double[] nodeANatural = FindNaturalCoordsOfNode(nodeSameSide.ID, element);
+						double[] nodeBNatural = FindNaturalCoordsOfNode(nodeOppositeSide.ID, element);
+						OffsetPoint(pointNatural, nodeANatural, nodeBNatural);
+						vertexCoords.NaturalCoords[element] = pointNatural;
+					}
+					VerticesCoordinates[point.VertexID] = vertexCoords;
+				}
+
+				
 			}
 		}
 
@@ -377,15 +401,22 @@ namespace MGroup.XFEM.Output.Mesh
 					this.CoordsGlobal = element.Interpolation.TransformNaturalToCartesian(element.Nodes, coordsNatural);
 				}
 
-				if (edge.NodeIDs[0] < edge.NodeIDs[1])
+				if (edge == null)
 				{
-					EdgeStart = edge.NodeIDs[0];
-					EdgeEnd = edge.NodeIDs[1];
+					IsInternalPoint = true;
 				}
 				else
 				{
-					EdgeStart = edge.NodeIDs[1];
-					EdgeEnd = edge.NodeIDs[0];
+					if (edge.NodeIDs[0] < edge.NodeIDs[1])
+					{
+						EdgeStart = edge.NodeIDs[0];
+						EdgeEnd = edge.NodeIDs[1];
+					}
+					else
+					{
+						EdgeStart = edge.NodeIDs[1];
+						EdgeEnd = edge.NodeIDs[0];
+					}
 				}
 
 				this.PositiveSide = positiveSide;
@@ -404,6 +435,8 @@ namespace MGroup.XFEM.Output.Mesh
 			/// The max id of the edge's nodes.
 			/// </summary>
 			public int EdgeEnd { get; }
+
+			public bool IsInternalPoint { get; }
 
 			/// <summary>
 			/// The edge node that lies on the same side of the discontinuity as the intersection point.
@@ -424,14 +457,21 @@ namespace MGroup.XFEM.Output.Mesh
 
 			public bool Equals(IntersectionPoint other)
 			{
-				if (this.EdgeStart != other.EdgeStart)
+				if (this.IsInternalPoint && other.IsInternalPoint)
 				{
-					return false;
 				}
-				if (this.EdgeEnd != other.EdgeEnd)
+				else
 				{
-					return false;
+					if (this.EdgeStart != other.EdgeStart)
+					{
+						return false;
+					}
+					if (this.EdgeEnd != other.EdgeEnd)
+					{
+						return false;
+					}
 				}
+
 				if (this.PositiveSide != other.PositiveSide)
 				{
 					return false;
@@ -456,6 +496,20 @@ namespace MGroup.XFEM.Output.Mesh
 				{
 					return (nodeEnd, nodeStart);
 				}
+			}
+
+			public XNode FindNodeSameSide(IXFiniteElement element, IXGeometryDescription discontinuity)
+			{
+				double signPoint = this.PositiveSide ? 1 : -1;
+				foreach (XNode node in element.Nodes)
+				{
+					double signNode = discontinuity.SignedDistanceOf(node);
+					if (signPoint * signNode > 0)
+					{
+						return node;
+					}
+				}
+				throw new Exception("An intersection point must belong to elements with at least 2 nodes on opposite sides");
 			}
 		}
 	}

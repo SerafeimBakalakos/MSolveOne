@@ -63,8 +63,8 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 
 			// Plot
 			string outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\plots\khoei_7_6_1";
-			//var writer = new StructuralFieldWriter(model, outputDirectory, false, false, true);
-			var writer = new StructuralFieldWriter_v2(model, crack, outputDirectory, false, false, true);
+			var writer = new StructuralFieldWriter(model, outputDirectory, false, false, true);
+			//var writer = new StructuralFieldWriter_v2(model, crack, outputDirectory, false, false, true);
 			writer.WriteResults(algebraicModel, globalU);
 		}
 
