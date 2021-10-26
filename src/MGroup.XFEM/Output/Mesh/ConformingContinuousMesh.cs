@@ -24,7 +24,7 @@ namespace MGroup.XFEM.Output.Mesh
 		/// <summary>
 		/// Intersection points will be moved along their edge by <see cref="offsetPercentage"/> * length(edge).
 		/// </summary>
-		private const double offsetPercentage = 1E-2;
+		private const double offsetPercentage = 1E-6;
 
 		/// <summary>
 		/// An intesection point belongs to an edge if 
@@ -35,12 +35,11 @@ namespace MGroup.XFEM.Output.Mesh
 		private static readonly ValueComparer pointComparer = new ValueComparer(1E-6);
 
 		private readonly IXModel model;
-		private readonly IXGeometryDescription discontinuity;
 
 		public ConformingContinuousMesh(IXModel model, IXGeometryDescription discontinuity)
 		{
 			this.model = model;
-			this.discontinuity = discontinuity;
+			this.Discontinuity = discontinuity;
 			ProcessOriginalNodes(model);
 
 			// Process intersection points
@@ -60,6 +59,8 @@ namespace MGroup.XFEM.Output.Mesh
 		}
 
 		public List<VtkCell> Cells { get; } = new List<VtkCell>();
+
+		public IXGeometryDescription Discontinuity { get; }
 
 		public Dictionary<int, VtkPoint> Vertices { get; } = new Dictionary<int, VtkPoint>();
 
@@ -232,15 +233,11 @@ namespace MGroup.XFEM.Output.Mesh
 				{
 					vertexID = Vertices.Count;
 					oppositeID = vertexID + 1;
-					//vertexID = Vertices.Count;
-					//oppositeID = vertexID + 1;
 				}
 				else
 				{
 					oppositeID = Vertices.Count;
 					vertexID = oppositeID + 1;
-					//vertexID = Vertices.Count;
-					//oppositeID = vertexID + 1;
 				}
 
 				// Add this point to the total vertices and intersection points.
@@ -267,6 +264,7 @@ namespace MGroup.XFEM.Output.Mesh
 				int id = node.ID;
 				Vertices[id] = new VtkPoint(id, node.Coordinates);
 				var vertexCoords = new VertexCoordinates();
+				vertexCoords.OriginalNodeID = id;
 				foreach (IXFiniteElement element in node.ElementsDictionary.Values)
 				{
 					int idx = element.Nodes.ToList().IndexOf(node);
@@ -288,7 +286,7 @@ namespace MGroup.XFEM.Output.Mesh
 				double[] centroidCoords = subcell.FindCentroidNatural();
 				centroid.Coordinates[CoordinateSystem.ElementNatural] = centroidCoords;
 				centroid.ShapeFunctions = element.Interpolation.EvaluateFunctionsAt(centroidCoords);
-				double distance = discontinuity.SignedDistanceOf(centroid);
+				double distance = Discontinuity.SignedDistanceOf(centroid);
 				bool positiveSide = distance > 0;
 
 				int numVertices = subcell.VerticesNatural.Count;
@@ -326,7 +324,7 @@ namespace MGroup.XFEM.Output.Mesh
 			foreach (IntersectionPoint point in IntersectionPoints)
 			{
 				// Find the node that lies on the same side as the point
-				(XNode nodeSameSide, XNode nodeOppositeSide) = point.FindNodeAtEachSide(model, discontinuity);
+				(XNode nodeSameSide, XNode nodeOppositeSide) = point.FindNodeAtEachSide(model, Discontinuity);
 
 				// Offset global coordinates
 				OffsetPoint(Vertices[point.VertexID].Coordinates, nodeSameSide.Coordinates, nodeOppositeSide.Coordinates);
@@ -358,6 +356,8 @@ namespace MGroup.XFEM.Output.Mesh
 			}
 
 			public Dictionary<IXFiniteElement, double[]> NaturalCoords { get; }
+
+			public int OriginalNodeID { get; set; } = int.MinValue;
 		}
 
 		public class IntersectionPoint

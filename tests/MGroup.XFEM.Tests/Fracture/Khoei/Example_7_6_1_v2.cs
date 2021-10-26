@@ -57,12 +57,14 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 			// Create and analyze model, in order to get the solution vector
 			int[] numElements = { 135, 45 };
 			XModel<IXCrackElement> model = CreateModel(numElements);
+			IXGeometryDescription crack = ((TempEdgeCrack2D)(model.GeometryModel.EnumerateDiscontinuities().First())).hybridGeometry;
 			model.Initialize();
 			(IAlgebraicModel algebraicModel, IGlobalVector globalU, IMatrixView globalK) = RunAnalysis(model);
 
 			// Plot
 			string outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\plots\khoei_7_6_1";
-			var writer = new StructuralFieldWriter(model, outputDirectory, false, false, true);
+			//var writer = new StructuralFieldWriter(model, outputDirectory, false, false, true);
+			var writer = new StructuralFieldWriter_v2(model, crack, outputDirectory, false, false, true);
 			writer.WriteResults(algebraicModel, globalU);
 		}
 
@@ -280,24 +282,24 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 			Assert.True(node7GlobalStiffnessExpected.Equals(node7GlobalStiffness.DoToAllEntries(round), tol));
 		}
 
-		[Theory]
-		[InlineData(15, 1.0, 2.981, 2559.729)]
-		[InlineData(15, 2.0, 2.286, 2241.703)]
-		[InlineData(15, 3.0, 2.119, 2158.025)]
-		[InlineData(15, 4.0, 2.117, 2157.079)]
-		[InlineData(15, 5.0, 2.115, 2156.142)]
+		//[Theory]
+		//[InlineData(15, 1.0, 2.981, 2559.729)]
+		//[InlineData(15, 2.0, 2.286, 2241.703)]
+		//[InlineData(15, 3.0, 2.119, 2158.025)]
+		//[InlineData(15, 4.0, 2.117, 2157.079)]
+		//[InlineData(15, 5.0, 2.115, 2156.142)]
 
-		[InlineData(25, 1.0, 2.921, 2533.527)]
-		[InlineData(25, 2.0, 2.285, 2240.865)]
-		[InlineData(25, 3.0, 2.114, 2155.333)]
-		[InlineData(25, 4.0, 2.113, 2154.904)]
-		[InlineData(25, 5.0, 2.112, 2154.240)]
+		//[InlineData(25, 1.0, 2.921, 2533.527)]
+		//[InlineData(25, 2.0, 2.285, 2240.865)]
+		//[InlineData(25, 3.0, 2.114, 2155.333)]
+		//[InlineData(25, 4.0, 2.113, 2154.904)]
+		//[InlineData(25, 5.0, 2.112, 2154.240)]
 
-		[InlineData(45, 1.0, 2.869, 2510.949)]
-		[InlineData(45, 2.0, 2.274, 2235.567)]
-		[InlineData(45, 3.0, 2.101, 2148.986)]
-		[InlineData(45, 4.0, 2.101, 2148.936)]
-		[InlineData(45, 5.0, 2.100, 2148.523)]
+		//[InlineData(45, 1.0, 2.869, 2510.949)]
+		//[InlineData(45, 2.0, 2.274, 2235.567)]
+		//[InlineData(45, 3.0, 2.101, 2148.986)]
+		//[InlineData(45, 4.0, 2.101, 2148.936)]
+		//[InlineData(45, 5.0, 2.100, 2148.523)]
 
 		public static void TestJintegral(int numElementsY, double jIntegralRadiusRatio, 
 			double expectedJintegral, double expectedSifMode1)
@@ -443,6 +445,7 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 		{
 			var model = new XModel<IXCrackElement>(2);
 			model.Subdomains[subdomainID] = new XSubdomain<IXCrackElement>(subdomainID);
+			model.FindConformingSubcells = true;
 
 			// Materials, integration
 			var material = new HomogeneousFractureMaterialField2D(E, v, thickness, false);
