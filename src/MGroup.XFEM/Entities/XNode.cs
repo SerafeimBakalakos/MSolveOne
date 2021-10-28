@@ -60,6 +60,19 @@ namespace MGroup.XFEM.Entities
 
 		public double Z => Coordinates[2];
 
+		public double CalculateDistanceFrom(double[] point)
+		{
+			if (Coordinates.Length == 2)
+			{
+				return Geometry.Utilities.Distance2D(this.Coordinates, point);
+			}
+			else if (Coordinates.Length == 3)
+			{
+				return Geometry.Utilities.Distance3D(this.Coordinates, point);
+			}
+			else throw new NotImplementedException();
+		}
+
 		public double CalculateDistanceFrom(XNode other)
 		{
 			if (Coordinates.Length == 2)
@@ -72,6 +85,7 @@ namespace MGroup.XFEM.Entities
 			}
 			else throw new NotImplementedException();
 		}
+
 		public int CompareTo(INode other) => this.ID - other.ID;
 
 		public override int GetHashCode() => ID.GetHashCode();

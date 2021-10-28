@@ -159,7 +159,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			if (cornerNodesOutputDirectory != null)
 			{
 				cornerDofs = new CrackFetiDPCornerDofsPlusLogging(environment, model, stdDofs,
-					sub => UniformDdmCrackModelBuilder2D.FindCornerNodes(sub, 2), cornerNodesOutputDirectory);
+					sub => UniformDdmCrackModelBuilder2D.FindCornerNodes(sub, 2));
 			}
 			else
 			{

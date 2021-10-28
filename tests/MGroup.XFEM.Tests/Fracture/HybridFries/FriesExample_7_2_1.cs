@@ -219,6 +219,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 				new CrackExitsDomainTermination(domainBoundary));
 			var analyzer = new QuasiStaticLefmAnalyzer(model, algebraicModel, solver, maxIterations, termination);
 			analyzer.Results.Add(new StructuralFieldWriter(model, outputDirectory));
+			analyzer.Results.Add(new SolutionNormLogger(outputDirectory + "\\solution_norm.txt", "SuiteSparseSolver"));
 
 			analyzer.Analyze();
 		}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.XFEM.Cracks.Geometry;
@@ -8,7 +8,7 @@ using MGroup.XFEM.Geometry.Primitives;
 
 namespace MGroup.XFEM.Enrichment.Functions
 {
-    public class CrackStepEnrichment : IEnrichmentFunction
+    public class CrackStepEnrichment : IStepEnrichment
     {
         private readonly ICrack crack;
         private readonly IXGeometryDescription crackGeometry;

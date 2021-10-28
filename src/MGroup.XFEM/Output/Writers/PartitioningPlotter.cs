@@ -41,7 +41,7 @@ namespace MGroup.XFEM.Output.Writers
 			{
 				allElements.UnionWith(subdomain.EnumerateElements());
 			}
-			var outputMesh = new VtkMeshDiscontinuous(nodes, allElements.ToList(), 2);
+			var outputMesh = new VtkMeshDiscontinuous(nodes, allElements.ToList(), dimension);
 			var subdomainIDs = new double[outputMesh.VtkPoints.Count];
 			for (int e = 0; e < outputMesh.OriginalElements.Count; ++e)
 			{

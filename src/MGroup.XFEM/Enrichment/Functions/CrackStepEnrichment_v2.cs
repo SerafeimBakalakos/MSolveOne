@@ -9,7 +9,7 @@ using MGroup.XFEM.Geometry.Primitives;
 
 namespace MGroup.XFEM.Enrichment.Functions
 {
-	public class CrackStepEnrichment_v2 : IEnrichmentFunction
+	public class CrackStepEnrichment_v2 : IStepEnrichment
 	{
 		private readonly IImplicitCrackGeometry crack;
 		private readonly double valuePos, valueNeg;

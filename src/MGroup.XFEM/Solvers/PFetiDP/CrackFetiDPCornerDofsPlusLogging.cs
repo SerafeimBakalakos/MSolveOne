@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,15 +17,11 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 {
 	public class CrackFetiDPCornerDofsPlusLogging : CrackFetiDPCornerDofs
 	{
-		private readonly string outputDirectory;
-		private int iteration = 0;
-		
 		public CrackFetiDPCornerDofsPlusLogging(IComputeEnvironment environment, IXModel model, 
 			IEnumerable<IDofType> standardCornerDofs, Func<ISubdomain, IEnumerable<INode>> getStandardCornerNodesOfSubdomain,
-			string outputDirectory)
-			: base(environment, model, standardCornerDofs, getStandardCornerNodesOfSubdomain)
+			int strategy = 1)
+			: base(environment, model, standardCornerDofs, getStandardCornerNodesOfSubdomain, strategy)
 		{
-			this.outputDirectory = outputDirectory;
 		}
 
 
@@ -35,7 +32,23 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 
 		public bool HasStdCornerDofs(INode node)
 		{
-			return standardCornerNodes[node.Subdomains.First()].Contains(node.ID);
+			int numSubdomainsWithCornerNode = 0;
+			foreach (int subdomainID in node.Subdomains)
+			{
+				if (standardCornerNodes[subdomainID].Contains(node.ID))
+				{
+					++numSubdomainsWithCornerNode;
+				}
+			}
+			if (numSubdomainsWithCornerNode == node.Subdomains.Count)
+			{
+				return true;
+			}
+			else
+			{
+				Debug.Assert(numSubdomainsWithCornerNode == 0, $"Node {node.ID} is corner only in some of its subdomains");
+				return false;
+			}
 		}
 	}
 }
