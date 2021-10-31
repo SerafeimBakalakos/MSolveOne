@@ -14,6 +14,7 @@ using MGroup.XFEM.Cracks.PropagationTermination;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Output.Writers;
+using MGroup.XFEM.Solvers;
 
 namespace MGroup.XFEM.Analysis
 {
@@ -39,24 +40,36 @@ namespace MGroup.XFEM.Analysis
 			this.elementMatrixProvider = new ElementStructuralStiffnessProvider();
 		}
 
+		public PerformanceLogger Logger { get; } = new PerformanceLogger();
+
 		public List<IResultsWriter> Results { get; } = new List<IResultsWriter>();
 
 		public string Status { get; private set; } = "Preparing";
 
 		public void Analyze()
 		{
+			var watch = new Stopwatch();
 			Status = "Running analysis";
 			IGlobalVector totalDisplacementsFreeDofs = null;
 			for (int iteration = 0; iteration < maxIterations; ++iteration)
 			{
 				Debug.WriteLine($"Crack propagation step {iteration}");
 				Console.WriteLine($"Crack propagation step {iteration}");
+				Logger.IncrementAnalysisIteration();
 
 				if (iteration == 0)
 				{
 					model.Initialize();
+					
+					watch.Start();
 					algebraicModel.OrderDofs();
+					watch.Stop();
+					Logger.LogDofOrderingDuration(watch.ElapsedMilliseconds);
+
+					watch.Restart();
 					BuildMatrices();
+					watch.Stop();
+					Logger.LogMatrixAssemblyDuration(watch.ElapsedMilliseconds);
 				}
 				else
 				{
@@ -73,13 +86,27 @@ namespace MGroup.XFEM.Analysis
 
 					if (reanalysis)
 					{
+						watch.Restart();
 						algebraicModel.ReorderDofs();
+						watch.Stop();
+						Logger.LogDofOrderingDuration(watch.ElapsedMilliseconds);
+
+						watch.Restart();
 						RebuildMatrices();
+						watch.Stop();
+						Logger.LogMatrixAssemblyDuration(watch.ElapsedMilliseconds);
 					}
 					else
 					{
+						watch.Restart();
 						algebraicModel.OrderDofs();
+						watch.Stop();
+						Logger.LogDofOrderingDuration(watch.ElapsedMilliseconds);
+
+						watch.Restart();
 						BuildMatrices();
+						watch.Stop();
+						Logger.LogMatrixAssemblyDuration(watch.ElapsedMilliseconds);
 					}
 				}
 
@@ -89,7 +116,10 @@ namespace MGroup.XFEM.Analysis
 				//if (DDLogger != null) DDLogger.PlotSubdomains(model);
 
 				// Solve the linear system
+				watch.Restart();
 				solver.Solve();
+				watch.Stop();
+				Logger.LogSolutionDuration(watch.ElapsedMilliseconds);
 				totalDisplacementsFreeDofs = solver.LinearSystem.Solution;
 				foreach (IResultsWriter writer in Results)
 				{

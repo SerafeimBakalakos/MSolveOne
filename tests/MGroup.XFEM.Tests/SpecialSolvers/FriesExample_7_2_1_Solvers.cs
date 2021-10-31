@@ -9,6 +9,7 @@ using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Solution;
 using MGroup.MSolve.Solution.AlgebraicModel;
+using MGroup.Solvers.DDM;
 using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 using MGroup.Solvers.DDM.Output;
@@ -36,20 +37,32 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 		private static string outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example1\";
 		private static string outputPlotDirectory = outputDirectory + "plots";
+		private const bool enablePlotting = false;
 
-		private static readonly int[] numElements = new int[] { 45, 10, 5 };
+		private const int numElementsMin = 25;
+		private static readonly int[] numElements = new int[] { 9 * numElementsMin, 2 * numElementsMin, numElementsMin };
+		private const int numSubdomainsMin = 5;
+		private static readonly int[] numSubdomains = new int[] { 9 * numSubdomainsMin, 2 * numSubdomainsMin, numSubdomainsMin };
 
 		private const int maxIterations = 11;
 		private const double fractureToughness = double.MaxValue;
 
-		private const bool reanalysis = true;
+		private const bool reanalysis = false;
+		private const double psmTolerance = 1E-10;
 
 		[Fact]
 		public static void RunExampleWithDirectSolver()
 		{
 			XModel<IXCrackElement> model = FriesExample_7_2_1_Model.DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
-			FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements, outputPlotDirectory);
-			FriesExample_7_2_1_Model.SetupEnrichmentOutput(model, outputPlotDirectory);
+			if (enablePlotting)
+			{
+				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements, outputPlotDirectory);
+				FriesExample_7_2_1_Model.SetupEnrichmentOutput(model, outputPlotDirectory);
+			}
+			else
+			{
+				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements);
+			}
 			SolverChoice solverChoice = SolverChoice.DirectNative;
 			(ISolver solver, IAlgebraicModel algebraicModel) = SetupDirectSolver(model, solverChoice);
 			RunAnalysis(model, algebraicModel, solver, solverChoice);
@@ -58,13 +71,21 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		[Fact]
 		public static void RunExampleWithPFetiDPSolver()
 		{
-			int[] numSubdomains = { 9, 2, 1};
 			int[] numClusters = { 1, 1, 1 };
 			(XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
 					= FriesExample_7_2_1_Model.DescribePhysicalModel(numElements, numSubdomains, numClusters)
 					.BuildMultiSubdomainModel();
-			FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements);
+			if (enablePlotting)
+			{
+				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements, outputPlotDirectory);
+				FriesExample_7_2_1_Model.SetupEnrichmentOutput(model, outputPlotDirectory);
+			}
+			else
+			{
+				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements);
+			}
 
+			//SolverChoice solverChoice = SolverChoice.PfetiDPManaged;
 			SolverChoice solverChoice = SolverChoice.PfetiDPNative;
 			(ISolver solver, IAlgebraicModel algebraicModel, DdmLogger logger) 
 				= SetupPFetiDPSolver(model, nodeTopology, solverChoice, numSubdomains);
@@ -83,11 +104,24 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				new FractureToughnessTermination(fractureToughness),
 				new CrackExitsDomainTermination(domainBoundary));
 			var analyzer = new QuasiStaticLefmAnalyzer(model, algebraicModel, solver, maxIterations, termination);
-			string filePath = outputDirectory + "solution_norm.txt";
-			analyzer.Results.Add(new SolutionNormLogger(filePath, solverChoice.ToString()));
+
+			var msg = new StringBuilder();
+			msg.Append($"{DateTime.Now}, solver={solverChoice.ToString()}");
+			msg.AppendLine($", numElements={numElements[0]}x{numElements[1]}x{numElements[2]}");
+			if (solverChoice == SolverChoice.PfetiDPManaged || solverChoice == SolverChoice.PfetiDPNative)
+			{
+				msg.Append($"numSubdomains={numSubdomains[0]}x{numSubdomains[1]}x{numSubdomains[2]}");
+				msg.AppendLine($", reanalysis={reanalysis}, PSM tolerance={psmTolerance}");
+			}
+
+			var normLogger = new SolutionNormLogger(Path.Combine(outputDirectory, "solution_norm.txt"));
+			normLogger.ExtraInfo = msg.ToString();
+			analyzer.Results.Add(normLogger);
+			analyzer.Logger.ExtraInfo = msg.ToString();
 			//analyzer.Results.Add(new StructuralFieldWriter(model, outputDirectory));
 
 			analyzer.Analyze();
+			analyzer.Logger.WriteToFile(Path.Combine(outputDirectory, "performance.txt"), true);
 		}
 
 		private static (ISolver, IAlgebraicModel) SetupDirectSolver(XModel<IXCrackElement> model, SolverChoice solverChoice)
@@ -124,8 +158,13 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			model.ConnectDataStructures(); //TODOMPI: this is also done in the analyzer
 			IDofType[] stdDofs = { StructuralDof.TranslationX, StructuralDof.TranslationY, StructuralDof.TranslationZ };
 
+			int minMultiplicity = 3;
+			if (numSubdomains[2] == 1)
+			{
+				minMultiplicity = 2;
+			}
 			var cornerDofs = new CrackFetiDPCornerDofsPlusLogging(environment, model, stdDofs,
-					sub => UniformDdmCrackModelBuilder3D.FindCornerNodes(sub, 2));
+				sub => UniformDdmCrackModelBuilder3D.FindCornerNodes(sub, minMultiplicity), 0);
 			if (numSubdomains[2] == 1)
 			{
 				//// We need an extra corner node at the edge subdomains
@@ -142,8 +181,11 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				//cornerDofs.AddStdCornerNode(17, extraNode.ID);
 			}
 
-			model.ModelObservers.Add(new PartitioningPlotter(outputPlotDirectory, model, 3));
-			model.ModelObservers.Add(new CornerNodesPlotter(environment, model, cornerDofs, outputPlotDirectory));
+			if (enablePlotting)
+			{
+				model.ModelObservers.Add(new PartitioningPlotter(outputPlotDirectory, model, 3));
+				model.ModelObservers.Add(new CornerNodesPlotter(environment, model, cornerDofs, outputPlotDirectory));
+			}
 
 			// Solver settings
 			IPsmSubdomainMatrixManagerFactory<SymmetricCscMatrix> psmMatrices;
@@ -174,8 +216,21 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
 			{
 				MaxIterations = 200,
-				ResidualTolerance = 1E-10
+				ResidualTolerance = psmTolerance
 			};
+
+			if (reanalysis)
+			{
+				var observer = new SubdomainEnrichmentsModifiedObserver();
+				model.GeometryModel.Enricher.Observers.Add(observer);
+				var reanalysisOptions = PFetiDPReanalysisOptions.CreateWithAllEnabled(observer);
+				//var reanalysisOptions = PFetiDPReanalysisOptions.CreateWithAllDisabled();
+				reanalysisOptions.PreviousSolution = false; // This causes errors if enabled
+
+				solverFactory.ReanalysisOptions = reanalysisOptions;
+				solverFactory.SubdomainTopology = new SubdomainTopologyOptimized();
+				solverFactory.ExplicitSubdomainMatrices = true;
+			}
 
 			// Create solver
 			var algebraicModel = solverFactory.BuildAlgebraicModel(model);

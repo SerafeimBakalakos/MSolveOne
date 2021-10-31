@@ -20,6 +20,8 @@ namespace MGroup.Solvers.LinearSystem
 
 		internal Guid Format { get; }
 
+		public int Length => SingleVector.Length;
+
 		//TODO: perhaps setting this should be done in the construction only
 		//TODO: I would rather this was internal, but it is needed by the test classes
 		public Vector SingleVector { get; set; } 

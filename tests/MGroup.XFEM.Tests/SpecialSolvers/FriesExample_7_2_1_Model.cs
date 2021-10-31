@@ -40,8 +40,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		private static readonly double[] support0Coords = { 257.5, 0 };
 		private static readonly double[] support1Coords = { 637.5, 0 };
 		private static readonly double[] support2Coords = { 37, 150 };
-		private static readonly double[] crackMouthCoords = { 337.5, 0 };
-		private static readonly double[] crackFrontCoords = { 337.5, 74 };
+		private static readonly double[] crackMouthCoords = { 337, 0 }; //337.5, 0
+		private static readonly double[] crackFrontCoords = { 337, 74/*.96371*/ }; //337.5, 74
 
 		private const double da = 8, rc = 1.5;
 		private const int numTrialPoints = 100;
