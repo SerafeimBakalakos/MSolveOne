@@ -28,28 +28,31 @@ using Xunit;
 
 namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 {
-	public static class FriesExample_7_2_1
+	public static class FriesExample_7_2_1_Solvers
 	{
 		private enum SolverChoice 
 		{ 
 			DirectManaged, DirectNative, PfetiDPManaged, PfetiDPNative 
 		}
 
-		private static string outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example1\";
-		private static string outputPlotDirectory = outputDirectory + "plots";
-		private const bool enablePlotting = false;
+		public static string outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example1\";
+		public static string outputPlotDirectory = outputDirectory + "plots";
+		public const bool enablePlotting = false;
 
-		private const int numElementsMin = 20;
-		private static readonly int[] numElements = new int[] { 9 * numElementsMin, 2 * numElementsMin, numElementsMin };
-		private const int numSubdomainsMin = 4;
-		private static readonly int[] numSubdomains = new int[] { 9 * numSubdomainsMin, 2 * numSubdomainsMin, numSubdomainsMin };
+		public static double[] crackMouthCoords = { 337.5, 0 };
+		public static double[] crackFrontCoords = { 337.5, 75 };
 
-		private const int maxIterations = 11;
-		private const double fractureToughness = double.MaxValue;
+		public static int numElementsMin = 5;
+		public static int[] numElements = new int[] { 9 * numElementsMin, 2 * numElementsMin, numElementsMin };
+		public static int numSubdomainsMin = 1;
+		public static int[] numSubdomains = new int[] { 9 * numSubdomainsMin, 2 * numSubdomainsMin, numSubdomainsMin };
+		
+		public static int maxIterations = 11;
+		public const double fractureToughness = double.MaxValue;
 
-		private const bool reanalysis = false;
-		private const double psmTolerance = 1E-10;
-		private const bool multiThreaded = false;
+		public static bool reanalysis = false;
+		public static double psmTolerance = 1E-10;
+		public static bool multiThreaded = false;
 
 		[Fact]
 		public static void RunExampleWithDirectSolver()
@@ -57,12 +60,12 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			XModel<IXCrackElement> model = FriesExample_7_2_1_Model.DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
 			if (enablePlotting)
 			{
-				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements, outputPlotDirectory);
+				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements, crackMouthCoords, crackFrontCoords, outputPlotDirectory);
 				FriesExample_7_2_1_Model.SetupEnrichmentOutput(model, outputPlotDirectory);
 			}
 			else
 			{
-				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements);
+				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements, crackMouthCoords, crackFrontCoords);
 			}
 			SolverChoice solverChoice = SolverChoice.DirectNative;
 			(ISolver solver, IAlgebraicModel algebraicModel) = SetupDirectSolver(model, solverChoice);
@@ -78,12 +81,12 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 					.BuildMultiSubdomainModel();
 			if (enablePlotting)
 			{
-				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements, outputPlotDirectory);
+				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements, crackMouthCoords, crackFrontCoords, outputPlotDirectory);
 				FriesExample_7_2_1_Model.SetupEnrichmentOutput(model, outputPlotDirectory);
 			}
 			else
 			{
-				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements);
+				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements, crackMouthCoords, crackFrontCoords);
 			}
 
 			//SolverChoice solverChoice = SolverChoice.PfetiDPManaged;

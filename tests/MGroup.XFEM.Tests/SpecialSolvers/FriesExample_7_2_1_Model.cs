@@ -40,20 +40,18 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		private static readonly double[] support0Coords = { 257.5, 0 };
 		private static readonly double[] support1Coords = { 637.5, 0 };
 		private static readonly double[] support2Coords = { 37, 150 };
-		private static readonly double[] crackMouthCoords = { 336, 0 }; //337.5, 0
-		private static readonly double[] crackFrontCoords = { 336, 74/*.96371*/ }; //337.5, 74
+		//public static double[] crackMouthCoords = { 337.5, 0 };
+		//public static double[] crackFrontCoords = { 337.5, 75 };
 
 		private const double da = 8, rc = 1.5;
 		private const int numTrialPoints = 100;
 		private const double zeroStresRThetaTolerance = 5E-2;
 
-		private const bool useFixedPropagator = true;
-		private const double growthAngle = -(40.0 / 180.0) * Math.PI;
-		
 		private const double heavisideTol = 1E-4;
 		private const double tipEnrichmentArea = 0.0;
 
-		public static void CreateGeometryModel(XModel<IXCrackElement> model, int[] numElements, string outputDirectory = null)
+		public static void CreateGeometryModel(XModel<IXCrackElement> model, int[] numElements,
+			double[] crackMouthCoords, double[] crackFrontCoords, string outputDirectory = null)
 		{
 			// Crack, enrichments
 			var geometryModel = new CrackGeometryModel(model);
@@ -62,7 +60,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				geometryModel, new RelativeAreaSingularityResolver(heavisideTol), tipEnrichmentArea);
 
 			IPropagator propagator = ChooseCrackPropagator(model, numElements);
-			HybridFriesCrack3D crack = CreateCrackGeometry(model, propagator);
+			HybridFriesCrack3D crack = CreateCrackGeometry(model, propagator, crackMouthCoords, crackFrontCoords);
 			geometryModel.Cracks[crack.ID] = crack;
 			if (outputDirectory != null)
 			{
@@ -74,8 +72,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			}
 		}
 
-		public static UniformDdmCrackModelBuilder3D DescribePhysicalModel(int[] numElements, 
-			int[] numSubdomains = null, int[] numClusters = null)
+		public static UniformDdmCrackModelBuilder3D DescribePhysicalModel(
+			int[] numElements, int[] numSubdomains = null, int[] numClusters = null)
 		{
 			if (numSubdomains == null)
 			{
@@ -137,6 +135,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 		private static IPropagator ChooseCrackPropagator(XModel<IXCrackElement> model, int[] numElements)
 		{
+			bool useFixedPropagator = true;
 			if (useFixedPropagator)
 			{
 				return new MockPropagator();
@@ -151,7 +150,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			}
 		}
 
-		private static HybridFriesCrack3D CreateCrackGeometry(XModel<IXCrackElement> model, IPropagator propagator)
+		private static HybridFriesCrack3D CreateCrackGeometry(XModel<IXCrackElement> model, IPropagator propagator,
+			double[] crackMouthCoords, double[] crackFrontCoords)
 		{
 			double[] pointA = { crackMouthCoords[0], crackMouthCoords[1], minCoords[2] };
 			double[] pointB = { crackMouthCoords[0], crackMouthCoords[1], maxCoords[2] };
@@ -212,6 +212,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			public (double[] growthAngles, double[] growthLengths) Propagate(
 				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, ICrackTipSystem[] crackTipSystems)
 			{
+				double growthAngle = -(40.0 / 180.0) * Math.PI;
 				double theta = iteration == 0 ? growthAngle : 0;
 
 				var growthAngles = new double[crackTipSystems.Length];
