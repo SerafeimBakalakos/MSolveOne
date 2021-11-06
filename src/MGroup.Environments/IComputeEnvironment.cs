@@ -85,6 +85,9 @@ namespace MGroup.Environments
 		/// <param name="actionPerNode"></param>
 		void DoPerNode(Action<int> actionPerNode);
 
+		void DoPerNodeSerially(Action<int> actionPerNode);
+
+
 		//TODOMPI: Its most common use is weird: An Action<int> is called by the environment. The environment passes the id of 
 		//      each ComputeNode it manages. Then the Action<int> requests from the environment to provide the ComputeNode for
 		//      the same id that the environment provided, e.g. to inspect the neighboring ComputeNode ids.

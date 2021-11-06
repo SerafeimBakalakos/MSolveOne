@@ -131,6 +131,14 @@ namespace MGroup.Environments
 			Parallel.ForEach(nodeTopology.Nodes.Keys, actionPerNode);
 		}
 
+		public void DoPerNodeSerially(Action<int> actionPerNode)
+		{
+			foreach (int nodeID in nodeTopology.Nodes.Keys)
+			{
+				actionPerNode(nodeID);
+			}
+		}
+
 		public ComputeNode GetComputeNode(int nodeID) => nodeTopology.Nodes[nodeID];
 
 		public void Initialize(ComputeNodeTopology nodeTopology)

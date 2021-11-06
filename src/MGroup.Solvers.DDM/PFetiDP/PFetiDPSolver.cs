@@ -31,6 +31,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 		private readonly ConcurrentDictionary<int, FetiDPSubdomainDofs> subdomainDofsFetiDP;
 		private readonly ConcurrentDictionary<int, PFetiDPSubdomainDofs> subdomainDofsPFetiDP;
 		private readonly ConcurrentDictionary<int, IFetiDPSubdomainMatrixManager> subdomainMatricesFetiDP;
+		private readonly bool directSolverIsNative = false;
 
 		public PFetiDPSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel,
 			IPsmSubdomainMatrixManagerFactory<TMatrix> matrixFactoryPsm, bool explicitSubdomainMatrices,
@@ -69,6 +70,15 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			{
 				modifiedCornerDofs = new NullModifiedCornerDofs();
 			}
+
+			if (matrixFactoryFetiDP is FetiDPSubdomainMatrixManagerSymmetricSuiteSparse.Factory)
+			{
+				directSolverIsNative = true;
+			}
+			else
+			{
+				directSolverIsNative = false;
+			}
 		}
 
 		protected override void CalcPreconditioner()
@@ -105,13 +115,38 @@ namespace MGroup.Solvers.DDM.PFetiDP
 					#endregion
 					subdomainMatricesFetiDP[subdomainID].HandleDofsWereModified();
 					subdomainMatricesFetiDP[subdomainID].ExtractKrrKccKrc();
-					subdomainMatricesFetiDP[subdomainID].InvertKrr();
+					//subdomainMatricesFetiDP[subdomainID].InvertKrr(); 
 				}
 				else
 				{
 					Debug.Assert(!subdomainMatricesFetiDP[subdomainID].IsEmpty);
 				}
 			});
+
+			//TODO: This should be done together with the extraction. However SuiteSparse already uses multiple threads and should
+			//		not be parallelized at subdomain level too. Instead environment.DoPerNode should be able to run tasks serially by reading a flag.
+			if (directSolverIsNative)
+			{
+				environment.DoPerNodeSerially(subdomainID =>
+				{
+					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
+						|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
+					{
+						subdomainMatricesFetiDP[subdomainID].InvertKrr();
+					}
+				});
+			}
+			else
+			{
+				environment.DoPerNode(subdomainID =>
+				{
+					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
+						|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
+					{
+						subdomainMatricesFetiDP[subdomainID].InvertKrr();
+					}
+				});
+			}
 
 			// Setup optimizations if coarse dofs are the same as in previous analysis
 			modifiedCornerDofs.Update(reanalysis.ModifiedSubdomains);

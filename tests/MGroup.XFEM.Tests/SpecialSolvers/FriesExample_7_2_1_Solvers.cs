@@ -39,9 +39,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		private static string outputPlotDirectory = outputDirectory + "plots";
 		private const bool enablePlotting = false;
 
-		private const int numElementsMin = 25;
+		private const int numElementsMin = 20;
 		private static readonly int[] numElements = new int[] { 9 * numElementsMin, 2 * numElementsMin, numElementsMin };
-		private const int numSubdomainsMin = 5;
+		private const int numSubdomainsMin = 4;
 		private static readonly int[] numSubdomains = new int[] { 9 * numSubdomainsMin, 2 * numSubdomainsMin, numSubdomainsMin };
 
 		private const int maxIterations = 11;
@@ -49,6 +49,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 		private const bool reanalysis = false;
 		private const double psmTolerance = 1E-10;
+		private const bool multiThreaded = false;
 
 		[Fact]
 		public static void RunExampleWithDirectSolver()
@@ -111,7 +112,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			if (solverChoice == SolverChoice.PfetiDPManaged || solverChoice == SolverChoice.PfetiDPNative)
 			{
 				msg.Append($"numSubdomains={numSubdomains[0]}x{numSubdomains[1]}x{numSubdomains[2]}");
-				msg.AppendLine($", reanalysis={reanalysis}, PSM tolerance={psmTolerance}");
+				msg.AppendLine($", reanalysis={reanalysis}, multithreaded environment={multiThreaded}, PSM tolerance={psmTolerance}");
 			}
 
 			var normLogger = new SolutionNormLogger(Path.Combine(outputDirectory, "solution_norm.txt"));
@@ -151,7 +152,15 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			ComputeNodeTopology nodeTopology, SolverChoice solverChoice, int[] numSubdomains)
 		{
 			// Environment
-			IComputeEnvironment environment = new SequentialSharedEnvironment();
+			IComputeEnvironment environment;
+			if (multiThreaded)
+			{
+				environment = new TplSharedEnvironment();
+			}
+			else
+			{
+				environment = new SequentialSharedEnvironment();
+			}
 			environment.Initialize(nodeTopology);
 
 			// Corner dofs

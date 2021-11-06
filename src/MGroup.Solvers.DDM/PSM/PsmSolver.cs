@@ -46,6 +46,7 @@ namespace MGroup.Solvers.DDM.Psm
 		protected readonly ConcurrentDictionary<int, IPsmSubdomainMatrixManager> subdomainMatricesPsm;
 		protected readonly ISubdomainTopology subdomainTopology;
 		protected readonly ConcurrentDictionary<int, PsmSubdomainVectors> subdomainVectors;
+		private readonly bool directSolverIsNative = false;
 
 		protected int analysisIteration;
 		protected DistributedOverlappingIndexer boundaryDofIndexer;
@@ -126,6 +127,15 @@ namespace MGroup.Solvers.DDM.Psm
 			Logger = new SolverLogger(name);
 			LoggerDdm = logger;
 
+			if (matrixManagerFactory is PsmSubdomainMatrixManagerSymmetricSuiteSparse.Factory)
+			{
+				directSolverIsNative = true;
+			}
+			else
+			{
+				directSolverIsNative = false;
+			}
+
 			analysisIteration = 0;
 		}
 
@@ -182,13 +192,38 @@ namespace MGroup.Solvers.DDM.Psm
 					#endregion
 					subdomainMatricesPsm[subdomainID].HandleDofsWereModified();
 					subdomainMatricesPsm[subdomainID].ExtractKiiKbbKib();
-					subdomainMatricesPsm[subdomainID].InvertKii();
+					//subdomainMatricesPsm[subdomainID].InvertKii();
 				}
 				else
 				{
 					Debug.Assert(!subdomainMatricesPsm[subdomainID].IsEmpty);
 				}
 			});
+
+			//TODO: This should be done together with the extraction. However SuiteSparse already uses multiple threads and should
+			//		not be parallelized at subdomain level too. Instead environment.DoPerNode should be able to run tasks serially by reading a flag.
+			if (directSolverIsNative)
+			{
+				environment.DoPerNodeSerially(subdomainID =>
+				{
+					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
+					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
+					{
+						subdomainMatricesPsm[subdomainID].InvertKii();
+					}
+				});
+			}
+			else
+			{
+				environment.DoPerNode(subdomainID =>
+				{
+					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
+					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
+					{
+						subdomainMatricesPsm[subdomainID].InvertKii();
+					}
+				});
+			}
 
 			// Intersubdomain dofs
 			if (isFirstAnalysis || !reanalysis.InterfaceProblemIndexer)

@@ -227,6 +227,14 @@ namespace MGroup.Environments.Mpi
 			Parallel.ForEach(localNodes.Keys, actionPerNode);
 		}
 
+		public void DoPerNodeSerially(Action<int> actionPerNode)
+		{
+			foreach (int nodeID in localNodes.Keys)
+			{
+				actionPerNode(nodeID);
+			}
+		}
+
 		public Dictionary<int, T> GatherToRootProcess<T>(Func<int, T> getDataPerNode, int rootProcessRank)
 		{
 			T[] localData;

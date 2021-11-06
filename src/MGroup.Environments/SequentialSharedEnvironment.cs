@@ -116,6 +116,8 @@ namespace MGroup.Environments
 			}
 		}
 
+		public void DoPerNodeSerially(Action<int> actionPerNode) => DoPerNode(actionPerNode);
+
 		public ComputeNode GetComputeNode(int nodeID) => nodeTopology.Nodes[nodeID];
 
 		public void Initialize(ComputeNodeTopology nodeTopology)
