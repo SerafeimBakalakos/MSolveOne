@@ -19,7 +19,7 @@ namespace MGroup.XFEM.Output.Writers
 			this.iteration = 0;
 		}
 
-		public string ExtraInfo { get; set; }
+		public string ExtraInfo { get; set; } = "";
 
 		public void WriteResults(IAlgebraicModel algebraicModel, IGlobalVector solution)
 		{

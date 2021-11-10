@@ -63,7 +63,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 		
 		private const double heavisideTol = 1E-4;
 		private const double tipEnrichmentArea = 0.0;
-		private const int maxIterations = 17;
+		private const int maxIterations = 15;
 		private const double fractureToughness = double.MaxValue;
 
 		private static HomogeneousFractureMaterialField3D Material
@@ -266,6 +266,8 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 				new CrackExitsDomainTermination(domainBoundary));
 			var analyzer = new QuasiStaticLefmAnalyzer(model, algebraicModel, solver, maxIterations, termination);
 			analyzer.Results.Add(new StructuralFieldWriter(model, outputDirectory, true, false));
+			var normLogger = new SolutionNormLogger(Path.Combine(outputDirectory, "solution_norm.txt"));
+			analyzer.Results.Add(normLogger);
 
 			analyzer.Analyze();
 		}
