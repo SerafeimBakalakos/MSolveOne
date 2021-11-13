@@ -31,6 +31,32 @@ namespace MGroup.Solvers.DDM.Tests.Partitioning
 			writer.PlotPartitioning(model, partitioner);
 		}
 
+		//[Fact]
+		public static void PlotPartitioningVariable()
+		{
+			IModel model = Brick3DExample.CreateSingleSubdomainModel();
+			model.ConnectDataStructures();
+
+			var mesh = new UniformCartesianMesh3D.Builder(Brick3DExample.MinCoords, Brick3DExample.MaxCoords,
+				Brick3DExample.NumElements).BuildMesh();
+
+			//int[] numElements = {4, 6, 8};
+			int[] numClusters = { 1, 1, 1 };
+			int[] numSubdomains = { 2, 2, 3 };
+			int[][] numElementsPerSubdomainPerAxis = new int[3][]
+			{
+				new int[] { 2, 2 },
+				new int[] { 2, 4 },
+				new int[] { 3, 2, 3 }
+			};
+			var partitioner = new UniformMeshPartitioner3D(mesh, numSubdomains, numClusters, numElementsPerSubdomainPerAxis);
+			partitioner.Partition(model);
+
+			string outputDirectory = @"C:\Users\Serafeim\Desktop\DDM\PFETIDP\partitioning\brick3D";
+			var writer = new PartitioningWriter(outputDirectory, 3);
+			writer.PlotPartitioning(model, partitioner);
+		}
+
 		[Fact]
 		public static void TestMeshPartitioning()
 		{

@@ -43,6 +43,15 @@ namespace MGroup.Solvers.DDM.Tests.Commons
 
 		public int[] NumElementsTotal { get; set; } = { 1, 1, 1 };
 
+		/// <summary>
+		/// For each axis d=0,1,2 <see cref="NumElementsPerSubdomainPerAxis"/> contains an int[] array. This array contains
+		/// the number of elements of each subdomain. If this property is not provided: a) If the total number of elements along 
+		/// an axis is a multiple of the number of subdomains per axis, then that multiplicity will be the number of elements 
+		/// per subdomain along that axis. b) If it is not a multiple, then any extra elements will be distributed among a 
+		/// subset of the subdomains, starting from the first subdomain of that axis.
+		/// </summary>
+		public int[][] NumElementsPerSubdomainPerAxis { get; set; } = null;
+
 		public int[] NumSubdomains { get; set; } = { 1, 1, 1 };
 
 		public int[] NumClusters { get; set; } = { 1, 1, 1 };
@@ -99,7 +108,7 @@ namespace MGroup.Solvers.DDM.Tests.Commons
 		{
 			Model model = BuildSingleSubdomainModel();
 			UniformCartesianMesh3D mesh = BuildMesh();
-			var partitioner = new UniformMeshPartitioner3D(mesh, NumSubdomains, NumClusters);
+			var partitioner = new UniformMeshPartitioner3D(mesh, NumSubdomains, NumClusters, NumElementsPerSubdomainPerAxis);
 			partitioner.Partition(model);
 			ModelUtilities.DecomposeIntoSubdomains(model, partitioner.NumSubdomainsTotal, partitioner.GetSubdomainOfElement);
 

@@ -47,8 +47,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		private const int numTrialPoints = 100;
 		private const double zeroStresRThetaTolerance = 5E-2;
 
-		private const double heavisideTol = 1E-4;
-		private const double tipEnrichmentArea = 0.0;
+		public static double heavisideTol = 1E-4;
+		public static double tipEnrichmentArea = 0.0;
 
 		public static void CreateGeometryModel(XModel<IXCrackElement> model, int[] numElements,
 			double[] crackMouthCoords, double[] crackFrontCoords, string outputDirectory = null)

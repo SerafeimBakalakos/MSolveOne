@@ -43,8 +43,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		private const int numTrialPoints = 100;
 		private const double zeroStresRThetaTolerance = 5E-2;
 
-		private const double heavisideTol = 1E-4;
-		private const double tipEnrichmentArea = 0.0;
+		public static double heavisideTol = 1E-4;
+		public static double tipEnrichmentArea = 0.0;
 
 		public static void CreateGeometryModel(XModel<IXCrackElement> model, int[] numElements,
 			string outputDirectory = null)
@@ -66,17 +66,20 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			var domainBoundary = new BoxDomainBoundary3D(minCoords, maxCoords, 1E-6);
 			crackGeometry.CrackFront = new CrackFront3D(crackGeometry, domainBoundary);
 			var crack = new HybridFriesCrack3D(model, crackGeometry, propagator);
-
-			//crack.Observers.Add(new LevelSetObserver(model, crack.CrackGeometry_v2, outputDirectory));
-			//crack.Observers.Add(new CrackLevelSetPlotter_v2(model, crack.CrackGeometry_v2, outputDirectory));
-			//crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
-			//crack.Observers.Add(new CrackBody3DObserver(crack.CrackGeometry_v2, outputDirectory));
-			//crack.Observers.Add(new CrackFront3DObserver(crack.CrackGeometry_v2, outputDirectory));
 			geometryModel.Cracks[crack.ID] = crack;
+
+			if (outputDirectory != null)
+			{
+				//crack.Observers.Add(new LevelSetObserver(model, crack.CrackGeometry_v2, outputDirectory));
+				crack.Observers.Add(new CrackLevelSetPlotter_v2(model, crack.CrackGeometry_v2, outputDirectory));
+				//crack.Observers.Add(new CrackInteractingElementsPlotter(crack, outputDirectory));
+				crack.Observers.Add(new CrackBody3DObserver(crack.CrackGeometry_v2, outputDirectory));
+				//crack.Observers.Add(new CrackFront3DObserver(crack.CrackGeometry_v2, outputDirectory));
+			}
 		}
 
 		public static UniformDdmCrackModelBuilder3D DescribePhysicalModel(
-			int[] numElements, int[] numSubdomains = null, int[] numClusters = null)
+			int[] numElements, int[] numSubdomains = null, int[] numClusters = null, int[][] numElementsPerSubdomain = null)
 		{
 			if (numSubdomains == null)
 			{
@@ -91,6 +94,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			modelBuilder.NumElementsTotal = numElements;
 			modelBuilder.NumSubdomains = numSubdomains;
 			modelBuilder.NumClusters = numClusters;
+			modelBuilder.NumElementsPerSubdomainPerAxis = numElementsPerSubdomain;
 
 			// Materials, integration
 			modelBuilder.MaterialField = new HomogeneousFractureMaterialField3D(E, v);

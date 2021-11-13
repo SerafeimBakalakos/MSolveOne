@@ -37,12 +37,13 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 		public static string outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example2\";
 		public static string outputPlotDirectory = outputDirectory + "plots";
-		public const bool enablePlotting = false;
+		public static bool enablePlotting = true;
 
 		public static int numElementsMin = 10;
 		public static int[] numElements = new int[] { 2 * numElementsMin, numElementsMin, 2 * numElementsMin };
 		public static int numSubdomainsMin = 1;
 		public static int[] numSubdomains = new int[] { 2 * numSubdomainsMin, numSubdomainsMin, 2 * numSubdomainsMin };
+		public static int[][] numElementsPerSubdomain = null;
 		
 		public static int maxIterations = 15;
 		public const double fractureToughness = double.MaxValue;
@@ -108,7 +109,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 			var msg = new StringBuilder();
 			msg.Append($"{DateTime.Now}, solver={solverChoice.ToString()}");
-			msg.AppendLine($", numElements={numElements[0]}x{numElements[1]}x{numElements[2]}");
+			msg.AppendLine($", numElements={numElements[0]}x{numElements[1]}x{numElements[2]}," +
+				$" heaviside tol={FriesExample_7_2_3_Model.heavisideTol}, tip enrichment radius={FriesExample_7_2_3_Model.tipEnrichmentArea}");
 			if (solverChoice == SolverChoice.PfetiDPManaged || solverChoice == SolverChoice.PfetiDPNative)
 			{
 				msg.Append($"numSubdomains={numSubdomains[0]}x{numSubdomains[1]}x{numSubdomains[2]}");
