@@ -18,28 +18,23 @@ using MGroup.Solvers.Assemblers;
 using MGroup.Solvers.DofOrdering;
 using MGroup.Solvers.LinearSystem;
 using MGroup.Solvers.Results;
+using MGroup.XFEM.Elements;
+using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.Solvers.PaisReanalysis
 {
 	public class ReanalysisAlgebraicModel<TMatrix> : GlobalAlgebraicModel<TMatrix>
 		where TMatrix : class, IMatrix
 	{
-		private readonly ISubdomain subdomain;
-		private readonly IModel model;
-		private readonly IDofOrderer dofOrderer;
-		private readonly ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler;
-		private readonly SubdomainVectorAssembler subdomainVectorAssembler;
-
 		private bool orderingExists = false;
 
-		public ReanalysisAlgebraicModel(IModel model, IDofOrderer dofOrderer,
+		public ReanalysisAlgebraicModel(XModel<IXCrackElement> model, IDofOrderer dofOrderer,
 			ISubdomainMatrixAssembler<TMatrix> subdomainMatrixAssembler) : base(model, dofOrderer, subdomainMatrixAssembler)
 		{
-			this.model = model;
-			this.dofOrderer = dofOrderer;
-			this.subdomainMatrixAssembler = subdomainMatrixAssembler;
-			subdomain = model.EnumerateSubdomains().First();
+			this.Model = model;
 		}
+
+		public XModel<IXCrackElement> Model { get; }
 
 		public override void OrderDofs()
 		{

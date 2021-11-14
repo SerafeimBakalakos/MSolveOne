@@ -68,7 +68,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
 			PlateBenchmark.WriteCrackPath(model);
-			Debug.WriteLine($"Num dofs = {solver.LinearSystem.RhsVector.Length}");
+			//Debug.WriteLine($"Num dofs = {solver.LinearSystem.RhsVector.Length}");
+			solver.Dispose();
 		}
 
 
@@ -91,7 +92,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
 			PlateBenchmark.WriteCrackPath(model);
-			Debug.WriteLine($"Num dofs = {solver.LinearSystem.RhsVector.Length}");
+			//Debug.WriteLine($"Num dofs = {solver.LinearSystem.RhsVector.Length}");
+			solver.Dispose();
 		}
 
 		[Theory]

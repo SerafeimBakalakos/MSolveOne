@@ -29,7 +29,7 @@ namespace MGroup.XFEM.Analysis
 		private readonly bool reanalysis;
 
 		public QuasiStaticLefmAnalyzer(XModel<IXCrackElement> model, IAlgebraicModel algebraicModel, ISolver solver, 
-			int maxIterations, IPropagationTermination terminationCriterion, bool reanalysis = true)
+			int maxIterations, IPropagationTermination terminationCriterion, bool reanalysis = false)
 		{
 			this.model = model;
 			this.algebraicModel = algebraicModel;
@@ -118,6 +118,9 @@ namespace MGroup.XFEM.Analysis
 				// Solve the linear system
 				watch.Restart();
 				solver.Solve();
+				#region debug
+				Debug.WriteLine($"norm(u)={solver.LinearSystem.Solution.Norm2()}");
+				#endregion
 				watch.Stop();
 				Logger.LogSolutionDuration(watch.ElapsedMilliseconds);
 				totalDisplacementsFreeDofs = solver.LinearSystem.Solution;

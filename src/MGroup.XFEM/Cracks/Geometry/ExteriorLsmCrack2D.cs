@@ -152,6 +152,9 @@ namespace MGroup.XFEM.Cracks.Geometry
 				algebraicModel, totalDisplacements, lsmGeometry.Tip, lsmGeometry.FrontSystem, TipElements);
 			lsmGeometry.Update(model.Nodes.Values, growthAngle, growthLength);
 			crackPath.Add(lsmGeometry.Tip);
+			#region debug
+			Debug.WriteLine($"new tip at ({lsmGeometry.Tip[0]}, {lsmGeometry.Tip[1]})");
+			#endregion
 		}
 	}
 }
