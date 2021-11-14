@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using MGroup.Environments;
@@ -21,6 +22,7 @@ using MGroup.Solvers.DDM.Tests;
 using MGroup.Solvers.Direct;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
+using MGroup.XFEM.Solvers.PaisReanalysis;
 using MGroup.XFEM.Solvers.PFetiDP;
 using Xunit;
 
@@ -47,6 +49,49 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
 			PlateBenchmark.WriteCrackPath(model);
+		}
+
+		[Fact]
+		public static void AnalyzeWithSuiteSparseSolver()
+		{
+			// Model
+			int[] numElements = { 48, 48 };
+			XModel<IXCrackElement> model = PlateBenchmark.DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
+			PlateBenchmark.CreateGeometryModel(model);
+			string outputDirectory = Path.Combine(workDirectory, "plots");
+			PlateBenchmark.SetupModelOutput(model, outputDirectory);
+
+			// Solver
+			var factory = new SuiteSparseSolver.Factory();
+			GlobalAlgebraicModel<SymmetricCscMatrix> algebraicModel = factory.BuildAlgebraicModel(model);
+			var solver = factory.BuildSolver(algebraicModel);
+
+			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
+			PlateBenchmark.WriteCrackPath(model);
+			Debug.WriteLine($"Num dofs = {solver.LinearSystem.RhsVector.Length}");
+		}
+
+
+		[Fact]
+		public static void AnalyzeWithReanalysisSolver()
+		{
+			// Model
+			int[] numElements = { 48, 48 };
+			XModel<IXCrackElement> model = PlateBenchmark.DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
+			PlateBenchmark.CreateGeometryModel(model);
+			string outputDirectory = Path.Combine(workDirectory, "plots");
+			PlateBenchmark.SetupModelOutput(model, outputDirectory);
+
+			// Solver
+			var enrichedNodeSelector = new BoundingBoxNodeSelector(new double[] { 0, 0.5 }, new double[] { 3, 2 });
+			var dofOrderer = new ReanalysisDofOrderer(enrichedNodeSelector.CanNodeBeEnriched);
+			var factory = new ReanalysisRebuildingSolver.Factory(dofOrderer);
+			GlobalAlgebraicModel<DokMatrixAdapter> algebraicModel = factory.BuildAlgebraicModel(model);
+			var solver = factory.BuildSolver(algebraicModel);
+
+			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
+			PlateBenchmark.WriteCrackPath(model);
+			Debug.WriteLine($"Num dofs = {solver.LinearSystem.RhsVector.Length}");
 		}
 
 		[Theory]

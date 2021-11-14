@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using MGroup.MSolve.Discretization;
@@ -53,6 +54,7 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			var reorderingStrategy = AmdReordering.CreateWithSuiteSparseAmd();
 			reorderingStrategy.ReorderDofs(subdomain, dofOrdering);
 
+			Debug.WriteLine($"Num dofs = {numFreeDofs}");
 			return dofOrdering;
 		}
 

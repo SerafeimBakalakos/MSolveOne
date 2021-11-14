@@ -6,7 +6,7 @@ using MGroup.XFEM.Extensions;
 
 namespace MGroup.XFEM.Solvers.PaisReanalysis
 {
-	public class BoundingBoxNodeSelector
+	public class BoundingBoxNodeSelector : IEnrichedNodeSelector
 	{
 		private readonly int dim;
 		private readonly double[] minCoords;
