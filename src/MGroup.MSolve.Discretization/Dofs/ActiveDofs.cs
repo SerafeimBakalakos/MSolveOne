@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace MGroup.MSolve.Discretization.Dofs
@@ -33,6 +34,11 @@ namespace MGroup.MSolve.Discretization.Dofs
 				dofsToIds.Clear();
 				nextId = 0;
 			}
+		}
+
+		public SortedDictionary<int, IDofType> SortDofs()
+		{
+			return new SortedDictionary<int, IDofType>(idsToDofs);
 		}
 
 		public int GetIdOfDof(IDofType dof) => dofsToIds[dof];
