@@ -50,7 +50,7 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			}
 
 			// Reorder dofs
-			var dofOrdering = new SubdomainFreeDofOrderingCaching(numFreeDofs, freeDofs, allDofs);
+			var dofOrdering = new SubdomainFreeDofOrderingGeneral(numFreeDofs, freeDofs, allDofs);
 			var reorderingStrategy = AmdReordering.CreateWithSuiteSparseAmd();
 			reorderingStrategy.ReorderDofs(subdomain, dofOrdering);
 

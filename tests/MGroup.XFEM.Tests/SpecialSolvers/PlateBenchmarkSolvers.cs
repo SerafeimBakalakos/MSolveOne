@@ -86,7 +86,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			var enrichedNodeSelector = new BoundingBoxNodeSelector(new double[] { 0, 0.5 }, new double[] { 3, 2 });
 			var dofOrderer = new ReanalysisDofOrderer(enrichedNodeSelector.CanNodeBeEnriched);
 			var factory = new ReanalysisRebuildingSolver.Factory(dofOrderer);
-			GlobalAlgebraicModel<DokMatrixAdapter> algebraicModel = factory.BuildAlgebraicModel(model);
+			ReanalysisAlgebraicModel<DokMatrixAdapter> algebraicModel = factory.BuildAlgebraicModel(model);
 			var solver = factory.BuildSolver(algebraicModel);
 
 			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);

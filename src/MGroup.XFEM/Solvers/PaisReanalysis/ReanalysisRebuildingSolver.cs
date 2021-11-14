@@ -126,8 +126,8 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			public ReanalysisRebuildingSolver BuildSolver(GlobalAlgebraicModel<DokMatrixAdapter> model)
 				=> new ReanalysisRebuildingSolver(model, FactorizationPivotTolerance);
 
-			public GlobalAlgebraicModel<DokMatrixAdapter> BuildAlgebraicModel(IModel model)
-				=> new GlobalAlgebraicModel<DokMatrixAdapter>(model, DofOrderer, new ReanalysisWholeMatrixAssembler());
+			public ReanalysisAlgebraicModel<DokMatrixAdapter> BuildAlgebraicModel(IModel model)
+				=> new ReanalysisAlgebraicModel<DokMatrixAdapter>(model, DofOrderer, new ReanalysisWholeMatrixAssembler());
 		}
 	}
 }

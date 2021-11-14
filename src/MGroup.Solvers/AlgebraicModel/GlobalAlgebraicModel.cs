@@ -190,7 +190,7 @@ namespace MGroup.Solvers.AlgebraicModel
 			}
 		}
 
-		public void OrderDofs()
+		public virtual void OrderDofs()
 		{
 			SubdomainFreeDofOrdering = dofOrderer.OrderFreeDofs(subdomain, model.AllDofs);
 			foreach (IAlgebraicModelObserver observer in Observers)
@@ -206,7 +206,7 @@ namespace MGroup.Solvers.AlgebraicModel
 			LinearSystem.Solution = CreateZeroVector();
 		}
 
-		public void ReorderDofs() => OrderDofs();
+		public virtual void ReorderDofs() => OrderDofs();
 
 		public void RebuildGlobalMatrixPartially(
 			IGlobalMatrix currentMatrix, Func<int, IEnumerable<IElement>> accessElements,
