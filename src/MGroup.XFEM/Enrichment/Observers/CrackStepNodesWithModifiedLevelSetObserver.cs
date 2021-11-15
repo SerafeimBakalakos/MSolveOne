@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.XFEM.Cracks.Geometry;
+using MGroup.XFEM.Elements;
 using MGroup.XFEM.Enrichment.Functions;
 using MGroup.XFEM.Entities;
 
@@ -13,17 +14,20 @@ namespace MGroup.XFEM.Enrichment.Observers
 	/// </summary>
 	public class CrackStepNodesWithModifiedLevelSetObserver : IEnrichmentObserver
 	{
-		private readonly ExteriorLsmCrack2D[] allCracks;
-		private readonly Dictionary<EnrichmentItem, ExteriorLsmCrack2D> enrichmentsToCracks 
-			= new Dictionary<EnrichmentItem, ExteriorLsmCrack2D>();
+		private readonly ICrack[] allCracks;
+		private readonly Dictionary<EnrichmentItem, ICrack> enrichmentsToCracks = new Dictionary<EnrichmentItem, ICrack>();
 
-		public CrackStepNodesWithModifiedLevelSetObserver(params ExteriorLsmCrack2D[] allCracks)
+		public CrackStepNodesWithModifiedLevelSetObserver(XModel<IXCrackElement> model)
 		{
-			if (allCracks.Length == 0)
+			var allCracks = new List<ICrack>();
+			foreach (IXDiscontinuity discontinuity in model.GeometryModel.EnumerateDiscontinuities())
 			{
-				throw new ArgumentException("All cracks of the model must be passed in");
+				if (discontinuity is ICrack crack)
+				{
+					allCracks.Add(crack);
+				}
 			}
-			this.allCracks = allCracks;
+			this.allCracks = allCracks.ToArray();
 		}
 
 		public Dictionary<EnrichmentItem, Dictionary<XNode, double>> LevelSetsOfStepNodes { get; }
@@ -43,14 +47,14 @@ namespace MGroup.XFEM.Enrichment.Observers
 
 		public void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment)
 		{
-			ExteriorLsmCrack2D crack = FindCrack(enrichment);
+			ICrack crack = FindCrack(enrichment);
 			if (crack == null)
 			{
 				return;
 			}
 
 			bool nodeExists = LevelSetsOfStepNodes[enrichment].TryGetValue(node, out double previousLevelSet);
-			double newLevelSet = crack.LsmGeometry.LevelSets[node.ID];
+			double newLevelSet = crack.CrackGeometry.SignedDistanceOf(node);
 			if (nodeExists && (newLevelSet != previousLevelSet))
 			{
 				StepNodesWithModifiedLevelSets.Add(node);
@@ -60,7 +64,7 @@ namespace MGroup.XFEM.Enrichment.Observers
 
 		public void LogEnrichmentRemoval(XNode node, EnrichmentItem enrichment)
 		{
-			ExteriorLsmCrack2D crack = FindCrack(enrichment);
+			ICrack crack = FindCrack(enrichment);
 			if (crack == null)
 			{
 				return;
@@ -74,18 +78,18 @@ namespace MGroup.XFEM.Enrichment.Observers
 			StepNodesWithModifiedLevelSets.Clear();
 		}
 
-		private ExteriorLsmCrack2D FindCrack(EnrichmentItem enrichment)
+		private ICrack FindCrack(EnrichmentItem enrichment)
 		{
-			if (enrichment.EnrichmentFunctions[0] is CrackStepEnrichment)
+			if (enrichment.EnrichmentFunctions[0] is IStepEnrichment)
 			{
-				bool crackExists = enrichmentsToCracks.TryGetValue(enrichment, out ExteriorLsmCrack2D result);
+				bool crackExists = enrichmentsToCracks.TryGetValue(enrichment, out ICrack result);
 				if (crackExists)
 				{
 					return result;
 				}
 				else
 				{
-					foreach (ExteriorLsmCrack2D crack in allCracks)
+					foreach (ICrack crack in allCracks)
 					{
 						if (crack.CrackBodyEnrichment == enrichment)
 						{

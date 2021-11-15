@@ -175,7 +175,6 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			foreach (int col in colsToRemove)
 			{
 				factorization.DeleteRow(col);
-
 			}
 
 			// Add columns corresponding to new dofs

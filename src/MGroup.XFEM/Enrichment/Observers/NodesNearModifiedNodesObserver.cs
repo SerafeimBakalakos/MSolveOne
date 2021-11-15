@@ -6,6 +6,9 @@ using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.Enrichment.Observers
 {
+	/// <summary>
+	/// Nodes that have unmodified enrichments, but belong to the same elements as nodes that have modified enrichments.
+	/// </summary>
 	public class NodesNearModifiedNodesObserver : IEnrichmentObserver
 	{
 		private readonly NodesWithModifiedEnrichmentsObserver nodesWithModifiedEnrichmentsObserver;

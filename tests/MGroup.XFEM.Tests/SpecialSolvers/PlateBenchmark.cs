@@ -145,8 +145,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			var previousCrackTipNodes = new PreviousCrackTipNodesObserver();
 			var rejectedCrackStepNodes = new RejectedCrackStepNodesObserver(
 				crack, newCrackTipNodes, allCrackStepNodes);
-			var nodesWithModifiedLevelSet = new CrackStepNodesWithModifiedLevelSetObserver(crack);
-			var nodesWithModifiedEnrichments = new NodesWithModifiedEnrichmentsObserver(nodesWithModifiedLevelSet);
+			var nodesWithModifiedLevelSet = new CrackStepNodesWithModifiedLevelSetObserver(model);
+			var nodesWithModifiedEnrichments = new NodesWithModifiedEnrichmentsObserver(
+				newCrackStepNodes, nodesWithModifiedLevelSet, newCrackTipNodes, previousCrackTipNodes);
 			var elementsWithModifiedNodes = new ElementsWithModifiedNodesObserver(nodesWithModifiedEnrichments);
 			var nodesNearModifiedNodes = new NodesNearModifiedNodesObserver(
 				nodesWithModifiedEnrichments, elementsWithModifiedNodes);

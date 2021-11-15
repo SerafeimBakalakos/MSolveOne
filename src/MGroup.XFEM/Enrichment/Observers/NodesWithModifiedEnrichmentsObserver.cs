@@ -16,20 +16,36 @@ namespace MGroup.XFEM.Enrichment.Observers
 	{
 		private readonly CrackStepNodesWithModifiedLevelSetObserver crackStepNodesWithModifiedLevelSetObserver;
 
-		public NodesWithModifiedEnrichmentsObserver(
-			CrackStepNodesWithModifiedLevelSetObserver crackStepNodesWithModifiedLevelSetObserver)
+		//TODO: perhaps these 3 are redundant, since enrichment addition and removal is being tracked.
+		private readonly NewCrackStepNodesObserver newCrackStepNodesObserver;
+		private readonly NewCrackTipNodesObserver newCrackTipNodesObserver;
+		private readonly PreviousCrackTipNodesObserver previousCrackTipNodesObserver;
+
+		public NodesWithModifiedEnrichmentsObserver(NewCrackStepNodesObserver newCrackStepNodesObserver,
+			CrackStepNodesWithModifiedLevelSetObserver crackStepNodesWithModifiedLevelSetObserver, 
+			NewCrackTipNodesObserver newCrackTipNodesObserver, PreviousCrackTipNodesObserver previousCrackTipNodesObserver)
 		{
+			this.newCrackStepNodesObserver = newCrackStepNodesObserver;
 			this.crackStepNodesWithModifiedLevelSetObserver = crackStepNodesWithModifiedLevelSetObserver;
+			this.newCrackTipNodesObserver = newCrackTipNodesObserver;
+			this.previousCrackTipNodesObserver = previousCrackTipNodesObserver;
 		}
 
 		public HashSet<XNode> NodesWithModifiedEnrichments { get; } = new HashSet<XNode>();
 
 		public IReadOnlyCollection<IEnrichmentObserver> ObserverDependencies
-			=> new IEnrichmentObserver[] { crackStepNodesWithModifiedLevelSetObserver };
+			=> new IEnrichmentObserver[] 
+			{ 
+				newCrackStepNodesObserver, crackStepNodesWithModifiedLevelSetObserver, 
+				newCrackTipNodesObserver, previousCrackTipNodesObserver
+			};
 
 		public void EndCurrentAnalysisIteration()
 		{
+			NodesWithModifiedEnrichments.UnionWith(newCrackStepNodesObserver.NewCrackStepNodes);
 			NodesWithModifiedEnrichments.UnionWith(crackStepNodesWithModifiedLevelSetObserver.StepNodesWithModifiedLevelSets);
+			NodesWithModifiedEnrichments.UnionWith(newCrackTipNodesObserver.NewCrackTipNodes);
+			NodesWithModifiedEnrichments.UnionWith(previousCrackTipNodesObserver.PreviousCrackTipNodes);
 		}
 
 		public void LogEnrichmentAddition(XNode node, EnrichmentItem enrichment)
