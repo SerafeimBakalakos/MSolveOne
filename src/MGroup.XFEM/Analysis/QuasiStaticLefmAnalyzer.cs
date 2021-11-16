@@ -119,7 +119,7 @@ namespace MGroup.XFEM.Analysis
 				watch.Restart();
 				solver.Solve();
 				#region debug
-				Debug.WriteLine($"norm(u)={solver.LinearSystem.Solution.Norm2()}");
+				//Debug.WriteLine($"norm(u)={solver.LinearSystem.Solution.Norm2()}");
 				#endregion
 				watch.Stop();
 				Logger.LogSolutionDuration(watch.ElapsedMilliseconds);

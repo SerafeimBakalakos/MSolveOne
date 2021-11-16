@@ -30,9 +30,13 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 		private readonly double factorizationPivotTolerance;
 		private readonly ReanalysisAlgebraicModel<DokMatrixAdapter> algebraicModel;
 
-		private readonly NewCrackStepNodesObserver newStepNodes = new NewCrackStepNodesObserver();
-		private readonly NewCrackTipNodesObserver newTipNodes = new NewCrackTipNodesObserver();
-		private readonly PreviousCrackTipNodesObserver previousTipNodes = new PreviousCrackTipNodesObserver();
+		private readonly NewCrackStepNodesObserver newStepNodes;
+		private readonly CrackStepNodesWithModifiedLevelSetObserver stepNodesWithModifiedLevelSet;
+		private readonly NewCrackTipNodesObserver newTipNodes;
+		private readonly PreviousCrackTipNodesObserver previousTipNodes;
+		private readonly NodesWithModifiedEnrichmentsObserver nodesWithModifiedEnrichments;
+		private readonly ElementsWithModifiedNodesObserver elementsWithModifiedNodes;
+		private readonly NodesNearModifiedNodesObserver nodesNearModifiedNodes;
 
 		private CholeskySuiteSparse factorization;
 		private int iteration = 0;
@@ -47,10 +51,21 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			LinearSystem.Observers.Add(this);
 			this.Logger = new SolverLogger(name);
 
+			// Enrichment observers
+			newStepNodes = new NewCrackStepNodesObserver();
+			stepNodesWithModifiedLevelSet = new CrackStepNodesWithModifiedLevelSetObserver(algebraicModel.Model);
+			newTipNodes = new NewCrackTipNodesObserver();
+			previousTipNodes = new PreviousCrackTipNodesObserver();
+			nodesWithModifiedEnrichments = new NodesWithModifiedEnrichmentsObserver(
+				newStepNodes, stepNodesWithModifiedLevelSet, newTipNodes, previousTipNodes);
+			elementsWithModifiedNodes = new ElementsWithModifiedNodesObserver(nodesWithModifiedEnrichments);
+			nodesNearModifiedNodes = new NodesNearModifiedNodesObserver(nodesWithModifiedEnrichments, elementsWithModifiedNodes);
+
+			var compositeObserver = new CompositeEnrichmentObserver();
+			compositeObserver.AddObservers(newStepNodes, stepNodesWithModifiedLevelSet, newTipNodes, previousTipNodes, 
+				nodesWithModifiedEnrichments, elementsWithModifiedNodes, nodesNearModifiedNodes);
 			INodeEnricher enricher = algebraicModel.Model.GeometryModel.Enricher;
-			enricher.Observers.Add(newStepNodes);
-			enricher.Observers.Add(newTipNodes);
-			enricher.Observers.Add(previousTipNodes);
+			enricher.Observers.Add(compositeObserver);
 		}
 
 		IGlobalLinearSystem ISolver.LinearSystem => LinearSystem;
@@ -162,14 +177,21 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			}
 			DokSymmetric matrix = LinearSystem.Matrix.SingleMatrix.DokMatrix;
 
-			// Find the dofs that were added
+			// Find enriched dofs that were added
 			var colsToAdd = new SortedSet<int>();
-			FindNewCrackStepDofs(colsToAdd);
-			FindNewCrackTipDofs(colsToAdd);
+			FindCrackStepDofs(newStepNodes.NewCrackStepNodes, colsToAdd);
+			FindCrackTipDofs(newTipNodes.NewCrackTipNodes, colsToAdd);
 
-			// Find the dofs that were removed
+			// Find enriched dofs that were removed
 			var colsToRemove = new HashSet<int>(colsToAdd);
-			FindPreviousCrackTipDofs(colsToRemove);
+			FindCrackTipDofs(previousTipNodes.PreviousCrackTipNodes, colsToRemove);
+
+			// Find enriched dofs that have modified stiffness and possibly enrichment values
+			var colsToModify = new HashSet<int>();
+			FindCrackStepDofs(stepNodesWithModifiedLevelSet.StepNodesWithModifiedLevelSets, colsToModify);
+			FindCrackStepDofs(nodesNearModifiedNodes.NearModifiedNodes, colsToModify);
+			colsToRemove.UnionWith(colsToModify);
+			colsToAdd.UnionWith(colsToModify);
 
 			// Delete columns corresponding to removed dofs
 			foreach (int col in colsToRemove)
@@ -189,60 +211,42 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			Logger.LogTaskDuration("Matrix factorization", watch.ElapsedMilliseconds);
 		}
 
-		private void FindNewCrackStepDofs(SortedSet<int> dofIndices)
+		private void FindCrackStepDofs(IEnumerable<XNode> inNodes, ISet<int> dofIndices)
 		{
 			ActiveDofs allDofs = algebraicModel.Model.AllDofs;
 			IntDofTable dofOrdering = algebraicModel.SubdomainFreeDofOrdering.FreeDofs;
-			foreach (XNode node in newStepNodes.NewCrackStepNodes)
+			foreach (XNode node in inNodes)
 			{
-				foreach (EnrichmentItem enrichment in node.Enrichments)
+				IReadOnlyDictionary<int, int> dofsOfNode = dofOrdering.GetDataOfRow(node.ID);
+				foreach (var dofIDIndexPair in dofsOfNode)
 				{
-					if (enrichment.EnrichmentFunctions[0] is IStepEnrichment)
+					IDofType dofType = allDofs.GetDofWithId(dofIDIndexPair.Key);
+					if (dofType is EnrichedDof enrichedDof)
 					{
-						foreach (IDofType dof in enrichment.EnrichedDofs)
+						if (enrichedDof.Enrichment is IStepEnrichment)
 						{
-							int dofID = allDofs.GetIdOfDof(dof);
-							dofIndices.Add(dofOrdering[node.ID, dofID]);
+							dofIndices.Add(dofIDIndexPair.Value);
 						}
 					}
 				}
 			}
 		}
 
-		private void FindNewCrackTipDofs(SortedSet<int> dofIndices)
+		private void FindCrackTipDofs(IEnumerable<XNode> inNodes, ISet<int> dofIndices)
 		{
 			ActiveDofs allDofs = algebraicModel.Model.AllDofs;
 			IntDofTable dofOrdering = algebraicModel.SubdomainFreeDofOrdering.FreeDofs;
-			foreach (XNode node in newTipNodes.NewCrackTipNodes)
+			foreach (XNode node in inNodes)
 			{
-				foreach (EnrichmentItem enrichment in node.Enrichments)
+				IReadOnlyDictionary<int, int> dofsOfNode = dofOrdering.GetDataOfRow(node.ID);
+				foreach (var dofIDIndexPair in dofsOfNode)
 				{
-					if (enrichment.EnrichmentFunctions[0] is ICrackTipEnrichment)
+					IDofType dofType = allDofs.GetDofWithId(dofIDIndexPair.Key);
+					if (dofType is EnrichedDof enrichedDof)
 					{
-						foreach (IDofType dof in enrichment.EnrichedDofs)
+						if (enrichedDof.Enrichment is ICrackTipEnrichment)
 						{
-							int dofID = allDofs.GetIdOfDof(dof);
-							dofIndices.Add(dofOrdering[node.ID, dofID]);
-						}
-					}
-				}
-			}
-		}
-
-		private void FindPreviousCrackTipDofs(HashSet<int> dofIndices)
-		{
-			ActiveDofs allDofs = algebraicModel.Model.AllDofs;
-			IntDofTable dofOrdering = algebraicModel.SubdomainFreeDofOrdering.FreeDofs;
-			foreach (XNode node in previousTipNodes.PreviousCrackTipNodes)
-			{
-				foreach (EnrichmentItem enrichment in node.Enrichments)
-				{
-					if (enrichment.EnrichmentFunctions[0] is ICrackTipEnrichment)
-					{
-						foreach (IDofType dof in enrichment.EnrichedDofs)
-						{
-							int dofID = allDofs.GetIdOfDof(dof);
-							dofIndices.Add(dofOrdering[node.ID, dofID]);
+							dofIndices.Add(dofIDIndexPair.Value);
 						}
 					}
 				}
