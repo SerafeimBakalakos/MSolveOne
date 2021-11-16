@@ -68,7 +68,7 @@ namespace MGroup.XFEM.Tests.Fracture.HybridFries
 		private static HomogeneousFractureMaterialField3D Material 
 			=> new HomogeneousFractureMaterialField3D(E, v);
 
-		[Fact]
+		//[Fact]
 		public static void RunExample()
 		{
 			//HERE: debug this, plot strains/stresses and make sure displacement plots are correct.

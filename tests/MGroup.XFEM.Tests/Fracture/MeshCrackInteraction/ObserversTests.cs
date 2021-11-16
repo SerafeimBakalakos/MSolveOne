@@ -78,8 +78,9 @@ namespace MGroup.XFEM.Tests.Fracture.Observers
 			var allBodyNodes = new AllCrackStepNodesObserver();
 			var newBodyNodes = new NewCrackStepNodesObserver();
 			var rejectedBodyNodes = new RejectedCrackStepNodesObserver(crack, newTipNodes, allBodyNodes);
-			var bodyNodesWithModifiedLevelSet = new CrackStepNodesWithModifiedLevelSetObserver(crack);
-			var modifiedNodes = new NodesWithModifiedEnrichmentsObserver(bodyNodesWithModifiedLevelSet);
+			var bodyNodesWithModifiedLevelSet = new CrackStepNodesWithModifiedLevelSetObserver(model);
+			var modifiedNodes = new NodesWithModifiedEnrichmentsObserver(
+				newBodyNodes, bodyNodesWithModifiedLevelSet, newTipNodes, previousTipNodes);
 			var modifiedElements = new ElementsWithModifiedNodesObserver(modifiedNodes);
 			var nearModifiedNodes = new NodesNearModifiedNodesObserver(modifiedNodes, modifiedElements);
 			var compositeObserver = new CompositeEnrichmentObserver();
@@ -174,8 +175,9 @@ namespace MGroup.XFEM.Tests.Fracture.Observers
 			var allBodyNodes = new AllCrackStepNodesObserver();
 			var newBodyNodes = new NewCrackStepNodesObserver();
 			var rejectedBodyNodes = new RejectedCrackStepNodesObserver(crack, newTipNodes, allBodyNodes);
-			var bodyNodesWithModifiedLevelSet = new CrackStepNodesWithModifiedLevelSetObserver(crack);
-			var modifiedNodes = new NodesWithModifiedEnrichmentsObserver(bodyNodesWithModifiedLevelSet);
+			var bodyNodesWithModifiedLevelSet = new CrackStepNodesWithModifiedLevelSetObserver(model);
+			var modifiedNodes = new NodesWithModifiedEnrichmentsObserver(
+				newBodyNodes, bodyNodesWithModifiedLevelSet, newTipNodes, previousTipNodes);
 			var modifiedElements = new ElementsWithModifiedNodesObserver(modifiedNodes);
 			var nearModifiedNodes = new NodesNearModifiedNodesObserver(modifiedNodes, modifiedElements);
 			var compositeObserver = new CompositeEnrichmentObserver();
