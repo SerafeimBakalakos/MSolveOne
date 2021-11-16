@@ -38,8 +38,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 {
 	public static class PlateBenchmark
 	{
-		private static readonly double[] minCoords = new double[] { 0, 0 };
-		private static readonly double[] maxCoords = new double[] { 4, 4 }; // in
+		public static readonly double[] minCoords = new double[] { 0, 0 };
+		public static readonly double[] maxCoords = new double[] { 4, 4 }; // in
 		private const double thickness = 1.0;
 		private const double E = 2E7;
 		private const double v = 0.3;
@@ -55,6 +55,24 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 		private static HomogeneousFractureMaterialField2D Material 
 			=> new HomogeneousFractureMaterialField2D(E, v, thickness, planeStress);
+
+		public static ExteriorLsmCrack2D CreateFullCrack(XModel<IXCrackElement> model)
+		{
+			double crackHeight = /*0.40*/ 0.45 * (maxCoords[1] - minCoords[1]);
+			var point0 = new double[] { minCoords[0], crackHeight };
+			var point1 = new double[] { minCoords[0] + a, crackHeight };
+			var initialGeom = new PolyLine2D(point0, point1);
+			initialGeom.UpdateGeometry(-0.13627386590549775, 0.3);
+			initialGeom.UpdateGeometry(-0.08076125279435226, 0.3);
+			initialGeom.UpdateGeometry(-0.12253941154816059, 0.3);
+			initialGeom.UpdateGeometry(-0.17552387030575733, 0.3);
+			initialGeom.UpdateGeometry(-0.2384700099835763, 0.3);
+			initialGeom.UpdateGeometry(-0.25035651119313834, 0.3);
+			initialGeom.UpdateGeometry(-0.18484372756358972, 0.3);
+			var crack = new ExteriorLsmCrack2D(0, initialGeom, model, null);
+			crack.InitializeGeometry();
+			return crack;
+		}
 
 		public static void CreateGeometryModel(XModel<IXCrackElement> model)
 		{
