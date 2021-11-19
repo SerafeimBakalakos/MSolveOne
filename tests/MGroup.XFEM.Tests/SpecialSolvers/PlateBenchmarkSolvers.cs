@@ -74,7 +74,6 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			solver.Dispose();
 		}
 
-
 		[Fact]
 		public static void AnalyzeWithReanalysisSolver()
 		{

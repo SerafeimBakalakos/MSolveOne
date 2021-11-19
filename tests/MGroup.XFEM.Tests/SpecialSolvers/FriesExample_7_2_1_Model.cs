@@ -50,6 +50,45 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		public static double heavisideTol = 1E-4;
 		public static double tipEnrichmentArea = 0.0;
 
+		public static ICrack CreateFullCrack(XModel<IXCrackElement> model, int maxIterations)
+		{
+			double[] crackMouthCoords = { 337.5, 0 };
+			double[] crackFrontCoords = { 337.5, 75 };
+
+			// Initial crack
+			double[] pointA = { crackMouthCoords[0], crackMouthCoords[1], minCoords[2] };
+			double[] pointB = { crackMouthCoords[0], crackMouthCoords[1], maxCoords[2] };
+			double[] pointC = { crackFrontCoords[0], crackFrontCoords[1], minCoords[2] };
+			int numVerticesAlongAB = 6;
+			int numVerticesAlongAC = 6;
+			var initialCrackMesh = TriangleMesh3D.CreateForRectangle(
+				pointA, pointB, pointC, numVerticesAlongAB, numVerticesAlongAC);
+
+			var crackGeometry = CrackSurface3D.CreateFromMesh(0, maxCoords[0] - minCoords[0], initialCrackMesh);
+			var domainBoundary = new BoxDomainBoundary3D(minCoords, maxCoords, 1E-6);
+			crackGeometry.CrackFront = new CrackFront3D(crackGeometry, domainBoundary);
+			crackGeometry.InitializeGeometry(model.Nodes.Values);
+
+			// Expected crack path
+			for (int t = 0; t < maxIterations; ++t)
+			{
+				ICrackFront3D crackFront = crackGeometry.CrackFront;
+				int numTips = crackFront.ActiveTips.Count;
+				double growthAngle = -(40.0 / 180.0) * Math.PI;
+				var frontGrowth = new CrackFrontPropagation();
+				frontGrowth.AnglesAtTips = new double[numTips];
+				frontGrowth.LengthsAtTips = new double[numTips];
+				for (int i = 0; i < numTips; ++i)
+				{
+					frontGrowth.AnglesAtTips[i] = (t == 0) ? growthAngle : 0;
+					frontGrowth.LengthsAtTips[i] = da;
+				}
+				crackGeometry.PropagateCrack(model.Nodes.Values, frontGrowth);
+			}
+
+			return new HybridFriesCrack3D(model, crackGeometry, null);
+		}
+
 		public static void CreateGeometryModel(XModel<IXCrackElement> model, int[] numElements,
 			double[] crackMouthCoords, double[] crackFrontCoords, string outputDirectory = null)
 		{

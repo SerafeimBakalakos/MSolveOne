@@ -33,7 +33,7 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 				double distanceFromTip = Math.Sqrt(levelSets[0] * levelSets[0] + levelSets[1] * levelSets[1]);
 				if ((distanceFromTip <= maxDistance) || (notCloseToExtension && (distanceFromBody <= maxDistance)))
 				{
-					Debug.WriteLine($"Possible enriched node {node.ID} ({node.X}, {node.Y})");
+					//Debug.WriteLine($"Possible enriched node {node.ID} ({node.X}, {node.Y})");
 					return true;
 				}
 			}

@@ -41,8 +41,13 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			if (!orderingExists)
 			{
 				base.OrderDofs();
+				orderingExists = true;
 			}
-			orderingExists = true;
+			else
+			{
+				LinearSystem.RhsVector.Clear();
+				LinearSystem.Solution.Clear();
+			}
 		}
 
 		public override void ReorderDofs()

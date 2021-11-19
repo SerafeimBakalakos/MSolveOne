@@ -18,11 +18,14 @@ using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.Direct;
 using MGroup.XFEM.Analysis;
+using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Cracks.PropagationTermination;
 using MGroup.XFEM.Elements;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.Geometry.Boundaries;
+using MGroup.XFEM.Geometry.LSM;
 using MGroup.XFEM.Output.Writers;
+using MGroup.XFEM.Solvers.PaisReanalysis;
 using MGroup.XFEM.Solvers.PFetiDP;
 using Xunit;
 
@@ -32,7 +35,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 	{
 		private enum SolverChoice 
 		{ 
-			DirectManaged, DirectNative, PfetiDPManaged, PfetiDPNative 
+			DirectManaged, DirectNative, DirectReanalysis, PfetiDPManaged, PfetiDPNative 
 		}
 
 		public static string outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example2\";
@@ -95,6 +98,40 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 			string path = Path.Combine(outputDirectory, "pfetidp_convergence.txt");
 			logger.WriteToFile(path, true);
+		}
+
+		[Fact]
+		public static void RunExampleWithReanalysisSolver()
+		{
+			XModel<IXCrackElement> model = FriesExample_7_2_3_Model.DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
+			if (enablePlotting)
+			{
+				FriesExample_7_2_3_Model.CreateGeometryModel(model, numElements, outputPlotDirectory);
+				FriesExample_7_2_3_Model.SetupEnrichmentOutput(model, outputPlotDirectory);
+			}
+			else
+			{
+				FriesExample_7_2_3_Model.CreateGeometryModel(model, numElements);
+			}
+			SolverChoice solverChoice = SolverChoice.DirectReanalysis;
+			
+			// Possibly enriched nodes
+			var crackGeometries = new List<IImplicitCrackGeometry>();
+			ICrack fullCrack = FriesExample_7_2_1_Model.CreateFullCrack(model, maxIterations);
+			crackGeometries.Add((IImplicitCrackGeometry)(fullCrack.CrackGeometry));
+			double dx = (FriesExample_7_2_1_Model.maxCoords[0] - FriesExample_7_2_1_Model.minCoords[0]) / numElements[0];
+			double dy = (FriesExample_7_2_1_Model.maxCoords[1] - FriesExample_7_2_1_Model.minCoords[1]) / numElements[1];
+			double dz = (FriesExample_7_2_1_Model.maxCoords[2] - FriesExample_7_2_1_Model.minCoords[2]) / numElements[2];
+			double maxDistance = 2 * Math.Sqrt(dx * dx + dy * dy + dz * dz); // Enriched nodes are at most 2 elements away from the crack.
+			var enrichedNodeSelector = new CrackVicinityNodeSelector(crackGeometries, maxDistance);
+			//var enrichedNodeSelector = new BoundingBoxNodeSelector(new double[] { 300, 0, 0 }, new double[] { 431.25, 150, 75 });
+
+			var dofOrderer = new ReanalysisDofOrderer(enrichedNodeSelector.CanNodeBeEnriched);
+			var factory = new ReanalysisRebuildingSolver.Factory(dofOrderer);
+			ReanalysisAlgebraicModel<DokMatrixAdapter> algebraicModel = factory.BuildAlgebraicModel(model);
+			var solver = factory.BuildSolver(algebraicModel);
+
+			RunAnalysis(model, algebraicModel, solver, solverChoice);
 		}
 
 		private static void RunAnalysis(XModel<IXCrackElement> model, IAlgebraicModel algebraicModel, ISolver solver, 
