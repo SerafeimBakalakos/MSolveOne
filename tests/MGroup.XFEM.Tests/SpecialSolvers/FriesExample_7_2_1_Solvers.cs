@@ -38,6 +38,11 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			DirectManaged, DirectNative, DirectReanalysis, PfetiDPManaged, PfetiDPNative 
 		}
 
+		public enum ReanalysisExtraDofs
+		{
+			None, LimitedNearModified, CrackStepNearModified, AllNearModified
+		}
+
 		public static string outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example1\";
 		public static string outputPlotDirectory = outputDirectory + "plots";
 		public static bool enablePlotting = false;
@@ -53,7 +58,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		public static int maxIterations = 11;
 		public const double fractureToughness = double.MaxValue;
 
-		public static bool reanalysis = false, limitModifiedDofs = false;
+		public static bool reanalysis = false;
+		public static ReanalysisExtraDofs reanalysisExtraDofs = ReanalysisExtraDofs.AllNearModified;
 		public static double psmTolerance = 1E-10;
 		public static bool multiThreaded = false;
 
@@ -130,7 +136,15 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 			var dofOrderer = new ReanalysisDofOrderer(enrichedNodeSelector.CanNodeBeEnriched);
 			var factory = new ReanalysisRebuildingSolver.Factory(dofOrderer);
-			if (limitModifiedDofs)
+			if (reanalysisExtraDofs == ReanalysisExtraDofs.None)
+			{
+				factory.ExtraDofsStrategy = new NoExtraModifiedDofsStrategy();
+			}
+			else if (reanalysisExtraDofs == ReanalysisExtraDofs.CrackStepNearModified)
+			{
+				factory.ExtraDofsStrategy = new StepDofsNearModifiedNodesStrategy();
+			}
+			else if (reanalysisExtraDofs == ReanalysisExtraDofs.LimitedNearModified)
 			{
 				factory.ExtraDofsStrategy = new LimitedDofsNearModifiedDofsStategy();
 			}
@@ -165,7 +179,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			}
 			else if (solverChoice == SolverChoice.DirectReanalysis)
 			{
-				msg.AppendLine($"limit reanalysis modified dofs={limitModifiedDofs}");
+				msg.AppendLine($"reanalysis extra modified dofs={reanalysisExtraDofs}");
 			}
 
 			var normLogger = new SolutionNormLogger(Path.Combine(outputDirectory, "solution_norm.txt"));

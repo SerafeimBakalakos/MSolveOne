@@ -34,7 +34,7 @@ namespace MGroup.XFEM.Tests
 
 			FriesExample_7_2_1_Solvers.multiThreaded = true;
 			FriesExample_7_2_1_Solvers.reanalysis = false;
-			FriesExample_7_2_1_Solvers.limitModifiedDofs = false;
+			FriesExample_7_2_1_Solvers.reanalysisExtraDofs = FriesExample_7_2_1_Solvers.ReanalysisExtraDofs.AllNearModified;
 			FriesExample_7_2_1_Solvers.psmTolerance = 1E-10;
 
 			//FriesExample_7_2_1_Solvers.RunExampleWithDirectSolver();
@@ -66,7 +66,7 @@ namespace MGroup.XFEM.Tests
 
 			FriesExample_7_2_3_Solvers.multiThreaded = true;
 			FriesExample_7_2_3_Solvers.reanalysis = false;
-			FriesExample_7_2_3_Solvers.limitModifiedDofs = false;
+			FriesExample_7_2_1_Solvers.reanalysisExtraDofs = FriesExample_7_2_1_Solvers.ReanalysisExtraDofs.None;
 			FriesExample_7_2_3_Solvers.psmTolerance = 1E-10;
 
 			//FriesExample_7_2_3_Solvers.RunExampleWithDirectSolver();
