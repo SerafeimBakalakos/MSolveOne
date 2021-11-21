@@ -9,8 +9,8 @@ namespace MGroup.XFEM.Tests
 		{
 			Console.WriteLine("Hello world");
 
-			RunExample1();
-			//RunExample2();
+			//RunExample1();
+			RunExample2();
 
 
 			//SpecialSolvers.MpiTestSuite.RunTestsWith4Processes();
@@ -32,8 +32,13 @@ namespace MGroup.XFEM.Tests
 			int numSubdomainsMin = 1;
 			FriesExample_7_2_1_Solvers.numSubdomains = new int[] { 9 * numSubdomainsMin, 2 * numSubdomainsMin, numSubdomainsMin };
 
+			FriesExample_7_2_1_Solvers.multiThreaded = true;
+			FriesExample_7_2_1_Solvers.reanalysis = false;
+			FriesExample_7_2_1_Solvers.limitModifiedDofs = false;
+			FriesExample_7_2_1_Solvers.psmTolerance = 1E-10;
+
 			//FriesExample_7_2_1_Solvers.RunExampleWithDirectSolver();
-			//FriesExample_7_2_3_Solvers.RunExampleWithPFetiDPSolver();
+			//FriesExample_7_2_1_Solvers.RunExampleWithPFetiDPSolver();
 			FriesExample_7_2_1_Solvers.RunExampleWithReanalysisSolver();
 		}
 
@@ -42,8 +47,8 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_3_Model.heavisideTol = 1E-4;
 			FriesExample_7_2_3_Solvers.maxIterations = 15;
 
-			//FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example2\";
-			FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\cluster\Desktop\Serafeim\results\Example2\";
+			FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example2\";
+			//FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\cluster\Desktop\Serafeim\results\Example2\";
 			FriesExample_7_2_3_Solvers.outputPlotDirectory = FriesExample_7_2_3_Solvers.outputDirectory + "plots";
 			FriesExample_7_2_3_Solvers.enablePlotting = false;
 
@@ -61,10 +66,12 @@ namespace MGroup.XFEM.Tests
 
 			FriesExample_7_2_3_Solvers.multiThreaded = true;
 			FriesExample_7_2_3_Solvers.reanalysis = false;
+			FriesExample_7_2_3_Solvers.limitModifiedDofs = false;
 			FriesExample_7_2_3_Solvers.psmTolerance = 1E-10;
 
 			//FriesExample_7_2_3_Solvers.RunExampleWithDirectSolver();
-			FriesExample_7_2_3_Solvers.RunExampleWithPFetiDPSolver();
+			//FriesExample_7_2_3_Solvers.RunExampleWithPFetiDPSolver();
+			FriesExample_7_2_3_Solvers.RunExampleWithReanalysisSolver();
 		}
 	}
 }

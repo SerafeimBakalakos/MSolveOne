@@ -28,25 +28,18 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 	{
 		private const string name = "ReanalysisRebuildingSolver"; // for error messages
 		private const bool useSuperNodalFactorization = true; // For faster back/forward substitutions.
+		private readonly IReanalysisExtraDofsStrategy extraDofsStrategy;
 		private readonly double factorizationPivotTolerance;
-		private readonly ReanalysisAlgebraicModel<DokMatrixAdapter> algebraicModel;
-
-		private readonly NewCrackStepNodesObserver newStepNodes;
-		private readonly CrackStepNodesWithModifiedLevelSetObserver stepNodesWithModifiedLevelSet;
-		private readonly NewCrackTipNodesObserver newTipNodes;
-		private readonly PreviousCrackTipNodesObserver previousTipNodes;
-		private readonly NodesWithModifiedEnrichmentsObserver nodesWithModifiedEnrichments;
-		private readonly ElementsWithModifiedNodesObserver elementsWithModifiedNodes;
-		private readonly NodesNearModifiedNodesObserver nodesNearModifiedNodes;
 
 		private CholeskySuiteSparse factorization;
 		private int iteration = 0;
-		private HashSet<int> inactiveDofsPrevious = new HashSet<int>();
 
-		private ReanalysisRebuildingSolver(ReanalysisAlgebraicModel<DokMatrixAdapter> algebraicModel,
-			double factorizationPivotTolerance)
+		private ReanalysisRebuildingSolver(ReanalysisAlgebraicModel<DokMatrixAdapter> algebraicModel, 
+			IReanalysisExtraDofsStrategy extraDofsStrategy, double factorizationPivotTolerance)
 		{
-			this.algebraicModel = algebraicModel;
+			this.AlgebraicModel = algebraicModel;
+			this.extraDofsStrategy = extraDofsStrategy;
+			extraDofsStrategy.Solver = this;
 			this.factorizationPivotTolerance = factorizationPivotTolerance;
 			this.LinearSystem = algebraicModel.LinearSystem;
 
@@ -54,21 +47,37 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			this.Logger = new SolverLogger(name);
 
 			// Enrichment observers
-			newStepNodes = new NewCrackStepNodesObserver();
-			stepNodesWithModifiedLevelSet = new CrackStepNodesWithModifiedLevelSetObserver(algebraicModel.Model);
-			newTipNodes = new NewCrackTipNodesObserver();
-			previousTipNodes = new PreviousCrackTipNodesObserver();
-			nodesWithModifiedEnrichments = new NodesWithModifiedEnrichmentsObserver(
-				newStepNodes, stepNodesWithModifiedLevelSet, newTipNodes, previousTipNodes);
-			elementsWithModifiedNodes = new ElementsWithModifiedNodesObserver(nodesWithModifiedEnrichments);
-			nodesNearModifiedNodes = new NodesNearModifiedNodesObserver(nodesWithModifiedEnrichments, elementsWithModifiedNodes);
+			NewStepNodes = new NewCrackStepNodesObserver();
+			StepNodesWithModifiedLevelSet = new CrackStepNodesWithModifiedLevelSetObserver(algebraicModel.Model);
+			NewTipNodes = new NewCrackTipNodesObserver();
+			PreviousTipNodes = new PreviousCrackTipNodesObserver();
+			NodesWithModifiedEnrichments = new NodesWithModifiedEnrichmentsObserver(
+				NewStepNodes, StepNodesWithModifiedLevelSet, NewTipNodes, PreviousTipNodes);
+			ElementsWithModifiedNodes = new ElementsWithModifiedNodesObserver(NodesWithModifiedEnrichments);
+			NodesNearModifiedNodes = new NodesNearModifiedNodesObserver(NodesWithModifiedEnrichments, ElementsWithModifiedNodes);
 
 			var compositeObserver = new CompositeEnrichmentObserver();
-			compositeObserver.AddObservers(newStepNodes, stepNodesWithModifiedLevelSet, newTipNodes, previousTipNodes, 
-				nodesWithModifiedEnrichments, elementsWithModifiedNodes, nodesNearModifiedNodes);
+			compositeObserver.AddObservers(NewStepNodes, StepNodesWithModifiedLevelSet, NewTipNodes, PreviousTipNodes, 
+				NodesWithModifiedEnrichments, ElementsWithModifiedNodes, NodesNearModifiedNodes);
 			INodeEnricher enricher = algebraicModel.Model.GeometryModel.Enricher;
 			enricher.Observers.Add(compositeObserver);
 		}
+
+		public ReanalysisAlgebraicModel<DokMatrixAdapter> AlgebraicModel { get; }
+
+		public NewCrackStepNodesObserver NewStepNodes { get; }
+
+		public CrackStepNodesWithModifiedLevelSetObserver StepNodesWithModifiedLevelSet { get; }
+
+		public NewCrackTipNodesObserver NewTipNodes { get; }
+
+		public PreviousCrackTipNodesObserver PreviousTipNodes { get; }
+
+		public NodesWithModifiedEnrichmentsObserver NodesWithModifiedEnrichments { get; }
+
+		public ElementsWithModifiedNodesObserver ElementsWithModifiedNodes { get; }
+
+		public NodesNearModifiedNodesObserver NodesNearModifiedNodes { get; }
 
 		IGlobalLinearSystem ISolver.LinearSystem => LinearSystem;
 
@@ -78,9 +87,9 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 
 		public string Name => name;
 
-		#region debug delete
 		public IEnrichedNodeSelector NodeSelector { get; set; }
-		#endregion
+
+		public HashSet<int> PreviouslyInactiveDofs { get; } = new HashSet<int>();
 
 		~ReanalysisRebuildingSolver()
 		{
@@ -152,6 +161,72 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			Logger.LogTaskDuration("Matrix factorization", watch.ElapsedMilliseconds);
 		}
 
+		public void FindCrackStepDofs(IEnumerable<XNode> inNodes, ISet<int> dofIndices)
+		{
+			ActiveDofs allDofs = AlgebraicModel.Model.AllDofs;
+			IntDofTable dofOrdering = AlgebraicModel.SubdomainFreeDofOrdering.FreeDofs;
+			foreach (XNode node in inNodes)
+			{
+				IReadOnlyDictionary<int, int> dofsOfNode = dofOrdering.GetDataOfRow(node.ID);
+				foreach (var dofIDIndexPair in dofsOfNode)
+				{
+					IDofType dofType = allDofs.GetDofWithId(dofIDIndexPair.Key);
+					if (dofType is EnrichedDof enrichedDof)
+					{
+						if (enrichedDof.Enrichment is IStepEnrichment)
+						{
+							dofIndices.Add(dofIDIndexPair.Value);
+						}
+					}
+				}
+			}
+		}
+
+		public void FindCrackTipDofs(IEnumerable<XNode> inNodes, ISet<int> dofIndices)
+		{
+			ActiveDofs allDofs = AlgebraicModel.Model.AllDofs;
+			IntDofTable dofOrdering = AlgebraicModel.SubdomainFreeDofOrdering.FreeDofs;
+			foreach (XNode node in inNodes)
+			{
+				IReadOnlyDictionary<int, int> dofsOfNode = dofOrdering.GetDataOfRow(node.ID);
+				foreach (var dofIDIndexPair in dofsOfNode)
+				{
+					IDofType dofType = allDofs.GetDofWithId(dofIDIndexPair.Key);
+					if (dofType is EnrichedDof enrichedDof)
+					{
+						if (enrichedDof.Enrichment is ICrackTipEnrichment)
+						{
+							dofIndices.Add(dofIDIndexPair.Value);
+						}
+					}
+				}
+			}
+		}
+
+		private (ISet<int> colsToAdd, ISet<int> colsToRemove) FindModifiedColumns()
+		{
+			var colsToAdd = new HashSet<int>();
+			var colsToRemove = new HashSet<int>();
+
+			// Dofs with modified stiffness (diagonal entries)
+			FindCrackStepDofs(NewStepNodes.NewCrackStepNodes, colsToAdd);
+			FindCrackTipDofs(NewTipNodes.NewCrackTipNodes, colsToAdd);
+			FindCrackTipDofs(PreviousTipNodes.PreviousCrackTipNodes, colsToRemove);
+			FindCrackStepDofs(StepNodesWithModifiedLevelSet.StepNodesWithModifiedLevelSets, colsToAdd);
+			colsToRemove.UnionWith(colsToAdd);
+
+			HashSet<int> extraModifiedCols = extraDofsStrategy.FindExtraModifiedCols(colsToAdd, colsToRemove);
+			colsToAdd.UnionWith(extraModifiedCols);
+			colsToRemove.UnionWith(extraModifiedCols);
+
+			// Optimization to avoid redundant adds
+			DokSymmetric matrix = LinearSystem.Matrix.SingleMatrix.DokMatrix;
+			colsToAdd.RemoveWhere(i => (matrix.RawColumns[i].Count == 1) && (matrix.RawColumns[i][i] == 1.0));
+			colsToRemove.RemoveWhere(i => PreviouslyInactiveDofs.Contains(i) && (!colsToAdd.Contains(i)));
+
+			return (new SortedSet<int>(colsToAdd), new SortedSet<int>(colsToRemove));
+		}
+
 		private void ReleaseResources()
 		{
 			if (factorization != null)
@@ -174,6 +249,21 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			}
 		}
 
+		private void UpdateInactiveDofs()
+		{
+			PreviouslyInactiveDofs.Clear();
+			int numColumns = LinearSystem.Matrix.SingleMatrix.DokMatrix.NumColumns;
+			var matrixColumns = LinearSystem.Matrix.SingleMatrix.DokMatrix.RawColumns;
+			for (int i = 0; i < numColumns; ++i)
+			{
+				Dictionary<int, double> column = matrixColumns[i];
+				if ((column.Count == 1) && (column[i] == 1.0))
+				{
+					PreviouslyInactiveDofs.Add(i);
+				}
+			}
+		}
+
 		private void UpdateMatrixFactorization()
 		{
 			var watch = new Stopwatch();
@@ -183,78 +273,8 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			{
 				throw new InvalidOperationException();
 			}
-			DokSymmetric matrix = LinearSystem.Matrix.SingleMatrix.DokMatrix;
 
-			#region debug uncomment
-			//// Find enriched dofs that were added
-			//var colsToAdd = new SortedSet<int>();
-			//FindCrackStepDofs(newStepNodes.NewCrackStepNodes, colsToAdd);
-			//FindCrackTipDofs(newTipNodes.NewCrackTipNodes, colsToAdd);
-
-			//// Find enriched dofs that were removed
-			//var colsToRemove = new HashSet<int>(colsToAdd);
-			//FindCrackTipDofs(previousTipNodes.PreviousCrackTipNodes, colsToRemove);
-
-			//// Find enriched dofs that have modified stiffness and possibly enrichment values
-			//var colsToModify = new HashSet<int>();
-			//FindCrackStepDofs(stepNodesWithModifiedLevelSet.StepNodesWithModifiedLevelSets, colsToModify);
-			//FindCrackStepDofs(nodesNearModifiedNodes.NearModifiedNodes, colsToModify);
-			//colsToRemove.UnionWith(colsToModify);
-			//colsToAdd.UnionWith(colsToModify);
-			#endregion
-
-			#region debug delete
-			//IntDofTable dofOrdering = algebraicModel.SubdomainFreeDofOrdering.FreeDofs;
-			//ActiveDofs allDofs = algebraicModel.Model.AllDofs;
-			//var colsToAdd = new SortedSet<int>();
-			//var colsToRemove = new HashSet<int>();
-
-			//// All dofs
-			//for (int i = 0; i < matrix.NumColumns; ++i)
-			//{
-			//	colsToAdd.Add(i);
-			//}
-
-			// All enriched dofs.
-			////The next causes errors. Why? Perhaps I should also remove the std stiffnesses that interact with the modified 
-			////enriched dofs. Perhaps this was not a problem in previous examples, because the ordering helped prevent modified 
-			////Kse entries showing up in the upper triangle.
-			//foreach ((int nodeID, int dofID, int col) in dofOrdering)
-			//{
-			//	IDofType dofType = allDofs.GetDofWithId(dofID);
-			//	if (dofType is EnrichedDof)
-			//	{
-			//		colsToAdd.Add(col);
-			//	}
-			//}
-
-			//// All dofs of possibly enriched nodes
-			//var modifiedNodes = new HashSet<XNode>();
-			//foreach (XNode node in algebraicModel.Model.Nodes.Values)
-			//{
-			//	if (NodeSelector.CanNodeBeEnriched(node))
-			//	{
-			//		modifiedNodes.Add(node);
-			//	}
-			//}
-			//FindAllDofs(modifiedNodes, colsToAdd);
-
-			//// All dofs of nodes near modified dofs
-			//HashSet<XNode> modifiedNodes = FindAllModifiedNodes();
-			//FindAllDofs(modifiedNodes, colsToAdd);
-
-
-			//FindCrackStepDofs(newStepNodes.NewCrackStepNodes, colsToAdd);
-			//FindCrackTipDofs(newTipNodes.NewCrackTipNodes, colsToAdd);
-			//colsToRemove = new HashSet<int>(colsToAdd);
-			//FindCrackTipDofs(previousTipNodes.PreviousCrackTipNodes, colsToRemove);
-
-			//(ISet<int> colsToAdd, ISet<int> colsToRemove) = FindAllModifiedDofs();
-			(ISet<int> colsToAdd, ISet<int> colsToRemove) = ClassifyColumns();
-
-
-			Console.WriteLine($"colsToAdd={colsToAdd.Count}, colsToRemove={colsToRemove.Count}");
-			#endregion
+			(ISet<int> colsToAdd, ISet<int> colsToRemove) = FindModifiedColumns();
 
 			// Delete columns corresponding to removed dofs
 			foreach (int col in colsToRemove)
@@ -263,270 +283,17 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			}
 
 			// Add columns corresponding to new dofs
+			DokSymmetric matrix = LinearSystem.Matrix.SingleMatrix.DokMatrix;
 			foreach (int col in colsToAdd)
 			{
 				colsToRemove.Remove(col);
 				SparseVector newColVector = matrix.GetColumnWithoutRows(col, colsToRemove);
-				//SparseVector newColVector = matrix.GetColumn(col);
 				factorization.AddRow(col, newColVector);
 			}
 
 			UpdateInactiveDofs();
 			watch.Stop();
 			Logger.LogTaskDuration("Matrix factorization", watch.ElapsedMilliseconds);
-		}
-
-		private (ISet<int> colsToAdd, ISet<int> colsToRemove) ClassifyColumns()
-		{
-			var colsToAdd = new HashSet<int>();
-			var colsToRemove = new HashSet<int>();
-			var colsToModify = new HashSet<int>();
-
-			// Dofs with modified stiffness (diagonal entries)
-			FindCrackStepDofs(newStepNodes.NewCrackStepNodes, colsToAdd);
-			FindCrackTipDofs(newTipNodes.NewCrackTipNodes, colsToAdd);
-			FindCrackTipDofs(previousTipNodes.PreviousCrackTipNodes, colsToRemove);
-			FindCrackStepDofs(stepNodesWithModifiedLevelSet.StepNodesWithModifiedLevelSets, colsToModify);
-			colsToAdd.UnionWith(colsToModify);
-			colsToRemove.UnionWith(colsToModify);
-			colsToModify.UnionWith(colsToAdd);
-			colsToModify.UnionWith(colsToRemove);
-
-			// Nodes with dofs with modified stiffness or near them
-			HashSet<XNode> modifiedNodes = FindNodesNearModifiedDofs();
-
-			// Dofs with unmodified diagonal entries, but modified super-diagonal entries
-			IntDofTable dofOrdering = algebraicModel.SubdomainFreeDofOrdering.FreeDofs;
-			DokSymmetric matrix = LinearSystem.Matrix.SingleMatrix.DokMatrix;
-			foreach (XNode node in modifiedNodes)
-			{
-				List<int> nearbyDofs = FindNearbyDofs(node);
-				if (node.ID == 1482)
-				{
-					Console.WriteLine();
-				}
-				foreach (var pair in dofOrdering.GetDataOfRow(node.ID))
-				{
-					int dofID = pair.Key;
-					int col = pair.Value;
-					if (colsToModify.Contains(col))
-					{
-						// We only care about dofs with unmodified stiffness now
-						continue;
-					}
-
-					Dictionary<int, double> wholeColumn = matrix.RawColumns[col];
-					if (wholeColumn.Count == 1 || wholeColumn[col] == 1.0)
-					{
-						// Inactive dof
-						continue;
-					}
-
-					if (MustUpdateNearModifiedDof(node.ID, dofID, col, nearbyDofs, colsToModify))
-					{
-						colsToAdd.Add(col);
-						colsToRemove.Add(col);
-						//colsToModify.UnionWith(colsToRemove); //ERROR: Leave this alone or all these dofs will be updated redundantly.
-					}
-				}
-			}
-
-
-			//IntDofTable dofOrdering = algebraicModel.SubdomainFreeDofOrdering.FreeDofs;
-			//DokSymmetric matrix = LinearSystem.Matrix.SingleMatrix.DokMatrix;
-			//foreach (XNode node in modifiedNodes)
-			//{
-			//	foreach (int col in dofOrdering.GetValuesOfRow(node.ID))
-			//	{
-			//		if (colsToModify.Contains(col))
-			//		{
-			//			continue;
-			//		}
-
-			//		colsToRemove.Add(col);
-			//		colsToAdd.Add(col);
-			//	}
-			//}
-
-			// Optimization to avoid redundant adds
-			colsToAdd.RemoveWhere(i => (matrix.RawColumns[i].Count == 1) && (matrix.RawColumns[i][i] == 1.0));
-			colsToRemove.RemoveWhere(i => inactiveDofsPrevious.Contains(i));
-
-			return (new SortedSet<int>(colsToAdd), new SortedSet<int>(colsToRemove));
-		}
-
-		private bool MustUpdateNearModifiedDof(int nodeID, int dofID, int col, List<int> nearbyDofs, HashSet<int> colsToModify)
-		{
-			return true;
-			//ActiveDofs allDofs = algebraicModel.Model.AllDofs;
-			//if (allDofs.GetDofWithId(dofID) is EnrichedDof)
-			//{
-			//	return false;
-			//}
-			//else
-			//{
-			//	return true;
-			//}
-
-			int j = col;
-			foreach (int i in nearbyDofs)
-			{
-				if (colsToModify.Contains(i))
-				{
-					// At this point we have an unmodified dof with a neighboring modified one
-					if (i < j)
-					{
-						// The coupling stiffness entry Aij belongs to column j and has been modified. 
-						// Thus the whole column needs to be modified.
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-
-		private void UpdateInactiveDofs()
-		{
-			inactiveDofsPrevious.Clear();
-			int numColumns = LinearSystem.Matrix.SingleMatrix.DokMatrix.NumColumns;
-			var matrixColumns = LinearSystem.Matrix.SingleMatrix.DokMatrix.RawColumns;
-			for (int i = 0; i < numColumns; ++i)
-			{
-				Dictionary<int, double> column = matrixColumns[i];
-				if ((column.Count == 1) && (column[i] == 1.0))
-				{
-					inactiveDofsPrevious.Add(i);
-				}
-			}
-		}
-
-		private (ISet<int> colsToAdd, ISet<int> colsToRemove) FindAllModifiedDofs()
-		{
-			var modifiedNodes = new HashSet<XNode>();
-			modifiedNodes.UnionWith(newStepNodes.NewCrackStepNodes);
-			modifiedNodes.UnionWith(newTipNodes.NewCrackTipNodes);
-			modifiedNodes.UnionWith(previousTipNodes.PreviousCrackTipNodes);
-			modifiedNodes.UnionWith(stepNodesWithModifiedLevelSet.StepNodesWithModifiedLevelSets);
-			var modifiedElements = new HashSet<IXFiniteElement>();
-			foreach (XNode node in modifiedNodes)
-			{
-				modifiedElements.UnionWith(node.ElementsDictionary.Values);
-			}
-			foreach (IXFiniteElement element in modifiedElements)
-			{
-				modifiedNodes.UnionWith(element.Nodes);
-			}
-
-			var colsToAdd = new SortedSet<int>();
-			IntDofTable dofOrdering = algebraicModel.SubdomainFreeDofOrdering.FreeDofs;
-			foreach (XNode node in modifiedNodes)
-			{
-				IReadOnlyDictionary<int, int> dofsOfNode = dofOrdering.GetDataOfRow(node.ID);
-				foreach (var dofIDIndexPair in dofsOfNode)
-				{
-					colsToAdd.Add(dofIDIndexPair.Value);
-				}
-			}
-			var colsToRemove = new HashSet<int>(colsToAdd);
-
-			// Optimization to avoid redundant adds and removes
-			DokSymmetric matrix = LinearSystem.Matrix.SingleMatrix.DokMatrix;
-			colsToAdd.RemoveWhere(i => (matrix.RawColumns[i].Count == 1) && (matrix.RawColumns[i][i] == 1.0));
-			colsToRemove.RemoveWhere(i => inactiveDofsPrevious.Contains(i));
-
-			return (new SortedSet<int>(colsToAdd), new SortedSet<int>(colsToRemove));
-		}
-
-		private List<int> FindNearbyDofs(XNode node)
-		{
-			var nearbyNodes = new HashSet<XNode>();
-			foreach (IXFiniteElement element in node.ElementsDictionary.Values)
-			{
-				nearbyNodes.UnionWith(element.Nodes);
-			}
-
-			IntDofTable dofOrdering = algebraicModel.SubdomainFreeDofOrdering.FreeDofs;
-			var nearbyDofs = new List<int>();
-			foreach (XNode otherNode in nearbyNodes)
-			{
-				nearbyDofs.AddRange(dofOrdering.GetValuesOfRow(otherNode.ID));
-			}
-			return nearbyDofs;
-		}
-
-		private HashSet<XNode> FindNodesNearModifiedDofs()
-		{
-			var modifiedNodes = new HashSet<XNode>();
-			modifiedNodes.UnionWith(newStepNodes.NewCrackStepNodes);
-			modifiedNodes.UnionWith(newTipNodes.NewCrackTipNodes);
-			modifiedNodes.UnionWith(previousTipNodes.PreviousCrackTipNodes);
-			modifiedNodes.UnionWith(stepNodesWithModifiedLevelSet.StepNodesWithModifiedLevelSets);
-
-			var modifiedElements = new HashSet<IXFiniteElement>();
-			foreach (XNode node in modifiedNodes)
-			{
-				modifiedElements.UnionWith(node.ElementsDictionary.Values);
-			}
-			foreach (IXFiniteElement element in modifiedElements)
-			{
-				modifiedNodes.UnionWith(element.Nodes);
-			}
-			return modifiedNodes;
-		}
-
-		private void FindAllDofs(IEnumerable<XNode> inNodes, ISet<int> dofIndices)
-		{
-			IntDofTable dofOrdering = algebraicModel.SubdomainFreeDofOrdering.FreeDofs;
-			foreach (XNode node in inNodes)
-			{
-				IReadOnlyDictionary<int, int> dofsOfNode = dofOrdering.GetDataOfRow(node.ID);
-				foreach (var dofIDIndexPair in dofsOfNode)
-				{
-					dofIndices.Add(dofIDIndexPair.Value);
-				}
-			}
-		}
-
-		private void FindCrackStepDofs(IEnumerable<XNode> inNodes, ISet<int> dofIndices)
-		{
-			ActiveDofs allDofs = algebraicModel.Model.AllDofs;
-			IntDofTable dofOrdering = algebraicModel.SubdomainFreeDofOrdering.FreeDofs;
-			foreach (XNode node in inNodes)
-			{
-				IReadOnlyDictionary<int, int> dofsOfNode = dofOrdering.GetDataOfRow(node.ID);
-				foreach (var dofIDIndexPair in dofsOfNode)
-				{
-					IDofType dofType = allDofs.GetDofWithId(dofIDIndexPair.Key);
-					if (dofType is EnrichedDof enrichedDof)
-					{
-						if (enrichedDof.Enrichment is IStepEnrichment)
-						{
-							dofIndices.Add(dofIDIndexPair.Value);
-						}
-					}
-				}
-			}
-		}
-
-		private void FindCrackTipDofs(IEnumerable<XNode> inNodes, ISet<int> dofIndices)
-		{
-			ActiveDofs allDofs = algebraicModel.Model.AllDofs;
-			IntDofTable dofOrdering = algebraicModel.SubdomainFreeDofOrdering.FreeDofs;
-			foreach (XNode node in inNodes)
-			{
-				IReadOnlyDictionary<int, int> dofsOfNode = dofOrdering.GetDataOfRow(node.ID);
-				foreach (var dofIDIndexPair in dofsOfNode)
-				{
-					IDofType dofType = allDofs.GetDofWithId(dofIDIndexPair.Key);
-					if (dofType is EnrichedDof enrichedDof)
-					{
-						if (enrichedDof.Enrichment is ICrackTipEnrichment)
-						{
-							dofIndices.Add(dofIDIndexPair.Value);
-						}
-					}
-				}
-			}
 		}
 
 		public class Factory
@@ -538,10 +305,12 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 
 			public IDofOrderer DofOrderer { get; set; }
 
+			public IReanalysisExtraDofsStrategy ExtraDofsStrategy { get; set; } = new AllDofsNearModifiedDofsStrategy();
+
 			public double FactorizationPivotTolerance { get; set; } = 1E-15;
 
 			public ReanalysisRebuildingSolver BuildSolver(ReanalysisAlgebraicModel<DokMatrixAdapter> model)
-				=> new ReanalysisRebuildingSolver(model, FactorizationPivotTolerance);
+				=> new ReanalysisRebuildingSolver(model, ExtraDofsStrategy, FactorizationPivotTolerance);
 
 			public ReanalysisAlgebraicModel<DokMatrixAdapter> BuildAlgebraicModel(XModel<IXCrackElement> model)
 				=> new ReanalysisAlgebraicModel<DokMatrixAdapter>(model, DofOrderer, new ReanalysisWholeMatrixAssembler());

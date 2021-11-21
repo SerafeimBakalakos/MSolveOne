@@ -96,6 +96,8 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 			var crack = (ExteriorLsmCrack2D)model.GeometryModel.GetDiscontinuity(0);
 
 			// Expected propagation path
+			// Warning: These paths are obtained by calculating Kss using all gauss points for XFEM integration. 
+			//		The result is significantly different using the Gauss points for standard integration.
 			var expectedPath = new List<double[]>();
 			if (rigidBCs)
 			{
@@ -133,7 +135,7 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 				expectedPath.Add(new double[] { 196.150616188081, 52.6037939120413 });
 			}
 			
-			// Chack propagation path
+			// Crack propagation path
 			Assert.Equal(expectedPath.Count, crack.CrackPath.Count);
 			int precision = 3;
 			for (int i = 0; i < expectedPath.Count; ++i)
@@ -200,6 +202,7 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 			var bulkIntegration = new CrackElementIntegrationStrategy(
 				enrichedIntegration, enrichedIntegration, enrichedIntegration);
 			var elemFactory = new XCrackElementFactory2D(material, t, bulkIntegration);
+			elemFactory.UseStandardIntegrationForKss = false;
 
 			// Elements
 			foreach ((int elementID, CellType cellType, int[] connectivity) in mesh.EnumerateElements())

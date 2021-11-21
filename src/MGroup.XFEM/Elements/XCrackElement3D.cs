@@ -29,6 +29,7 @@ namespace MGroup.XFEM.Elements
 		private const bool storeGaussPoints = false;
 
 		private readonly IElementGeometry elementGeometry;
+		private readonly bool useStdIntegrationForKss;
 		private readonly int id;
 		private readonly int numStandardDofs;
 		private readonly IDofType[][] standardDofTypes;
@@ -51,7 +52,7 @@ namespace MGroup.XFEM.Elements
 		public XCrackElement3D(int id, IReadOnlyList<XNode> nodes, IElementGeometry elementGeometry,
 			IFractureMaterialField materialField, IIsoparametricInterpolation interpolation,
 			IGaussPointExtrapolation gaussPointExtrapolation, IQuadrature standardQuadrature,
-			CrackElementIntegrationStrategy bulkIntegration)
+			CrackElementIntegrationStrategy bulkIntegration, bool useStdIntegrationForKss)
 		{
 			this.id = id;
 			this.Nodes = nodes;
@@ -61,6 +62,7 @@ namespace MGroup.XFEM.Elements
 			this.GaussPointExtrapolation = gaussPointExtrapolation;
 			this.IntegrationStandard = standardQuadrature;
 			this.IntegrationBulk = bulkIntegration;
+			this.useStdIntegrationForKss = useStdIntegrationForKss;
 			this.MaterialField = materialField;
 
 			this.numStandardDofs = 3 * nodes.Count;
@@ -351,10 +353,13 @@ namespace MGroup.XFEM.Elements
 			// If the element is has more than 1 phase, then I cannot use the standard quadrature, since the material is  
 			// different on each phase.
 			var Kss = Matrix.CreateZero(numStandardDofs, numStandardDofs);
-			for (int i = 0; i < gaussPointsBulk.Count; ++i)
+			IReadOnlyList<GaussPoint> gaussPoints =
+				useStdIntegrationForKss ? this.IntegrationStandard.IntegrationPoints : this.gaussPointsBulk;
+			for (int i = 0; i < gaussPoints.Count; ++i)
 			{
-				GaussPoint gaussPoint = gaussPointsBulk[i];
-				EvalInterpolation evalInterpolation = evalInterpolationsAtGPsVolume[i];
+				GaussPoint gaussPoint = gaussPoints[i];
+				EvalInterpolation evalInterpolation = useStdIntegrationForKss ?
+					Interpolation.EvaluateAllAt(Nodes, gaussPoint.Coordinates) : evalInterpolationsAtGPsVolume[i];
 				double dV = evalInterpolation.Jacobian.DirectDeterminant;
 
 				// Material properties

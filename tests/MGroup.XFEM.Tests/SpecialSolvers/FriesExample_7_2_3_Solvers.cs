@@ -51,7 +51,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		public static int maxIterations = 15;
 		public const double fractureToughness = double.MaxValue;
 
-		public static bool reanalysis = false;
+		public static bool reanalysis = false, limitModifiedDofs = false;
 		public static double psmTolerance = 1E-10;
 		public static bool multiThreaded = false;
 
@@ -117,17 +117,25 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			
 			// Possibly enriched nodes
 			var crackGeometries = new List<IImplicitCrackGeometry>();
-			ICrack fullCrack = FriesExample_7_2_1_Model.CreateFullCrack(model, maxIterations);
+			ICrack fullCrack = FriesExample_7_2_3_Model.CreateFullCrack(model, maxIterations);
 			crackGeometries.Add((IImplicitCrackGeometry)(fullCrack.CrackGeometry));
-			double dx = (FriesExample_7_2_1_Model.maxCoords[0] - FriesExample_7_2_1_Model.minCoords[0]) / numElements[0];
-			double dy = (FriesExample_7_2_1_Model.maxCoords[1] - FriesExample_7_2_1_Model.minCoords[1]) / numElements[1];
-			double dz = (FriesExample_7_2_1_Model.maxCoords[2] - FriesExample_7_2_1_Model.minCoords[2]) / numElements[2];
+			double dx = (FriesExample_7_2_3_Model.maxCoords[0] - FriesExample_7_2_3_Model.minCoords[0]) / numElements[0];
+			double dy = (FriesExample_7_2_3_Model.maxCoords[1] - FriesExample_7_2_3_Model.minCoords[1]) / numElements[1];
+			double dz = (FriesExample_7_2_3_Model.maxCoords[2] - FriesExample_7_2_3_Model.minCoords[2]) / numElements[2];
 			double maxDistance = 2 * Math.Sqrt(dx * dx + dy * dy + dz * dz); // Enriched nodes are at most 2 elements away from the crack.
 			var enrichedNodeSelector = new CrackVicinityNodeSelector(crackGeometries, maxDistance);
 			//var enrichedNodeSelector = new BoundingBoxNodeSelector(new double[] { 300, 0, 0 }, new double[] { 431.25, 150, 75 });
 
 			var dofOrderer = new ReanalysisDofOrderer(enrichedNodeSelector.CanNodeBeEnriched);
 			var factory = new ReanalysisRebuildingSolver.Factory(dofOrderer);
+			if (limitModifiedDofs)
+			{
+				factory.ExtraDofsStrategy = new LimitedDofsNearModifiedDofsStategy();
+			}
+			else
+			{
+				factory.ExtraDofsStrategy = new AllDofsNearModifiedDofsStrategy();
+			}
 			ReanalysisAlgebraicModel<DokMatrixAdapter> algebraicModel = factory.BuildAlgebraicModel(model);
 			var solver = factory.BuildSolver(algebraicModel);
 
@@ -152,6 +160,10 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			{
 				msg.Append($"numSubdomains={numSubdomains[0]}x{numSubdomains[1]}x{numSubdomains[2]}");
 				msg.AppendLine($", reanalysis={reanalysis}, multithreaded environment={multiThreaded}, PSM tolerance={psmTolerance}");
+			}
+			else if (solverChoice == SolverChoice.DirectReanalysis)
+			{
+				msg.AppendLine($"limit reanalysis modified dofs={limitModifiedDofs}");
 			}
 
 			var normLogger = new SolutionNormLogger(Path.Combine(outputDirectory, "solution_norm.txt"));

@@ -255,6 +255,7 @@ namespace MGroup.XFEM.Tests.Fracture.Benchmarks
 			var bulkIntegration = new CrackElementIntegrationStrategy(
 				cutIntegration, tipIntegration, tipIntegration);
 			var elemFactory = new XCrackElementFactory2D(material, t, bulkIntegration);
+			elemFactory.UseStandardIntegrationForKss = false;
 
 			// Elements
 			foreach ((int elementID, CellType cellType, int[] connectivity) in mesh.EnumerateElements())

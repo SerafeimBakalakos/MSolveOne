@@ -30,21 +30,21 @@ namespace MGroup.XFEM.Elements
 
 			// Collections' declarations
 			var interpolations = new Dictionary<CellType, IIsoparametricInterpolation>();
-			var standardIntegrationsForConductivity = new Dictionary<CellType, IQuadrature>();
+			var stdIntegrationsForStiffness = new Dictionary<CellType, IQuadrature>();
 			//var integrationsForMass = new Dictionary<CellType, IQuadrature2D>();
 			var extrapolations = new Dictionary<CellType, IGaussPointExtrapolation>();
 			var elementGeometries = new Dictionary<CellType, IElementGeometry>();
 
 			// Hexa8
 			interpolations.Add(CellType.Hexa8, InterpolationHexa8.UniqueInstance);
-			standardIntegrationsForConductivity.Add(CellType.Hexa8, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2));
+			stdIntegrationsForStiffness.Add(CellType.Hexa8, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2));
 			//integrationsForMass.Add(CellType.Hexa8, GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2));
 			extrapolations.Add(CellType.Hexa8, ExtrapolationGaussLegendre2x2x2.UniqueInstance);
 			elementGeometries.Add(CellType.Hexa8, new ElementHexa8Geometry());
 
 			// Tet4
 			interpolations.Add(CellType.Tet4, InterpolationTet4.UniqueInstance);
-			standardIntegrationsForConductivity.Add(CellType.Tet4, TetrahedronQuadrature.Order2Points4);
+			stdIntegrationsForStiffness.Add(CellType.Tet4, TetrahedronQuadrature.Order2Points4);
 			//integrationsForMass.Add(CellType.Tet4, TetrahedronQuadrature.Order2Points4);
 			extrapolations.Add(CellType.Tet4, null);
 			elementGeometries.Add(CellType.Tet4, new ElementTet4Geometry());
@@ -52,7 +52,7 @@ namespace MGroup.XFEM.Elements
 			// Static field assignments
 			XCrackElementFactory3D.interpolations = interpolations;
 			XCrackElementFactory3D.extrapolations = extrapolations;
-			XCrackElementFactory3D.stdIntegrationsForStiffness = standardIntegrationsForConductivity;
+			XCrackElementFactory3D.stdIntegrationsForStiffness = stdIntegrationsForStiffness;
 			//XContinuumElement2DFactory.integrationsForMass = integrationsForMass;
 			XCrackElementFactory3D.elementGeometries = elementGeometries;
 
@@ -66,13 +66,15 @@ namespace MGroup.XFEM.Elements
 			//this.integrationBoundaryOrder = integrationBoundaryOrder;
 		}
 
+		public bool UseStandardIntegrationForKss { get; set; } = false;
+
 		public IXCrackElement CreateElement(int id, CellType cellType, IReadOnlyList<XNode> nodes)
 		{
 #if DEBUG
 			interpolations[cellType].CheckElementNodes(nodes);
 #endif
 			return new XCrackElement3D(id, nodes, elementGeometries[cellType], material, interpolations[cellType],
-				extrapolations[cellType], stdIntegrationsForStiffness[cellType], integrationbulk);
+				extrapolations[cellType], stdIntegrationsForStiffness[cellType], integrationbulk, UseStandardIntegrationForKss);
 		}
 	}
 }

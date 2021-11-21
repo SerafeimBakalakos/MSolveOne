@@ -97,6 +97,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			// Solver
 			var dofOrderer = new ReanalysisDofOrderer(enrichedNodeSelector.CanNodeBeEnriched);
 			var factory = new ReanalysisRebuildingSolver.Factory(dofOrderer);
+			factory.ExtraDofsStrategy = new StepDofsNearModifiedNodesStrategy();
 			ReanalysisAlgebraicModel<DokMatrixAdapter> algebraicModel = factory.BuildAlgebraicModel(model);
 			var solver = factory.BuildSolver(algebraicModel);
 
