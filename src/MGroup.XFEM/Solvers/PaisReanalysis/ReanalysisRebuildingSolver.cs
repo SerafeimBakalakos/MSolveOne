@@ -147,12 +147,12 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 		private void FactorizeMatrix()
 		{
 			var watch = new Stopwatch();
-			watch.Start();
 
 			// Matrix assembly
 			SymmetricCscMatrix matrix = LinearSystem.Matrix.SingleMatrix.DokMatrix.BuildSymmetricCscMatrix(true);
 
 			// Factorization
+			watch.Start();
 			factorization = CholeskySuiteSparse.Factorize(matrix, useSuperNodalFactorization);
 
 			UpdateInactiveDofs();
@@ -266,6 +266,8 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 
 		private void UpdateMatrixFactorization()
 		{
+			long updateDuration = 0;
+			long managedDuration = 0;
 			var watch = new Stopwatch();
 			watch.Start();
 
@@ -275,25 +277,43 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			}
 
 			(ISet<int> colsToAdd, ISet<int> colsToRemove) = FindModifiedColumns();
+			watch.Stop();
+			managedDuration += watch.ElapsedMilliseconds;
 
+			watch.Restart();
 			// Delete columns corresponding to removed dofs
 			foreach (int col in colsToRemove)
 			{
 				factorization.DeleteRow(col);
 			}
+			watch.Stop();
+			updateDuration += watch.ElapsedMilliseconds;
 
 			// Add columns corresponding to new dofs
 			DokSymmetric matrix = LinearSystem.Matrix.SingleMatrix.DokMatrix;
+
 			foreach (int col in colsToAdd)
 			{
+				watch.Restart();
 				colsToRemove.Remove(col);
 				SparseVector newColVector = matrix.GetColumnWithoutRows(col, colsToRemove);
+				watch.Stop();
+				managedDuration += watch.ElapsedMilliseconds;
+
+				watch.Restart();
 				factorization.AddRow(col, newColVector);
+				watch.Stop();
+				updateDuration += watch.ElapsedMilliseconds;
 			}
 
+			watch.Restart();
 			UpdateInactiveDofs();
 			watch.Stop();
-			Logger.LogTaskDuration("Matrix factorization", watch.ElapsedMilliseconds);
+			managedDuration += watch.ElapsedMilliseconds;
+
+			Logger.LogTaskDuration("Matrix factorization", updateDuration);
+			Logger.LogTaskDuration("Matrix factorization managed code", managedDuration);
+			//Logger.LogTaskDuration("Matrix factorization", watch.ElapsedMilliseconds);
 		}
 
 		public class Factory

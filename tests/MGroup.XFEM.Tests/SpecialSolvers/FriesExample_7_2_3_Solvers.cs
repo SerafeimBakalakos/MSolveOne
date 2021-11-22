@@ -187,7 +187,14 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			//analyzer.Results.Add(new StructuralFieldWriter(model, outputDirectory));
 
 			analyzer.Analyze();
-			analyzer.Logger.WriteToFile(Path.Combine(outputDirectory, "performance.txt"), true);
+
+			string performanceOutputFile = Path.Combine(outputDirectory, "performance.txt");
+			analyzer.Logger.WriteToFile(performanceOutputFile, true);
+			if (solverChoice == SolverChoice.DirectReanalysis)
+			{
+				solver.Logger.WriteToFile(performanceOutputFile, msg.ToString(), true);
+				solver.Logger.WriteAggregatesToFile(performanceOutputFile, msg.ToString(), true);
+			}
 		}
 
 		private static (ISolver, IAlgebraicModel) SetupDirectSolver(XModel<IXCrackElement> model, SolverChoice solverChoice)

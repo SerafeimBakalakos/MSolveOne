@@ -29,7 +29,7 @@ namespace MGroup.Solvers.Direct
 		private CholeskySuiteSparse factorization;
 
 		private SuiteSparseSolver(GlobalAlgebraicModel<SymmetricCscMatrix> model, double factorizationPivotTolerance) 
-			: base(model, "SkylineSolver")
+			: base(model, "SuiteSparseSolver")
 		{
 			this.factorizationPivotTolerance = factorizationPivotTolerance;
 		}
