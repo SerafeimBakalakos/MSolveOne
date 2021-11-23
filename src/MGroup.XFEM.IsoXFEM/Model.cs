@@ -41,86 +41,170 @@ namespace MGroup.XFEM.IsoXFEM
             this.geometry = geometry;
             this.constrainedSide = constrainedSide;
         }
-        private void CreateElements()
-        {           
-            for (int i = 1; i <= geometry.numberOfElementsX * geometry.numberOfElementsY; i++)
-            {
-                decimal val = (i - 1) / geometry.numberOfElementsY;
-                var cl = Decimal.ToDouble(Math.Round(val, MidpointRounding.ToZero)) + 1;
-                var node1ID = (int)cl - 2 + i;
-                var node2ID = node1ID + geometry.numberOfElementsY + 1;
-                var node3ID = node2ID + 1;
-                var node4ID = node1ID + 1;
-                var nodesOfElement = new[]
-                {
-                    nodes[node1ID],
-                    nodes[node2ID],
-                    nodes[node3ID],
-                    nodes[node4ID]
-                };
-                var element = new Element(i-1,material, geometry, nodesOfElement);
-                int[] dofs = new int[8];
-                for (int j = 0; j < nodesOfElement.Length; j++)
-                {
-                    dofs[2 * j] = 2 * element.nodesOfElement[j].ID;
-                    dofs[2 * j + 1] = 2 * element.nodesOfElement[j].ID + 1;
-                }
-                element.dofsOfElement = dofs;
-                elements.Add(element);               
-            }
-        }
+		private void CreateElements()
+		{
+			#region CreateElementsMatlab
+			//for (int i = 1; i <= geometry.numberOfElementsX * geometry.numberOfElementsY; i++)
+			//{
+			//    decimal val = (i - 1) / geometry.numberOfElementsY;
+			//    var cl = Decimal.ToDouble(Math.Round(val, MidpointRounding.ToZero)) + 1;
+			//    var node1ID = (int)cl - 2 + i;
+			//    var node2ID = node1ID + geometry.numberOfElementsY + 1;
+			//    var node3ID = node2ID + 1;
+			//    var node4ID = node1ID + 1;
+			//    var nodesOfElement = new[]
+			//    {
+			//        nodes[node1ID],
+			//        nodes[node2ID],
+			//        nodes[node3ID],
+			//        nodes[node4ID]
+			//    };
+			//    var element = new Element(i-1,material, geometry, nodesOfElement);
+			//    int[] dofs = new int[8];
+			//    for (int j = 0; j < nodesOfElement.Length; j++)
+			//    {
+			//        dofs[2 * j] = 2 * element.nodesOfElement[j].ID;
+			//        dofs[2 * j + 1] = 2 * element.nodesOfElement[j].ID + 1;
+			//    }
+			//    element.dofsOfElement = dofs;
+			//    elements.Add(element);               
+			//}
+			#endregion
+			int el = 0;
+			for (int i = 0; i < geometry.numberOfElementsX; i++)
+			{
+				for (int j = 0; j < geometry.numberOfElementsY; j++)
+				{
+					var node1ID = el + i;
+					var node2ID = node1ID + geometry.numberOfElementsY + 1;
+					var node3ID = node2ID + 1;
+					var node4ID = node1ID + 1;
+					var nodesOfElement = new[]
+					{
+							nodes[node1ID],
+							nodes[node2ID],
+							nodes[node3ID],
+							nodes[node4ID]
+						};
+					var element = new Element(el, material, geometry, nodesOfElement);
+					int[] dofs = new int[8];
+					for (int k = 0; k < nodesOfElement.Length; k++)
+					{
+						dofs[2 * k] = 2 * element.nodesOfElement[k].ID;
+						dofs[2 * k + 1] = 2 * element.nodesOfElement[k].ID + 1;
+					}
+					element.dofsOfElement = dofs;
+					elements.Add(element);
+					el = el + 1;
+				}
+			}
+		}
 
-        private void CreateNodes()
-        {
-            for (int i = 1; i <= (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1); i++)
-            {
-                decimal val = (i - 1) / (geometry.numberOfElementsY + 1);
-                var cl = Decimal.ToDouble(Math.Round(val, MidpointRounding.ToZero));
-                var nodeX= cl * geometry.length / geometry.numberOfElementsX;
-                var md = (i - 1) % (geometry.numberOfElementsY + 1);
-                var nodeY= md * geometry.height / geometry.numberOfElementsY;
-                //Add Constrains
-                var constrainX = false;
-                var constrainY = false;
-                switch (constrainedSide)
-                {
-                    case ConstrainedSide.Bottomside:
-                        if (nodeY==0)
-                        {
-                            constrainX = true;
-                            constrainY = true;
-                        }
-                        break;
-                    case ConstrainedSide.Rightside:
-                        if(nodeX==geometry.length)
-                        {
-                            constrainX = true;
-                            constrainY = true;
-                        }
-                        break;
-                    case ConstrainedSide.Upperside:
-                        if (nodeY==geometry.height)
-                        {
-                            constrainX = true;
-                            constrainY = true;
-                        }
-                        break;
-                    case ConstrainedSide.Leftside:
-                        if (nodeX == 0)
-                        {
-                            constrainX = true;
-                            constrainY = true;
-                        }
-                        break;
-                    default:
-                        break;
-                }                
-                var node = new Node(i - 1, nodeX, nodeY,constrainX,constrainY);
-                nodes.Add(node);
-            }
-        }
+		private void CreateNodes()
+		{
+			#region MakeCoordinatesMatlab
+			//for (int i = 1; i <= (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1); i++)
+			//{
+			//    decimal val = (i - 1) / (geometry.numberOfElementsY + 1);
+			//    var cl = Decimal.ToDouble(Math.Round(val, MidpointRounding.ToZero));
+			//    var nodeX= cl * geometry.length / geometry.numberOfElementsX;
+			//    var md = (i - 1) % (geometry.numberOfElementsY + 1);
+			//    var nodeY= md * geometry.height / geometry.numberOfElementsY;
+			//    //Add Constrains
+			//    var constrainX = false;
+			//    var constrainY = false;
+			//    switch (constrainedSide)
+			//    {
+			//        case ConstrainedSide.Bottomside:
+			//            if (nodeY==0)
+			//            {
+			//                constrainX = true;
+			//                constrainY = true;
+			//            }
+			//            break;
+			//        case ConstrainedSide.Rightside:
+			//            if(nodeX==geometry.length)
+			//            {
+			//                constrainX = true;
+			//                constrainY = true;
+			//            }
+			//            break;
+			//        case ConstrainedSide.Upperside:
+			//            if (nodeY==geometry.height)
+			//            {
+			//                constrainX = true;
+			//                constrainY = true;
+			//            }
+			//            break;
+			//        case ConstrainedSide.Leftside:
+			//            if (nodeX == 0)
+			//            {
+			//                constrainX = true;
+			//                constrainY = true;
+			//            }
+			//            break;
+			//        default:
+			//            break;
+			//    }                
+			//    var node = new Node(i - 1, nodeX, nodeY,constrainX,constrainY);
+			//    nodes.Add(node);
+			//}
+			#endregion
+			var coordX = 0.0;
+			var coordY = 0.0;
+			int id = 0;
+			for (int i = 0; i < (geometry.numberOfElementsX + 1); i++)
+			{
+				for (int j = 0; j < (geometry.numberOfElementsY + 1); j++)
+				{
+					var nodeX = coordX;
+					var nodeY = coordY;
+					var constrainX = false;
+					var constrainY = false;
+					switch (constrainedSide)
+					{
+						case ConstrainedSide.Bottomside:
+							if (nodeY == 0)
+							{
+								constrainX = true;
+								constrainY = true;
+							}
+							break;
+						case ConstrainedSide.Rightside:
+							if (nodeX == geometry.length)
+							{
+								constrainX = true;
+								constrainY = true;
+							}
+							break;
+						case ConstrainedSide.Upperside:
+							if (nodeY == geometry.height)
+							{
+								constrainX = true;
+								constrainY = true;
+							}
+							break;
+						case ConstrainedSide.Leftside:
+							if (nodeX == 0)
+							{
+								constrainX = true;
+								constrainY = true;
+							}
+							break;
+						default:
+							break;
+					}
+					var node = new Node(id, nodeX, nodeY, constrainX, constrainY);
+					nodes.Add(node);
+					coordY = coordY + geometry.height / geometry.numberOfElementsY;
+					id = id + 1;
+				}
+				coordY = 0;
+				coordX = coordX + geometry.length / geometry.numberOfElementsX;
+			}
+		}
 
-        private void FindElementsOnNodes()
+		private void FindElementsOnNodes()
         {            
             for (int k = 0; k < nodes.Count; k++)
             {
