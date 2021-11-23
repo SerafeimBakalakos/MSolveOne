@@ -29,14 +29,16 @@ namespace MGroup.XFEM.IsoXFEM
         /// <summary>
         /// Elements that include this Node
         /// </summary>
-        public List<Element> elementsOnNode = new List<Element>();
-        /// <summary>
-        /// Constructs a Node objects and initializes it with its ID and X any Y coordinates
-        /// </summary>
-        /// <param name="id">The ID of the node (should not be a negative number)</param>
-        /// <param name="x">X coordinate of the node</param>
-        /// <param name="y">Y coordinate of the node</param>
-        public Node(int id, double x, double y, bool isXConstrained, bool isYConstrained)
+        public List<Element> elementsOnNode = new List<Element>();		
+		/// <summary>
+		/// Constructs a Node objects and initializes it with its ID and X any Y coordinates.
+		/// </summary>
+		/// <param name="id">The ID of the node (should not be a negative number)</param>
+		/// <param name="x">X coordinate of the node</param>
+		/// <param name="y">Y coordinate of the node</param>
+		/// <param name="isXConstrained">X-constrain of the node</param>
+		/// <param name="isYConstrained">Y-constrain of the node</param>
+		public Node(int id, double x, double y, bool isXConstrained, bool isYConstrained)
         {
             ID = id >= 0 ? id:-id;
             X = x;
