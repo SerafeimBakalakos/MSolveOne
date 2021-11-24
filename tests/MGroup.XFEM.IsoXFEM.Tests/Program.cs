@@ -1,4 +1,7 @@
 using System;
+using MGroup.XFEM.IsoXFEM;
+using MGroup.XFEM.IsoXFEM.Solvers;
+using MGroup.LinearAlgebra.Vectors;
 
 namespace MGroup.XFEM.IsoXFEM.Tests
 {
@@ -6,7 +9,8 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	{
 		static void Main(string[] args)
 		{
-			Console.WriteLine("Hello World!");
+			ModelTests.CreateNodesTest();
+			Console.WriteLine("Test Finished");
 		}
 	}
 }

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace MGroup.XFEM.IsoXFEM
 {
-    class FEMAnalysis
+    public class FEMAnalysis
     {
         private readonly ISolver solver;
         private readonly Vector load;

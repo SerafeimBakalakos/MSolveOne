@@ -1,4 +1,4 @@
-using IsoXFEMOptimization.Output;
+using MGroup.XFEM.IsoXFEM.Output;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Output;
 using MGroup.LinearAlgebra.Output.Formatting;
@@ -14,7 +14,7 @@ namespace MGroup.XFEM.IsoXFEM.Output
         {
             var writer = new FullMatrixWriter();
             writer.NumericFormat = new ExponentialFormat() { NumDecimalDigits = 17 };
-            string path = $"{Paths.OutputForTxtResults}\\OOS2BottomEnd_40x20_SkylineLDL_InitialStiffness_ComputeOnlyOneTime_CorrectMatlabErrors.txt";
+            string path = $"{Paths.OutputForTxtResults}\\OOS3BottomEnd_40x20_SkylineLDL_InitialStiffness_ComputeOnlyOneTime_CorrectMatlabErrors.txt";
             writer.WriteToFile(results, path);
         }
 

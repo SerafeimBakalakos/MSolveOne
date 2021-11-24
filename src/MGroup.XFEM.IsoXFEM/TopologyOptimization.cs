@@ -11,7 +11,7 @@ using System.Text;
 
 namespace MGroup.XFEM.IsoXFEM
 {
-    static class TopologyOptimization
+    public static class TopologyOptimization
     {
 
         private const double volumeFraction = 0.5;

@@ -11,7 +11,7 @@ namespace MGroup.XFEM.IsoXFEM
         MiddleEnd,
         BottomEnd
     }
-    class NodalLoad
+    public class NodalLoad
     {
         
         public GeometryProperties geometry;

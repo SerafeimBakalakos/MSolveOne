@@ -7,7 +7,7 @@ using MGroup.LinearAlgebra.Vectors;
 
 namespace MGroup.XFEM.IsoXFEM
 {
-   class Model
+   public class Model
     {
         //                      #2
         //     .________________________________.
@@ -41,7 +41,7 @@ namespace MGroup.XFEM.IsoXFEM
             this.geometry = geometry;
             this.constrainedSide = constrainedSide;
         }
-		private void CreateElements()
+		public void CreateElements()
 		{
 			#region CreateElementsMatlab
 			//for (int i = 1; i <= geometry.numberOfElementsX * geometry.numberOfElementsY; i++)
@@ -85,7 +85,7 @@ namespace MGroup.XFEM.IsoXFEM
 							nodes[node2ID],
 							nodes[node3ID],
 							nodes[node4ID]
-						};
+					};
 					var element = new Element(el, material, geometry, nodesOfElement);
 					int[] dofs = new int[8];
 					for (int k = 0; k < nodesOfElement.Length; k++)
@@ -100,7 +100,7 @@ namespace MGroup.XFEM.IsoXFEM
 			}
 		}
 
-		private void CreateNodes()
+		public void CreateNodes()
 		{
 			#region MakeCoordinatesMatlab
 			//for (int i = 1; i <= (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1); i++)
@@ -204,7 +204,7 @@ namespace MGroup.XFEM.IsoXFEM
 			}
 		}
 
-		private void FindElementsOnNodes()
+		public void FindElementsOnNodes()
         {            
             for (int k = 0; k < nodes.Count; k++)
             {
@@ -230,7 +230,7 @@ namespace MGroup.XFEM.IsoXFEM
         }
 
         public void EnumerateDegreesOfFreedom()
-            {               
+        {               
                var fixedDofs = new int[2 * (geometry.numberOfElementsY + 1)];
                var allDofs = new int[2 * nodes.Count];
                 for (int i = 0; i < 2 * (geometry.numberOfElementsY + 1); i++)
@@ -245,6 +245,6 @@ namespace MGroup.XFEM.IsoXFEM
             constraintsOfDofs.Add("FreeDofs", freeDofs);
             constraintsOfDofs.Add("FixedDofs", fixedDofs);
             constraintsOfDofs.Add("AllDofs", allDofs);
-            }
+         }
    }
 }
