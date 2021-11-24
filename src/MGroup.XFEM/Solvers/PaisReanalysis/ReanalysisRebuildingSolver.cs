@@ -152,13 +152,21 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			SymmetricCscMatrix matrix = LinearSystem.Matrix.SingleMatrix.DokMatrix.BuildSymmetricCscMatrix(true);
 
 			// Factorization
+			if (factorization != null)
+			{
+				factorization.Dispose();
+				factorization = null;
+			}
 			watch.Start();
 			factorization = CholeskySuiteSparse.Factorize(matrix, useSuperNodalFactorization);
-
-			UpdateInactiveDofs();
-
 			watch.Stop();
 			Logger.LogTaskDuration("Matrix factorization", watch.ElapsedMilliseconds);
+
+			watch.Restart();
+			UpdateInactiveDofs();
+			watch.Stop();
+			Logger.LogTaskDuration("Matrix factorization managed code", watch.ElapsedMilliseconds);
+
 		}
 
 		public void FindCrackStepDofs(IEnumerable<XNode> inNodes, ISet<int> dofIndices)
@@ -203,7 +211,7 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			}
 		}
 
-		private (ISet<int> colsToAdd, ISet<int> colsToRemove) FindModifiedColumns()
+		private (ISet<int> colsToAdd, ISet<int> colsToRemove, HashSet<int> extraCols) FindModifiedColumns()
 		{
 			var colsToAdd = new HashSet<int>();
 			var colsToRemove = new HashSet<int>();
@@ -224,7 +232,7 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			colsToAdd.RemoveWhere(i => (matrix.RawColumns[i].Count == 1) && (matrix.RawColumns[i][i] == 1.0));
 			colsToRemove.RemoveWhere(i => PreviouslyInactiveDofs.Contains(i) && (!colsToAdd.Contains(i)));
 
-			return (new SortedSet<int>(colsToAdd), new SortedSet<int>(colsToRemove));
+			return (new SortedSet<int>(colsToAdd), new SortedSet<int>(colsToRemove), extraModifiedCols);
 		}
 
 		private void ReleaseResources()
@@ -268,30 +276,36 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 		{
 			long updateDuration = 0;
 			long managedDuration = 0;
-			var watch = new Stopwatch();
-			watch.Start();
 
 			if (factorization == null)
 			{
 				throw new InvalidOperationException();
 			}
 
-			(ISet<int> colsToAdd, ISet<int> colsToRemove) = FindModifiedColumns();
+			var watch = new Stopwatch();
+			watch.Start();
+			(ISet<int> colsToAdd, ISet<int> colsToRemove, HashSet<int> extraCols) = FindModifiedColumns();
 			watch.Stop();
 			managedDuration += watch.ElapsedMilliseconds;
 
-			watch.Restart();
 			// Delete columns corresponding to removed dofs
 			foreach (int col in colsToRemove)
 			{
+				watch.Restart();
 				factorization.DeleteRow(col);
+				watch.Stop();
+				if (extraCols.Contains(col))
+				{
+					managedDuration += watch.ElapsedMilliseconds;
+				}
+				else
+				{
+					updateDuration += watch.ElapsedMilliseconds;
+				}
 			}
-			watch.Stop();
-			updateDuration += watch.ElapsedMilliseconds;
 
 			// Add columns corresponding to new dofs
 			DokSymmetric matrix = LinearSystem.Matrix.SingleMatrix.DokMatrix;
-
 			foreach (int col in colsToAdd)
 			{
 				watch.Restart();
@@ -303,7 +317,15 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 				watch.Restart();
 				factorization.AddRow(col, newColVector);
 				watch.Stop();
-				updateDuration += watch.ElapsedMilliseconds;
+
+				if (extraCols.Contains(col))
+				{
+					managedDuration += watch.ElapsedMilliseconds;
+				}
+				else
+				{
+					updateDuration += watch.ElapsedMilliseconds;
+				}
 			}
 
 			watch.Restart();

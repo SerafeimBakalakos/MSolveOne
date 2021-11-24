@@ -9,8 +9,8 @@ namespace MGroup.XFEM.Tests
 		{
 			Console.WriteLine("Hello world");
 
-			RunExample1();
-			//RunExample2();
+			//RunExample1();
+			RunExample2();
 
 
 			//SpecialSolvers.MpiTestSuite.RunTestsWith4Processes();
@@ -34,12 +34,12 @@ namespace MGroup.XFEM.Tests
 
 			FriesExample_7_2_1_Solvers.multiThreaded = true;
 			FriesExample_7_2_1_Solvers.reanalysis = false;
-			FriesExample_7_2_1_Solvers.reanalysisExtraDofs = FriesExample_7_2_1_Solvers.ReanalysisExtraDofs.None;
+			FriesExample_7_2_1_Solvers.reanalysisExtraDofs = FriesExample_7_2_1_Solvers.ReanalysisExtraDofs.AllNearModified;
 			FriesExample_7_2_1_Solvers.psmTolerance = 1E-10;
 
-			FriesExample_7_2_1_Solvers.RunExampleWithDirectSolver();
+			//FriesExample_7_2_1_Solvers.RunExampleWithDirectSolver();
 			//FriesExample_7_2_1_Solvers.RunExampleWithPFetiDPSolver();
-			//FriesExample_7_2_1_Solvers.RunExampleWithReanalysisSolver();
+			FriesExample_7_2_1_Solvers.RunExampleWithReanalysisSolver();
 		}
 
 		private static void RunExample2()
@@ -66,7 +66,7 @@ namespace MGroup.XFEM.Tests
 
 			FriesExample_7_2_3_Solvers.multiThreaded = true;
 			FriesExample_7_2_3_Solvers.reanalysis = false;
-			FriesExample_7_2_3_Solvers.reanalysisExtraDofs = FriesExample_7_2_3_Solvers.ReanalysisExtraDofs.None;
+			FriesExample_7_2_3_Solvers.reanalysisExtraDofs = FriesExample_7_2_3_Solvers.ReanalysisExtraDofs.AllNearModified;
 			FriesExample_7_2_3_Solvers.psmTolerance = 1E-10;
 
 			//FriesExample_7_2_3_Solvers.RunExampleWithDirectSolver();

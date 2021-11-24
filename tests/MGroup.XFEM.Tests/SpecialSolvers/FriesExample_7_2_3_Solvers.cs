@@ -186,6 +186,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			analyzer.Logger.ExtraInfo = msg.ToString();
 			//analyzer.Results.Add(new StructuralFieldWriter(model, outputDirectory));
 
+			Console.WriteLine("Starting analysis");
 			analyzer.Analyze();
 
 			string performanceOutputFile = Path.Combine(outputDirectory, "performance.txt");
