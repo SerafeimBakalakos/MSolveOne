@@ -7,7 +7,7 @@ using MGroup.LinearAlgebra.Vectors;
 
 namespace MGroup.XFEM.IsoXFEM
 {
-    class StructuralPerfomance
+    public class StructuralPerfomance
     {
         public Vector strainEnergy;
         public Vector strainEnergyDensity;

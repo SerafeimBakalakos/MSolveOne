@@ -7,12 +7,12 @@ using System.Text;
 
 namespace MGroup.XFEM.IsoXFEM
 {
-    class XFEMIntegration
+    public class XFEMIntegration
     {
       public Matrix coordinatesOfBoundaryElement;
       public int[,] connectionOfBoundaryElement;
       public double areaBoundaryElement;
-      private Tuple<Vector, Matrix, Vector> IntersectionPoints( Matrix elementCoordinates, Vector elementNodalLevelSet)
+      public Tuple<Vector, Matrix, Vector> IntersectionPoints( Matrix elementCoordinates, Vector elementNodalLevelSet)
         {
             Vector nodalLevelSetOnFirstNode = elementNodalLevelSet.GetSubvector(new int[] { 0 });
             int[] elementNodesCircular = new int[] { 0, 1, 2, 3, 0 };
@@ -104,7 +104,7 @@ namespace MGroup.XFEM.IsoXFEM
             var tuple = new Tuple<Vector, Matrix, Vector>(elementConnectionCircularWithIntersectionPoints, elementCoordinatesWithIntersection, elementsNodalLevelSetWithIntersectionPoints);
             return tuple;
         }
-      private (Matrix , int[] ) CoordinatesNodesofXFEMpoints(Vector elementNodesCircularWithIntersectionPoints, Matrix elementCoordinatesWithIntersection, Vector elementNodalLevelSetWithIntersectionPoints)
+      public (Matrix , int[] ) CoordinatesNodesofXFEMpoints(Vector elementNodesCircularWithIntersectionPoints, Matrix elementCoordinatesWithIntersection, Vector elementNodalLevelSetWithIntersectionPoints)
         {   //This Method returns the Matrix elementCoordinatesWithIntersectionAndCentrePoints and int [] connectionCircularNoNegativeNodesWithIntersection.
             //For Example:
             //
@@ -176,7 +176,7 @@ namespace MGroup.XFEM.IsoXFEM
             Matrix elementCoordinatesWithIntersectionAndCentrePoints = elementCoordinatesWithIntersection.AppendBottom(meanCoordinate);
             return (elementCoordinatesWithIntersectionAndCentrePoints, connectionCircularNoNegativeNodesWithIntersection);
         }
-      private (int[,] , double ) ConnectionOfSubTrianglesAndAreaSubElement(int[] nodesofSubTriangles, Matrix coordsOfSubTriangles)
+      public (int[,] , double ) ConnectionOfSubTrianglesAndAreaSubElement(int[] nodesofSubTriangles, Matrix coordsOfSubTriangles)
         {
             //For Example:
             //                  LevelSet                                     
