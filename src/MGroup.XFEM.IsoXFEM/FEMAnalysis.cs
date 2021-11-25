@@ -13,7 +13,7 @@ namespace MGroup.XFEM.IsoXFEM
         private readonly Vector load;
         public Vector displacements;
         private readonly Model model;
-        private Matrix globalStiffness;
+		public /*private*/ Matrix globalStiffness;
 
         public FEMAnalysis(Model model, ISolver solver,Vector load)
         {
@@ -21,7 +21,7 @@ namespace MGroup.XFEM.IsoXFEM
             this.solver = solver;
             this.load = load;
         }
-        private void AssembleStiffnessMatrix()
+		public /*private*/ void AssembleStiffnessMatrix()
         {
             globalStiffness = Matrix.CreateZero(2 * model.nodes.Count, 2 * model.nodes.Count);
             for (int i = 0; i < model.elements.Count; i++)
@@ -37,7 +37,7 @@ namespace MGroup.XFEM.IsoXFEM
                 }
             }
         }
-        private void RefillDisplacements(Vector solution)
+        public void RefillDisplacements(Vector solution)
         {
             int[] numOfFreedofs = new int[solution.Length];
             for (int i = 0; i < solution.Length; i++)
