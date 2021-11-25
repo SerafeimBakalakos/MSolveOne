@@ -9,7 +9,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	public class ModelTests
 	{
 		[Fact]
-		public static void CreateNodesTest()
+		private void CreateNodesTest()
 		{
 			var geometry = new GeometryProperties(40, 40, 1, 2, 2);
 			var material = new MaterialProperties(1, 0.3);
@@ -36,7 +36,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			}
 		}
 		[Fact]
-		public static void CreateElementTest()
+		private void CreateElementTest()
 		{
 			var geometry = new GeometryProperties(40, 40, 1, 2, 2);
 			var material = new MaterialProperties(1, 0.3);
@@ -92,7 +92,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			}
 		}
 		[Fact]
-		public static void FindElementsOnNodesTests()
+		private void FindElementsOnNodesTests()
 		{
 			var geometry = new GeometryProperties(40, 40, 1, 2, 2);
 			var material = new MaterialProperties(1, 0.3);

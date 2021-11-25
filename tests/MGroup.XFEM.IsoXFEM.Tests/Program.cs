@@ -8,9 +8,8 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	class Program
 	{
 		static void Main(string[] args)
-		{
-			ModelTests.CreateNodesTest();
-			Console.WriteLine("Test Finished");
+		{			
+			Example1.RunExample1();
 		}
 	}
 }
