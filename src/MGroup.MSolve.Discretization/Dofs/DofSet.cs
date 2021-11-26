@@ -8,7 +8,7 @@ namespace MGroup.MSolve.Discretization.Dofs
 {
 	public class DofSet
 	{
-		//TODO: Perhaps I should use HashSets and order them, when I actually need to number the dofs
+		//TODO: Perhaps I should use HashSets and order them, when I actually need to number the dofs. 
 		private SortedDictionary<int, SortedSet<int>> data = new SortedDictionary<int, SortedSet<int>>();
 
 		public DofSet()
@@ -73,7 +73,11 @@ namespace MGroup.MSolve.Discretization.Dofs
 			return numEntries;
 		}
 
-		public IEnumerable<(int nodeID, int dofID)> EnumerateNodesDofs()
+		/// <summary>
+		/// The order is node major, dof minor.
+		/// </summary>
+		/// <returns></returns>
+		public IEnumerable<(int nodeID, int dofID)> EnumerateOrderedNodesDofs()
 		{
 			foreach (var nodeDofsPair in data)
 			{

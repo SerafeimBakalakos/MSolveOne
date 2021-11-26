@@ -40,7 +40,7 @@ namespace MGroup.MSolve.DataStructures
 			this.data = data;
 		}
 
-		public int EntryCount //TODO: perhaps this should be cached somehow
+		public int NumEntries //TODO: perhaps this should be cached somehow
 		{
 			get
 			{

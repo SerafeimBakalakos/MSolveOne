@@ -45,7 +45,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 		public int[] CalcSubdomainGlobalCornerDofMap(int subdomainID)
 		{
-			int numSubdomainDofs = SubdomainDofOrderingsCorner[subdomainID].EntryCount;
+			int numSubdomainDofs = SubdomainDofOrderingsCorner[subdomainID].NumEntries;
 			var subdomainToGlobalMap = new int[numSubdomainDofs];
 			foreach ((int node, int dof, int subdomainIdx) in SubdomainDofOrderingsCorner[subdomainID])
 			{

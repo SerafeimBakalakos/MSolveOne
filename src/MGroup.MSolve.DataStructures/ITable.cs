@@ -16,7 +16,7 @@ namespace MGroup.MSolve.DataStructures
         /// <summary>
         /// The total number of entries in this table. 
         /// </summary>
-        int EntryCount { get; }
+        int NumEntries { get; }
 
         /// <summary>
         /// The value associated with the pair (<paramref name="row"/>, <paramref name="col"/>).

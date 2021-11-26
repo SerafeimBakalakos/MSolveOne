@@ -216,7 +216,7 @@ namespace MGroup.Solvers.DDM
 			{
 				DofSet commonDofs = GetCommonDofsOfSubdomains(subdomainID, neighborID);
 				var commonDofIndices = new List<int>(commonDofs.Count());
-				foreach ((int nodeID, int dofID) in commonDofs.EnumerateNodesDofs())
+				foreach ((int nodeID, int dofID) in commonDofs.EnumerateOrderedNodesDofs())
 				{
 					//TODO: It would be faster to iterate each node and then its dofs. Same for DofTable. 
 					//		Even better let DofTable take DofSet as argument and return the indices.
@@ -229,7 +229,7 @@ namespace MGroup.Solvers.DDM
 				allCommonDofIndices[neighborID] = commonDofIndices.ToArray();
 			}
 
-			indexer.GetLocalComponent(subdomainID).Initialize(subdomainDofs.EntryCount, allCommonDofIndices);
+			indexer.GetLocalComponent(subdomainID).Initialize(subdomainDofs.NumEntries, allCommonDofIndices);
 		}
 
 		//TODOMPI: Avoid finding and storing the common nodes of a subdomain pair twice. Actually, the GetCommonNodesOfSubdomains 
