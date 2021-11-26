@@ -78,5 +78,39 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			}
 		}
 
+		[Fact]
+		public void MeshAndAreaOfSubElementTest()
+		{
+			var coordinatesOfElement = Matrix.CreateFromArray(new double[,] { { -1, -1 }, { 1, -1 }, { 1, 1 }, { -1, 1 } });
+			var elementLevelSet = Vector.CreateFromArray(new double[] { 10, -10, -10, 10 });
+			var integration = new XFEMIntegration();
+			integration.MeshAndAreaOfSubElement(coordinatesOfElement, elementLevelSet);
+			var areaOfElementExpected = 2.00;
+			var connectionOfElementExpected = new int[,] { { 0, 4, 6 }, { 4, 5, 6 }, { 5, 3, 6 }, { 3, 0, 6 } };
+			var coordinatesOfElementExpected = Matrix.CreateFromArray(new double[,] { { -1, -1 }, { +1, -1 }, { +1, +1 }, { -1, +1 }, { 0, -1 }, { 0, +1 }, { -0.5, 0 } });
+			var areaOfElementComputed = integration.areaBoundaryElement;
+			var connectionOfElementComputed = integration.connectionOfBoundaryElement;
+			var coordinatesOfElementComputed = integration.coordinatesOfBoundaryElement;
+			Assert.Equal(areaOfElementExpected, areaOfElementComputed);
+			Assert.Equal(connectionOfElementExpected.GetLength(0), connectionOfElementComputed.GetLength(0));
+			Assert.Equal(connectionOfElementExpected.GetLength(1), connectionOfElementComputed.GetLength(1));
+			Assert.Equal(coordinatesOfElementExpected.NumRows, coordinatesOfElementComputed.NumRows);
+			Assert.Equal(coordinatesOfElementExpected.NumColumns, coordinatesOfElementComputed.NumColumns);
+			for (int i = 0; i < connectionOfElementExpected.GetLength(0); i++)
+			{
+				for (int j = 0; j < connectionOfElementExpected.GetLength(1); j++)
+				{
+					Assert.Equal(connectionOfElementExpected[i, j], connectionOfElementComputed[i, j]);
+				}
+			}
+			for (int i = 0; i < coordinatesOfElementExpected.NumRows; i++)
+			{
+				for (int j = 0; j < coordinatesOfElementExpected.NumColumns; j++)
+				{
+					Assert.Equal(coordinatesOfElementExpected[i, j], coordinatesOfElementComputed[i, j]);
+				}
+			}
+
+		}
 	}
 }
