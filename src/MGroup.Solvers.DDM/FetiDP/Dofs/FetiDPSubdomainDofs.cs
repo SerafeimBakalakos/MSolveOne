@@ -128,10 +128,5 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 			this.DofsCornerToFree = cornerToFree.ToArray();
 			this.DofsRemainderToFree = remainderToFree.ToArray();
 		}
-
-		public void SeparateRemainderDofsIntoBoundaryAndInternalDofs()
-		{
-			throw new NotImplementedException("Unused in PFETI-DP. Implement it for FETI-DP");
-		}
 	}
 }

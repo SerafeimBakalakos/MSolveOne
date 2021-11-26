@@ -14,6 +14,8 @@
 //using MGroup.MSolve.Solution;
 //using MGroup.MSolve.Solution.LinearSystem;
 //using MGroup.Solvers.DDM.FetiDP.Dofs;
+//using MGroup.Solvers.DDM.FetiDP.Preconditioning;
+//using MGroup.Solvers.DDM.FetiDP.Scaling;
 //using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 //using MGroup.Solvers.DDM.LagrangeMultipliers;
 //using MGroup.Solvers.DDM.LinearSystem;
@@ -37,9 +39,9 @@
 //		private readonly IPsmInterfaceProblemVectors interfaceProblemVectors;
 //		private readonly IModel model;
 //		private readonly string name;
-//		//private /*readonly*/ IPsmPreconditioner preconditioner; //TODO: Make this readonly as well.
-//		private readonly PsmReanalysisOptions reanalysis;
-//		private readonly IBoundaryDofScaling scaling;
+//		private readonly IFetiDPPreconditioner preconditioner;
+//		private readonly FetiDPReanalysisOptions reanalysis;
+//		private readonly IFetiDPScaling scaling;
 //		private readonly ConcurrentDictionary<int, FetiDPSubdomainDofs> subdomainDofsFetiDP;
 //		private readonly ConcurrentDictionary<int, SubdomainLagranges> subdomainLagranges;
 //		private readonly ConcurrentDictionary<int, IFetiDPSubdomainMatrixManager> subdomainMatricesFetiDP;
@@ -50,13 +52,13 @@
 //		private int analysisIteration;
 //		private DistributedOverlappingIndexer lagrangeVectorIndexer;
 
-//		private FetiDPSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel, 
-//			IFetiDPSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory, 
-//			bool explicitSubdomainMatrices, IPsmPreconditioner preconditioner,
+//		private FetiDPSolver(IComputeEnvironment environment, IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel,
+//			IFetiDPSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory,
+//			bool explicitSubdomainMatrices, IFetiDPPreconditioner preconditioner,
 //			IPsmInterfaceProblemSolverFactory interfaceProblemSolverFactory,
 //			ICornerDofSelection cornerDofs, ICrossPointStrategy crossPointStrategy,
 //			bool isHomogeneous, DdmLogger logger,
-//			PsmReanalysisOptions reanalysis, string name = "FETI-DP Solver")
+//			FetiDPReanalysisOptions reanalysis, string name = "FETI-DP Solver")
 //		{
 //			this.name = name;
 //			this.environment = environment;
@@ -88,14 +90,14 @@
 
 //			if (isHomogeneous)
 //			{
-//				this.scaling = new HomogeneousScaling(environment, s => subdomainDofsFetiDP[s], reanalysis);
+//				this.scaling = new HomogeneousScaling(
+//					environment, model, s => subdomainDofsFetiDP[s], crossPointStrategy, reanalysis);
 //			}
 //			else
 //			{
-//				this.scaling = new HeterogeneousScaling(environment, subdomainTopology,
-//					s => algebraicModel.SubdomainLinearSystems[s], s => subdomainDofsFetiDP[s]);
+//				throw new NotImplementedException();
 //			}
-			
+
 //			if (explicitSubdomainMatrices)
 //			{
 //				this.interfaceProblemMatrix = new PsmInterfaceProblemMatrixExplicit(
@@ -103,7 +105,7 @@
 //			}
 //			else
 //			{
-//				this.interfaceProblemMatrix = new PsmInterfaceProblemMatrixImplicit(environment, 
+//				this.interfaceProblemMatrix = new PsmInterfaceProblemMatrixImplicit(environment,
 //					s => subdomainDofsFetiDP[s], s => subdomainMatricesFetiDP[s]);
 //			}
 
@@ -159,9 +161,9 @@
 //		{
 //		}
 
-//		public virtual void PreventFromOverwrittingSystemMatrices() {}
+//		public virtual void PreventFromOverwrittingSystemMatrices() { }
 
-//		public virtual void Solve() 
+//		public virtual void Solve()
 //		{
 //			bool isFirstAnalysis = analysisIteration == 0;
 
@@ -173,7 +175,7 @@
 //			// Prepare subdomain-level dofs and matrices
 //			environment.DoPerNode(subdomainID =>
 //			{
-//				if (isFirstAnalysis || !reanalysis.SubdomainDofSubsets 
+//				if (isFirstAnalysis || !reanalysis.SubdomainDofSubsets
 //					|| reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
 //				{
 //					#region log
@@ -190,7 +192,7 @@
 //					Debug.Assert(!subdomainDofsFetiDP[subdomainID].IsEmpty);
 //				}
 
-//				if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices 
+//				if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
 //					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 //				{
 //					#region log
@@ -248,12 +250,12 @@
 //			}
 
 //			// Calculating scaling coefficients
-//			scaling.CalcScalingMatrices(lagrangeVectorIndexer);
+//			scaling.CalcScalingMatrices();
 
 //			// Prepare subdomain-level vectors
 //			environment.DoPerNode(subdomainID =>
 //			{
-//				if (isFirstAnalysis || !reanalysis.RhsVectors 
+//				if (isFirstAnalysis || !reanalysis.RhsVectors
 //					|| reanalysis.ModifiedSubdomains.IsRhsModified(subdomainID))
 //				{
 //					#region log
@@ -334,7 +336,7 @@
 //							return previousSolution.LocalVectors[subdomainID];
 //						}
 //					});
-					
+
 //					interfaceProblemVectors.InterfaceProblemSolution = newSolution;
 //				}
 //			}
@@ -364,21 +366,28 @@
 
 //		public class Factory
 //		{
+//			private readonly ICornerDofSelection cornerDofs;
 //			private readonly IComputeEnvironment environment;
 
-//			public Factory(IComputeEnvironment environment, IPsmSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory)
+//			public Factory(IComputeEnvironment environment, ICornerDofSelection cornerDofs, 
+//				IFetiDPSubdomainMatrixManagerFactory<TMatrix> matrixManagerFactory)
 //			{
 //				this.environment = environment;
+//				this.cornerDofs = cornerDofs;
+
+//				CrossPointStrategy = new FullyRedundantLagranges();
 //				DofOrderer = new DofOrderer(new NodeMajorDofOrderingStrategy(), new NullReordering());
 //				EnableLogging = false;
 //				ExplicitSubdomainMatrices = false;
 //				InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg();
 //				IsHomogeneousProblem = true;
-//				PsmMatricesFactory = matrixManagerFactory; //new PsmSubdomainMatrixManagerSymmetricCSparse.Factory();
-//				Preconditioner = new PsmPreconditionerIdentity();
-//				ReanalysisOptions = PsmReanalysisOptions.CreateWithAllDisabled();
+//				FetiDPMatricesFactory = matrixManagerFactory;
+//				Preconditioner = null;
+//				ReanalysisOptions = FetiDPReanalysisOptions.CreateWithAllDisabled();
 //				SubdomainTopology = new SubdomainTopologyGeneral();
 //			}
+
+//			public ICrossPointStrategy CrossPointStrategy { get; set; }
 
 //			public IDofOrderer DofOrderer { get; set; }
 
@@ -390,27 +399,27 @@
 
 //			public bool IsHomogeneousProblem { get; set; }
 
-//			public IPsmSubdomainMatrixManagerFactory<TMatrix> PsmMatricesFactory { get; }
+//			public IFetiDPSubdomainMatrixManagerFactory<TMatrix> FetiDPMatricesFactory { get; }
 
-//			public IPsmPreconditioner Preconditioner { get; set; }
+//			public IFetiDPPreconditioner Preconditioner { get; set; }
 
-//			public PsmReanalysisOptions ReanalysisOptions { get; set; }
+//			public FetiDPReanalysisOptions ReanalysisOptions { get; set; }
 
 //			public ISubdomainTopology SubdomainTopology { get; set; }
 
 //			public DistributedAlgebraicModel<TMatrix> BuildAlgebraicModel(IModel model)
 //			{
 //				return new DistributedAlgebraicModel<TMatrix>(
-//					environment, model, DofOrderer, SubdomainTopology, PsmMatricesFactory.CreateAssembler(),
+//					environment, model, DofOrderer, SubdomainTopology, FetiDPMatricesFactory.CreateAssembler(),
 //					ReanalysisOptions);
 //			}
 
-//			public virtual PsmSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
+//			public virtual FetiDPSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
 //			{
 //				DdmLogger logger = EnableLogging ? new DdmLogger(environment, "PSM Solver", model.NumSubdomains) : null;
-//				return new PsmSolver<TMatrix>(environment, model, algebraicModel, PsmMatricesFactory,
-//					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolverFactory, IsHomogeneousProblem,
-//					logger, ReanalysisOptions);
+//				return new FetiDPSolver<TMatrix>(environment, model, algebraicModel, FetiDPMatricesFactory,
+//					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolverFactory, cornerDofs, CrossPointStrategy,
+//					IsHomogeneousProblem, logger, ReanalysisOptions);
 //			}
 //		}
 //	}
