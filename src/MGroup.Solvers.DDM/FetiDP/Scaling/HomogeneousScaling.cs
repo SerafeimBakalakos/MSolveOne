@@ -18,7 +18,10 @@ namespace MGroup.Solvers.DDM.FetiDP.Scaling
 		private readonly IModel model;
 		private readonly Func<int, FetiDPSubdomainDofs> getSubdomainDofs;
 		private readonly FetiDPReanalysisOptions reanalysis;
-		private readonly ConcurrentDictionary<int, double[]> inverseMultiplicities = new ConcurrentDictionary<int, double[]>();
+		private readonly ConcurrentDictionary<int, double[]> inverseMultiplicitiesBoundaryRemainder 
+			= new ConcurrentDictionary<int, double[]>();
+		private readonly ConcurrentDictionary<int, double[]> inverseMultiplicitiesCorner
+			= new ConcurrentDictionary<int, double[]>();
 
 		public HomogeneousScaling(IComputeEnvironment environment, IModel model, 
 			Func<int, FetiDPSubdomainDofs> getSubdomainDofs, ICrossPointStrategy crossPointStrategy, 
@@ -39,7 +42,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Scaling
 
 		public void CalcScalingMatrices()
 		{
-			bool isFirstAnalysis = inverseMultiplicities.Count == 0;
+			bool isFirstAnalysis = inverseMultiplicitiesBoundaryRemainder.Count == 0;
 			Action<int> calcSubdomainScaling = subdomainID =>
 			{
 				if (isFirstAnalysis || !reanalysis.RhsVectors
@@ -57,20 +60,43 @@ namespace MGroup.Solvers.DDM.FetiDP.Scaling
 						int multiplicity = model.GetNode(nodeID).Subdomains.Count;
 						Wbr[brIndex] = 1.0 / multiplicity;
 					}
-					inverseMultiplicities[subdomainID] = Wbr;
-					SubdomainMatricesWbr[subdomainID] = DiagonalMatrix.CreateFromArray(Wbr);
+
+					var Wc = new double[dofs.DofsCornerToFree.Length];
+					{
+						foreach ((int nodeID, int dofID, int cIndex) in dofs.DofOrderingCorner)
+						{
+							int multiplicity = model.GetNode(nodeID).Subdomains.Count;
+							Wc[cIndex] = 1.0 / multiplicity;
+						}
+					}
+
+					this.SubdomainMatricesWbr[subdomainID] = DiagonalMatrix.CreateFromArray(Wbr);
+					this.inverseMultiplicitiesBoundaryRemainder[subdomainID] = Wbr;
+					this.inverseMultiplicitiesCorner[subdomainID] = Wc;
 				}
 			};
 			environment.DoPerNode(calcSubdomainScaling);
 		}
 
-		public void ScaleBoundaryRhsVector(int subdomainID, Vector boundaryRemainderRhsVector)
+		public void ScaleBoundaryRhsVector(int subdomainID, Vector forcesAtFreeDofs)
 		{
-			double[] coefficients = inverseMultiplicities[subdomainID];
-			Debug.Assert(boundaryRemainderRhsVector.Length == coefficients.Length);
-			for (int i = 0; i < coefficients.Length; i++)
+			FetiDPSubdomainDofs subdomainDofs = getSubdomainDofs(subdomainID);
+			int[] cornerToFree = subdomainDofs.DofsCornerToFree;
+			int[] remainderToFree = subdomainDofs.DofsRemainderToFree;
+			int[] boundaryRemainderToRemainder = subdomainDofs.DofsBoundaryRemainderToRemainder;
+
+			double[] Wc = inverseMultiplicitiesCorner[subdomainID];
+			for (int cornerDofIdx = 0; cornerDofIdx < Wc.Length; ++cornerDofIdx)
 			{
-				boundaryRemainderRhsVector[i] *= coefficients[i];
+				int freeDofIdx = cornerToFree[cornerDofIdx];
+				forcesAtFreeDofs[freeDofIdx] *= Wc[cornerDofIdx];
+			}
+
+			double[] Wbr = inverseMultiplicitiesBoundaryRemainder[subdomainID];
+			for (int brDofIdx = 0; brDofIdx < Wbr.Length; ++brDofIdx)
+			{
+				int freeDofIdx = remainderToFree[boundaryRemainderToRemainder[brDofIdx]];
+				forcesAtFreeDofs[freeDofIdx] *= Wc[brDofIdx];
 			}
 		}
 	}

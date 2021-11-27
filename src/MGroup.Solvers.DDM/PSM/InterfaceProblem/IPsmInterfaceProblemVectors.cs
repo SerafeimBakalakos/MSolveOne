@@ -18,7 +18,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 		// globalF = sum {Lb[s]^T * (fb[s] - Kbi[s] * inv(Kii[s]) * fi[s]) }
 		void CalcInterfaceRhsVector(DistributedOverlappingIndexer indexer);
 
-		public void Clear();
+		void Clear();
 
 	}
 }
