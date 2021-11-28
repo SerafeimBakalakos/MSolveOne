@@ -41,16 +41,22 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 		//TODO: dedicated class, since in Dr, each row has exactly one +-1 entry 
 		public SignedBooleanMatrixRowMajor MatrixDr { get; private set; }
 
-		public void CalcMatrixDr()
+		public SignedBooleanMatrixRowMajor MatrixDbr { get; private set; }
+
+		public void CalcSignedBooleanMatrices()
 		{
-			MatrixDr = new SignedBooleanMatrixRowMajor(LagrangeMultipliers.Count, subdomainDofs.DofsRemainderToFree.Length);
 			IntDofTable boundaryRemainderDofs = subdomainDofs.DofOrderingBoundaryRemainder;
 			int[] boundaryRemainderToRemainder = subdomainDofs.DofsBoundaryRemainderToRemainder;
+			MatrixDbr = new SignedBooleanMatrixRowMajor(LagrangeMultipliers.Count, boundaryRemainderToRemainder.Length);
+			MatrixDr = new SignedBooleanMatrixRowMajor(LagrangeMultipliers.Count, subdomainDofs.DofsRemainderToFree.Length);
 			foreach (LagrangeMultiplier lagrange in LagrangeMultipliers)
 			{
+				bool positiveSign = subdomainID == lagrange.SubdomainPlus;
 				int boundaryRemainderDofIdx = boundaryRemainderDofs[lagrange.NodeID, lagrange.DofID];
+				MatrixDbr.AddEntry(lagrange.LocalIdx, boundaryRemainderDofIdx, positiveSign);
+
 				int remainderDofIdx = boundaryRemainderToRemainder[boundaryRemainderDofIdx];
-				MatrixDr.AddEntry(lagrange.LocalIdx, remainderDofIdx, subdomainID == lagrange.SubdomainPlus);
+				MatrixDr.AddEntry(lagrange.LocalIdx, remainderDofIdx, positiveSign);
 			}
 		}
 

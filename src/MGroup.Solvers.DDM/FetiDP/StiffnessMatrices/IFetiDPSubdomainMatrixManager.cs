@@ -16,17 +16,32 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		void ClearSubMatrices();
 
+		/// <summary>
+		/// Divide subdomain matrix between internal and boundary-remainder dofs.
+		/// </summary>
+		void ExtractKiiKbbKib();
+
 		void ExtractKrrKccKrc();
 
 		void HandleDofsWereModified();
 
+		void InvertKii();
+
 		void InvertKrr();
 
+		Vector MultiplyInverseKiiTimes(Vector vector);
+
 		Vector MultiplyInverseKrrTimes(Vector vector);
+
+		Vector MultiplyKbbTimes(Vector vector);
+
+		Vector MultiplyKbiTimes(Vector vector);
 
 		Vector MultiplyKccTimes(Vector vector);
 
 		Vector MultiplyKcrTimes(Vector vector);
+
+		Vector MultiplyKibTimes(Vector vector);
 
 		Vector MultiplyKrcTimes(Vector vector);
 
@@ -43,6 +58,8 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			temp = MultiplyKcrTimes(temp);
 			output.SubtractIntoThis(temp);
 		}
+
+		void ReorderInternalDofs();
 
 		void ReorderRemainderDofs();
 	}

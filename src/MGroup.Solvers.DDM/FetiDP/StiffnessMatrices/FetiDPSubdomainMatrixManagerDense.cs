@@ -15,11 +15,9 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		private readonly SubdomainLinearSystem<Matrix> linearSystem;
 		private readonly FetiDPSubdomainDofs subdomainDofs;
 
-		private Matrix Kcc;
-		private Matrix Kcr;
-		private Matrix Krc;
-		private Matrix Krr;
-		private Matrix inverseKrr;
+		private Matrix Kbb, Kbi, Kib, Kii;
+		private Matrix Kcc, Kcr, Krc, Krr;
+		private Matrix inverseKii, inverseKrr;
 		private Matrix Scc;
 
 		public FetiDPSubdomainMatrixManagerDense(SubdomainLinearSystem<Matrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
@@ -47,6 +45,16 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			Scc = null;
 		}
 
+		public void ExtractKiiKbbKib()
+		{
+			(int[] internalToFree, int[] boundaryRemainderToFree) = subdomainDofs.RemapDofs();
+			Matrix Kff = linearSystem.Matrix;
+			Kbb = Kff.GetSubmatrix(boundaryRemainderToFree, boundaryRemainderToFree);
+			Kbi = Kff.GetSubmatrix(boundaryRemainderToFree, internalToFree);
+			Kib = Kff.GetSubmatrix(internalToFree, boundaryRemainderToFree);
+			Kii = Kff.GetSubmatrix(internalToFree, internalToFree);
+		}
+
 		public void ExtractKrrKccKrc()
 		{
 			int[] cornerToFree = subdomainDofs.DofsCornerToFree;
@@ -60,19 +68,35 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		public void HandleDofsWereModified() => ClearSubMatrices();
 
+		public void InvertKii()
+		{
+			inverseKii = Kii.Invert();
+			Kii = null; // Kii has been overwritten
+		}
+
 		public void InvertKrr()
 		{
 			inverseKrr = Krr.Invert();
 			Krr = null; // Krr has been overwritten
 		}
 
+		public Vector MultiplyInverseKiiTimes(Vector vector) => inverseKii * vector;
+
 		public Vector MultiplyInverseKrrTimes(Vector vector) => inverseKrr * vector;
+
+		public Vector MultiplyKbbTimes(Vector vector) => Kbb * vector;
+
+		public Vector MultiplyKbiTimes(Vector vector) => Kbi * vector;
 
 		public Vector MultiplyKccTimes(Vector vector) => Kcc * vector;
 
 		public Vector MultiplyKcrTimes(Vector vector) => Kcr * vector;
 
+		public Vector MultiplyKibTimes(Vector vector) => Kib * vector;
+
 		public Vector MultiplyKrcTimes(Vector vector) => Krc * vector;
+
+		public void ReorderInternalDofs() => subdomainDofs.ReorderInternalDofs(DofPermutation.CreateNoPermutation());
 
 		public void ReorderRemainderDofs() => subdomainDofs.ReorderRemainderDofs(DofPermutation.CreateNoPermutation());
 

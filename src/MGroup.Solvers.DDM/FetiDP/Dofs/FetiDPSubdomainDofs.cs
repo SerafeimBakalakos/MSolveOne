@@ -36,6 +36,31 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 
 		public bool IsEmpty => DofOrderingCorner == null;
 
+		public (int[] internalToFree, int[] boundaryRemainderToFree) RemapDofs()
+		{
+			var internalToFree = new int[DofsInternalToRemainder.Length];
+			for (int i = 0; i < internalToFree.Length; ++i)
+			{
+				internalToFree[i] = DofsRemainderToFree[DofsInternalToRemainder[i]];
+			}
+
+			var boundaryRemainderToFree = new int[DofsBoundaryRemainderToRemainder.Length];
+			for (int i = 0; i < boundaryRemainderToFree.Length; ++i)
+			{
+				boundaryRemainderToFree[i] = DofsRemainderToFree[DofsBoundaryRemainderToRemainder[i]];
+			}
+
+			return (internalToFree, boundaryRemainderToFree);
+		}
+
+		public void ReorderInternalDofs(DofPermutation permutation)
+		{
+			if (permutation.IsBetter)
+			{
+				DofsInternalToRemainder = permutation.ReorderKeysOfDofIndicesMap(DofsInternalToRemainder);
+			}
+		}
+
 		public void ReorderRemainderDofs(DofPermutation permutation)
 		{
 			if (permutation.IsBetter)

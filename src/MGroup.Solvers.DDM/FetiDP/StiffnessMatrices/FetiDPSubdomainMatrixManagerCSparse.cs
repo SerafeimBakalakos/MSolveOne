@@ -52,6 +52,11 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			Scc = null;
 		}
 
+		public void ExtractKiiKbbKib()
+		{
+			throw new NotImplementedException();
+		}
+
 		public void ExtractKrrKccKrc()
 		{
 			int[] cornerToFree = subdomainDofs.DofsCornerToFree;
@@ -71,19 +76,46 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			submatrixExtractor.Clear();
 		}
 
+		public void InvertKii()
+		{
+			throw new NotImplementedException();
+		}
+
 		public void InvertKrr()
 		{
 			inverseKrr = LUCSparseNet.Factorize(Krr);
 			Krr = null; // It has not been mutated, but it is no longer needed
 		}
 
+		public Vector MultiplyInverseKiiTimes(Vector vector)
+		{
+			throw new NotImplementedException();
+		}
+
 		public Vector MultiplyInverseKrrTimes(Vector vector) => inverseKrr.SolveLinearSystem(vector);
+
+		public Vector MultiplyKbbTimes(Vector vector)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Vector MultiplyKbiTimes(Vector vector)
+		{
+			throw new NotImplementedException();
+		}
 
 		public Vector MultiplyKccTimes(Vector vector) => Kcc * vector;
 
 		public Vector MultiplyKcrTimes(Vector vector) => Kcr * vector;
 
+		public Vector MultiplyKibTimes(Vector vector)
+		{
+			throw new NotImplementedException();
+		}
+
 		public Vector MultiplyKrcTimes(Vector vector) => Krc * vector;
+
+		public void ReorderInternalDofs() => subdomainDofs.ReorderInternalDofs(DofPermutation.CreateNoPermutation());
 
 		public void ReorderRemainderDofs() => subdomainDofs.ReorderRemainderDofs(DofPermutation.CreateNoPermutation());
 

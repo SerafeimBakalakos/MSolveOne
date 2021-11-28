@@ -41,7 +41,7 @@ namespace MGroup.Solvers.DDM.FetiDP.InterfaceProblem
 		{
 			DistributedOverlappingVector xe = lagrangeVectorIndexer.CheckCompatibleVector(input);
 			DistributedOverlappingVector ye = lagrangeVectorIndexer.CheckCompatibleVector(output);
-			ye.Clear();
+			//ye.Clear(); //TODO: Clear the existing local vectors instead of reallocating them
 
 			// Operations before coarse problem solution
 			var v1e = new ConcurrentDictionary<int, Vector>(); // will be reused after coarse problem solution
