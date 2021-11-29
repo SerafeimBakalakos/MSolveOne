@@ -7,6 +7,10 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.LinearAlgebra.Matrices;
 
 	using Xunit;
+	using MGroup.XFEM.Entities;
+	using MGroup.MSolve.Discretization;
+	using MGroup.MSolve.Discretization.Dofs;
+	using MGroup.XFEM.Materials.Duplicates;
 
 	public class ElementTests
 	{
@@ -14,18 +18,35 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		public void ElementTest()
 		{
 			var geometry = new GeometryProperties(40, 40, 1, 2, 2);
-			var material = new MaterialProperties(1, 0.3);
-			var nodes = new List<Node>();
-			nodes.Add(new Node(0, 0, 0, true, true));
-			nodes.Add(new Node(1, 0, 20, true, true));
-			nodes.Add(new Node(2, 0, 40, true, true));
-			nodes.Add(new Node(3, 20, 0, false, false));
-			nodes.Add(new Node(4, 20, 20, false, false));
-			nodes.Add(new Node(5, 20, 40, false, false));
-			nodes.Add(new Node(6, 40, 0, false, false));
-			nodes.Add(new Node(7, 40, 20, false, false));
-			nodes.Add(new Node(8, 40, 40, false, false));
-			var element = new Element(0, material, geometry, new[]
+			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
+			material.YoungModulus = 1;
+			material.PoissonRatio = 0.3;
+			var nodes = new List<XNode>();
+			//nodes.Add(new Node(0, 0, 0, true, true));
+			//nodes.Add(new Node(1, 0, 20, true, true));
+			//nodes.Add(new Node(2, 0, 40, true, true));
+			//nodes.Add(new Node(3, 20, 0, false, false));
+			//nodes.Add(new Node(4, 20, 20, false, false));
+			//nodes.Add(new Node(5, 20, 40, false, false));
+			//nodes.Add(new Node(6, 40, 0, false, false));
+			//nodes.Add(new Node(7, 40, 20, false, false));
+			//nodes.Add(new Node(8, 40, 40, false, false));
+			nodes.Add(new XNode(0, new double[] { 0, 0 } /*true, true*/));
+			nodes.Add(new XNode(1, new double[] { 0, 20 } /*true, true*/));
+			nodes.Add(new XNode(2, new double[] { 0, 40 } /*true, true*/));
+			nodes.Add(new XNode(3, new double[] { 20, 0 } /*false, false*/));
+			nodes.Add(new XNode(4, new double[] { 20, 20 }/*, false, false*/));
+			nodes.Add(new XNode(5, new double[] { 20, 40 }/*, false, false*/));
+			nodes.Add(new XNode(6, new double[] { 40, 0 }/*, false, false*/));
+			nodes.Add(new XNode(7, new double[] { 40, 20 }/*, false, false*/));
+			nodes.Add(new XNode(8, new double[] { 40, 40 }/*, false, false*/));
+			nodes[0].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+			nodes[0].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+			nodes[1].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+			nodes[1].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+			nodes[2].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+			nodes[2].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+			var element = new IsoXfemElement2D(0, material, geometry, new[]
 			{
 				nodes[0],
 				nodes[3],
@@ -65,13 +86,15 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		public void CalcStiffnesAndAreaTest()
 		{
 			var geometry = new GeometryProperties(40, 40, 1, 2, 2);
-			var material = new MaterialProperties(1, 0.3);
-			var element = new Element(0, material, geometry, new[]
+			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
+			material.YoungModulus = 1;
+			material.PoissonRatio = 0.3;
+			var element = new IsoXfemElement2D(0, material, geometry, new[]
 			{
-				new Node(0, 0, 0, true, true),
-				new Node(3, 20, 0, false, false),
-				new Node(4, 20, 20, false, false),
-				new Node(1, 0, 20, true, true)
+				new XNode(0, new double[] { 0, 0 } /*true, true*/),
+				new XNode(3, new double[] { 20, 0 } /*false, false*/),
+				new XNode(4, new double[] { 20, 20 }/*, false, false*/),
+				new XNode(1, new double[] { 0, 20 } /*true, true*/)
 			});
 			Vector elementLevelSet = Vector.CreateFromArray(new double[] { 10, -10, -10, 10 });
 			element.CalcStiffnessAndArea(elementLevelSet);

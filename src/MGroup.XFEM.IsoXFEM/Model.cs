@@ -4,6 +4,10 @@ using System.Text;
 using MGroup.XFEM.IsoXFEM.Solvers;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.XFEM.Entities;
+using MGroup.MSolve.Discretization;
+using MGroup.MSolve.Discretization.Dofs;
+using MGroup.XFEM.Materials.Duplicates;
 
 namespace MGroup.XFEM.IsoXFEM
 {
@@ -30,12 +34,13 @@ namespace MGroup.XFEM.IsoXFEM
             Leftside,
         }
         private readonly ConstrainedSide constrainedSide;
-        public List<Node> nodes = new List<Node>();
-        public List<Element> elements = new List<Element>();       
-        public MaterialProperties material;
+        //public List<Node> nodes = new List<Node>();
+		public List<XNode> nodes = new List<XNode>();
+        public List<IsoXfemElement2D> elements = new List<IsoXfemElement2D>();       
+        public ElasticMaterial2D material;
         public GeometryProperties geometry;        
         public Dictionary<string, int[]> constraintsOfDofs = new Dictionary<string, int[]>();
-        public Model(MaterialProperties material, GeometryProperties geometry, ConstrainedSide constrainedSide=ConstrainedSide.Leftside)
+        public Model(ElasticMaterial2D material, GeometryProperties geometry, ConstrainedSide constrainedSide=ConstrainedSide.Leftside)
         {            
             this.material = material;
             this.geometry = geometry;
@@ -86,7 +91,7 @@ namespace MGroup.XFEM.IsoXFEM
 							nodes[node3ID],
 							nodes[node4ID]
 					};
-					var element = new Element(el, material, geometry, nodesOfElement);
+					var element = new IsoXfemElement2D(el, material, geometry, nodesOfElement);
 					int[] dofs = new int[8];
 					for (int k = 0; k < nodesOfElement.Length; k++)
 					{
@@ -159,42 +164,44 @@ namespace MGroup.XFEM.IsoXFEM
 				{
 					var nodeX = coordX;
 					var nodeY = coordY;
-					var constrainX = false;
-					var constrainY = false;
+					//var constrainX = false;
+					//var constrainY = false;
+					double[] coords = { nodeX, nodeY };
+					var node = new XNode(id, coords);
 					switch (constrainedSide)
 					{
 						case ConstrainedSide.Bottomside:
 							if (nodeY == 0)
 							{
-								constrainX = true;
-								constrainY = true;
+								node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+								node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
 							}
 							break;
 						case ConstrainedSide.Rightside:
 							if (nodeX == geometry.length)
 							{
-								constrainX = true;
-								constrainY = true;
+								node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+								node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
 							}
 							break;
 						case ConstrainedSide.Upperside:
 							if (nodeY == geometry.height)
 							{
-								constrainX = true;
-								constrainY = true;
+								node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+								node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
 							}
 							break;
 						case ConstrainedSide.Leftside:
 							if (nodeX == 0)
 							{
-								constrainX = true;
-								constrainY = true;
+								node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+								node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
 							}
 							break;
 						default:
 							break;
 					}
-					var node = new Node(id, nodeX, nodeY, constrainX, constrainY);
+					//var node = new Node(id, nodeX, nodeY, constrainX, constrainY);
 					nodes.Add(node);
 					coordY = coordY + geometry.height / geometry.numberOfElementsY;
 					id = id + 1;
@@ -205,21 +212,25 @@ namespace MGroup.XFEM.IsoXFEM
 		}
 
 		public void FindElementsOnNodes()
-        {            
-            for (int k = 0; k < nodes.Count; k++)
-            {
-                for (int i = 0; i <elements.Count ; i++)
-                {
-                    var element = elements[i];
-                    for (int j = 0; j <element.nodesOfElement.Count ; j++)
-                    {
-                        if (element.nodesOfElement[j].ID==k)
-                        {
-                            nodes[k].elementsOnNode.Add(elements[i]);                            
-                        }
-                    }
-                }
-            }
+        {
+			foreach (IsoXfemElement2D element in elements)
+			{
+				foreach (XNode node in element.Nodes) node.ElementsDictionary[element.ID] = element;
+			}
+			//for (int k = 0; k < nodes.Count; k++)
+   //         {
+   //             for (int i = 0; i <elements.Count ; i++)
+   //             {
+   //                 var element = elements[i];
+   //                 for (int j = 0; j <element.nodesOfElement.Count ; j++)
+   //                 {
+   //                     if (element.nodesOfElement[j].ID==k)
+   //                     {
+   //                         nodes[k].elementsOnNode.Add(elements[i]);                            
+   //                     }
+   //                 }
+   //             }
+   //         }
         }
 
         public void MakeMesh()

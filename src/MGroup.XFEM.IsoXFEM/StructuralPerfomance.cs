@@ -4,6 +4,7 @@ using System.Text;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Reduction;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.IsoXFEM
 {
@@ -44,16 +45,30 @@ namespace MGroup.XFEM.IsoXFEM
         public void ComputeNodalStrainEnergyDensity()
         {
            nodalStrainEnergyDensity = Vector.CreateZero(model.nodes.Count);
-            for (int i = 0; i < model.nodes.Count; i++)
-            {
-                var node = model.nodes[i];
-                var strainEnergyOfTheseElements = 0.0;
-                for (int j = 0; j <node.elementsOnNode.Count ; j++)
-                {
-                    strainEnergyOfTheseElements += strainEnergyDensity[node.elementsOnNode[j].ID];                    
-                }
-                nodalStrainEnergyDensity[i] = strainEnergyOfTheseElements / node.elementsOnNode.Count;                               
-            }
+			//foreach (IsoXfemElement2D element in model.elements)
+			//{
+			//	foreach (XNode node in element.Nodes) node.ElementsDictionary[element.ID] = element;
+			//}	
+			for (int i = 0; i < model.nodes.Count; i++)
+			{
+				var node = model.nodes[i];
+				var strainEnergyOfTheseElements = 0.0;
+				foreach (var item in node.ElementsDictionary.Keys)
+				{
+					strainEnergyOfTheseElements += strainEnergyDensity[node.ElementsDictionary[item].ID];
+				}
+				nodalStrainEnergyDensity[i] = strainEnergyOfTheseElements / node.ElementsDictionary.Count;
+			}
+			//for (int i = 0; i < model.nodes.Count; i++)
+   //         {
+   //             var node = model.nodes[i];
+   //             var strainEnergyOfTheseElements = 0.0;
+   //             for (int j = 0; j <node.ElementsDictionary.Count/*.elementsOnNode.Count*/ ; j++)
+   //             {				
+			//		strainEnergyOfTheseElements += strainEnergyDensity[node.ElementsDictionary[j].ID];                    
+   //             }
+   //             nodalStrainEnergyDensity[i] = strainEnergyOfTheseElements / node.ElementsDictionary.Count;                               
+   //         }
         }
     }
 }

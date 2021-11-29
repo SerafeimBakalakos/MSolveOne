@@ -29,7 +29,7 @@ namespace MGroup.XFEM.IsoXFEM
         /// <summary>
         /// Elements that include this Node
         /// </summary>
-        public List<Element> elementsOnNode = new List<Element>();		
+        public List<IsoXfemElement2D> elementsOnNode = new List<IsoXfemElement2D>();		
 		/// <summary>
 		/// Constructs a Node objects and initializes it with its ID and X any Y coordinates.
 		/// </summary>

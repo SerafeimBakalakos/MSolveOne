@@ -164,7 +164,7 @@ namespace MGroup.XFEM.IsoXFEM
             }
             return newArea;
         }
-        public static void PlotPerformanceLevel(int iteration, List<Node> nodes , List<Element> elements, Vector nodalValues)
+        public static void PlotPerformanceLevel(int iteration, List<Node> nodes , List<IsoXfemElement2D> elements, Vector nodalValues)
         {                    
             string path = $"{ Paths.OutputDirectory}\\OOS2BottomEnd_40x20_SkylineLDL_InitialStiffness_ComputeOnlyOneTime_CorrectMatlabErrors{iteration}.vtk";
             var writer = new VtkFileWriter(path);

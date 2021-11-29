@@ -6,6 +6,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.LinearAlgebra.Matrices;
 	using MGroup.LinearAlgebra.Vectors;
 	using MGroup.XFEM.IsoXFEM.Solvers;
+	using MGroup.XFEM.Materials.Duplicates;
 
 	using Xunit;
 	public class FEMAnalysisTests
@@ -15,7 +16,9 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		private void AssembleStiffnessMatrix()
 		{
 			var geometry = new GeometryProperties(30, 10, 1, 3, 1);
-			var material = new MaterialProperties(1, 0.3);
+			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
+			material.YoungModulus = 1;
+			material.PoissonRatio = 0.3;
 			var model = new Model(material, geometry);
 			model.MakeMesh();
 			model.EnumerateDegreesOfFreedom();
@@ -53,7 +56,9 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		private void RefillDisplacements()
 		{
 			var geometry = new GeometryProperties(40, 40, 1, 2, 2);
-			var material = new MaterialProperties(1, 0.3);
+			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
+			material.YoungModulus = 1;
+			material.PoissonRatio = 0.3;
 			var model = new Model(material, geometry);
 			model.MakeMesh();
 			model.EnumerateDegreesOfFreedom();
@@ -75,7 +80,9 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		public void SolveTest()
 		{
 			var geometry = new GeometryProperties(40, 20, 1, 40, 20);
-			var material = new MaterialProperties(1, 0.3);
+			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
+			material.YoungModulus = 1;
+			material.PoissonRatio = 0.3;
 			var model = new Model(material, geometry);
 			model.MakeMesh();
 			model.EnumerateDegreesOfFreedom();

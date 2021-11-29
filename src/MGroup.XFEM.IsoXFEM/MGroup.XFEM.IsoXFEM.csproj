@@ -1,12 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="DotNumerics" Version="1.1.0" />
     <PackageReference Include="MGroup.LinearAlgebra" Version="0.1.0-unstable.52" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MGroup.XFEM\MGroup.XFEM.csproj" />
   </ItemGroup>
 
 </Project>

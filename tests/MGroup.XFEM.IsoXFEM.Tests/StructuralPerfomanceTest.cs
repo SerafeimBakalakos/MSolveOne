@@ -5,6 +5,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using System.Text;
 
 	using MGroup.LinearAlgebra.Vectors;
+	using MGroup.XFEM.Materials.Duplicates;
 
 	using Xunit;
 
@@ -14,7 +15,9 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		public void ComputeStrainEnergyandStrainEnergyDensity()
 		{
 			var geometry = new GeometryProperties(20, 20, 1, 2, 2);
-			var material = new MaterialProperties(1, 0.3);
+			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
+			material.YoungModulus = 1;
+			material.PoissonRatio = 0.3;
 			var model = new Model(material, geometry);
 			model.MakeMesh();
 			model.EnumerateDegreesOfFreedom();
@@ -34,7 +37,9 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		public void ComputeNodalStrainEnergyDensityTest()
 		{
 			var geometry = new GeometryProperties(20, 20, 1, 2, 2);
-			var material = new MaterialProperties(1, 0.3);
+			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
+			material.YoungModulus = 1;
+			material.PoissonRatio = 0.3;
 			var model = new Model(material, geometry);
 			model.MakeMesh();
 			model.EnumerateDegreesOfFreedom();

@@ -7,6 +7,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.LinearAlgebra.Input;
 	using MGroup.LinearAlgebra.Vectors;
 	using MGroup.XFEM.IsoXFEM.Solvers;
+	using MGroup.XFEM.Materials.Duplicates;
 
 	using Xunit;
 
@@ -17,7 +18,9 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		private void SolidAreaTest()
 		{
 			var geometry = new GeometryProperties(2, 1, 1, 2, 1);
-			var material = new MaterialProperties(1, 0.3);
+			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
+			material.YoungModulus = 1;
+			material.PoissonRatio = 0.3;
 			var model = new Model(material, geometry);
 			model.MakeMesh();
 			model.EnumerateDegreesOfFreedom();
@@ -36,7 +39,9 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		private void UpdatingMLPTest()
 		{
 			var geometry = new GeometryProperties(40, 20, 1, 40, 20);
-			var material = new MaterialProperties(1, 0.3);
+			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
+			material.YoungModulus = 1;
+			material.PoissonRatio = 0.3;
 			var model = new Model(material, geometry);
 			model.MakeMesh();
 			model.EnumerateDegreesOfFreedom();
@@ -87,7 +92,9 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		public void IsoXfemTest()
 		{
 			var geometry = new GeometryProperties(40, 20, 1, 40, 20);
-			var material = new MaterialProperties(1, 0.3);
+			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
+			material.YoungModulus = 1;
+			material.PoissonRatio = 0.3;
 			var model = new Model(material, geometry);
 			model.MakeMesh();
 			model.EnumerateDegreesOfFreedom();
@@ -97,7 +104,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var femAnalysis = new FEMAnalysis(model, solver, rhs);
 			TopologyOptimization.IsoXfem(model, femAnalysis);
 			var resultsComputed = TopologyOptimization.results;
-			var reader = new FullMatrixReader(false);
+			var reader = new FullMatrixReader(true);
 			string inputFile = @"C:\Users\ebank\source\repos\MSolveOne\tests\MGroup.XFEM.IsoXFEM.Tests\Resources\OOSBottomEnd_40x20_SkylineLDL_InitialStiffness_ComputeOnlyOneTime_CorrectMatlabErrors.txt";
 			var resultsExpected = reader.ReadFile(inputFile);
 			for (int i = 0; i < resultsExpected.NumRows; i++)
