@@ -76,7 +76,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			submatrixExtractor.Clear();
 		}
 
-		public void InvertKii()
+		public void InvertKii(bool diagonalOnly)
 		{
 			throw new NotImplementedException();
 		}
@@ -87,7 +87,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			Krr = null; // It has not been mutated, but it is no longer needed
 		}
 
-		public Vector MultiplyInverseKiiTimes(Vector vector)
+		public Vector MultiplyInverseKiiTimes(Vector vector, bool diagonalOnly)
 		{
 			throw new NotImplementedException();
 		}

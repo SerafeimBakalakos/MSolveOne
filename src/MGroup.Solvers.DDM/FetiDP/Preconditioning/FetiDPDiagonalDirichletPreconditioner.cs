@@ -13,7 +13,7 @@ using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 
 namespace MGroup.Solvers.DDM.FetiDP.Preconditioning
 {
-	public class FetiDPDirichletPreconditioner : IFetiDPPreconditioner
+	public class FetiDPDiagonalDirichletPreconditioner : IFetiDPPreconditioner
 	{
 		private IComputeEnvironment environment;
 		private DistributedOverlappingIndexer lagrangeVectorIndexer;
@@ -38,7 +38,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Preconditioning
 				Vector v1 = Wbr.Multiply(Dbr.Multiply(ys, true));
 				Vector v2 = fetiDPMatrices.MultiplyKbbTimes(v1);
 				Vector v3 = fetiDPMatrices.MultiplyKibTimes(v1);
-				v3 = fetiDPMatrices.MultiplyInverseKiiTimes(v1, false);
+				v3 = fetiDPMatrices.MultiplyInverseKiiTimes(v1, true);
 				v3 = fetiDPMatrices.MultiplyKbiTimes(v1);
 				v2.AddIntoThis(v3);
 				xe.LocalVectors[s] = Dbr.Multiply(Wbr.Multiply(v2));
@@ -60,7 +60,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Preconditioning
 			{
 				IFetiDPSubdomainMatrixManager subdomainMatrices = getSubdomainMatrices(s);
 				subdomainMatrices.ExtractKiiKbbKib();
-				subdomainMatrices.InvertKii(false);
+				subdomainMatrices.InvertKii(true);
 			});
 		}
 	}

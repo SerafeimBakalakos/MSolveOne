@@ -31,6 +31,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		private CsrMatrix Kbi, Kcr;
 		private SymmetricCscMatrix Kii, Krr;
 		private CholeskySuiteSparse inverseKii, inverseKrr;
+		private DiagonalMatrix inverseKiiDiagonal;
 		private SymmetricMatrix Scc;
 
 		public FetiDPSubdomainMatrixManagerSymmetricSuiteSparse(
@@ -61,6 +62,16 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			Kcr = null;
 			Krr = null;
 			Scc = null;
+
+			if (inverseKii != null)
+			{
+				inverseKii.Dispose();
+			}
+			inverseKii = null;
+			inverseKiiDiagonal = null;
+			Kbb = null;
+			Kbi = null;
+			Kii = null;
 		}
 
 		public void ExtractKiiKbbKib()
@@ -92,13 +103,21 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			submatrixExtractorCornerRemainder.Clear();
 		}
 
-		public void InvertKii()
+		public void InvertKii(bool diagonalOnly)
 		{
-			if (inverseKii != null)
+			if (diagonalOnly)
 			{
-				inverseKii.Dispose();
+				inverseKiiDiagonal = DiagonalMatrix.CreateFromArray(Kii.GetDiagonalAsArray());
+				inverseKiiDiagonal.Invert();
 			}
-			inverseKii = CholeskySuiteSparse.Factorize(Kii, true);
+			else
+			{
+				if (inverseKii != null)
+				{
+					inverseKii.Dispose();
+				}
+				inverseKii = CholeskySuiteSparse.Factorize(Kii, true);
+			}
 			Kii = null; // It has not been mutated, but it is no longer needed
 		}
 
@@ -115,7 +134,17 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			}
 		}
 
-		public Vector MultiplyInverseKiiTimes(Vector vector) => inverseKii.SolveLinearSystem(vector);
+		public Vector MultiplyInverseKiiTimes(Vector vector, bool diagonalOnly)
+		{
+			if (diagonalOnly)
+			{
+				return inverseKiiDiagonal.Multiply(vector);
+			}
+			else
+			{
+				return inverseKii.SolveLinearSystem(vector);
+			}
+		}
 
 		public Vector MultiplyInverseKrrTimes(Vector vector) => inverseKrr.SolveLinearSystem(vector);
 

@@ -25,11 +25,11 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		void HandleDofsWereModified();
 
-		void InvertKii();
+		void InvertKii(bool diagonalOnly);
 
 		void InvertKrr();
 
-		Vector MultiplyInverseKiiTimes(Vector vector);
+		Vector MultiplyInverseKiiTimes(Vector vector, bool diagonalOnly);
 
 		Vector MultiplyInverseKrrTimes(Vector vector);
 

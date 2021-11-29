@@ -18,6 +18,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		private Matrix Kbb, Kbi, Kib, Kii;
 		private Matrix Kcc, Kcr, Krc, Krr;
 		private Matrix inverseKii, inverseKrr;
+		private DiagonalMatrix inverseKiiDiagonal;
 		private Matrix Scc;
 
 		public FetiDPSubdomainMatrixManagerDense(SubdomainLinearSystem<Matrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
@@ -43,6 +44,13 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			Krc = null;
 			Krr = null;
 			Scc = null;
+
+			inverseKii = null;
+			inverseKiiDiagonal = null;
+			Kbb = null;
+			Kbi = null;
+			Kib = null;
+			Kii = null;
 		}
 
 		public void ExtractKiiKbbKib()
@@ -68,10 +76,18 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		public void HandleDofsWereModified() => ClearSubMatrices();
 
-		public void InvertKii()
+		public void InvertKii(bool diagonalOnly)
 		{
-			inverseKii = Kii.Invert();
-			Kii = null; // Kii has been overwritten
+			if (diagonalOnly)
+			{
+				inverseKiiDiagonal = DiagonalMatrix.CreateFromArray(Kii.GetDiagonalAsArray());
+				inverseKiiDiagonal.Invert();
+			}
+			else
+			{
+				inverseKii = Kii.Invert();
+			}
+			Kii = null; // Kii has been overwritten or is not needed anymore
 		}
 
 		public void InvertKrr()
@@ -80,7 +96,17 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			Krr = null; // Krr has been overwritten
 		}
 
-		public Vector MultiplyInverseKiiTimes(Vector vector) => inverseKii * vector;
+		public Vector MultiplyInverseKiiTimes(Vector vector, bool diagonalOnly)
+		{
+			if (diagonalOnly)
+			{
+				return inverseKiiDiagonal.Multiply(vector);
+			}
+			else
+			{
+				return inverseKii* vector;
+			}
+		}
 
 		public Vector MultiplyInverseKrrTimes(Vector vector) => inverseKrr * vector;
 
