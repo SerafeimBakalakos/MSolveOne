@@ -141,7 +141,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 			}
 			else
 			{
-				convergenceCriterion = new RegularPcgConvergence();
+				convergenceCriterion = new ApproximatePcgResidualConvergence<TMatrix>(algebraicModel);
 			}
 			this.interfaceProblemSolver = interfaceProblemSolverFactory.BuildIterativeMethod(convergenceCriterion);
 
