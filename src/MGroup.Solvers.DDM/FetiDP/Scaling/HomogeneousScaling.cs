@@ -78,7 +78,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Scaling
 			environment.DoPerNode(calcSubdomainScaling);
 		}
 
-		public void ScaleBoundaryRhsVector(int subdomainID, Vector forcesAtFreeDofs)
+		public void ScaleSubdomainRhsVector(int subdomainID, Vector rhsAtFreeDofs)
 		{
 			FetiDPSubdomainDofs subdomainDofs = getSubdomainDofs(subdomainID);
 			int[] cornerToFree = subdomainDofs.DofsCornerToFree;
@@ -89,15 +89,18 @@ namespace MGroup.Solvers.DDM.FetiDP.Scaling
 			for (int cornerDofIdx = 0; cornerDofIdx < Wc.Length; ++cornerDofIdx)
 			{
 				int freeDofIdx = cornerToFree[cornerDofIdx];
-				forcesAtFreeDofs[freeDofIdx] *= Wc[cornerDofIdx];
+				rhsAtFreeDofs[freeDofIdx] *= Wc[cornerDofIdx];
 			}
 
 			double[] Wbr = inverseMultiplicitiesBoundaryRemainder[subdomainID];
 			for (int brDofIdx = 0; brDofIdx < Wbr.Length; ++brDofIdx)
 			{
 				int freeDofIdx = remainderToFree[boundaryRemainderToRemainder[brDofIdx]];
-				forcesAtFreeDofs[freeDofIdx] *= Wc[brDofIdx];
+				rhsAtFreeDofs[freeDofIdx] *= Wc[brDofIdx];
 			}
 		}
+
+		public void ScaleSubdomainSolutionVector(int subdomainID, Vector solutionAtFreeDofs) 
+			=> ScaleSubdomainRhsVector(subdomainID, solutionAtFreeDofs);
 	}
 }

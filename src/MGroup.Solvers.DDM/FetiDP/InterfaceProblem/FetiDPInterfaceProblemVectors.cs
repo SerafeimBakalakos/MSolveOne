@@ -17,12 +17,12 @@ namespace MGroup.Solvers.DDM.FetiDP.InterfaceProblem
 		private readonly IComputeEnvironment environment;
 		private readonly IDictionary<int, SubdomainLagranges> subdomainLagranges;
 		private readonly IDictionary<int, IFetiDPSubdomainMatrixManager> subdomainMatrices;
-		private readonly IDictionary<int, FetiDPSubdomainVectors> subdomainVectors;
+		private readonly IDictionary<int, FetiDPSubdomainRhsVectors> subdomainVectors;
 
 		public FetiDPInterfaceProblemVectors(IComputeEnvironment environment, IFetiDPCoarseProblem coarseProblem, 
 			IDictionary<int, SubdomainLagranges> subdomainLagranges,
 			IDictionary<int, IFetiDPSubdomainMatrixManager> subdomainMatrices, 
-			IDictionary<int, FetiDPSubdomainVectors> subdomainVectors)
+			IDictionary<int, FetiDPSubdomainRhsVectors> subdomainVectors)
 		{
 			this.environment = environment;
 			this.coarseProblem = coarseProblem;

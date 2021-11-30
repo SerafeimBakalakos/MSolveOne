@@ -9,7 +9,7 @@ using MGroup.Solvers.DDM.LinearSystem;
 
 namespace MGroup.Solvers.DDM.FetiDP.Vectors
 {
-	public class FetiDPSubdomainVectors
+	public class FetiDPSubdomainRhsVectors
 	{
 		private readonly ISubdomainLinearSystem linearSystem;
 		private readonly IFetiDPSubdomainMatrixManager matrixManagerFetiDP;
@@ -24,7 +24,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Vectors
 
 		public Vector VectorInvKrrTimesFr { get; private set; }
 
-		public FetiDPSubdomainVectors(ISubdomainLinearSystem linearSystem, FetiDPSubdomainDofs subdomainDofs, 
+		public FetiDPSubdomainRhsVectors(ISubdomainLinearSystem linearSystem, FetiDPSubdomainDofs subdomainDofs, 
 			SubdomainLagranges subdomainLagranges, IFetiDPSubdomainMatrixManager matrixManagerFetiDP)
 		{
 			this.linearSystem = linearSystem;
@@ -50,7 +50,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Vectors
 			VectorInvKrrTimesFr = null;
 		}
 
-		public void ExtractBoundaryInternalRhsVectors(Action<Vector> scaleBoundaryVector)
+		public void ExtractRhsSubvectors(Action<Vector> scaleBoundaryVector)
 		{
 			int[] remainderDofs = subdomainDofs.DofsRemainderToFree;
 			int[] cornerDofs = subdomainDofs.DofsCornerToFree;
@@ -61,31 +61,5 @@ namespace MGroup.Solvers.DDM.FetiDP.Vectors
 			this.VectorFr = ff.GetSubvector(remainderDofs);
 			this.VectorFc = ff.GetSubvector(cornerDofs);
 		}
-
-		public Vector CalcSubdomainFreeSolution(Vector subdomainCornerDisplacements, Vector subdomainLagrangeValues)
-		{
-			int numFreeDofs = linearSystem.DofOrdering.NumFreeDofs;
-			int[] remainderDofs = subdomainDofs.DofsRemainderToFree;
-			int[] cornerDofs = subdomainDofs.DofsCornerToFree;
-
-			// ur[s] = inv(Krr[s]) * (fr[s] - Dr[s]^T * lambda[s] - Krc[s] * uc[s])
-			Vector uc = subdomainCornerDisplacements;
-			Vector lambda = subdomainLagrangeValues;
-			SignedBooleanMatrixRowMajor Dr = subdomainLagranges.MatrixDr;
-			Vector v1 = VectorFc.Copy();
-			Vector v2 = Dr.Multiply(lambda, true);
-			Vector v3 = matrixManagerFetiDP.MultiplyKrcTimes(uc);
-			v1.SubtractIntoThis(v2);
-			v1.SubtractIntoThis(v3);
-			Vector ur = matrixManagerFetiDP.MultiplyInverseKrrTimes(v1);
-
-			// Gather ub[s], ui[s] into uf[s]
-			var uf = Vector.CreateZero(numFreeDofs);
-			uf.CopyNonContiguouslyFrom(remainderDofs, ur);
-			uf.CopyNonContiguouslyFrom(cornerDofs, uc);
-
-			return uf;
-		}
-
 	}
 }

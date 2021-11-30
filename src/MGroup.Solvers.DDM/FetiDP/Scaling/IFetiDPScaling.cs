@@ -13,6 +13,8 @@ namespace MGroup.Solvers.DDM.FetiDP.Scaling
 
 		void CalcScalingMatrices();
 
-		void ScaleBoundaryRhsVector(int subdomainID, Vector forcesAtFreeDofs);
+		void ScaleSubdomainRhsVector(int subdomainID, Vector rhsAtFreeDofs);
+
+		void ScaleSubdomainSolutionVector(int subdomainID, Vector solutionAtFreeDofs);
 	}
 }

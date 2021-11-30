@@ -9,6 +9,7 @@ using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Iterative;
 using MGroup.LinearAlgebra.Matrices;
+using MGroup.LinearAlgebra.Matrices.Operators;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Solution;
@@ -47,11 +48,12 @@ namespace MGroup.Solvers.DDM.FetiDP
 		private readonly IFetiDPPreconditioner preconditioner;
 		private readonly FetiDPReanalysisOptions reanalysis;
 		private readonly IFetiDPScaling scaling;
+		private readonly FetiDPSolutionRecovery solutionRecovery;
 		private readonly ConcurrentDictionary<int, FetiDPSubdomainDofs> subdomainDofs;
 		private readonly ConcurrentDictionary<int, SubdomainLagranges> subdomainLagranges;
 		private readonly ConcurrentDictionary<int, IFetiDPSubdomainMatrixManager> subdomainMatrices;
 		private readonly ISubdomainTopology subdomainTopology;
-		private readonly ConcurrentDictionary<int, FetiDPSubdomainVectors> subdomainVectors;
+		private readonly ConcurrentDictionary<int, FetiDPSubdomainRhsVectors> subdomainVectors;
 		private readonly bool directSolverIsNative = false;
 
 		private int analysisIteration;
@@ -78,14 +80,14 @@ namespace MGroup.Solvers.DDM.FetiDP
 
 			this.subdomainDofs = new ConcurrentDictionary<int, FetiDPSubdomainDofs>();
 			this.subdomainMatrices = new ConcurrentDictionary<int, IFetiDPSubdomainMatrixManager>();
-			this.subdomainVectors = new ConcurrentDictionary<int, FetiDPSubdomainVectors>();
+			this.subdomainVectors = new ConcurrentDictionary<int, FetiDPSubdomainRhsVectors>();
 			environment.DoPerNode(subdomainID =>
 			{
 				SubdomainLinearSystem<TMatrix> linearSystem = algebraicModel.SubdomainLinearSystems[subdomainID];
 				var dofs = new FetiDPSubdomainDofs(model.GetSubdomain(subdomainID), linearSystem);
 				var lagranges = new SubdomainLagranges(model, subdomainID, subdomainTopology, dofs, crossPointStrategy);
 				IFetiDPSubdomainMatrixManager matrices = matrixManagerFactory.CreateMatrixManager(linearSystem, dofs);
-				var vectors = new FetiDPSubdomainVectors(linearSystem, dofs, lagranges, matrices);
+				var vectors = new FetiDPSubdomainRhsVectors(linearSystem, dofs, lagranges, matrices);
 
 				subdomainDofs[subdomainID] = dofs;
 				subdomainLagranges[subdomainID] = lagranges;
@@ -145,6 +147,9 @@ namespace MGroup.Solvers.DDM.FetiDP
 			}
 			this.interfaceProblemSolver = interfaceProblemSolverFactory.BuildIterativeMethod(convergenceCriterion);
 
+			this.solutionRecovery = new FetiDPSolutionRecovery(environment, coarseProblem, scaling,
+				s => subdomainDofs[s], s => subdomainLagranges[s], s => subdomainMatrices[s], s => subdomainVectors[s]);
+
 			Logger = new SolverLogger(name);
 			LoggerDdm = logger;
 
@@ -197,7 +202,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 					//Debug.WriteLine($"Processing corner, boundary-remainder & internal dofs of subdomain {subdomainID}");
 					#endregion
 					subdomainDofs[subdomainID].SeparateAllFreeDofs(cornerDofs);
-					subdomainMatrices[subdomainID].ReorderRemainderDofs();
+					//subdomainMatrices[subdomainID].ReorderRemainderDofs();
 					subdomainLagranges[subdomainID].DefineSubdomainLagrangeMultipliers();
 					subdomainLagranges[subdomainID].CalcSignedBooleanMatrices();
 				}
@@ -276,8 +281,8 @@ namespace MGroup.Solvers.DDM.FetiDP
 					//Console.WriteLine($"Processing corner, boundary-remainder & internal subvectors of subdomain {subdomainID}");
 					//Debug.WriteLine($"Processing corner, boundary-remainder & internal subvectors of subdomain {subdomainID}");
 					#endregion
-					subdomainVectors[subdomainID].ExtractBoundaryInternalRhsVectors(
-						fb => scaling.ScaleBoundaryRhsVector(subdomainID, fb));
+					subdomainVectors[subdomainID].ExtractRhsSubvectors(
+						fb => scaling.ScaleSubdomainRhsVector(subdomainID, fb));
 					subdomainVectors[subdomainID].CalcCondensedRhsVector();
 				}
 				else
@@ -301,21 +306,11 @@ namespace MGroup.Solvers.DDM.FetiDP
 			SolveInterfaceProblem();
 
 			// Having found the lagrange multipliers, now calculate the solution in term of primal dofs
-			CalculatePrimalSolution();
+			solutionRecovery.CalcPrimalSolution(
+				interfaceProblemVectors.InterfaceProblemSolution, algebraicModel.LinearSystem.Solution);
 
 			++analysisIteration;
 			Logger.IncrementAnalysisStep();
-		}
-
-		private void CalculatePrimalSolution()
-		{
-			throw new NotImplementedException();
-			//// Find the solution at all free dofs
-			//environment.DoPerNode(subdomainID =>
-			//{
-			//	Vector subdomainBoundarySolution = interfaceProblemVectors.InterfaceProblemSolution.LocalVectors[subdomainID];
-			//	subdomainVectors[subdomainID].CalcStoreSubdomainFreeSolution(subdomainBoundarySolution);
-			//});
 		}
 
 		private bool GuessInitialSolution()
@@ -407,7 +402,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 				InterfaceProblemSolverFactory = new FetiDPInterfaceProblemSolverFactoryPcg();
 				IsHomogeneousProblem = true;
 				FetiDPMatricesFactory = matrixManagerFactory;
-				Preconditioner = null;
+				Preconditioner = new FetiDPDiagonalDirichletPreconditioner();
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
 				this.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
 				ReanalysisOptions = FetiDPReanalysisOptions.CreateWithAllDisabled();
