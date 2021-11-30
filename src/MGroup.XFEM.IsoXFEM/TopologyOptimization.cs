@@ -75,7 +75,10 @@ namespace MGroup.XFEM.IsoXFEM
                                                                                        {model.elements[el].nodesOfElement[2].X, model.elements[el].nodesOfElement[2].Y },
                                                                                        {model.elements[el].nodesOfElement[3].X, model.elements[el].nodesOfElement[3].Y }});
                     model.elements[el].coordinatesOfElement = elementCoordinates;
-                    model.elements[el].CalcStiffnessAndArea(elementRelativeCriteria);
+					model.elements[el].elementLevelSet = elementRelativeCriteria;
+					model.elements[el].StiffnessMatrix(model.elements[el]);
+					model.elements[el].CalcBulkSizeCartesian();
+                    //model.elements[el].CalcStiffnessAndArea();
                     areaOfElements[el] = model.elements[el].areaOfElement;
                 }
             }

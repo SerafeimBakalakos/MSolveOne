@@ -96,8 +96,8 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				new XNode(4, new double[] { 20, 20 }/*, false, false*/),
 				new XNode(1, new double[] { 0, 20 } /*true, true*/)
 			});
-			Vector elementLevelSet = Vector.CreateFromArray(new double[] { 10, -10, -10, 10 });
-			element.CalcStiffnessAndArea(elementLevelSet);
+			element.elementLevelSet = Vector.CreateFromArray(new double[] { 10, -10, -10, 10 });
+			element.CalcStiffnessAndArea();
 			var areaOfElementExpected = 200.00;
 			var stiffnessOfElementExpected= Matrix.CreateFromArray(new double[,] { { 0.29532967033, 0.133928571429, - 0.151098901099, - 0.051510989011, - 0.123626373626, - 0.0927197802198, - 0.0206043956044,    0.0103021978022},
 			{0.133928571429, 0.384615384615,  -0.0377747252747, 0.0274725274725, -0.0858516483516, -0.123626373626, -0.0103021978022, -0.288461538462 },

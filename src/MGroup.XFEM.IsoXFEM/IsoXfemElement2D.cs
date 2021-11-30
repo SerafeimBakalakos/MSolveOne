@@ -42,6 +42,7 @@ namespace MGroup.XFEM.IsoXFEM
 		public Matrix stiffnessOfElement;
 		private static IMatrixView defaultStiffness;
 		public PhaseElement phaseElement;
+		public Vector elementLevelSet;
 		public Matrix coordinatesOfElement;
 		private static IElementStructuralStiffnessComputation elementStructuralStiffnessComputation;
 
@@ -64,9 +65,12 @@ namespace MGroup.XFEM.IsoXFEM
 				defaultStiffness = elementStructuralStiffnessComputation.ElementStructuralStiffnessComputation(coordinatesOfElement, elasticityMatrix, geometry.thickness);
 			}
 			stiffnessOfElement = defaultStiffness.CopyToFullMatrix();
+				Interpolation = InterpolationQuad4.UniqueInstance;
+				IntegrationStandard = GaussLegendre2D.GetQuadratureWithOrder(2, 2);
+				IntegrationBulk = new IntegrationWithConformingSubtriangles2D(TriangleQuadratureSymmetricGaussian.Order2Points3);			
 		}
 
-		public void CalcStiffnessAndArea(Vector elementLevelSet)
+		public void CalcStiffnessAndArea(/*Vector elementLevelSet*/)
 		{
 			if (elementLevelSet.Min() >= 0)
 			{
@@ -93,8 +97,6 @@ namespace MGroup.XFEM.IsoXFEM
 			}
 		}
 
-
-
 		public IReadOnlyList<GaussPoint> BulkIntegrationPoints => throw new NotImplementedException();
 
 		public IElementSubcell[] ConformingSubcells { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -103,9 +105,9 @@ namespace MGroup.XFEM.IsoXFEM
 
 		public ElementFace[] Faces => throw new NotImplementedException();
 
-		public IBulkIntegration IntegrationBulk => throw new NotImplementedException();
+		public IBulkIntegration IntegrationBulk { get; }
 
-		public IQuadrature IntegrationStandard => throw new NotImplementedException();
+		public IQuadrature IntegrationStandard { get; }
 
 		public IIsoparametricInterpolation Interpolation { get; } = InterpolationQuad4.UniqueInstance;
 
@@ -130,14 +132,63 @@ namespace MGroup.XFEM.IsoXFEM
 		public void SetSubdomainID(int subdomainID) => throw new NotImplementedException();
 		public double CalcBulkSizeCartesian()
 		{
-			//Calculate Area
+			if (elementLevelSet.Min() >= 0)
+			{
+				phaseElement = PhaseElement.solidElement;				
+				areaOfElement = lengthOfElement * heigthOfElement;
+			}
+			else if (elementLevelSet.Max() <= 0)
+			{
+				phaseElement = PhaseElement.voidElement;				
+				areaOfElement = 0.00;
+			}
+			else
+			{
+				phaseElement = PhaseElement.boundaryElement;
+				var integration = new XFEMIntegration();
+				integration.MeshAndAreaOfSubElement(coordinatesOfElement, elementLevelSet);
+				//var elementStructuralStiffnessComputation = new ElementStructuralStiffnessXFEMComputation(integration.coordinatesOfBoundaryElement, integration.connectionOfBoundaryElement);
+				areaOfElement = integration.areaBoundaryElement;
+				//var stiffness = elementStructuralStiffnessComputation.ElementStructuralStiffnessComputation(coordinatesOfElement, elasticityMatrix, geometry.thickness);
+				//stiffnessOfElement = stiffness;
+			}
 			return areaOfElement;
 		}
-		public double CalcBulkSizeNatural() => throw new NotImplementedException();
+		public double CalcBulkSizeNatural() => 4.00;
 		public double[] FindCentroidCartesian() => throw new NotImplementedException();
+
+		//for enriched elements
 		public void IdentifyDofs() => throw new NotImplementedException();
-		public void IdentifyIntegrationPointsAndMaterials() => throw new NotImplementedException();
-		public IMatrix StiffnessMatrix(IElement element) => throw new NotImplementedException();
+		public void IdentifyIntegrationPointsAndMaterials()
+		{
+
+		}
+
+		public IMatrix StiffnessMatrix(IElement element)
+		{
+			if (elementLevelSet.Min() >= 0)
+			{
+				phaseElement = PhaseElement.solidElement;
+				stiffnessOfElement = defaultStiffness.CopyToFullMatrix();				
+			}
+			else if (elementLevelSet.Max() <= 0)
+			{
+				phaseElement = PhaseElement.voidElement;
+				stiffnessOfElement = defaultStiffness.CopyToFullMatrix();
+				stiffnessOfElement.ScaleIntoThis(0.0001);
+			}
+			else
+			{
+				phaseElement = PhaseElement.boundaryElement;
+				var integration = new XFEMIntegration();
+				integration.MeshAndAreaOfSubElement(coordinatesOfElement, elementLevelSet);
+				var elementStructuralStiffnessComputation = new ElementStructuralStiffnessXFEMComputation(integration.coordinatesOfBoundaryElement, integration.connectionOfBoundaryElement);
+				var stiffness = elementStructuralStiffnessComputation.ElementStructuralStiffnessComputation(coordinatesOfElement, elasticityMatrix, geometry.thickness);
+				stiffnessOfElement = stiffness;
+			}
+			return stiffnessOfElement;
+		}
+		//Dynamic Problems
 		public IMatrix MassMatrix(IElement element) => throw new NotImplementedException();
 		public IMatrix DampingMatrix(IElement element) => throw new NotImplementedException();
 		public void ResetMaterialModified() => throw new NotImplementedException();
