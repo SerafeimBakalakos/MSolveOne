@@ -37,7 +37,6 @@ namespace MGroup.Solvers.DDM.FetiDP.InterfaceProblem
 
 		public void CalcInterfaceRhsVector(DistributedOverlappingIndexer lagrangeVectorIndexer)
 		{
-			var v1 = new DistributedOverlappingVector(lagrangeVectorIndexer, s => subdomainVectors[s].VectorInvKrrTimesFr);
 			Dictionary<int, Vector> yce = environment.CalcNodeData(s => subdomainVectors[s].VectorFcCondensed);
 			Dictionary<int, Vector> xce = environment.CalcNodeData(s => Vector.CreateZero(yce[s].Length));
 			coarseProblem.SolveCoarseProblem(yce, xce);
@@ -45,11 +44,9 @@ namespace MGroup.Solvers.DDM.FetiDP.InterfaceProblem
 			Dictionary<int, Vector> rhsVectors = environment.CalcNodeData(s =>
 			{
 				Vector v1s = subdomainVectors[s].VectorInvKrrTimesFr;
-				Vector temp = subdomainMatrices[s].MultiplyKrcTimes(xce[s]);
-				Vector v2s = subdomainMatrices[s].MultiplyInverseKrrTimes(xce[s]);
-				Vector v3s = v1s + v2s;
-				return subdomainLagranges[s].MatrixDr.Multiply(v3s);
-
+				Vector v2s = subdomainMatrices[s].MultiplyInverseKrrTimes(subdomainMatrices[s].MultiplyKrcTimes(xce[s]));
+				v2s.AddIntoThis(v1s);
+				return subdomainLagranges[s].MatrixDr.Multiply(v2s);
 			});
 			InterfaceProblemRhs = new DistributedOverlappingVector(lagrangeVectorIndexer, rhsVectors);
 			InterfaceProblemRhs.SumOverlappingEntries();

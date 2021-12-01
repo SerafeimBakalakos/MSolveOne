@@ -28,17 +28,17 @@ namespace MGroup.Solvers.DDM.LagrangeMultipliers
 
 		public int CompareTo(LagrangeMultiplier other)
 		{
-			if (other.NodeID - this.NodeID != 0)
+			if (this.NodeID - other.NodeID != 0)
 			{
-				return other.NodeID - this.NodeID;
+				return this.NodeID - other.NodeID;
 			}
-			else if (other.DofID - this.DofID != 0)
+			else if (this.DofID - other.DofID != 0)
 			{
-				return other.DofID - this.DofID;
+				return this.DofID - other.DofID;
 			}
 			else
 			{
-				Debug.Assert((other.SubdomainPlus == this.SubdomainPlus) && (other.SubdomainMinus == this.SubdomainMinus));
+				Debug.Assert((this.SubdomainPlus == other.SubdomainPlus) && (this.SubdomainMinus == other.SubdomainMinus));
 				return 0;
 			}
 		}

@@ -79,6 +79,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 			this.reanalysis = reanalysis;
 
 			this.subdomainDofs = new ConcurrentDictionary<int, FetiDPSubdomainDofs>();
+			this.subdomainLagranges = new ConcurrentDictionary<int, SubdomainLagranges>();
 			this.subdomainMatrices = new ConcurrentDictionary<int, IFetiDPSubdomainMatrixManager>();
 			this.subdomainVectors = new ConcurrentDictionary<int, FetiDPSubdomainRhsVectors>();
 			environment.DoPerNode(subdomainID =>
@@ -402,7 +403,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 				InterfaceProblemSolverFactory = new FetiDPInterfaceProblemSolverFactoryPcg();
 				IsHomogeneousProblem = true;
 				FetiDPMatricesFactory = matrixManagerFactory;
-				Preconditioner = new FetiDPDiagonalDirichletPreconditioner();
+				Preconditioner = new FetiDPDirichletPreconditioner();
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
 				this.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
 				ReanalysisOptions = FetiDPReanalysisOptions.CreateWithAllDisabled();

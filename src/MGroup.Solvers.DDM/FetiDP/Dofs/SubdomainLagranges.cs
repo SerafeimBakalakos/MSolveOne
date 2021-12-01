@@ -102,7 +102,9 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 				commonLagranges.Add(lagrange);
 			}
 
-			Debug.Assert(subdomainTopology.GetNeighborsOfSubdomain(subdomainID).SequenceEqual(commonLagrangesWithNeighbors.Keys));
+			// The next does not necessarily hold (e.g. in 2D), since all common dofs between 2 subdomains may be corner dofs, 
+			// instead of having lagrange multipliers applied.
+			//Debug.Assert(subdomainTopology.GetNeighborsOfSubdomain(subdomainID).SequenceEqual(commonLagrangesWithNeighbors.Keys));
 		}
 
 		public void InitializeDistributedVectorIndexer(DistributedOverlappingIndexer.Local localIndexer)
@@ -117,6 +119,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 				{
 					commonLagrangeIndices[i++] = lagrange.LocalIdx;
 				}
+				allCommonLagrangeIndices[neighborID] = commonLagrangeIndices;
 			}
 			localIndexer.Initialize(LagrangeMultipliers.Count, allCommonLagrangeIndices);
 		}

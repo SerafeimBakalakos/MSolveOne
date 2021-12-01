@@ -122,7 +122,9 @@ namespace MGroup.Environments
 		/// <summary>
 		/// Buffer of values that will be received by a <see cref="ComputeNode"/> i by each of its neighboring 
 		/// <see cref="ComputeNode"/>s. Foreach j in <see cref="ComputeNode.Neighbors"/> of i, the values transfered from j to i 
-		/// will be stored in <see cref="recvValues"/>[j]. If the buffer lengths are not known, then 
+		/// will be stored in <see cref="recvValues"/>[j]. If the buffer lengths are not known, then this dictionary can be empty
+		/// and the buffers will be initialized by 
+		/// <see cref="IComputeEnvironment.NeighborhoodAllToAll{T}(Dictionary{int, AllToAllNodeData{T}}, bool)"/>.
 		/// </summary>
 		public ConcurrentDictionary<int, T[]> recvValues;
 

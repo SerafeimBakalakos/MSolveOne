@@ -80,9 +80,9 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			int[] internalToRemainder = subdomainDofs.DofsInternalToRemainder;
 
 			submatrixExtractorBoundaryInternal.ExtractSubmatrices(Krr, boundaryRemainderToRemainder, internalToRemainder);
-			Kbb = submatrixExtractorCornerRemainder.Submatrix00;
-			Kbi = submatrixExtractorCornerRemainder.Submatrix01;
-			Kii = submatrixExtractorCornerRemainder.Submatrix11;
+			Kbb = submatrixExtractorBoundaryInternal.Submatrix00;
+			Kbi = submatrixExtractorBoundaryInternal.Submatrix01;
+			Kii = submatrixExtractorBoundaryInternal.Submatrix11;
 		}
 
 		public void ExtractKrrKccKrc()

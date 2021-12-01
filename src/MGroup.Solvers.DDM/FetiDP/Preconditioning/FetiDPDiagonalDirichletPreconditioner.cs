@@ -38,8 +38,8 @@ namespace MGroup.Solvers.DDM.FetiDP.Preconditioning
 				Vector v1 = Wbr.Multiply(Dbr.Multiply(ys, true));
 				Vector v2 = fetiDPMatrices.MultiplyKbbTimes(v1);
 				Vector v3 = fetiDPMatrices.MultiplyKibTimes(v1);
-				v3 = fetiDPMatrices.MultiplyInverseKiiTimes(v1, true);
-				v3 = fetiDPMatrices.MultiplyKbiTimes(v1);
+				v3 = fetiDPMatrices.MultiplyInverseKiiTimes(v3, true);
+				v3 = fetiDPMatrices.MultiplyKbiTimes(v3);
 				v2.AddIntoThis(v3);
 				xe.LocalVectors[s] = Dbr.Multiply(Wbr.Multiply(v2));
 			});

@@ -253,7 +253,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				// Find the common entries (to send) of this node with each of its neighbors
 				var transferData = new AllToAllNodeData<double>();
 				transferData.sendValues = localIndexer.CreateBuffersForAllToAllWithNeighbors();
-				foreach (int neighborID in node.Neighbors) 
+				foreach (int neighborID in localIndexer.ActiveNeighborsOfNode) 
 				{
 					int[] commonEntries = localIndexer.GetCommonEntriesWithNeighbor(neighborID);
 					var sv = Vector.CreateFromArray(transferData.sendValues[neighborID]);
@@ -277,7 +277,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				DistributedOverlappingIndexer.Local localIndexer = Indexer.GetLocalComponent(nodeID);
 
 				IDictionary<int, double[]> recvValues = dataPerNode[nodeID].recvValues;
-				foreach (int neighborID in node.Neighbors) 
+				foreach (int neighborID in localIndexer.ActiveNeighborsOfNode) 
 				{
 					int[] commonEntries = localIndexer.GetCommonEntriesWithNeighbor(neighborID);
 					var rv = Vector.CreateFromArray(recvValues[neighborID]);

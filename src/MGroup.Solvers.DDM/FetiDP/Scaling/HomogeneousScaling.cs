@@ -96,7 +96,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Scaling
 			for (int brDofIdx = 0; brDofIdx < Wbr.Length; ++brDofIdx)
 			{
 				int freeDofIdx = remainderToFree[boundaryRemainderToRemainder[brDofIdx]];
-				rhsAtFreeDofs[freeDofIdx] *= Wc[brDofIdx];
+				rhsAtFreeDofs[freeDofIdx] *= Wbr[brDofIdx];
 			}
 		}
 

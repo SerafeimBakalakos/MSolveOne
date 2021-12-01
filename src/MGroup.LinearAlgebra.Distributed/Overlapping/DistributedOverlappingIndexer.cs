@@ -107,6 +107,12 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				this.Node = node;
 			}
 
+			/// <summary>
+			/// Neighboring <see cref="ComputeNode"/>s of this <see cref="Node"/> with local vectors that have at least 1 common 
+			/// entry with the local vector of this <see cref="Node"/>.
+			/// </summary>
+			public SortedSet<int> ActiveNeighborsOfNode { get; private set; }
+
 			//TODO: Micro optimization: calc and store the inverse multiplicities since multiplication is faster than divison.
 			//      Also in some DDM components I explicitly work with inverse multiplicities, thus this would save memory, 
 			//      computation time and avoid repetitions.
@@ -125,7 +131,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				//TODOMPI: dictionaries that contain per node values should be requested from the environment, which knows their
 				//      type (Dictionary/ConcurrentDictionary), capacity and concurrency level.
 				var buffers = new ConcurrentDictionary<int, double[]>(); 
-				foreach (int neighborID in Node.Neighbors)
+				foreach (int neighborID in ActiveNeighborsOfNode)
 				{
 					buffers[neighborID] = new double[commonEntriesWithNeighbors[neighborID].Length];
 				}
@@ -135,6 +141,8 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			public void Initialize(int numTotalEntries, Dictionary<int, int[]> commonEntriesWithNeighbors)
 			{
 				this.NumEntries = numTotalEntries;
+				ActiveNeighborsOfNode = new SortedSet<int>(commonEntriesWithNeighbors.Keys);
+				Debug.Assert(Node.Neighbors.IsSupersetOf(ActiveNeighborsOfNode));
 				this.commonEntriesWithNeighbors = commonEntriesWithNeighbors;
 				FindMultiplicities();
 			}
@@ -147,6 +155,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			{
 				this.NumEntries = other.NumEntries;
 				this.commonEntriesWithNeighbors = other.commonEntriesWithNeighbors;
+				this.ActiveNeighborsOfNode = other.ActiveNeighborsOfNode;
 				this.Multiplicities = other.Multiplicities;
 			}
 

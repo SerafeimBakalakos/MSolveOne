@@ -148,6 +148,7 @@ namespace MGroup.Environments
 
 		public void NeighborhoodAllToAll<T>(Dictionary<int, AllToAllNodeData<T>> dataPerNode, bool areRecvBuffersKnown)
 		{
+			CheckNeighborhoodAllToAllInput(dataPerNode, areRecvBuffersKnown);
 			Parallel.ForEach(nodeTopology.Nodes.Keys, thisNodeID =>
 			{
 				ComputeNode thisNode = nodeTopology.Nodes[thisNodeID];
@@ -156,27 +157,61 @@ namespace MGroup.Environments
 				foreach (int otherNodeID in thisNode.Neighbors)
 				{
 					// Receive data from each other node, by just copying the corresponding array segments.
-					ComputeNode otherNode = nodeTopology.Nodes[otherNodeID];
 					AllToAllNodeData<T> otherData = dataPerNode[otherNodeID];
-					int bufferLength = otherData.sendValues[thisNodeID].Length;
+					bool haveCommonData = otherData.sendValues.TryGetValue(thisNodeID, out T[] dataToSend);
+					if (!haveCommonData)
+					{
+						continue;
+					}
 
+					int bufferLength = dataToSend.Length;
 					if (!areRecvBuffersKnown)
 					{
-						Debug.Assert(!thisData.recvValues.ContainsKey(otherNodeID), "This buffer must not exist previously.");
 						thisData.recvValues[otherNodeID] = new T[bufferLength];
-					}
-					else
-					{
-						Debug.Assert(thisData.recvValues[otherNodeID].Length == bufferLength,
-							$"Node {otherNode.ID} tries to send {bufferLength} entries but node {thisNode.ID} tries to" +
-								$" receive {thisData.recvValues[otherNodeID].Length} entries. They must match.");
 					}
 
 					// Copy data from other to this node. 
 					// Copying from this to other node will be done in another iteration of the outer loop.
-					Array.Copy(otherData.sendValues[thisNodeID], thisData.recvValues[otherNodeID], bufferLength);
+					Array.Copy(dataToSend, thisData.recvValues[otherNodeID], bufferLength);
 				}
 			});
+		}
+
+		[Conditional("DEBUG")]
+		private void CheckNeighborhoodAllToAllInput<T>(Dictionary<int, AllToAllNodeData<T>> dataPerNode, bool areRecvBuffersKnown)
+		{
+			foreach (int thisNodeID in nodeTopology.Nodes.Keys)
+			{
+				ComputeNode thisNode = nodeTopology.Nodes[thisNodeID];
+				AllToAllNodeData<T> thisData = dataPerNode[thisNodeID];
+
+				Debug.Assert(thisNode.Neighbors.IsSupersetOf(thisData.sendValues.Keys));
+				Debug.Assert(thisNode.Neighbors.IsSupersetOf(thisData.recvValues.Keys));
+				foreach (int otherNodeID in thisNode.Neighbors)
+				{
+					// Receive data from each other node, by just copying the corresponding array segments.
+					ComputeNode otherNode = nodeTopology.Nodes[otherNodeID];
+					AllToAllNodeData<T> otherData = dataPerNode[otherNodeID];
+
+					// Check that the buffers exist and have the correct length.
+					if (otherData.sendValues.ContainsKey(thisNodeID))
+					{
+						int bufferLength = otherData.sendValues[thisNodeID].Length;
+
+						if (!areRecvBuffersKnown)
+						{
+
+							Debug.Assert(!thisData.recvValues.ContainsKey(otherNodeID), "This buffer must not exist previously.");
+						}
+						else
+						{
+							Debug.Assert(thisData.recvValues[otherNodeID].Length == bufferLength,
+								$"Node {otherNode.ID} tries to send {bufferLength} entries but node {thisNode.ID} tries to" +
+									$" receive {thisData.recvValues[otherNodeID].Length} entries. They must match.");
+						}
+					}
+				}
+			}
 		}
 	}
 }
