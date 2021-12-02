@@ -14,7 +14,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 {
 	public class FetiDPSubdomainMatrixManagerCSparse : IFetiDPSubdomainMatrixManager
 	{
-		private readonly bool clearKrrAfterFactorization = false;
+		private readonly bool clearKrrAfterFactorization;
 		private readonly SubdomainLinearSystem<CsrMatrix> linearSystem;
 		private readonly FetiDPSubdomainDofs subdomainDofs;
 		private readonly SubmatrixExtractorPckCsrCscSym submatrixExtractorBoundaryInternal = new SubmatrixExtractorPckCsrCscSym();
@@ -28,11 +28,12 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		private DiagonalMatrix inverseKiiDiagonal;
 		private Matrix Scc;
 
-		public FetiDPSubdomainMatrixManagerCSparse(
-			SubdomainLinearSystem<CsrMatrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
+		public FetiDPSubdomainMatrixManagerCSparse(SubdomainLinearSystem<CsrMatrix> linearSystem, 
+			FetiDPSubdomainDofs subdomainDofs, bool clearKrrAfterFactorization)
 		{
 			this.linearSystem = linearSystem;
 			this.subdomainDofs = subdomainDofs;
+			this.clearKrrAfterFactorization = clearKrrAfterFactorization;
 		}
 
 		public bool IsEmpty => inverseKrr == null;
@@ -149,11 +150,19 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		public class Factory : IFetiDPSubdomainMatrixManagerFactory<CsrMatrix>
 		{
+			private readonly bool clearKrrAfterFactorization;
+
+			public Factory(bool clearKrrAfterFactorization = false)
+			{
+				this.clearKrrAfterFactorization = clearKrrAfterFactorization;
+			}
+
 			public ISubdomainMatrixAssembler<CsrMatrix> CreateAssembler() => new CsrMatrixAssembler(false);
+
 
 			public IFetiDPSubdomainMatrixManager CreateMatrixManager(
 				SubdomainLinearSystem<CsrMatrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
-				=> new FetiDPSubdomainMatrixManagerCSparse(linearSystem, subdomainDofs);
+				=> new FetiDPSubdomainMatrixManagerCSparse(linearSystem, subdomainDofs, clearKrrAfterFactorization);
 		}
 	}
 }

@@ -29,11 +29,41 @@ namespace MGroup.Solvers.DDM.Commons
 			var result = new int[numDofs];
 			if (PermutationIsOldToNew)
 			{
-				for (int i = 0; i < numDofs; ++i) result[PermutationArray[i]] = dofIndicesMap[i]; // i is old index
+				for (int i = 0; i < numDofs; ++i)
+				{
+					result[PermutationArray[i]] = dofIndicesMap[i]; // i is old index
+				}
 			}
 			else
 			{
-				for (int i = 0; i < numDofs; ++i) result[i] = dofIndicesMap[PermutationArray[i]]; // i is new index
+				for (int i = 0; i < numDofs; ++i)
+				{
+					result[i] = dofIndicesMap[PermutationArray[i]]; // i is new index
+				}
+			}
+			return result;
+		}
+
+		public int[] ReorderValuesOfDofIndicesMap(int[] dofIndicesMap)
+		{
+			int[] oldToNewValues;
+			if (PermutationIsOldToNew)
+			{
+				oldToNewValues = PermutationArray;
+			}
+			else
+			{
+				oldToNewValues = new int[PermutationArray.Length];
+				for (int i = 0; i < PermutationArray.Length; ++i)
+				{
+					oldToNewValues[PermutationArray[i]] = i;
+				}
+			}
+
+			var result = new int[dofIndicesMap.Length];
+			for (int i = 0; i < result.Length; ++i)
+			{
+				result[i] = oldToNewValues[dofIndicesMap[i]];
 			}
 			return result;
 		}

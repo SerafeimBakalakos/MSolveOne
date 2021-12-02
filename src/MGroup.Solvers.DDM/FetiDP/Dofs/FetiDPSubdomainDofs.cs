@@ -22,8 +22,6 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 
 		public IntDofTable DofOrderingCorner { get; private set; }
 
-		public IntDofTable DofOrderingRemainder { get; private set; } //TODO: this is not needed in PFETI-P and probably not in FETI-DP too.
-
 		public IntDofTable DofOrderingBoundaryRemainder { get; private set; }
 
 		public int[] DofsBoundaryRemainderToRemainder { get; private set; }
@@ -66,6 +64,15 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 			if (permutation.IsBetter)
 			{
 				DofsRemainderToFree = permutation.ReorderKeysOfDofIndicesMap(DofsRemainderToFree);
+
+				if (DofsInternalToRemainder != null)
+				{
+					DofsInternalToRemainder = permutation.ReorderValuesOfDofIndicesMap(DofsInternalToRemainder);
+				}
+				if (DofsBoundaryRemainderToRemainder != null)
+				{
+					DofsBoundaryRemainderToRemainder = permutation.ReorderValuesOfDofIndicesMap(DofsBoundaryRemainderToRemainder);
+				}
 			}
 		}
 
@@ -73,7 +80,6 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 		{
 			var cornerDofOrdering = new IntDofTable();
 			var cornerToFree = new List<int>();
-			var remainderDofOrdering = new IntDofTable();
 			var remainderToFree = new List<int>();
 			var boundaryRemainderDofOrdering = new IntDofTable();
 			var boundaryRemainderToRemainder = new List<int>();
@@ -96,7 +102,6 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 					else
 					{
 						int remainderDofIdx = remainderToFree.Count;
-						remainderDofOrdering[nodeID, dofID] = remainderDofIdx;
 						remainderToFree.Add(freeDofIdx);
 
 						if (nodeMultiplicity > 1)
@@ -116,7 +121,6 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 
 			this.DofOrderingCorner = cornerDofOrdering;
 			this.DofsCornerToFree = cornerToFree.ToArray();
-			this.DofOrderingRemainder = remainderDofOrdering;
 			this.DofsRemainderToFree = remainderToFree.ToArray();
 			this.DofOrderingBoundaryRemainder = boundaryRemainderDofOrdering;
 			this.DofsBoundaryRemainderToRemainder = boundaryRemainderToRemainder.ToArray();

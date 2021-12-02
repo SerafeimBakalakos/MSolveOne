@@ -59,7 +59,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			// Solver
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
-				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
+				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory(true));
 
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
 			{
@@ -142,7 +142,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			// Solver
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
-				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
+				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory(true));
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
 			{
 				// Papagiannakis specified these and reported the number of iterations and the error from direct solver.
@@ -223,7 +223,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			// Solver
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
-				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
+				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory(true));
 
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
 			{

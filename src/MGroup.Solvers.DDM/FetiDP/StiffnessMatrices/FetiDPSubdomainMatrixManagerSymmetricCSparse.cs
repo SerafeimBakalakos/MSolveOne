@@ -19,7 +19,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		/// In FETI-DP Krr is also used for the preconditioner. In PFETI-DP only Krr is only used for the Schur complement of 
 		/// remainder dofs
 		/// </summary>
-		private readonly bool clearKrrAfterFactorization = false;
+		private readonly bool clearKrrAfterFactorization;
 		private readonly SubdomainLinearSystem<SymmetricCscMatrix> linearSystem;
 		private readonly FetiDPSubdomainDofs subdomainDofs;
 		private readonly OrderingAmdCSparseNet reordering = new OrderingAmdCSparseNet();
@@ -33,11 +33,12 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		private DiagonalMatrix inverseKiiDiagonal;
 		private SymmetricMatrix Scc;
 
-		public FetiDPSubdomainMatrixManagerSymmetricCSparse(
-			SubdomainLinearSystem<SymmetricCscMatrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
+		public FetiDPSubdomainMatrixManagerSymmetricCSparse(SubdomainLinearSystem<SymmetricCscMatrix> linearSystem, 
+			FetiDPSubdomainDofs subdomainDofs, bool clearKrrAfterFactorization)
 		{
 			this.linearSystem = linearSystem;
 			this.subdomainDofs = subdomainDofs;
+			this.clearKrrAfterFactorization = clearKrrAfterFactorization;
 		}
 
 		public bool IsEmpty => inverseKrr == null;
@@ -148,7 +149,12 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		public void ReorderInternalDofs()
 		{
-			throw new NotImplementedException();
+			int[] internalDofs = subdomainDofs.DofsInternalToRemainder;
+			(int[] rowIndicesKii, int[] colOffsetsKii) = submatrixExtractorBoundaryInternal.ExtractSparsityPattern(Krr, internalDofs);
+			(int[] permutation, bool oldToNew) = reordering.FindPermutation(
+				internalDofs.Length, rowIndicesKii, colOffsetsKii);
+
+			subdomainDofs.ReorderInternalDofs(DofPermutation.Create(permutation, oldToNew));
 		}
 
 		public void ReorderRemainderDofs()
@@ -164,11 +170,18 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		public class Factory : IFetiDPSubdomainMatrixManagerFactory<SymmetricCscMatrix>
 		{
+			private readonly bool clearKrrAfterFactorization;
+
+			public Factory(bool clearKrrAfterFactorization = false)
+			{
+				this.clearKrrAfterFactorization = clearKrrAfterFactorization;
+			}
+
 			public ISubdomainMatrixAssembler<SymmetricCscMatrix> CreateAssembler() => new SymmetricCscMatrixAssembler(true);
 
 			public IFetiDPSubdomainMatrixManager CreateMatrixManager(
 				SubdomainLinearSystem<SymmetricCscMatrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
-				=> new FetiDPSubdomainMatrixManagerSymmetricCSparse(linearSystem, subdomainDofs);
+				=> new FetiDPSubdomainMatrixManagerSymmetricCSparse(linearSystem, subdomainDofs, clearKrrAfterFactorization);
 		}
 	}
 }

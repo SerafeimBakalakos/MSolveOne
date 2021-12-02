@@ -203,7 +203,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 					//Debug.WriteLine($"Processing corner, boundary-remainder & internal dofs of subdomain {subdomainID}");
 					#endregion
 					subdomainDofs[subdomainID].SeparateAllFreeDofs(cornerDofs);
-					//subdomainMatrices[subdomainID].ReorderRemainderDofs();
+					subdomainMatrices[subdomainID].ReorderRemainderDofs();
 					subdomainLagranges[subdomainID].DefineSubdomainLagrangeMultipliers();
 					subdomainLagranges[subdomainID].CalcSignedBooleanMatrices();
 				}

@@ -59,6 +59,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Preconditioning
 			environment.DoPerNode(s =>
 			{
 				IFetiDPSubdomainMatrixManager subdomainMatrices = getSubdomainMatrices(s);
+				subdomainMatrices.ReorderInternalDofs();
 				subdomainMatrices.ExtractKiiKbbKib();
 				subdomainMatrices.InvertKii(false);
 			});

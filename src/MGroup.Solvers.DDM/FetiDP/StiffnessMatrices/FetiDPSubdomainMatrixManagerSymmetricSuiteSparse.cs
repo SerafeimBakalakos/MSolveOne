@@ -20,7 +20,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		/// In FETI-DP Krr is also used for the preconditioner. In PFETI-DP only Krr is only used for the Schur complement of 
 		/// remainder dofs
 		/// </summary>
-		private readonly bool clearKrrAfterFactorization = false;
+		private readonly bool clearKrrAfterFactorization;
 		private readonly SubdomainLinearSystem<SymmetricCscMatrix> linearSystem;
 		private readonly FetiDPSubdomainDofs subdomainDofs;
 		private readonly OrderingAmdSuiteSparse reordering = new OrderingAmdSuiteSparse();
@@ -34,11 +34,12 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		private DiagonalMatrix inverseKiiDiagonal;
 		private SymmetricMatrix Scc;
 
-		public FetiDPSubdomainMatrixManagerSymmetricSuiteSparse(
-			SubdomainLinearSystem<SymmetricCscMatrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
+		public FetiDPSubdomainMatrixManagerSymmetricSuiteSparse(SubdomainLinearSystem<SymmetricCscMatrix> linearSystem, 
+			FetiDPSubdomainDofs subdomainDofs, bool clearKrrAfterFactorization)
 		{
 			this.linearSystem = linearSystem;
 			this.subdomainDofs = subdomainDofs;
+			this.clearKrrAfterFactorization = clearKrrAfterFactorization;
 		}
 
 		public bool IsEmpty => inverseKrr == null;
@@ -162,7 +163,14 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		public void ReorderInternalDofs()
 		{
-			throw new NotImplementedException();
+			int[] internalDofs = subdomainDofs.DofsInternalToRemainder;
+			(int[] rowIndicesKii, int[] colOffsetsKii) = submatrixExtractorBoundaryInternal.ExtractSparsityPattern(Krr, internalDofs);
+
+			bool oldToNew = false; //TODO: This should be provided by the reordering algorithm
+			(int[] permutation, ReorderingStatistics stats) = reordering.FindPermutation(
+				internalDofs.Length, rowIndicesKii.Length, rowIndicesKii, colOffsetsKii);
+
+			subdomainDofs.ReorderInternalDofs(DofPermutation.Create(permutation, oldToNew));
 		}
 
 		public void ReorderRemainderDofs()
@@ -180,11 +188,19 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		public class Factory : IFetiDPSubdomainMatrixManagerFactory<SymmetricCscMatrix>
 		{
+			private readonly bool clearKrrAfterFactorization;
+
+			public Factory(bool clearKrrAfterFactorization = false)
+			{
+				this.clearKrrAfterFactorization = clearKrrAfterFactorization;
+			}
+
 			public ISubdomainMatrixAssembler<SymmetricCscMatrix> CreateAssembler() => new SymmetricCscMatrixAssembler(true);
+
 
 			public IFetiDPSubdomainMatrixManager CreateMatrixManager(
 				SubdomainLinearSystem<SymmetricCscMatrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
-				=> new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse(linearSystem, subdomainDofs);
+				=> new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse(linearSystem, subdomainDofs, clearKrrAfterFactorization);
 		}
 	}
 }

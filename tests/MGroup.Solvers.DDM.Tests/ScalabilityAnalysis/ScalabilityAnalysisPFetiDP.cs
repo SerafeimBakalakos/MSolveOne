@@ -115,14 +115,14 @@ namespace MGroup.Solvers.DDM.Tests.ScalabilityAnalysis
 			if (EnableNativeDlls)
 			{
 				psmMatricesFactory = new PsmSubdomainMatrixManagerSymmetricSuiteSparse.Factory();
-				fetiDPMatricesFactory = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse.Factory();
+				fetiDPMatricesFactory = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse.Factory(true);
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricSuiteSparse();
 				fetiDPCoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
 			}
 			else
 			{
 				psmMatricesFactory = new PsmSubdomainMatrixManagerSymmetricCSparse.Factory();
-				fetiDPMatricesFactory = new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory();
+				fetiDPMatricesFactory = new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory(true); 
 				var coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
 				fetiDPCoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
 			}

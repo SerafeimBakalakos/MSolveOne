@@ -60,7 +60,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			// Solver
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
-				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
+				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory(true));
 
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
 			{
@@ -158,7 +158,7 @@ namespace MGroup.Solvers.DDM.Tests.PFetiDP
 			// Solver
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, new PsmSubdomainMatrixManagerSymmetricCSparse.Factory(),
-				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
+				cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory(true));
 
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
 			{

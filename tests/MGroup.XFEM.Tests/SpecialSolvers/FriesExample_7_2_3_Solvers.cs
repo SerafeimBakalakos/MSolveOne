@@ -276,7 +276,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			if (solverChoice == SolverChoice.PfetiDPManaged)
 			{
 				psmMatrices = new PsmSubdomainMatrixManagerSymmetricCSparse.Factory();
-				fetiDPMatrices = new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory();
+				fetiDPMatrices = new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory(true);
 				coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricCSparse();
 			}
 			else if (solverChoice == SolverChoice.PfetiDPNative)
