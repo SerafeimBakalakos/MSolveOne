@@ -18,6 +18,7 @@ using MGroup.Solvers.DDM.FetiDP;
 using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.FetiDP.InterfaceProblem;
+using MGroup.Solvers.DDM.FetiDP.Preconditioning;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.Psm;
@@ -34,15 +35,7 @@ namespace MGroup.Solvers.DDM.Tests.FetiDP
 	{
 		[Theory]
 		[InlineData(EnvironmentChoice.SequentialShared, false, false, false)]
-		[InlineData(EnvironmentChoice.SequentialShared, true, false, false)]
-		[InlineData(EnvironmentChoice.SequentialShared, true, true, false)]
-		[InlineData(EnvironmentChoice.SequentialShared, true, false, true)]
-		[InlineData(EnvironmentChoice.SequentialShared, true, true, true)]
 		[InlineData(EnvironmentChoice.TplShared, false, false, false)]
-		[InlineData(EnvironmentChoice.TplShared, true, false, false)]
-		[InlineData(EnvironmentChoice.TplShared, true, true, false)]
-		[InlineData(EnvironmentChoice.TplShared, true, false, true)]
-		[InlineData(EnvironmentChoice.TplShared, true, true, true)]
 		public static void TestForBrick3D(EnvironmentChoice env, bool coarseDistributed, bool coarseJacobi, bool coarseReortho)
 			=> TestForBrick3DInternal(env.CreateEnvironment(), coarseDistributed, coarseJacobi, coarseReortho);
 
@@ -62,6 +55,7 @@ namespace MGroup.Solvers.DDM.Tests.FetiDP
 			var solverFactory = new FetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
 
+			solverFactory.Preconditioner = new FetiDPDirichletPreconditioner();
 			solverFactory.InterfaceProblemSolverFactory = new FetiDPInterfaceProblemSolverFactoryPcg()
 			{
 				MaxIterations = 200,
@@ -159,10 +153,11 @@ namespace MGroup.Solvers.DDM.Tests.FetiDP
 			var solverFactory = new FetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, cornerDofs, new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory());
 
+			solverFactory.Preconditioner = new FetiDPDirichletPreconditioner();
 			solverFactory.InterfaceProblemSolverFactory = new FetiDPInterfaceProblemSolverFactoryPcg()
 			{
 				MaxIterations = 200,
-				ResidualTolerance = 1E-20
+				ResidualTolerance = 1E-10
 			};
 
 			if (isCoarseProblemDistributed)
@@ -220,7 +215,7 @@ namespace MGroup.Solvers.DDM.Tests.FetiDP
 			// Check convergence
 			int precision = 10;
 			int pcgIterationsExpected = 14;
-			double pcgResidualNormRatioExpected = 2.868430313362798E-11;
+			double pcgResidualNormRatioExpected = 3E-11;
 			IterativeStatistics stats = solver.InterfaceProblemSolutionStats;
 			Assert.Equal(pcgIterationsExpected, stats.NumIterationsRequired);
 			Assert.Equal(pcgResidualNormRatioExpected, stats.ResidualNormRatioEstimation, precision);

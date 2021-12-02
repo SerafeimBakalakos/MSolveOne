@@ -6,11 +6,10 @@ using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Matrices;
-using MGroup.LinearAlgebra.Vectors;
+using MGroup.Solvers.DDM.FetiDP.Vectors;
 using MGroup.Solvers.DDM.LinearSystem;
-using MGroup.Solvers.DDM.PSM.Vectors;
 
-namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
+namespace MGroup.Solvers.DDM.FetiDP.InterfaceProblem
 {
 	/// <summary>
 	/// At each iteration, it checks if ||K * u - f|| / ||f|| &lt; tol, where all vectors and matrices correspond to the free 
@@ -20,31 +19,24 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 	public class ObjectiveConvergenceCriterion<TMatrix> : IPcgResidualConvergence
 		where TMatrix: class, IMatrix
 	{
-		private readonly IComputeEnvironment environment;
 		private readonly DistributedAlgebraicModel<TMatrix> algebraicModel;
-		private readonly Func<int, PsmSubdomainVectors> getSubdomainVectors;
+		private readonly FetiDPSolutionRecovery solutionRecovery;
 
 		private double normF0;
 
-		public ObjectiveConvergenceCriterion(IComputeEnvironment environment, DistributedAlgebraicModel<TMatrix> algebraicModel, 
-			Func<int, PsmSubdomainVectors> getSubdomainVectors)
+		public ObjectiveConvergenceCriterion(DistributedAlgebraicModel<TMatrix> algebraicModel,
+			FetiDPSolutionRecovery solutionRecovery)
 		{
-			this.environment = environment;
 			this.algebraicModel = algebraicModel;
-			this.getSubdomainVectors = getSubdomainVectors;
+			this.solutionRecovery = solutionRecovery;
 		}
 
 		public double EstimateResidualNormRatio(PcgAlgorithmBase pcg)
 		{
-			// Find displacements at free dofs
-			var Ub = (DistributedOverlappingVector)(pcg.Solution);
+			// Find solution at free dofs
+			var lambda = (DistributedOverlappingVector)(pcg.Solution);
 			var Uf = new DistributedOverlappingVector(algebraicModel.FreeDofIndexer);
-			environment.DoPerNode(subdomainID =>
-			{
-				Vector ubs = Ub.LocalVectors[subdomainID];
-				Vector ufs = getSubdomainVectors(subdomainID).CalcSubdomainFreeSolution(ubs);
-				Uf.LocalVectors[subdomainID] = ufs;
-			});
+			solutionRecovery.CalcPrimalSolution(lambda, Uf);
 
 			IGlobalMatrix Kff = algebraicModel.LinearSystem.Matrix;
 			IGlobalVector Ff = algebraicModel.LinearSystem.RhsVector;

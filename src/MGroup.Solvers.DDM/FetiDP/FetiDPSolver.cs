@@ -137,19 +137,19 @@ namespace MGroup.Solvers.DDM.FetiDP
 					environment, coarseProblem, subdomainLagranges, subdomainMatrices, subdomainVectors);
 			}
 
+			this.solutionRecovery = new FetiDPSolutionRecovery(environment, coarseProblem, scaling,
+				s => subdomainDofs[s], s => subdomainLagranges[s], s => subdomainMatrices[s], s => subdomainVectors[s]);
+
 			IPcgResidualConvergence convergenceCriterion;
 			if (interfaceProblemSolverFactory.UseObjectiveConvergenceCriterion)
 			{
-				throw new NotImplementedException();
+				convergenceCriterion = new ObjectiveConvergenceCriterion<TMatrix>(algebraicModel, solutionRecovery);
 			}
 			else
 			{
 				convergenceCriterion = new ApproximatePcgResidualConvergence<TMatrix>(algebraicModel);
 			}
 			this.interfaceProblemSolver = interfaceProblemSolverFactory.BuildIterativeMethod(convergenceCriterion);
-
-			this.solutionRecovery = new FetiDPSolutionRecovery(environment, coarseProblem, scaling,
-				s => subdomainDofs[s], s => subdomainLagranges[s], s => subdomainMatrices[s], s => subdomainVectors[s]);
 
 			Logger = new SolverLogger(name);
 			LoggerDdm = logger;
