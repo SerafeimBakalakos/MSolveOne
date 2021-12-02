@@ -268,12 +268,12 @@ namespace MGroup.XFEM.Tests.Fracture.Khoei
 			double tol = 1E-13;
 			Func<double, double> round = x => 1E6 * Math.Round(x * 1E-6, 3);
 			#region debug
-			string directory = @"C:\Users\Serafeim\Desktop\xfem 3d\matrices\";
-			var writer = new FullMatrixWriter();
-			writer.NumericFormat = new GeneralNumericFormat();
-			writer.WriteToFile(node7Elem1Stiffness, directory + "K7_tip.txt");
-			writer.WriteToFile(node7Elem2Stiffness, directory + "K7_blending.txt");
-			writer.WriteToFile(node7GlobalStiffness, directory + "K7_total.txt");
+			//string directory = @"C:\Users\Serafeim\Desktop\xfem 3d\matrices\";
+			//var writer = new FullMatrixWriter();
+			//writer.NumericFormat = new GeneralNumericFormat();
+			//writer.WriteToFile(node7Elem1Stiffness, directory + "K7_tip.txt");
+			//writer.WriteToFile(node7Elem2Stiffness, directory + "K7_blending.txt");
+			//writer.WriteToFile(node7GlobalStiffness, directory + "K7_total.txt");
 //HERE: some tip enriched entries are the opposite of the expected ones
 			#endregion
 			Assert.True(node6StiffnessExpected.Equals(node6Stiffness.DoToAllEntries(round), tol));

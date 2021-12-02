@@ -162,7 +162,7 @@ namespace MGroup.Solvers.DDM.Tests.FetiDP
 			solverFactory.InterfaceProblemSolverFactory = new FetiDPInterfaceProblemSolverFactoryPcg()
 			{
 				MaxIterations = 200,
-				ResidualTolerance = 1E-10
+				ResidualTolerance = 1E-20
 			};
 
 			if (isCoarseProblemDistributed)

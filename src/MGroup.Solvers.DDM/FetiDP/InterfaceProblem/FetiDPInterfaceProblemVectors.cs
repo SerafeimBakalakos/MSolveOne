@@ -45,7 +45,7 @@ namespace MGroup.Solvers.DDM.FetiDP.InterfaceProblem
 			{
 				Vector v1s = subdomainVectors[s].VectorInvKrrTimesFr;
 				Vector v2s = subdomainMatrices[s].MultiplyInverseKrrTimes(subdomainMatrices[s].MultiplyKrcTimes(xce[s]));
-				v2s.AddIntoThis(v1s);
+				v2s.LinearCombinationIntoThis(-1, v1s, +1);
 				return subdomainLagranges[s].MatrixDr.Multiply(v2s);
 			});
 			InterfaceProblemRhs = new DistributedOverlappingVector(lagrangeVectorIndexer, rhsVectors);

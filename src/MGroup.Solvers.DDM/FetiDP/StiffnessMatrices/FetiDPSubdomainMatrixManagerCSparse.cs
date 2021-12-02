@@ -14,15 +14,18 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 {
 	public class FetiDPSubdomainMatrixManagerCSparse : IFetiDPSubdomainMatrixManager
 	{
+		private readonly bool clearKrrAfterFactorization = false;
 		private readonly SubdomainLinearSystem<CsrMatrix> linearSystem;
 		private readonly FetiDPSubdomainDofs subdomainDofs;
-		private readonly SubmatrixExtractorFullCsrCsc submatrixExtractor = new SubmatrixExtractorFullCsrCsc();
+		private readonly SubmatrixExtractorPckCsrCscSym submatrixExtractorBoundaryInternal = new SubmatrixExtractorPckCsrCscSym();
+		private readonly SubmatrixExtractorFullCsrCsc submatrixExtractorCornerRemainder = new SubmatrixExtractorFullCsrCsc();
 
-		private Matrix Kcc;
-		private CsrMatrix Kcr;
-		private CsrMatrix Krc;
-		private CscMatrix Krr;
-		private LUCSparseNet inverseKrr;
+		private Matrix Kbb, Kcc;
+		private CsrMatrix Kbi, Kcr;
+		private CsrMatrix Kib, Krc;
+		private CscMatrix Kii, Krr;
+		private LUCSparseNet inverseKii, inverseKrr;
+		private DiagonalMatrix inverseKiiDiagonal;
 		private Matrix Scc;
 
 		public FetiDPSubdomainMatrixManagerCSparse(
@@ -50,11 +53,26 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			Krc = null;
 			Krr = null;
 			Scc = null;
+
+			inverseKii = null;
+			inverseKiiDiagonal = null;
+			Kbb = null;
+			Kbi = null;
+			Kib = null;
+			Kii = null;
 		}
 
 		public void ExtractKiiKbbKib()
 		{
 			throw new NotImplementedException();
+			//int[] boundaryRemainderToRemainder = subdomainDofs.DofsBoundaryRemainderToRemainder;
+			//int[] internalToRemainder = subdomainDofs.DofsInternalToRemainder;
+
+			//submatrixExtractorBoundaryInternal.ExtractSubmatrices(Krr, boundaryRemainderToRemainder, internalToRemainder);
+			//Kbb = submatrixExtractorBoundaryInternal.Submatrix00;
+			//Kbi = submatrixExtractorBoundaryInternal.Submatrix01;
+			//Kib = submatrixExtractorBoundaryInternal.Submatrix10;
+			//Kii = submatrixExtractorBoundaryInternal.Submatrix11;
 		}
 
 		public void ExtractKrrKccKrc()
@@ -63,55 +81,65 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			int[] remainderToFree = subdomainDofs.DofsRemainderToFree;
 
 			CsrMatrix Kff = linearSystem.Matrix;
-			submatrixExtractor.ExtractSubmatrices(Kff, cornerToFree, remainderToFree);
-			Kcc = submatrixExtractor.Submatrix00;
-			Kcr = submatrixExtractor.Submatrix01;
-			Krc = submatrixExtractor.Submatrix10;
-			Krr = submatrixExtractor.Submatrix11;
+			submatrixExtractorCornerRemainder.ExtractSubmatrices(Kff, cornerToFree, remainderToFree);
+			Kcc = submatrixExtractorCornerRemainder.Submatrix00;
+			Kcr = submatrixExtractorCornerRemainder.Submatrix01;
+			Krc = submatrixExtractorCornerRemainder.Submatrix10;
+			Krr = submatrixExtractorCornerRemainder.Submatrix11;
 		}
 
 		public void HandleDofsWereModified()
 		{
 			ClearSubMatrices();
-			submatrixExtractor.Clear();
+			submatrixExtractorCornerRemainder.Clear();
 		}
 
 		public void InvertKii(bool diagonalOnly)
 		{
-			throw new NotImplementedException();
+			if (diagonalOnly)
+			{
+				inverseKiiDiagonal = DiagonalMatrix.CreateFromArray(Kii.GetDiagonalAsArray());
+				inverseKiiDiagonal.Invert();
+			}
+			else
+			{
+				inverseKii = LUCSparseNet.Factorize(Kii);
+			}
+			Kii = null; // It has not been mutated, but it is no longer needed
 		}
 
 		public void InvertKrr()
 		{
 			inverseKrr = LUCSparseNet.Factorize(Krr);
-			Krr = null; // It has not been mutated, but it is no longer needed
+			if (clearKrrAfterFactorization)
+			{
+				Krr = null; // It has not been mutated, but it is no longer needed
+			}
 		}
 
 		public Vector MultiplyInverseKiiTimes(Vector vector, bool diagonalOnly)
 		{
-			throw new NotImplementedException();
+			if (diagonalOnly)
+			{
+				return inverseKiiDiagonal.Multiply(vector);
+			}
+			else
+			{
+				return inverseKii.SolveLinearSystem(vector);
+			}
 		}
 
 		public Vector MultiplyInverseKrrTimes(Vector vector) => inverseKrr.SolveLinearSystem(vector);
 
-		public Vector MultiplyKbbTimes(Vector vector)
-		{
-			throw new NotImplementedException();
-		}
+		public Vector MultiplyKbbTimes(Vector vector) => Kbb * vector;
 
-		public Vector MultiplyKbiTimes(Vector vector)
-		{
-			throw new NotImplementedException();
-		}
+		public Vector MultiplyKbiTimes(Vector vector) => Kbi * vector;
 
 		public Vector MultiplyKccTimes(Vector vector) => Kcc * vector;
 
 		public Vector MultiplyKcrTimes(Vector vector) => Kcr * vector;
 
-		public Vector MultiplyKibTimes(Vector vector)
-		{
-			throw new NotImplementedException();
-		}
+		public Vector MultiplyKibTimes(Vector vector) => Kib * vector;
 
 		public Vector MultiplyKrcTimes(Vector vector) => Krc * vector;
 

@@ -71,10 +71,6 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
 			PlateBenchmark.WriteCrackPath(model);
 			//Debug.WriteLine($"Num dofs = {solver.LinearSystem.RhsVector.Length}");
-			#region debug
-			//solver.Logger.WriteToFile(@"C:\Users\Serafeim\Desktop\xfem 3d\paper\plate2D\results\performance.txt", $"{numElements[0]}x{numElements[1]}", true);
-			//solver.Logger.WriteAggregatesToFile(@"C:\Users\Serafeim\Desktop\xfem 3d\paper\plate2D\results\performance.txt", $"{numElements[0]}x{numElements[1]}", true);
-			#endregion
 			solver.Dispose();
 		}
 
@@ -107,11 +103,6 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
 			PlateBenchmark.WriteCrackPath(model);
-			#region debug
-			//Debug.WriteLine($"Num dofs = {solver.LinearSystem.RhsVector.Length}");
-			//solver.Logger.WriteToFile(@"C:\Users\Serafeim\Desktop\xfem 3d\paper\plate2D\results\performance.txt", $"{numElements[0]}x{numElements[1]}", true);
-			//solver.Logger.WriteAggregatesToFile(@"C:\Users\Serafeim\Desktop\xfem 3d\paper\plate2D\results\performance.txt", $"{numElements[0]}x{numElements[1]}", true);
-			#endregion
 			solver.Dispose();
 		}
 

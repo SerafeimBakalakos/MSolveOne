@@ -40,7 +40,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Preconditioning
 				Vector v3 = fetiDPMatrices.MultiplyKibTimes(v1);
 				v3 = fetiDPMatrices.MultiplyInverseKiiTimes(v3, false);
 				v3 = fetiDPMatrices.MultiplyKbiTimes(v3);
-				v2.AddIntoThis(v3);
+				v2.SubtractIntoThis(v3);
 				xe.LocalVectors[s] = Dbr.Multiply(Wbr.Multiply(v2));
 			});
 			xe.SumOverlappingEntries();

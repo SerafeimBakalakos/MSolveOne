@@ -21,7 +21,7 @@ namespace MGroup.Solvers.DDM.FetiDP.InterfaceProblem
 
 		public double EstimateResidualNormRatio(PcgAlgorithmBase pcg)
 		{
-			return Math.Sqrt(pcg.ResDotPrecondRes) / normF0;
+			return pcg.PrecondResidual.Norm2() / normF0;
 		}
 
 		public void Initialize(PcgAlgorithmBase pcg)

@@ -55,5 +55,29 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 			//var Lc = new BooleanMatrixRowsToColumns(numSubdomainDofs, NumGlobalCornerDofs, subdomainToGlobalMap);
 			return subdomainToGlobalMap;
 		}
+
+		private void ReorderGlobalCornersNodeMajorDofMinor()
+		{
+			var cornerDofs = new SortedDictionary<int, SortedSet<int>>();
+			foreach (int node in GlobalDofOrderingCorner.GetRows())
+			{
+				var dofsOfNode = new SortedSet<int>();
+				foreach (int dof in GlobalDofOrderingCorner.GetColumnsOfRow(node))
+				{
+					dofsOfNode.Add(dof);
+				}
+				cornerDofs[node] = dofsOfNode;
+			}
+
+			GlobalDofOrderingCorner = new IntDofTable();
+			int numCornerDofs = 0;
+			foreach (int node in cornerDofs.Keys)
+			{
+				foreach (int dof in cornerDofs[node])
+				{
+					GlobalDofOrderingCorner[node, dof] = numCornerDofs++;
+				}
+			}
+		}
 	}
 }
