@@ -8,15 +8,14 @@ namespace MGroup.Solvers.DDM.LagrangeMultipliers
 {
 	public class FullyRedundantLagranges : ICrossPointStrategy
 	{
-		public (int subdomainPlus, int subdomainMinus)[] ListSubdomainCombinations(IEnumerable<int> subdomainIDs)
+		public List<(int subdomainPlus, int subdomainMinus)> ListSubdomainCombinations(IEnumerable<int> subdomainIDs)
 		{
 			var subdomains = new SortedSet<int>(subdomainIDs);
 			int multiplicity = subdomains.Count;
 			Debug.Assert(multiplicity > 1);
 			int numCombos = (multiplicity * (multiplicity - 1)) / 2;
-			var combos = new (int subdomainPlus, int subdomainMinus)[numCombos];
+			var combos = new List<(int subdomainPlus, int subdomainMinus)>(numCombos);
 			var processedSubdomains = new SortedSet<int>(subdomains);
-			int c = 0;
 			foreach (int subdomain1 in subdomains)
 			{
 				processedSubdomains.Remove(subdomain1);
@@ -25,11 +24,11 @@ namespace MGroup.Solvers.DDM.LagrangeMultipliers
 					// Lagrange multiplier between these 2 subdomains. The one with the min ID will be the positive one.
 					if (subdomain1 < subdomain2)
 					{
-						combos[c++] = (subdomain1, subdomain2);
+						combos.Add((subdomain1, subdomain2));
 					}
 					else
 					{
-						combos[c++] = (subdomain2, subdomain1);
+						combos.Add((subdomain2, subdomain1));
 					}
 				}
 			}

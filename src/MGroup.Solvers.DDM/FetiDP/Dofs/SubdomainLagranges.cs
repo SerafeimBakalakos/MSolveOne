@@ -76,7 +76,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 			foreach (int nodeID in boundaryRemainderDofs.GetRows())
 			{
 				INode node = model.GetNode(nodeID);
-				(int subdomainPlus, int subdomainMinus)[] combos = ListSubdomainCombinations(node);
+				IList<(int subdomainPlus, int subdomainMinus)> combos = ListSubdomainCombinations(node);
 				foreach (int dofID in boundaryRemainderDofs.GetColumnsOfRow(nodeID))
 				{
 					foreach ((int sPlus, int sMinus) in combos)
@@ -93,6 +93,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 			commonLagrangesWithNeighbors.Clear();
 			foreach (LagrangeMultiplier lagrange in LagrangeMultipliers)
 			{
+				Debug.Assert((this.subdomainID == lagrange.SubdomainPlus) || (this.subdomainID == lagrange.SubdomainMinus));
 				int neighborID = (lagrange.SubdomainPlus == this.subdomainID) ? lagrange.SubdomainMinus : lagrange.SubdomainPlus;
 				if (!commonLagrangesWithNeighbors.TryGetValue(neighborID, out SortedSet<LagrangeMultiplier> commonLagranges))
 				{
@@ -124,7 +125,7 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 			localIndexer.Initialize(LagrangeMultipliers.Count, allCommonLagrangeIndices);
 		}
 
-		private (int subdomainPlus, int subdomainMinus)[] ListSubdomainCombinations(INode node)
+		private IList<(int subdomainPlus, int subdomainMinus)> ListSubdomainCombinations(INode node)
 		{
 			if (node.Subdomains.Count == 2)
 			{
@@ -144,7 +145,9 @@ namespace MGroup.Solvers.DDM.FetiDP.Dofs
 			else
 			{
 				Debug.Assert(node.Subdomains.Count > 2, "Found boundary remainder node with less than 2 subdomains");
-				return crossPointStrategy.ListSubdomainCombinations(node.Subdomains);
+				List<(int subdomainPlus, int subdomainMinus)> combos = crossPointStrategy.ListSubdomainCombinations(node.Subdomains);
+				combos.RemoveAll(c => (c.subdomainPlus != this.subdomainID) && (c.subdomainMinus != this.subdomainID));
+				return combos;
 			}
 		}
 	}

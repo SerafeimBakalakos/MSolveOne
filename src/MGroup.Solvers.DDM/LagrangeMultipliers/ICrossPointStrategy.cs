@@ -7,6 +7,6 @@ namespace MGroup.Solvers.DDM.LagrangeMultipliers
 {
 	public interface ICrossPointStrategy
 	{
-		(int subdomainPlus, int subdomainMinus)[] ListSubdomainCombinations(IEnumerable<int> subdomainIDs);
+		List<(int subdomainPlus, int subdomainMinus)> ListSubdomainCombinations(IEnumerable<int> subdomainIDs);
 	}
 }

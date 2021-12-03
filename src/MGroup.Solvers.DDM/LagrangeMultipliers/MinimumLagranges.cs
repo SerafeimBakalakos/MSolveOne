@@ -8,22 +8,22 @@ namespace MGroup.Solvers.DDM.LagrangeMultipliers
 {
 	public class MinimumLagranges : ICrossPointStrategy
 	{
-		public (int subdomainPlus, int subdomainMinus)[] ListSubdomainCombinations(IEnumerable<int> subdomainIDs)
+		public List<(int subdomainPlus, int subdomainMinus)> ListSubdomainCombinations(IEnumerable<int> subdomainIDs)
 		{
 			int[] subdomains = subdomainIDs.OrderBy(s => s).ToArray();
 			Debug.Assert(subdomains.Length > 1);
 			int numCombos = subdomains.Length - 1;
-			var combos = new (int subdomainPlus, int subdomainMinus)[numCombos];
+			var combos = new List<(int subdomainPlus, int subdomainMinus)>(numCombos);
 			for (int i = 0; i < numCombos; ++i)
 			{
 				// Lagrange multiplier between subdomains i, i+1. The one with the min ID will be the positive one.
 				if (subdomains[i] < subdomains[i+1])
 				{
-					combos[i] = (subdomains[i], subdomains[i + 1]);
+					combos.Add((subdomains[i], subdomains[i + 1]));
 				}
 				else
 				{
-					combos[i] = (subdomains[i + 1], subdomains[i]);
+					combos.Add((subdomains[i + 1], subdomains[i]));
 				}
 			}
 			return combos;

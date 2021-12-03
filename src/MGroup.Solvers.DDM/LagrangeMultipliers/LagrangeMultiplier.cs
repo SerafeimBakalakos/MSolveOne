@@ -36,9 +36,13 @@ namespace MGroup.Solvers.DDM.LagrangeMultipliers
 			{
 				return this.DofID - other.DofID;
 			}
+			else if ((this.SubdomainPlus != other.SubdomainPlus) || (this.SubdomainMinus != other.SubdomainMinus))
+			{
+				throw new NotImplementedException("We cannot compare lagranges between the same dofs, " +
+					"but different subdomains at crosspoints yet.");
+			}
 			else
 			{
-				Debug.Assert((this.SubdomainPlus == other.SubdomainPlus) && (this.SubdomainMinus == other.SubdomainMinus));
 				return 0;
 			}
 		}
