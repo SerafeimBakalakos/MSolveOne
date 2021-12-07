@@ -14,7 +14,6 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
-            //var material = new MaterialProperties(1, 0.3);
             var model = new Model(material, geometry);
             model.MakeMesh();
             model.EnumerateDegreesOfFreedom();
