@@ -10,7 +10,9 @@ using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Solvers.AlgebraicModel;
 using MGroup.Solvers.DDM;
+using MGroup.Solvers.DDM.FetiDP;
 using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
+using MGroup.Solvers.DDM.FetiDP.InterfaceProblem;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PFetiDP;
@@ -109,6 +111,44 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		[Theory]
 		[InlineData(EnvironmentChoice.SequentialShared)]
 		[InlineData(EnvironmentChoice.TplShared)]
+		public static void AnalyzeWithFetiDPSolver(EnvironmentChoice environmentChoice)
+			=> AnalyzeWithFetiDPSolverInternal(environmentChoice.CreateEnvironment());
+
+		internal static void AnalyzeWithFetiDPSolverInternal(IComputeEnvironment environment, int numClustersTotal = 1)
+		{
+			string outputDirectory = Path.Combine(workDirectory, "plots");
+
+			// Model
+			int[] numElements = { 48, 48 };
+			int[] numSubdomains = { 4, 4 };
+			int[] numClusters = GetNumClusters(numClustersTotal);
+			(XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
+				= PlateBenchmark.DescribePhysicalModel(numElements, numSubdomains, numClusters).BuildMultiSubdomainModel();
+			PlateBenchmark.CreateGeometryModel(model);
+
+			bool reanalysis = false;
+			(DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel, FetiDPSolver<SymmetricCscMatrix> solver,
+				CrackFetiDPCornerDofs cornerDofs)
+				= CreateFetiDPSolver(environment, model, nodeTopology, reanalysis, outputDirectory);
+
+			if (!(environment is MpiEnvironment))
+			{
+				PlateBenchmark.SetupModelOutput(model, outputDirectory);
+				PlateBenchmark.SetupPartitioningOutput(
+					environment, model, (CrackFetiDPCornerDofsPlusLogging)cornerDofs, outputDirectory);
+			}
+
+			PlateBenchmark.RunAnalysis(model, algebraicModel, solver);
+			PlateBenchmark.WriteCrackPath(model);
+
+			string path = Path.Combine(workDirectory, "fetidp_convergence.txt");
+			solver.LoggerDdm.WriteToFile(path, true);
+		}
+
+
+		[Theory]
+		[InlineData(EnvironmentChoice.SequentialShared)]
+		[InlineData(EnvironmentChoice.TplShared)]
 		public static void AnalyzeWithPFetiDPSolver(EnvironmentChoice environmentChoice)
 			=> AnalyzeWithPFetiDPSolverInternal(environmentChoice.CreateEnvironment());
 
@@ -200,6 +240,60 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 				solver.LoggerDdm.WriteToFile(path, true);
 			}
+		}
+
+		private static (DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel, FetiDPSolver<SymmetricCscMatrix> solver,
+			CrackFetiDPCornerDofs cornerDofs)
+			CreateFetiDPSolver(IComputeEnvironment environment, XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology,
+				bool reanalysis, string cornerNodesOutputDirectory = null)
+		{
+			// Environment
+			environment.Initialize(nodeTopology);
+
+			// Corner dofs
+			IDofType[] stdDofs = { StructuralDof.TranslationX, StructuralDof.TranslationY };
+			CrackFetiDPCornerDofs cornerDofs;
+			if (cornerNodesOutputDirectory != null)
+			{
+				cornerDofs = new CrackFetiDPCornerDofsPlusLogging(environment, model, stdDofs,
+					sub => UniformDdmCrackModelBuilder2D.FindCornerNodes(sub, 2));
+			}
+			else
+			{
+				cornerDofs = new CrackFetiDPCornerDofs(environment, model, stdDofs,
+					sub => UniformDdmCrackModelBuilder2D.FindCornerNodes(sub, 2));
+			}
+
+			// Solver
+			var solverFactory = new FetiDPSolver<SymmetricCscMatrix>.Factory(environment, cornerDofs, 
+				new FetiDPSubdomainMatrixManagerSymmetricCSparse.Factory(false));
+			solverFactory.EnableLogging = true;
+			solverFactory.ExplicitSubdomainMatrices = false;
+			solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(
+				new FetiDPCoarseProblemMatrixSymmetricCSparse());
+			solverFactory.InterfaceProblemSolverFactory = new FetiDPInterfaceProblemSolverFactoryPcg()
+			{
+				MaxIterations = 200,
+				ResidualTolerance = 1E-10
+			};
+
+			if (reanalysis)
+			{
+				var observer = new SubdomainEnrichmentsModifiedObserver();
+				model.GeometryModel.Enricher.Observers.Add(observer);
+				var reanalysisOptions = FetiDPReanalysisOptions.CreateWithAllEnabled(observer);
+				//var reanalysisOptions = PFetiDPReanalysisOptions.CreateWithAllDisabled();
+				reanalysisOptions.PreviousSolution = false; // This causes errors if enabled
+
+				solverFactory.ReanalysisOptions = reanalysisOptions;
+				solverFactory.SubdomainTopology = new SubdomainTopologyOptimized();
+				solverFactory.ExplicitSubdomainMatrices = true;
+			}
+
+			DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			FetiDPSolver<SymmetricCscMatrix> solver = solverFactory.BuildSolver(model, algebraicModel);
+
+			return (algebraicModel, solver, cornerDofs);
 		}
 
 		private static (DistributedAlgebraicModel<SymmetricCscMatrix> algebraicModel, PsmSolver<SymmetricCscMatrix> solver, 
