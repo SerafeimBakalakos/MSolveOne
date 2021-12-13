@@ -87,6 +87,8 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			Kcr = submatrixExtractorCornerRemainder.Submatrix01;
 			Krc = submatrixExtractorCornerRemainder.Submatrix10;
 			Krr = submatrixExtractorCornerRemainder.Submatrix11;
+
+			submatrixExtractorBoundaryInternal.Clear();
 		}
 
 		public void HandleDofsWereModified()

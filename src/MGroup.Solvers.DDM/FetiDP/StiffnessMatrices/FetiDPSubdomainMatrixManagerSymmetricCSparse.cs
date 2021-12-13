@@ -88,6 +88,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			Kcr = submatrixExtractorCornerRemainder.Submatrix01;
 			Krr = submatrixExtractorCornerRemainder.Submatrix11; 
 
+			submatrixExtractorBoundaryInternal.Clear();
 			//TODO: It would be better if these were returned by the extractor, instead of stored in its properties. 
 			//		The only state that the extractor needs is its private mapping arrays
 		}

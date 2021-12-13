@@ -441,7 +441,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 
 			public virtual FetiDPSolver<TMatrix> BuildSolver(IModel model, DistributedAlgebraicModel<TMatrix> algebraicModel)
 			{
-				DdmLogger logger = EnableLogging ? new DdmLogger(environment, "PSM Solver", model.NumSubdomains) : null;
+				DdmLogger logger = EnableLogging ? new DdmLogger(environment, "FETI-DP Solver", model.NumSubdomains) : null;
 				return new FetiDPSolver<TMatrix>(environment, model, algebraicModel, FetiDPMatricesFactory,
 					ExplicitSubdomainMatrices, Preconditioner, InterfaceProblemSolverFactory, cornerDofs, CoarseProblemFactory,
 					CrossPointStrategy, IsHomogeneousProblem, logger, ReanalysisOptions);
