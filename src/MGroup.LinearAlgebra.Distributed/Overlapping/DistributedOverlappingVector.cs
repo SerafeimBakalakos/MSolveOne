@@ -142,6 +142,24 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			return Environment.AllReduceAnd(flags);
 		}
 
+		public int Length()
+		{
+			Dictionary<int, double> localLengths = Environment.CalcNodeData(node =>
+			{
+				int[] multiplicities = Indexer.GetLocalComponent(node).Multiplicities;
+
+				double localLegth = 0.0;
+				for (int i = 0; i < multiplicities.Length; ++i)
+				{
+					localLegth += 1.0 / multiplicities[i];
+				}
+
+				return localLegth;
+			});
+
+			return (int)Math.Round(Environment.AllReduceSum(localLengths));
+		}
+
 		public void LinearCombinationIntoThis(
 			double thisCoefficient, IGlobalVector otherVector, double otherCoefficient)
 		{

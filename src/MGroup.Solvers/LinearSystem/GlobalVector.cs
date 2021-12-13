@@ -53,6 +53,8 @@ namespace MGroup.Solvers.LinearSystem
 			return result;
 		}
 
+		int IGlobalVector.Length() => SingleVector.Length;
+
 		public void LinearCombinationIntoThis(double thisCoefficient, IGlobalVector otherVector, double otherCoefficient)
 		{
 			GlobalVector globalOtherVector = checkCompatibleVector(otherVector);

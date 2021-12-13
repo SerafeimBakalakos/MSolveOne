@@ -34,10 +34,7 @@ namespace MGroup.XFEM.Output.Writers
 					writer.WriteLine($"Info: {ExtraInfo.TrimEnd('\r', '\n')}");
 				}
 				writer.Write($"{DateTime.Now}, iteration {iteration}: \t norm2(u) = {norm}");
-				if (solution is GlobalVector globalVector)
-				{
-					writer.Write($", length = {globalVector.Length}");
-				}
+				writer.Write($", length = {solution.Length()}");
 				writer.WriteLine();
 			}
 

@@ -43,6 +43,8 @@ namespace MGroup.LinearAlgebra.Distributed
 			return result;
 		}
 
+		int Length();
+
 		void LinearCombinationIntoThis(double thisCoefficient, IGlobalVector otherVector, double otherCoefficient);
 
 		double Norm2() => Math.Sqrt(this.DotProduct(this));
