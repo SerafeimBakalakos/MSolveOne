@@ -5,12 +5,21 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.LinearAlgebra.Input;
 	using MGroup.LinearAlgebra.Matrices;
 	using MGroup.LinearAlgebra.Vectors;
+	using MGroup.MSolve.Discretization.Dofs;
+	using MGroup.MSolve.Discretization.Loads;
 	using MGroup.XFEM.IsoXFEM.Solvers;
 	using MGroup.XFEM.Materials.Duplicates;
 
 	using Xunit;
 	public class FEMAnalysisTests
-	{		
+	{
+		public enum EndLoad
+		{
+			UpperEnd,
+			MiddleEnd,
+			BottomEnd
+		}
+		private  EndLoad endload;
 
 		[Fact]
 		private void AssembleStiffnessMatrix()
@@ -19,13 +28,33 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
-			var model = new Model(material, geometry);
-			model.MakeMesh();
-			model.EnumerateDegreesOfFreedom();
-			var nodalLoad = new NodalLoad(geometry, EndLoad.BottomEnd);
-			Vector rhs = nodalLoad.CalcRHS();
+			var meshGeneration = new MeshGeneration(material, geometry);
+			var mesh = meshGeneration.MakeMesh();
+			int dimension = 2;
+			var xModel = new XModel<IsoXfemElement2D>(dimension);
+			foreach (var item in mesh.Item1.Keys)
+			{
+				xModel.Nodes[item] = mesh.Item1[item];
+			}
+			foreach (var item in mesh.Item2.Keys)
+			{
+				xModel.Elements[item] = mesh.Item2[item];
+			}
+			xModel.Initialize();
+			endload = EndLoad.MiddleEnd;
+			int nodeIDLoad = (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1) - ((int)endload * (geometry.numberOfElementsY) / 2) - 1;
+			Load load;
+			load = new Load()
+			{
+				Node = xModel.Nodes[nodeIDLoad],
+				DOF = StructuralDof.TranslationY,
+				Amount = 1
+			};
+			xModel.NodalLoads.Add(load);
+			//var nodalLoad = new NodalLoad(geometry);
+			//Vector rhs = nodalLoad.CalcRHS();
 			ISolver solver = new SkylineLdlSolver();
-			var femAnalysis = new FEMAnalysis(model, solver, rhs);
+			var femAnalysis = new FEMAnalysis(geometry, xModel, solver/*, rhs*/);
 			femAnalysis.AssembleStiffnessMatrix();
 			Matrix globalStiffnessComputed = femAnalysis.globalStiffness;
 			Matrix globalStiffnessExpected= Matrix.CreateFromArray(new double[,] {{ 0.494505494505,   0.178571428571,  0.0549450549451, 0.0137362637363, -0.302197802198, -0.0137362637363, -0.247252747253, -0.178571428571, 0,   0,   0,   0,   0,   0,   0,   0 },
@@ -59,13 +88,33 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
-			var model = new Model(material, geometry);
-			model.MakeMesh();
-			model.EnumerateDegreesOfFreedom();
-			var nodalLoad = new NodalLoad(geometry, EndLoad.BottomEnd);
-			Vector rhs = nodalLoad.CalcRHS();
+			var meshGeneration = new MeshGeneration(material, geometry);
+			var mesh = meshGeneration.MakeMesh();
+			int dimension = 2;
+			var xModel = new XModel<IsoXfemElement2D>(dimension);
+			foreach (var item in mesh.Item1.Keys)
+			{
+				xModel.Nodes[item] = mesh.Item1[item];
+			}
+			foreach (var item in mesh.Item2.Keys)
+			{
+				xModel.Elements[item] = mesh.Item2[item];
+			}
+			xModel.Initialize();
+			//endload = EndLoad.MiddleEnd;
+			//int nodeIDLoad = (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1) - ((int)endload * (geometry.numberOfElementsY) / 2) - 1;
+			//Load load;
+			//load = new Load()
+			//{
+			//	Node = xModel.Nodes[nodeIDLoad],
+			//	DOF = StructuralDof.TranslationY,
+			//	Amount = 1
+			//};
+			//xModel.NodalLoads.Add(load);
+			//var nodalLoad = new NodalLoad(geometry);
+			//Vector rhs = nodalLoad.CalcRHS();
 			ISolver solver = new SkylineLdlSolver();
-			var femAnalysis = new FEMAnalysis(model, solver, rhs);
+			var femAnalysis = new FEMAnalysis(geometry, xModel, solver/*, rhs*/);
 			Vector solution = Vector.CreateWithValue(12, 10);
 			femAnalysis.RefillDisplacements(solution);
 			var displacementsComputed = femAnalysis.displacements;
@@ -83,13 +132,34 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
-			var model = new Model(material, geometry);
-			model.MakeMesh();
-			model.EnumerateDegreesOfFreedom();
-			var nodalLoad = new NodalLoad(geometry, EndLoad.BottomEnd);
-			Vector rhs = nodalLoad.CalcRHS();
+			var meshGeneration = new MeshGeneration(material, geometry);
+			var mesh = meshGeneration.MakeMesh();
+			int dimension = 2;
+			var xModel = new XModel<IsoXfemElement2D>(dimension);
+			foreach (var item in mesh.Item1.Keys)
+			{
+				xModel.Nodes[item] = mesh.Item1[item];
+			}
+			foreach (var item in mesh.Item2.Keys)
+			{
+				xModel.Elements[item] = mesh.Item2[item];
+			}
+			xModel.Initialize();
+			endload = EndLoad.BottomEnd;
+			int nodeIDLoad = (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1) - ((int)endload * (geometry.numberOfElementsY) / 2) - 1;
+			Load load;
+			load = new Load()
+			{
+				Node = xModel.Nodes[nodeIDLoad],
+				DOF = StructuralDof.TranslationY,
+				Amount = 1
+			};
+			xModel.NodalLoads.Add(load);
+			//var nodalLoad = new NodalLoad(geometry);
+			//Vector rhs = nodalLoad.CalcRHS();
 			ISolver solver = new SkylineLdlSolver();
-			var femAnalysis = new FEMAnalysis(model, solver, rhs);
+			var femAnalysis = new FEMAnalysis(geometry, xModel, solver/*, rhs*/);
+			femAnalysis.Initialize();
 			femAnalysis.Solve();
 			var displacementsComputed = femAnalysis.displacements;
 			var reader = new Array1DReader(false);

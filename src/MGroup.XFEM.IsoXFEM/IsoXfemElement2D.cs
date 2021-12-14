@@ -153,7 +153,8 @@ namespace MGroup.XFEM.IsoXFEM
 		public double[] FindCentroidCartesian() => throw new NotImplementedException();
 
 		//for enriched elements
-		public void IdentifyDofs() => throw new NotImplementedException();
+		public void IdentifyDofs()
+		{ }
 		public void IdentifyIntegrationPointsAndMaterials()
 		{
 			this.gaussPointsBulk = IntegrationBulk.GenerateIntegrationPoints(this);

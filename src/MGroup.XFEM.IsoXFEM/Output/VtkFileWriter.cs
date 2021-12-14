@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using MGroup.LinearAlgebra.Matrices;
+using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.IsoXFEM
 {
@@ -30,7 +31,7 @@ namespace MGroup.XFEM.IsoXFEM
 		}
 
 		//TODO: Perhaps the mesh should be injected into the contructor
-		public void WriteMesh(List<Node> nodes, List<IsoXfemElement2D> elements)
+		public void WriteMesh(Dictionary<int, XNode>  nodes, List<IsoXfemElement2D> elements)
 		{
 			if (writeFieldsNext) throw new InvalidOperationException("A mesh has already been written.");
 

@@ -11,8 +11,8 @@ using MGroup.XFEM.Materials.Duplicates;
 
 namespace MGroup.XFEM.IsoXFEM
 {
-   public class Model
-    {
+   public class MeshGeneration
+	{
         //                      #2
         //     .________________________________.
         //     |                                |
@@ -34,19 +34,15 @@ namespace MGroup.XFEM.IsoXFEM
             Leftside,
         }
         private readonly ConstrainedSide constrainedSide;
-        //public List<Node> nodes = new List<Node>();
-		public List<XNode> nodes = new List<XNode>();
-        public List<IsoXfemElement2D> elements = new List<IsoXfemElement2D>();       
-        public ElasticMaterial2D material;
+		public ElasticMaterial2D material;
         public GeometryProperties geometry;        
-        public Dictionary<string, int[]> constraintsOfDofs = new Dictionary<string, int[]>();
-        public Model(ElasticMaterial2D material, GeometryProperties geometry, ConstrainedSide constrainedSide=ConstrainedSide.Leftside)
+        public MeshGeneration(ElasticMaterial2D material, GeometryProperties geometry, ConstrainedSide constrainedSide=ConstrainedSide.Leftside)
         {            
             this.material = material;
             this.geometry = geometry;
             this.constrainedSide = constrainedSide;
         }
-		public void CreateElements()
+		public Dictionary<int, IsoXfemElement2D> CreateElements(Dictionary<int, XNode> nodes)
 		{
 			#region CreateElementsMatlab
 			//for (int i = 1; i <= geometry.numberOfElementsX * geometry.numberOfElementsY; i++)
@@ -76,6 +72,7 @@ namespace MGroup.XFEM.IsoXFEM
 			//}
 			#endregion
 			int el = 0;
+			var elements = new Dictionary<int, IsoXfemElement2D>();
 			for (int i = 0; i < geometry.numberOfElementsX; i++)
 			{
 				for (int j = 0; j < geometry.numberOfElementsY; j++)
@@ -99,13 +96,14 @@ namespace MGroup.XFEM.IsoXFEM
 						dofs[2 * k + 1] = 2 * element.nodesOfElement[k].ID + 1;
 					}
 					element.dofsOfElement = dofs;
-					elements.Add(element);
+					elements.Add(el,element);
 					el = el + 1;
 				}
 			}
+			return elements;
 		}
 
-		public void CreateNodes()
+		public Dictionary<int, XNode> CreateNodes()
 		{
 			#region MakeCoordinatesMatlab
 			//for (int i = 1; i <= (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1); i++)
@@ -158,14 +156,13 @@ namespace MGroup.XFEM.IsoXFEM
 			var coordX = 0.0;
 			var coordY = 0.0;
 			int id = 0;
+			var nodes = new Dictionary<int, XNode>();
 			for (int i = 0; i < (geometry.numberOfElementsX + 1); i++)
 			{
 				for (int j = 0; j < (geometry.numberOfElementsY + 1); j++)
 				{
 					var nodeX = coordX;
-					var nodeY = coordY;
-					//var constrainX = false;
-					//var constrainY = false;
+					var nodeY = coordY;					
 					double[] coords = { nodeX, nodeY };
 					var node = new XNode(id, coords);
 					switch (constrainedSide)
@@ -201,22 +198,22 @@ namespace MGroup.XFEM.IsoXFEM
 						default:
 							break;
 					}
-					//var node = new Node(id, nodeX, nodeY, constrainX, constrainY);
-					nodes.Add(node);
+					nodes.Add(id,node);
 					coordY = coordY + geometry.height / geometry.numberOfElementsY;
 					id = id + 1;
 				}
 				coordY = 0;
 				coordX = coordX + geometry.length / geometry.numberOfElementsX;
 			}
+			return nodes;
 		}
 
 		public void FindElementsOnNodes()
         {
-			foreach (IsoXfemElement2D element in elements)
-			{
-				foreach (XNode node in element.Nodes) node.ElementsDictionary[element.ID] = element;
-			}
+			//foreach (IsoXfemElement2D element in elements)
+			//{
+			//	foreach (XNode node in element.Nodes) node.ElementsDictionary[element.ID] = element;
+			//}
 			//for (int k = 0; k < nodes.Count; k++)
    //         {
    //             for (int i = 0; i <elements.Count ; i++)
@@ -233,29 +230,12 @@ namespace MGroup.XFEM.IsoXFEM
    //         }
         }
 
-        public void MakeMesh()
+        public Tuple<Dictionary<int, XNode>, Dictionary<int, IsoXfemElement2D>> MakeMesh()
         {
-            CreateNodes();
-            CreateElements();           
-            FindElementsOnNodes();
+            var nodes=CreateNodes();
+            var elements=CreateElements(nodes);
+			var tuple = new Tuple <Dictionary<int, XNode>,Dictionary<int, IsoXfemElement2D>> (nodes,elements);
+			return tuple;			
         }
-
-        public void EnumerateDegreesOfFreedom()
-        {               
-               var fixedDofs = new int[2 * (geometry.numberOfElementsY + 1)];
-               var allDofs = new int[2 * nodes.Count];
-                for (int i = 0; i < 2 * (geometry.numberOfElementsY + 1); i++)
-                {
-                    fixedDofs[i] = i; 
-                }
-                for (int i = 0; i < 2 * nodes.Count; i++)
-                {
-                    allDofs[i] = i;  
-                }
-               var freeDofs = ArraysMethods.SetDiff(fixedDofs, allDofs);
-            constraintsOfDofs.Add("FreeDofs", freeDofs);
-            constraintsOfDofs.Add("FixedDofs", fixedDofs);
-            constraintsOfDofs.Add("AllDofs", allDofs);
-         }
    }
 }

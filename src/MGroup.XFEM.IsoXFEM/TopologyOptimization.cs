@@ -8,6 +8,7 @@ using MGroup.LinearAlgebra.Vectors;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.IsoXFEM
 {
@@ -22,13 +23,13 @@ namespace MGroup.XFEM.IsoXFEM
 		public /*private*/static double mlp;
         private static Vector vfEachIteration;
 		public static Matrix results;
-        public static void IsoXfem(Model model, FEMAnalysis femAnalysis)
+        public static void IsoXfem(XModel<IsoXfemElement2D> xModel, FEMAnalysis femAnalysis)
         {
-            nodalStrainEnergyIt = Vector.CreateZero(model.nodes.Count);
-            nodalStrainEnergyItPrevious = Vector.CreateZero(model.nodes.Count);
-            Vector initialAreaOfElements = Vector.CreateWithValue(model.elements.Count, model.elements[0].areaOfElement);
+            nodalStrainEnergyIt = Vector.CreateZero(xModel.Nodes.Count);
+            nodalStrainEnergyItPrevious = Vector.CreateZero(xModel.Nodes.Count);
+            Vector initialAreaOfElements = Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements[0].areaOfElement);
             var initialAreaElement = initialAreaOfElements[0];
-            Vector areaOfElements = Vector.CreateWithValue(model.elements.Count, initialAreaElement);
+            Vector areaOfElements = Vector.CreateWithValue(xModel.Elements.Count, initialAreaElement);
             vfEachIteration = Vector.CreateZero(iterations);
             var areaOfWholeStructure = initialAreaOfElements.Sum();
             var vfi = 1.00;
@@ -44,9 +45,11 @@ namespace MGroup.XFEM.IsoXFEM
                     }
                 }
                 femAnalysis.Solve();			
-				var structuralPerfomance = new StructuralPerfomance(model, initialAreaElement, femAnalysis.displacements);
-                structuralPerfomance.ComputeStrainEnergyandStrainEnergyDensity();
-                structuralPerfomance.ComputeNodalStrainEnergyDensity();
+				var structuralPerfomance = new StructuralPerfomance(xModel.Nodes, xModel.Elements, initialAreaElement, femAnalysis.displacements);
+				xModel.levelSetStructuralPerfomance = structuralPerfomance;
+				xModel.Update();
+                //structuralPerfomance.ComputeStrainEnergyandStrainEnergyDensity();
+                //structuralPerfomance.ComputeNodalStrainEnergyDensity();
                 nodalStrainEnergyIt = structuralPerfomance.nodalStrainEnergyDensity;
                 double totalStrainEnergy = structuralPerfomance.strainEnergy.Sum();
                 StabilizingEvolutionaryProcess(it);
@@ -64,20 +67,20 @@ namespace MGroup.XFEM.IsoXFEM
                 //Target Volume Fraction for this iteration
                 Vector casesForVolumeFractionsIt = Vector.CreateFromArray(new double[] { volumeFraction, vfi * (1 - evolutionRate) });
                 vfi = casesForVolumeFractionsIt.Max();
-                var relativeCriteria = UpdatingMLP(model, vfi, vfk, initialAreaOfElements, areaOfWholeStructure);				
+                var relativeCriteria = UpdatingMLP(xModel, vfi, vfk, initialAreaOfElements, areaOfWholeStructure);				
 				//PlotPerformanceLevel(it, model.nodes, model.elements, relativeCriteria);
-				for (int el = 0; el < model.elements.Count; el++)
+				for (int el = 0; el < xModel.Elements.Count; el++)
                 {
-                    int[] connectionOfElement = new int[] { model.elements[el].nodesOfElement[0].ID, model.elements[el].nodesOfElement[1].ID, model.elements[el].nodesOfElement[2].ID, model.elements[el].nodesOfElement[3].ID };
+                    int[] connectionOfElement = new int[] { xModel.Elements[el].nodesOfElement[0].ID, xModel.Elements[el].nodesOfElement[1].ID, xModel.Elements[el].nodesOfElement[2].ID, xModel.Elements[el].nodesOfElement[3].ID };
                     Vector elementRelativeCriteria = relativeCriteria.GetSubvector(connectionOfElement);
-                    Matrix elementCoordinates = Matrix.CreateFromArray(new double[,] {{ model.elements[el].nodesOfElement[0].X, model.elements[el].nodesOfElement[0].Y},
-                                                                                       {model.elements[el].nodesOfElement[1].X, model.elements[el].nodesOfElement[1].Y },
-                                                                                       {model.elements[el].nodesOfElement[2].X, model.elements[el].nodesOfElement[2].Y },
-                                                                                       {model.elements[el].nodesOfElement[3].X, model.elements[el].nodesOfElement[3].Y }});
-                    model.elements[el].coordinatesOfElement = elementCoordinates;
-					model.elements[el].elementLevelSet = elementRelativeCriteria;
-					model.elements[el].StiffnessMatrix(model.elements[el]);
-					areaOfElements[el] = model.elements[el].areaOfElement;
+                    Matrix elementCoordinates = Matrix.CreateFromArray(new double[,] {{ xModel.Elements[el].nodesOfElement[0].X, xModel.Elements[el].nodesOfElement[0].Y},
+                                                                                       {xModel.Elements[el].nodesOfElement[1].X, xModel.Elements[el].nodesOfElement[1].Y },
+                                                                                       {xModel.Elements[el].nodesOfElement[2].X, xModel.Elements[el].nodesOfElement[2].Y },
+                                                                                       {xModel.Elements[el].nodesOfElement[3].X, xModel.Elements[el].nodesOfElement[3].Y }});
+					xModel.Elements[el].coordinatesOfElement = elementCoordinates;
+					xModel.Elements[el].elementLevelSet = elementRelativeCriteria;
+					xModel.Elements[el].StiffnessMatrix(xModel.Elements[el]);
+					areaOfElements[el] = xModel.Elements[el].areaOfElement;
                 }
             }
             ResultsWriter.ResultsWriterToTxt(results);
@@ -92,7 +95,7 @@ namespace MGroup.XFEM.IsoXFEM
                 }
             }
         }
-        public static Vector UpdatingMLP(Model model, double targetVolumeFraction, double volumeFractionIteration, Vector initialAreas, double wholeArea)
+        public static Vector UpdatingMLP(XModel<IsoXfemElement2D> xModel, double targetVolumeFraction, double volumeFractionIteration, Vector initialAreas, double wholeArea)
         {
             int z = 0;
             Vector relativeCriteria = Vector.CreateZero(nodalStrainEnergyIt.Length);
@@ -104,20 +107,20 @@ namespace MGroup.XFEM.IsoXFEM
                     mlpVector[i] = mlp;
                 }
                 relativeCriteria = nodalStrainEnergyIt - mlpVector;
-                var areasofelement = SolidArea(model, initialAreas, relativeCriteria);
+                var areasofelement = SolidArea(xModel, initialAreas, relativeCriteria);
                 volumeFractionIteration = areasofelement.Sum() / wholeArea;
                 mlp = mlp * volumeFractionIteration / targetVolumeFraction;
                 z++;
             }
             return relativeCriteria;
         }
-        public static Vector SolidArea(Model model, Vector initialAreasOfElements, Vector relativeCriteria)
+        public static Vector SolidArea(XModel<IsoXfemElement2D> xModel, Vector initialAreasOfElements, Vector relativeCriteria)
         {
             Vector newArea = Vector.CreateZero(initialAreasOfElements.Length);
             double areaRatio = 1.00;
-            for (int i = 0; i < model.elements.Count; i++)
+            for (int i = 0; i < xModel.Elements.Count; i++)
             {
-                int[] connectionOfElement = new int[] { model.elements[i].nodesOfElement[0].ID, model.elements[i].nodesOfElement[1].ID, model.elements[i].nodesOfElement[2].ID, model.elements[i].nodesOfElement[3].ID };
+                int[] connectionOfElement = new int[] { xModel.Elements[i].nodesOfElement[0].ID, xModel.Elements[i].nodesOfElement[1].ID, xModel.Elements[i].nodesOfElement[2].ID, xModel.Elements[i].nodesOfElement[3].ID };
                 if (relativeCriteria.GetSubvector(connectionOfElement).Min() > 0)
                 {
                     areaRatio = 1;
@@ -165,7 +168,7 @@ namespace MGroup.XFEM.IsoXFEM
             }
             return newArea;
         }
-        public static void PlotPerformanceLevel(int iteration, List<Node> nodes , List<IsoXfemElement2D> elements, Vector nodalValues)
+        public static void PlotPerformanceLevel(int iteration, Dictionary<int, XNode>  nodes , List<IsoXfemElement2D> elements, Vector nodalValues)
         {                    
             string path = $"{ Paths.OutputDirectory}\\OOS2BottomEnd_40x20_SkylineLDL_InitialStiffness_ComputeOnlyOneTime_CorrectMatlabErrors{iteration}.vtk";
             var writer = new VtkFileWriter(path);

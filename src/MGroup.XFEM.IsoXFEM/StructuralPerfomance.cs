@@ -13,22 +13,24 @@ namespace MGroup.XFEM.IsoXFEM
         public Vector strainEnergy;
         public Vector strainEnergyDensity;
         public Vector nodalStrainEnergyDensity;
-        private readonly Model model;
-        private readonly Vector displacements;
+		private readonly Dictionary<int, XNode> nodes  = new Dictionary<int, XNode>();
+		private readonly Dictionary<int, IsoXfemElement2D> elements  = new Dictionary<int, IsoXfemElement2D>();
+		private readonly Vector displacements;
         private readonly double initialArea;
-        public StructuralPerfomance(Model model,double initialArea, Vector displacements)
+        public StructuralPerfomance(Dictionary<int, XNode> nodes, Dictionary<int, IsoXfemElement2D> elements, double initialArea, Vector displacements)
         {
-            this.model = model;
+			this.nodes = nodes;
+			this.elements = elements;
             this.initialArea = initialArea;
             this.displacements = displacements;
         }
         public void ComputeStrainEnergyandStrainEnergyDensity()
         {
-            strainEnergy = Vector.CreateZero(model.elements.Count);
-            strainEnergyDensity = Vector.CreateZero(model.elements.Count);           
-            for (int i = 0; i < model.elements.Count; i++)
+            strainEnergy = Vector.CreateZero(elements.Count);
+            strainEnergyDensity = Vector.CreateZero(elements.Count);           
+            for (int i = 0; i < elements.Count; i++)
             {
-                var dofsofelement = model.elements[i].dofsOfElement;
+                var dofsofelement = elements[i].dofsOfElement;
                 Vector Ue = displacements.GetSubvector(dofsofelement);
                 Matrix transposeUe = Matrix.CreateZero(1, 8);
                 for (int j = 0; j < 8; j++)
@@ -36,7 +38,7 @@ namespace MGroup.XFEM.IsoXFEM
                     transposeUe[0, j] = Ue[j];
                 }
                 Matrix firstmult = transposeUe.Scale(0.5);
-                Matrix secmult = firstmult.MultiplyRight(model.elements[i].stiffnessOfElement);
+                Matrix secmult = firstmult.MultiplyRight(elements[i].stiffnessOfElement);
                 Vector result = secmult * Ue;
                 strainEnergy[i] = result[0];
                 strainEnergyDensity[i] = strainEnergy[i] / initialArea;
@@ -44,14 +46,14 @@ namespace MGroup.XFEM.IsoXFEM
         }
         public void ComputeNodalStrainEnergyDensity()
         {
-           nodalStrainEnergyDensity = Vector.CreateZero(model.nodes.Count);
+           nodalStrainEnergyDensity = Vector.CreateZero(nodes.Count);
 			//foreach (IsoXfemElement2D element in model.elements)
 			//{
 			//	foreach (XNode node in element.Nodes) node.ElementsDictionary[element.ID] = element;
 			//}	
-			for (int i = 0; i < model.nodes.Count; i++)
+			for (int i = 0; i < nodes.Count; i++)
 			{
-				var node = model.nodes[i];
+				var node = nodes[i];
 				var strainEnergyOfTheseElements = 0.0;
 				foreach (var item in node.ElementsDictionary.Keys)
 				{

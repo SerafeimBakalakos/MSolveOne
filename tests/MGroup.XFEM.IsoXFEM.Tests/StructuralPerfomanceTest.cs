@@ -18,12 +18,22 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
-			var model = new Model(material, geometry);
-			model.MakeMesh();
-			model.EnumerateDegreesOfFreedom();
+			var meshGeneration = new MeshGeneration(material, geometry);
+			var mesh = meshGeneration.MakeMesh();
+			int dimension = 2;
+			var xModel = new XModel<IsoXfemElement2D>(dimension);
+			foreach (var item in mesh.Item1.Keys)
+			{
+				xModel.Nodes[item] = mesh.Item1[item];
+			}
+			foreach (var item in mesh.Item2.Keys)
+			{
+				xModel.Elements[item] = mesh.Item2[item];
+			}
+			xModel.Initialize();
 			double initialArea = 100;
 			Vector displacements = Vector.CreateFromArray(new double[] { 0, 0, 0, 0, 0, 0, 1.76924266492499, 2.43273081966077, 0.174565886551294, 2.18549731446979, -2.05458622432392, 2.22010344064856, 2.24365209361063, 4.97664957363316, 0.162098204124805, 5.50209505074586, -3.20059751636863, 7.51106771335219 });
-			var structuralPerfomance = new StructuralPerfomance(model, initialArea, displacements);
+			var structuralPerfomance = new StructuralPerfomance(xModel.Nodes,xModel.Elements, initialArea, displacements);
 			structuralPerfomance.ComputeStrainEnergyandStrainEnergyDensity();
 			Vector strainEnergyExpected = Vector.CreateFromArray(new double[] { 1.08827975348119, 1.01527547939228, 0.331473388126520, 1.32050523567611 });
 			Vector strainEnergyDensityExpected = Vector.CreateFromArray(new double[] { 0.0108827975348119, 0.0101527547939228, 0.00331473388126520, 0.0132050523567611 });
@@ -40,12 +50,22 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
-			var model = new Model(material, geometry);
-			model.MakeMesh();
-			model.EnumerateDegreesOfFreedom();
+			var meshGeneration = new MeshGeneration(material, geometry);
+			var mesh = meshGeneration.MakeMesh();
+			int dimension = 2;
+			var xModel = new XModel<IsoXfemElement2D>(dimension);
+			foreach (var item in mesh.Item1.Keys)
+			{
+				xModel.Nodes[item] = mesh.Item1[item];
+			}
+			foreach (var item in mesh.Item2.Keys)
+			{
+				xModel.Elements[item] = mesh.Item2[item];
+			}
+			xModel.Initialize();
 			double initialArea = 100;
 			Vector displacements = Vector.CreateFromArray(new double[] { 0, 0, 0, 0, 0, 0, 1.76924266492499, 2.43273081966077, 0.174565886551294, 2.18549731446979, -2.05458622432392, 2.22010344064856, 2.24365209361063, 4.97664957363316, 0.162098204124805, 5.50209505074586, -3.20059751636863, 7.51106771335219 });
-			var structuralPerfomance = new StructuralPerfomance(model, initialArea, displacements);
+			var structuralPerfomance = new StructuralPerfomance(xModel.Nodes,xModel.Elements, initialArea, displacements);
 			structuralPerfomance.ComputeStrainEnergyandStrainEnergyDensity();
 			structuralPerfomance.ComputeNodalStrainEnergyDensity();
 			Vector strainEnergyDensity = Vector.CreateFromArray(new double[] { 0.0108827975348119, 0.0101527547939228, 0.00331473388126520, 0.0132050523567611 });
