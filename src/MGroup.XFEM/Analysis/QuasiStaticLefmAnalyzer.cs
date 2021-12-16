@@ -55,7 +55,7 @@ namespace MGroup.XFEM.Analysis
 			{
 				Debug.WriteLine($"Crack propagation step {iteration}");
 				Console.WriteLine($"Crack propagation step {iteration}");
-				Logger.IncrementAnalysisIteration();
+				//Logger.IncrementAnalysisIteration();
 
 				if (iteration == 0)
 				{
@@ -64,12 +64,14 @@ namespace MGroup.XFEM.Analysis
 					watch.Start();
 					algebraicModel.OrderDofs();
 					watch.Stop();
-					Logger.LogDofOrderingDuration(watch.ElapsedMilliseconds);
+					solver.Logger.LogTaskDuration("Dof ordering", watch.ElapsedMilliseconds);
+					//Logger.LogDofOrderingDuration(watch.ElapsedMilliseconds);
 
 					watch.Restart();
 					BuildMatrices();
 					watch.Stop();
-					Logger.LogMatrixAssemblyDuration(watch.ElapsedMilliseconds);
+					solver.Logger.LogTaskDuration("Matrix assembly", watch.ElapsedMilliseconds);
+					//Logger.LogMatrixAssemblyDuration(watch.ElapsedMilliseconds);
 				}
 				else
 				{
@@ -89,24 +91,28 @@ namespace MGroup.XFEM.Analysis
 						watch.Restart();
 						algebraicModel.ReorderDofs();
 						watch.Stop();
-						Logger.LogDofOrderingDuration(watch.ElapsedMilliseconds);
+						solver.Logger.LogTaskDuration("Dof ordering", watch.ElapsedMilliseconds);
+						//Logger.LogDofOrderingDuration(watch.ElapsedMilliseconds);
 
 						watch.Restart();
 						RebuildMatrices();
 						watch.Stop();
-						Logger.LogMatrixAssemblyDuration(watch.ElapsedMilliseconds);
+						solver.Logger.LogTaskDuration("Matrix assembly", watch.ElapsedMilliseconds);
+						//Logger.LogMatrixAssemblyDuration(watch.ElapsedMilliseconds);
 					}
 					else
 					{
 						watch.Restart();
 						algebraicModel.OrderDofs();
 						watch.Stop();
-						Logger.LogDofOrderingDuration(watch.ElapsedMilliseconds);
+						solver.Logger.LogTaskDuration("Dof ordering", watch.ElapsedMilliseconds);
+						//Logger.LogDofOrderingDuration(watch.ElapsedMilliseconds);
 
 						watch.Restart();
 						BuildMatrices();
 						watch.Stop();
-						Logger.LogMatrixAssemblyDuration(watch.ElapsedMilliseconds);
+						solver.Logger.LogTaskDuration("Matrix assembly", watch.ElapsedMilliseconds);
+						//Logger.LogMatrixAssemblyDuration(watch.ElapsedMilliseconds);
 					}
 				}
 
@@ -116,13 +122,14 @@ namespace MGroup.XFEM.Analysis
 				//if (DDLogger != null) DDLogger.PlotSubdomains(model);
 
 				// Solve the linear system
-				watch.Restart();
+				//watch.Restart();
 				solver.Solve();
 				#region debug
 				//Debug.WriteLine($"norm(u)={solver.LinearSystem.Solution.Norm2()}");
 				#endregion
-				watch.Stop();
-				Logger.LogSolutionDuration(watch.ElapsedMilliseconds);
+				//watch.Stop();
+				//solver.Logger.LogTaskDuration("Solution", watch.ElapsedMilliseconds);
+				//Logger.LogSolutionDuration(watch.ElapsedMilliseconds);
 				totalDisplacementsFreeDofs = solver.LinearSystem.Solution;
 				foreach (IResultsWriter writer in Results)
 				{

@@ -45,6 +45,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 		private readonly IModel model;
 		private readonly IModifiedCornerDofs modifiedCornerDofs;
 		private readonly string name;
+		private readonly ObjectiveConvergenceCriterion<TMatrix> objectiveConvergenceCriterion;
 		private readonly IFetiDPPreconditioner preconditioner;
 		private readonly FetiDPReanalysisOptions reanalysis;
 		private readonly IFetiDPScaling scaling;
@@ -143,7 +144,8 @@ namespace MGroup.Solvers.DDM.FetiDP
 			IPcgResidualConvergence convergenceCriterion;
 			if (interfaceProblemSolverFactory.UseObjectiveConvergenceCriterion)
 			{
-				convergenceCriterion = new ObjectiveConvergenceCriterion<TMatrix>(algebraicModel, solutionRecovery);
+				this.objectiveConvergenceCriterion = new ObjectiveConvergenceCriterion<TMatrix>(algebraicModel, solutionRecovery);
+				convergenceCriterion = this.objectiveConvergenceCriterion;
 			}
 			else
 			{
@@ -185,6 +187,9 @@ namespace MGroup.Solvers.DDM.FetiDP
 
 		public virtual void Solve()
 		{
+			var watchTotal = new Stopwatch();
+			watchTotal.Start();
+			var watch = new Stopwatch();
 			bool isFirstAnalysis = analysisIteration == 0;
 
 			if (LoggerDdm != null)
@@ -193,6 +198,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 			}
 
 			// Prepare subdomain-level dofs and matrices
+			watch.Start();
 			environment.DoPerNode(subdomainID =>
 			{
 				if (isFirstAnalysis || !reanalysis.SubdomainDofSubsets
@@ -253,8 +259,11 @@ namespace MGroup.Solvers.DDM.FetiDP
 					}
 				});
 			}
+			watch.Stop();
+			Logger.LogTaskDuration("Subdomain level dofs and matrices", watch.ElapsedMilliseconds);
 
 			// Intersubdomain lagrange multipliers
+			watch.Restart();
 			if (true/*isFirstAnalysis || !reanalysis.InterfaceProblemIndexer*/)
 			{
 				this.lagrangeVectorIndexer = new DistributedOverlappingIndexer(environment);
@@ -268,11 +277,14 @@ namespace MGroup.Solvers.DDM.FetiDP
 			else
 			{
 			}
-
+			
 			// Calculating scaling coefficients
 			scaling.CalcScalingMatrices();
+			watch.Stop();
+			Logger.LogTaskDuration("Define interface problem dofs", watch.ElapsedMilliseconds);
 
 			// Prepare subdomain-level vectors
+			watch.Restart();
 			environment.DoPerNode(subdomainID =>
 			{
 				if (isFirstAnalysis || !reanalysis.RhsVectors
@@ -291,27 +303,41 @@ namespace MGroup.Solvers.DDM.FetiDP
 					Debug.Assert(!subdomainVectors[subdomainID].IsEmpty);
 				}
 			});
+			watch.Stop();
+			Logger.LogTaskDuration("Subdomain level vectors", watch.ElapsedMilliseconds);
 
+			watch.Restart();
 			// Setup optimizations if coarse dofs are the same as in previous analysis
 			modifiedCornerDofs.Update(reanalysis.ModifiedSubdomains);
 
 			// Prepare coarse problem
 			coarseProblem.FindCoarseProblemDofs(LoggerDdm, modifiedCornerDofs);
 			coarseProblem.PrepareMatricesForSolution();
+			watch.Stop();
+			Logger.LogTaskDuration("Prepare coarse problem", watch.ElapsedMilliseconds);
 
 			// Prepare and solve the interface problem
+			watch.Restart();
 			interfaceProblemMatrix.Calculate(lagrangeVectorIndexer);
 			interfaceProblemVectors.CalcInterfaceRhsVector(lagrangeVectorIndexer);
 			preconditioner.Initialize(
 				environment, lagrangeVectorIndexer, s => subdomainLagranges[s], s => subdomainMatrices[s], scaling);
+			watch.Stop();
+			Logger.LogTaskDuration("Prepare interface problem", watch.ElapsedMilliseconds); // preconditioner should be together with subdomain operations
+
 			SolveInterfaceProblem();
 
 			// Having found the lagrange multipliers, now calculate the solution in term of primal dofs
+			watch.Restart();
 			solutionRecovery.CalcPrimalSolution(
 				interfaceProblemVectors.InterfaceProblemSolution, algebraicModel.LinearSystem.Solution);
+			watch.Stop();
+			Logger.LogTaskDuration("Recover solution at all dofs", watch.ElapsedMilliseconds);
 
-			++analysisIteration;
+			watchTotal.Stop();
+			Logger.LogTaskDuration("Solution", watchTotal.ElapsedMilliseconds);
 			Logger.IncrementAnalysisStep();
+			++analysisIteration;
 		}
 
 		private bool GuessInitialSolution()
@@ -367,6 +393,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 
 		private void SolveInterfaceProblem()
 		{
+			var watch = new Stopwatch();
 			bool initalGuessIsZero = GuessInitialSolution();
 
 			// Solver the interface problem
@@ -374,15 +401,23 @@ namespace MGroup.Solvers.DDM.FetiDP
 				interfaceProblemMatrix, preconditioner, interfaceProblemVectors.InterfaceProblemRhs,
 				interfaceProblemVectors.InterfaceProblemSolution, initalGuessIsZero);
 			InterfaceProblemSolutionStats = stats;
+			watch.Stop();
 
+			Debug.WriteLine("Iterations for boundary problem = " + stats.NumIterationsRequired);
+			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
+			Logger.LogTaskDuration("Interface problem solution", watch.ElapsedMilliseconds);
 			if (LoggerDdm != null)
 			{
 				LoggerDdm.LogProblemSize(0, algebraicModel.FreeDofIndexer.CountUniqueEntries());
 				LoggerDdm.LogProblemSize(1, lagrangeVectorIndexer.CountUniqueEntries());
 				LoggerDdm.LogSolverConvergenceData(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
 			}
-			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
-			Debug.WriteLine("Iterations for boundary problem = " + stats.NumIterationsRequired);
+
+			if (objectiveConvergenceCriterion != null)
+			{
+				Logger.LogTaskDuration("Objective PCG criterion", objectiveConvergenceCriterion.EllapsedMilliseconds);
+				objectiveConvergenceCriterion.EllapsedMilliseconds = 0;
+			}
 		}
 
 		public class Factory

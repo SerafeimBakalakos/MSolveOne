@@ -5,6 +5,10 @@ using System.Linq;
 using System.Text;
 using MGroup.Environments;
 
+#region debug
+// Delete this class.
+#endregion
+
 namespace MGroup.XFEM.Solvers
 {
 	public class PerformanceLogger

@@ -58,9 +58,10 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		public static int maxIterations = 15;
 		public const double fractureToughness = double.MaxValue;
 
-		public static bool reanalysis = false;
+		public static bool ddmReanalysis = false;
 		public static ReanalysisExtraDofs reanalysisExtraDofs = ReanalysisExtraDofs.AllNearModified;
 		public static double iterTol = 1E-10;
+		public static bool objectivePcgCriterion = false;
 		public static bool multiThreaded = false;
 
 		[Fact]
@@ -204,7 +205,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				|| solverChoice == SolverChoice.FetiDPManaged || solverChoice == SolverChoice.FetiDPNative)
 			{
 				msg.Append($"numSubdomains={numSubdomains[0]}x{numSubdomains[1]}x{numSubdomains[2]}");
-				msg.AppendLine($", reanalysis={reanalysis}, multithreaded environment={multiThreaded}, PSM tolerance={iterTol}");
+				msg.AppendLine($", reanalysis={ddmReanalysis}, multithreaded environment={multiThreaded}, PSM tolerance={iterTol}");
 			}
 			else if (solverChoice == SolverChoice.DirectReanalysis)
 			{
@@ -215,18 +216,16 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			normLogger.ExtraInfo = msg.ToString();
 			analyzer.Results.Add(normLogger);
 			analyzer.Logger.ExtraInfo = msg.ToString();
+			solver.Logger.ExtraInfo = msg.ToString();
 			//analyzer.Results.Add(new StructuralFieldWriter(model, outputDirectory));
 
 			Console.WriteLine("Starting analysis");
 			analyzer.Analyze();
 
 			string performanceOutputFile = Path.Combine(outputDirectory, "performance.txt");
-			analyzer.Logger.WriteToFile(performanceOutputFile, true);
-			if (solverChoice == SolverChoice.DirectReanalysis)
-			{
-				solver.Logger.WriteToFile(performanceOutputFile, msg.ToString(), true);
-				solver.Logger.WriteAggregatesToFile(performanceOutputFile, msg.ToString(), true);
-			}
+			//analyzer.Logger.WriteToFile(performanceOutputFile, true);
+			solver.Logger.WriteAggregatesToFile(performanceOutputFile, true);
+			solver.Logger.WriteToFile(performanceOutputFile, true);
 		}
 
 		private static (ISolver, IAlgebraicModel) SetupDirectSolver(XModel<IXCrackElement> model, SolverChoice solverChoice)
@@ -326,10 +325,11 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			solverFactory.InterfaceProblemSolverFactory = new FetiDPInterfaceProblemSolverFactoryPcg()
 			{
 				MaxIterations = 200,
-				ResidualTolerance = iterTol
+				ResidualTolerance = iterTol,
+				UseObjectiveConvergenceCriterion = objectivePcgCriterion
 			};
 
-			if (reanalysis)
+			if (ddmReanalysis)
 			{
 				throw new NotImplementedException();
 				var observer = new SubdomainEnrichmentsModifiedObserver();
@@ -426,10 +426,11 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
 			{
 				MaxIterations = 200,
-				ResidualTolerance = iterTol
+				ResidualTolerance = iterTol,
+				UseObjectiveConvergenceCriterion = objectivePcgCriterion
 			};
 
-			if (reanalysis)
+			if (ddmReanalysis)
 			{
 				var observer = new SubdomainEnrichmentsModifiedObserver();
 				model.GeometryModel.Enricher.Observers.Add(observer);

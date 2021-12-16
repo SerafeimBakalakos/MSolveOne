@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed;
@@ -31,9 +32,14 @@ namespace MGroup.Solvers.DDM.FetiDP.InterfaceProblem
 			this.solutionRecovery = solutionRecovery;
 		}
 
+		public long EllapsedMilliseconds { get; set; } = 0;
+
 		public double EstimateResidualNormRatio(PcgAlgorithmBase pcg)
 		{
+			var watch = new Stopwatch();
+
 			// Find solution at free dofs
+			watch.Start();
 			var lambda = (DistributedOverlappingVector)(pcg.Solution);
 			var Uf = new DistributedOverlappingVector(algebraicModel.FreeDofIndexer);
 			solutionRecovery.CalcPrimalSolution(lambda, Uf);
@@ -43,8 +49,13 @@ namespace MGroup.Solvers.DDM.FetiDP.InterfaceProblem
 			IGlobalVector residual = Ff.CreateZero();
 			Kff.MultiplyVector(Uf, residual);
 			residual.LinearCombinationIntoThis(-1.0, Ff, +1.0);
+			double result = residual.Norm2() / normF0;
+			watch.Stop();
 
-			return residual.Norm2() / normF0;
+			this.EllapsedMilliseconds += watch.ElapsedMilliseconds;
+
+			//Console.WriteLine($"Residual norm ratio = {result}");
+			return result;
 		}
 
 		public void Initialize(PcgAlgorithmBase pcg)

@@ -4,6 +4,8 @@ namespace MGroup.MSolve.Solution
 {
 	public interface ISolverLogger
 	{
+		string ExtraInfo { get; set; }
+
 		int GetNumDofs(int analysisStep, string category);
 
 		int GetNumIterationsOfIterativeAlgorithm(int analysisStep);
@@ -23,7 +25,7 @@ namespace MGroup.MSolve.Solution
 		/// but they are not necessarily repeated in all analyses. Thus call it at the end of the Solve() method.
 		/// </summary>
 		void IncrementAnalysisStep();
-		void WriteToFile(string path, string title, bool append);
-		void WriteAggregatesToFile(string path, string title, bool append);
+		void WriteToFile(string path, bool append);
+		void WriteAggregatesToFile(string path, bool append);
 	}
 }

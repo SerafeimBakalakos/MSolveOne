@@ -39,6 +39,7 @@ namespace MGroup.Solvers.DDM.Psm
 		protected readonly IPsmInterfaceProblemVectors interfaceProblemVectors;
 		protected readonly IModel model;
 		protected readonly string name;
+		private readonly ObjectiveConvergenceCriterion<TMatrix> objectiveConvergenceCriterion;
 		protected /*readonly*/ IPsmPreconditioner preconditioner; //TODO: Make this readonly as well.
 		protected readonly PsmReanalysisOptions reanalysis;
 		protected readonly IBoundaryDofScaling scaling;
@@ -47,6 +48,7 @@ namespace MGroup.Solvers.DDM.Psm
 		protected readonly ISubdomainTopology subdomainTopology;
 		protected readonly ConcurrentDictionary<int, PsmSubdomainVectors> subdomainVectors;
 		private readonly bool directSolverIsNative = false;
+
 
 		protected int analysisIteration;
 		protected DistributedOverlappingIndexer boundaryDofIndexer;
@@ -115,8 +117,9 @@ namespace MGroup.Solvers.DDM.Psm
 			IPcgResidualConvergence convergenceCriterion;
 			if (interfaceProblemSolverFactory.UseObjectiveConvergenceCriterion)
 			{
-				convergenceCriterion = new ObjectiveConvergenceCriterion<TMatrix>(
+				this.objectiveConvergenceCriterion = new ObjectiveConvergenceCriterion<TMatrix>(
 					environment, algebraicModel, s => subdomainVectors[s]);
+				convergenceCriterion = this.objectiveConvergenceCriterion;
 			}
 			else
 			{
@@ -158,6 +161,9 @@ namespace MGroup.Solvers.DDM.Psm
 
 		public virtual void Solve() 
 		{
+			var watchTotal = new Stopwatch();
+			watchTotal.Start();
+			var watch = new Stopwatch();
 			bool isFirstAnalysis = analysisIteration == 0;
 
 			if (LoggerDdm != null)
@@ -166,6 +172,7 @@ namespace MGroup.Solvers.DDM.Psm
 			}
 
 			// Prepare subdomain-level dofs and matrices
+			watch.Start();
 			environment.DoPerNode(subdomainID =>
 			{
 				if (isFirstAnalysis || !reanalysis.SubdomainDofSubsets 
@@ -224,8 +231,11 @@ namespace MGroup.Solvers.DDM.Psm
 					}
 				});
 			}
+			watch.Stop();
+			Logger.LogTaskDuration("Subdomain level dofs and matrices", watch.ElapsedMilliseconds);
 
 			// Intersubdomain dofs
+			watch.Restart();
 			if (isFirstAnalysis || !reanalysis.InterfaceProblemIndexer)
 			{
 				this.boundaryDofIndexer = subdomainTopology.CreateDistributedVectorIndexer(
@@ -240,8 +250,11 @@ namespace MGroup.Solvers.DDM.Psm
 
 			// Calculating scaling coefficients
 			scaling.CalcScalingMatrices(boundaryDofIndexer);
+			watch.Stop();
+			Logger.LogTaskDuration("Define interface problem dofs", watch.ElapsedMilliseconds);
 
 			// Prepare subdomain-level vectors
+			watch.Restart();
 			environment.DoPerNode(subdomainID =>
 			{
 				if (isFirstAnalysis || !reanalysis.RhsVectors 
@@ -259,22 +272,33 @@ namespace MGroup.Solvers.DDM.Psm
 					Debug.Assert(!subdomainVectors[subdomainID].IsEmpty);
 				}
 			});
+			watch.Stop();
+			Logger.LogTaskDuration("Subdomain level vectors", watch.ElapsedMilliseconds);
 
 			// Prepare and solve the interface problem
+			watch.Restart();
 			interfaceProblemMatrix.Calculate(boundaryDofIndexer);
 			interfaceProblemVectors.CalcInterfaceRhsVector(boundaryDofIndexer);
 			CalcPreconditioner();
+			watch.Stop();
+			Logger.LogTaskDuration("Prepare interface problem", watch.ElapsedMilliseconds); // preconditioner should be together with subdomain operations
+
 			SolveInterfaceProblem();
 
 			// Find the solution at all free dofs
+			watch.Restart();
 			environment.DoPerNode(subdomainID =>
 			{
 				Vector subdomainBoundarySolution = interfaceProblemVectors.InterfaceProblemSolution.LocalVectors[subdomainID];
 				subdomainVectors[subdomainID].CalcStoreSubdomainFreeSolution(subdomainBoundarySolution);
 			});
+			watch.Stop();
+			Logger.LogTaskDuration("Recover solution at all dofs", watch.ElapsedMilliseconds);
 
-			++analysisIteration;
+			watchTotal.Stop();
+			Logger.LogTaskDuration("Solution", watchTotal.ElapsedMilliseconds);
 			Logger.IncrementAnalysisStep();
+			++analysisIteration;
 		}
 
 		protected virtual void CalcPreconditioner()
@@ -335,6 +359,8 @@ namespace MGroup.Solvers.DDM.Psm
 
 		protected void SolveInterfaceProblem()
 		{
+			var watch = new Stopwatch();
+			watch.Start();
 			bool initalGuessIsZero = GuessInitialSolution();
 
 			// Solver the interface problem
@@ -342,15 +368,23 @@ namespace MGroup.Solvers.DDM.Psm
 				interfaceProblemMatrix.Matrix, preconditioner.Preconditioner, interfaceProblemVectors.InterfaceProblemRhs,
 				interfaceProblemVectors.InterfaceProblemSolution, initalGuessIsZero);
 			InterfaceProblemSolutionStats = stats;
+			watch.Stop();
 
+			Debug.WriteLine("Iterations for boundary problem = " + stats.NumIterationsRequired);
+			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
+			Logger.LogTaskDuration("Interface problem solution", watch.ElapsedMilliseconds);
 			if (LoggerDdm != null)
 			{
 				LoggerDdm.LogProblemSize(0, algebraicModel.FreeDofIndexer.CountUniqueEntries());
 				LoggerDdm.LogProblemSize(1, boundaryDofIndexer.CountUniqueEntries());
 				LoggerDdm.LogSolverConvergenceData(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
 			}
-			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
-			Debug.WriteLine("Iterations for boundary problem = " + stats.NumIterationsRequired);
+
+			if (objectiveConvergenceCriterion != null)
+			{
+				Logger.LogTaskDuration("Objective PCG criterion", objectiveConvergenceCriterion.EllapsedMilliseconds);
+				objectiveConvergenceCriterion.EllapsedMilliseconds = 0;
+			}
 		}
 
 		public class Factory

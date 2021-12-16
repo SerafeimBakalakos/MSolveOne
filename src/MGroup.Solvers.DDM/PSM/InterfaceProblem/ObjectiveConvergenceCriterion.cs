@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed;
@@ -23,7 +24,6 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 		private readonly IComputeEnvironment environment;
 		private readonly DistributedAlgebraicModel<TMatrix> algebraicModel;
 		private readonly Func<int, PsmSubdomainVectors> getSubdomainVectors;
-
 		private double normF0;
 
 		public ObjectiveConvergenceCriterion(IComputeEnvironment environment, DistributedAlgebraicModel<TMatrix> algebraicModel, 
@@ -34,9 +34,14 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 			this.getSubdomainVectors = getSubdomainVectors;
 		}
 
+		public long EllapsedMilliseconds { get; set; } = 0;
+
 		public double EstimateResidualNormRatio(PcgAlgorithmBase pcg)
 		{
+			var watch = new Stopwatch();
+
 			// Find displacements at free dofs
+			watch.Start();
 			var Ub = (DistributedOverlappingVector)(pcg.Solution);
 			var Uf = new DistributedOverlappingVector(algebraicModel.FreeDofIndexer);
 			environment.DoPerNode(subdomainID =>
@@ -51,8 +56,13 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 			IGlobalVector residual = Ff.CreateZero();
 			Kff.MultiplyVector(Uf, residual);
 			residual.LinearCombinationIntoThis(-1.0, Ff, +1.0);
+			double result = residual.Norm2() / normF0;
+			watch.Stop();
 
-			return residual.Norm2() / normF0;
+			this.EllapsedMilliseconds += watch.ElapsedMilliseconds;
+
+			//Console.WriteLine($"Residual norm ratio = {result}");
+			return result;
 		}
 
 		public void Initialize(PcgAlgorithmBase pcg)
