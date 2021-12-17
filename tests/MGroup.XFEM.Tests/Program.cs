@@ -22,17 +22,17 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_1_Solvers.maxIterations = 5;
 			FriesExample_7_2_1_Model.heavisideTol = 1E-4;
 
-			FriesExample_7_2_1_Solvers.outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example1\";
-			//FriesExample_7_2_1_Solvers.outputDirectory = @"C:\Users\cluster\Desktop\Serafeim\results\Example1\";
+			//FriesExample_7_2_1_Solvers.outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example1\";
+			FriesExample_7_2_1_Solvers.outputDirectory = @"C:\Users\cluster\Desktop\Serafeim\results\Example1\";
 			FriesExample_7_2_1_Solvers.outputPlotDirectory = FriesExample_7_2_1_Solvers.outputDirectory + "plots";
 			FriesExample_7_2_1_Solvers.enablePlotting = false;
 
-			FriesExample_7_2_1_Solvers.crackMouthCoords = new double[] { 337, 0 };
-			FriesExample_7_2_1_Solvers.crackFrontCoords = new double[] { 337, 74 };
+			FriesExample_7_2_1_Solvers.crackMouthCoords = new double[] { 337.5, 0 };
+			FriesExample_7_2_1_Solvers.crackFrontCoords = new double[] { 337.5, 74 };
 
-			int numElementsMin = 10;
+			int numElementsMin = 5;
 			FriesExample_7_2_1_Solvers.numElements = new int[] { 9 * numElementsMin, 2 * numElementsMin, numElementsMin };
-			int numSubdomainsMin = 5;
+			int numSubdomainsMin = 1;
 			FriesExample_7_2_1_Solvers.numSubdomains = new int[] { 9 * numSubdomainsMin, 2 * numSubdomainsMin, numSubdomainsMin };
 
 			FriesExample_7_2_1_Solvers.multiThreaded = true;
@@ -52,8 +52,8 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_3_Model.heavisideTol = 1E-3;
 			FriesExample_7_2_3_Solvers.maxIterations = 5;
 
-			FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example2\";
-			//FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\cluster\Desktop\Serafeim\results\Example2\";
+			//FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example2\";
+			FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\cluster\Desktop\Serafeim\results\Example2\";
 			FriesExample_7_2_3_Solvers.outputPlotDirectory = FriesExample_7_2_3_Solvers.outputDirectory + "plots";
 			FriesExample_7_2_3_Solvers.enablePlotting = false;
 
