@@ -5,8 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="C:\Users\ebank\.nuget\packages\mgroup.numericalanalyzers\0.1.0-unstable.28\contentFiles\any\netstandard2.0\lapacke.h" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DotNumerics" Version="1.1.0" />
     <PackageReference Include="MGroup.LinearAlgebra" Version="0.1.0-unstable.52" />
+    <PackageReference Include="MGroup.NumericalAnalyzers" Version="0.1.0-unstable.28" />
   </ItemGroup>
 
   <ItemGroup>

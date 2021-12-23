@@ -5,14 +5,41 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.LinearAlgebra.Input;
 	using MGroup.LinearAlgebra.Matrices;
 	using MGroup.LinearAlgebra.Vectors;
+	using MGroup.MSolve.Discretization;
 	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.MSolve.Discretization.Loads;
 	using MGroup.XFEM.IsoXFEM.Solvers;
 	using MGroup.XFEM.Materials.Duplicates;
+	using MGroup.NumericalAnalyzers;
+	using MGroup.Solvers.Direct;
 
 	using Xunit;
+	using MGroup.Constitutive.Structural;
+	using MGroup.XFEM.Entities;
+
 	public class FEMAnalysisTests
 	{
+		//                      #2
+		//     .________________________________.
+		//     |                                |
+		//     |                                |
+		//     |                                |
+		//     |                                |
+		//     |                                |
+		//  #3 |                                |      #1
+		//     |                                |
+		//     |                                |
+		//     |                                |
+		//     .________________________________.
+		//                    #0
+		public enum ConstrainedSide
+		{
+			Bottomside,
+			Rightside,
+			Upperside,
+			Leftside,
+		}
+		private static ConstrainedSide constrainedSide = ConstrainedSide.Leftside;
 		public enum EndLoad
 		{
 			UpperEnd,
@@ -30,8 +57,44 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			material.PoissonRatio = 0.3;
 			var meshGeneration = new MeshGeneration(material, geometry);
 			var mesh = meshGeneration.MakeMesh();
+			foreach (var item in mesh.Item1.Values)
+			{
+				switch (constrainedSide)
+				{
+					case ConstrainedSide.Bottomside:
+						if (item.Y == 0)
+						{
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+						}
+						break;
+					case ConstrainedSide.Rightside:
+						if (item.X == geometry.length)
+						{
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+						}
+						break;
+					case ConstrainedSide.Upperside:
+						if (item.Y == geometry.height)
+						{
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+						}
+						break;
+					case ConstrainedSide.Leftside:
+						if (item.X == 0)
+						{
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+						}
+						break;
+					default:
+						break;
+				}
+			}
 			int dimension = 2;
-			var xModel = new XModel<IsoXfemElement2D>(dimension);
+			var xModel = new IsoXFEM.XModel<IsoXfemElement2D>(dimension);
 			foreach (var item in mesh.Item1.Keys)
 			{
 				xModel.Nodes[item] = mesh.Item1[item];
@@ -40,7 +103,6 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			{
 				xModel.Elements[item] = mesh.Item2[item];
 			}
-			xModel.Initialize();
 			endload = EndLoad.MiddleEnd;
 			int nodeIDLoad = (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1) - ((int)endload * (geometry.numberOfElementsY) / 2) - 1;
 			Load load;
@@ -51,8 +113,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				Amount = 1
 			};
 			xModel.NodalLoads.Add(load);
-			//var nodalLoad = new NodalLoad(geometry);
-			//Vector rhs = nodalLoad.CalcRHS();
+			xModel.Initialize();
 			ISolver solver = new SkylineLdlSolver();
 			var femAnalysis = new FEMAnalysis(geometry, xModel, solver/*, rhs*/);
 			femAnalysis.AssembleStiffnessMatrix();
@@ -90,8 +151,44 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			material.PoissonRatio = 0.3;
 			var meshGeneration = new MeshGeneration(material, geometry);
 			var mesh = meshGeneration.MakeMesh();
+			foreach (var item in mesh.Item1.Values)
+			{
+				switch (constrainedSide)
+				{
+					case ConstrainedSide.Bottomside:
+						if (item.Y == 0)
+						{
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+						}
+						break;
+					case ConstrainedSide.Rightside:
+						if (item.X == geometry.length)
+						{
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+						}
+						break;
+					case ConstrainedSide.Upperside:
+						if (item.Y == geometry.height)
+						{
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+						}
+						break;
+					case ConstrainedSide.Leftside:
+						if (item.X == 0)
+						{
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+						}
+						break;
+					default:
+						break;
+				}
+			}
 			int dimension = 2;
-			var xModel = new XModel<IsoXfemElement2D>(dimension);
+			var xModel = new IsoXFEM.XModel<IsoXfemElement2D>(dimension);
 			foreach (var item in mesh.Item1.Keys)
 			{
 				xModel.Nodes[item] = mesh.Item1[item];
@@ -101,20 +198,9 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				xModel.Elements[item] = mesh.Item2[item];
 			}
 			xModel.Initialize();
-			//endload = EndLoad.MiddleEnd;
-			//int nodeIDLoad = (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1) - ((int)endload * (geometry.numberOfElementsY) / 2) - 1;
-			//Load load;
-			//load = new Load()
-			//{
-			//	Node = xModel.Nodes[nodeIDLoad],
-			//	DOF = StructuralDof.TranslationY,
-			//	Amount = 1
-			//};
-			//xModel.NodalLoads.Add(load);
-			//var nodalLoad = new NodalLoad(geometry);
-			//Vector rhs = nodalLoad.CalcRHS();
 			ISolver solver = new SkylineLdlSolver();
 			var femAnalysis = new FEMAnalysis(geometry, xModel, solver/*, rhs*/);
+			femAnalysis.Initialize();
 			Vector solution = Vector.CreateWithValue(12, 10);
 			femAnalysis.RefillDisplacements(solution);
 			var displacementsComputed = femAnalysis.displacements;
@@ -134,8 +220,45 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			material.PoissonRatio = 0.3;
 			var meshGeneration = new MeshGeneration(material, geometry);
 			var mesh = meshGeneration.MakeMesh();
+			foreach (var item in mesh.Item1.Values)
+			{
+				switch (constrainedSide)
+				{
+					case ConstrainedSide.Bottomside:
+						if (item.Y == 0)
+						{
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+						}
+						break;
+					case ConstrainedSide.Rightside:
+						if (item.X == geometry.length)
+						{
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+						}
+						break;
+					case ConstrainedSide.Upperside:
+						if (item.Y == geometry.height)
+						{
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+						}
+						break;
+					case ConstrainedSide.Leftside:
+						if (item.X == 0)
+						{
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+						}
+						break;
+					default:
+						break;
+				}
+			}
 			int dimension = 2;
-			var xModel = new XModel<IsoXfemElement2D>(dimension);
+			var xModel = new IsoXFEM.XModel<IsoXfemElement2D>(dimension);
+			xModel.Subdomains[0] = new XSubdomain<IsoXfemElement2D>(0);
 			foreach (var item in mesh.Item1.Keys)
 			{
 				xModel.Nodes[item] = mesh.Item1[item];
@@ -143,8 +266,8 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			foreach (var item in mesh.Item2.Keys)
 			{
 				xModel.Elements[item] = mesh.Item2[item];
+				xModel.Subdomains[0].Elements.Add(mesh.Item2[item]);
 			}
-			xModel.Initialize();
 			endload = EndLoad.BottomEnd;
 			int nodeIDLoad = (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1) - ((int)endload * (geometry.numberOfElementsY) / 2) - 1;
 			Load load;
@@ -155,20 +278,49 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				Amount = 1
 			};
 			xModel.NodalLoads.Add(load);
-			//var nodalLoad = new NodalLoad(geometry);
-			//Vector rhs = nodalLoad.CalcRHS();
-			ISolver solver = new SkylineLdlSolver();
-			var femAnalysis = new FEMAnalysis(geometry, xModel, solver/*, rhs*/);
-			femAnalysis.Initialize();
-			femAnalysis.Solve();
-			var displacementsComputed = femAnalysis.displacements;
+			xModel.Initialize();
+			//Use FEMAnalysis
+			//ISolver solver = new SkylineLdlSolver();
+			//var femAnalysis = new FEMAnalysis(geometry, xModel, solver/*, rhs*/);
+			//femAnalysis.Initialize();
+			//femAnalysis.Solve();
+			//var displacementsComputed = femAnalysis.displacements;
+			//Use MSolve.NumericalAnalyzers
+			/// <summary>
+			/// Defines Skyline Solver.
+			/// </summary>
+			var solverFactory = new SkylineSolver.Factory();
+			var algebraicModel = solverFactory.BuildAlgebraicModel(xModel);
+			var solver = solverFactory.BuildSolver(algebraicModel);
+
+			/// <summary>
+			/// Defines Problem type as Structural.
+			/// </summary>
+			var provider = new ProblemStructural(xModel, algebraicModel, solver);
+
+			/// <summary>
+			/// Defines Analyzers.
+			/// Chlid Analyzer: Linear
+			/// Parent Analyzer: Static
+			/// </summary>
+			var childAnalyzer = new LinearAnalyzer(xModel, algebraicModel, solver, provider);
+			var parentAnalyzer = new StaticAnalyzer(xModel, algebraicModel, solver, provider, childAnalyzer);
+
+			/// <summary>
+			/// Run the anlaysis.
+			/// </summary>
+			parentAnalyzer.Initialize();
+			parentAnalyzer.Solve();
+			var solution = solver.LinearSystem.Solution.SingleVector;
+
+			//Extract Results from txt file
 			var reader = new Array1DReader(false);
 			string inputFile = @"C:\Users\ebank\source\repos\MSolveOne\tests\MGroup.XFEM.IsoXFEM.Tests\Resources\OOSBottomEnd_40x20_it_0_displacements.txt";
 			var uexp = reader.ReadFile(inputFile);
 			Vector displacementsExpected = Vector.CreateFromArray(uexp, true);
-			for (int i = 0; i < displacementsExpected.Length; i++)
+			for (int i = 0; i < solution.Length; i++)
 			{
-				Assert.Equal(displacementsExpected[i], displacementsComputed[i]);
+				Assert.Equal(displacementsExpected[i+42], solution[i],10);
 			}
 		}
 	}

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MGroup.MSolve.Discretization.Dofs;
+using MGroup.XFEM.Entities;
 
 namespace MGroup.XFEM.IsoXFEM
 {
@@ -15,7 +16,8 @@ namespace MGroup.XFEM.IsoXFEM
 		public Vector displacements;
 		private GeometryProperties geometry;
 		private readonly XModel<IsoXfemElement2D> xModel;
-		private Dictionary<string, int[]> constraintsOfDofs = new Dictionary<string, int[]>();
+		private  int[] globalDegreesOfFreedomInteger;
+		//private Dictionary<string, int[]> constraintsOfDofs = new Dictionary<string, int[]>();
 		private int dofLoad;
 		public /*private*/ Matrix globalStiffness;
 
@@ -46,8 +48,8 @@ namespace MGroup.XFEM.IsoXFEM
             globalStiffness = Matrix.CreateZero(2 * xModel.Nodes.Count, 2 * xModel.Nodes.Count);
             for (int i = 0; i < xModel.Elements.Count; i++)
             {
-                var stiffnessElement = xModel.Elements[i].stiffnessOfElement;
-                var dofs = xModel.Elements[i].dofsOfElement;
+                var stiffnessElement = xModel.Elements[i].StiffnessOfElement;
+                var dofs = xModel.Elements[i].DofsOfElement;
                 for (int j = 0; j < dofs.Length; j++)
                 {
                     for (int k = 0; k < dofs.Length; k++)
@@ -57,23 +59,56 @@ namespace MGroup.XFEM.IsoXFEM
                 }
             }
         }
-		private void EnumerateDegreesOfFreedom()
+		private void EnumerateStructuralDegreesOfFreedom()
 		{
-			var fixedDofs = new int[2 * (geometry.numberOfElementsY + 1)];
-			var allDofs = new int[2 * xModel.Nodes.Count];
-			for (int i = 0; i < 2 * (geometry.numberOfElementsY + 1); i++)
+			List<int> globalDegreesOfFreedom = new List<int>();
+			if (xModel.Dimension == 2)
 			{
-				fixedDofs[i] = i;
+				foreach (XNode xNode in xModel.Nodes.Values)
+				{
+					if (xNode.Constraints.Count==0)
+					{
+						
+						globalDegreesOfFreedom.Add(xNode.ID*2);					
+						globalDegreesOfFreedom.Add(xNode.ID * 2+1);
+					}
+					else if (xNode.Constraints.Count==1)
+					{
+						if (xNode.Constraints[0].DOF== StructuralDof.TranslationX)
+						{
+							globalDegreesOfFreedom.Add(xNode.ID * 2 + 1); 
+						}
+						else if (xNode.Constraints[0].DOF == StructuralDof.TranslationY)
+						{
+							globalDegreesOfFreedom.Add(xNode.ID * 2);
+						}
+					}
+				}
+				 globalDegreesOfFreedomInteger = new int[globalDegreesOfFreedom.Count];
+				for (int i = 0; i < globalDegreesOfFreedom.Count; i++)
+				{
+					globalDegreesOfFreedomInteger[i] = globalDegreesOfFreedom[i];
+				}
 			}
-			for (int i = 0; i < 2 * xModel.Nodes.Count; i++)
-			{
-				allDofs[i] = i;
-			}
-			var freeDofs = ArraysMethods.SetDiff(fixedDofs, allDofs);
-			constraintsOfDofs.Add("FreeDofs", freeDofs);
-			constraintsOfDofs.Add("FixedDofs", fixedDofs);
-			constraintsOfDofs.Add("AllDofs", allDofs);
-		}
+		}		
+		
+		//private void EnumerateDegreesOfFreedom()
+		//{
+		//	var fixedDofs = new int[2 * (geometry.numberOfElementsY + 1)];
+		//	var allDofs = new int[2 * xModel.Nodes.Count];
+		//	for (int i = 0; i < 2 * (geometry.numberOfElementsY + 1); i++)
+		//	{
+		//		fixedDofs[i] = i;
+		//	}
+		//	for (int i = 0; i < 2 * xModel.Nodes.Count; i++)
+		//	{
+		//		allDofs[i] = i;
+		//	}
+		//	var freeDofs = ArraysMethods.SetDiff(fixedDofs, allDofs);
+		//	constraintsOfDofs.Add("FreeDofs", freeDofs);
+		//	constraintsOfDofs.Add("FixedDofs", fixedDofs);
+		//	constraintsOfDofs.Add("AllDofs", allDofs);
+		//}
 		public void RefillDisplacements(Vector solution)
         {
             int[] numOfFreedofs = new int[solution.Length];
@@ -81,21 +116,20 @@ namespace MGroup.XFEM.IsoXFEM
             {
                 numOfFreedofs[i] = i;
             }
-            displacements = Vector.CreateZero(constraintsOfDofs["AllDofs"].Length);
-            displacements.AddIntoThisNonContiguouslyFrom(constraintsOfDofs["FreeDofs"], solution, numOfFreedofs);
+            displacements = Vector.CreateZero(xModel.Nodes.Count*xModel.Dimension);
+            displacements.AddIntoThisNonContiguouslyFrom(globalDegreesOfFreedomInteger, solution, numOfFreedofs);
         }
 
 		public void Initialize()
 		{
 			CalcRHS();
-			EnumerateDegreesOfFreedom();
+			EnumerateStructuralDegreesOfFreedom();
 		}
         public void Solve()
         {
-			//EnumerateDegreesOfFreedom();
 			AssembleStiffnessMatrix();
-            Matrix globalStiffnessFree = globalStiffness.GetSubmatrix(constraintsOfDofs["FreeDofs"], constraintsOfDofs["FreeDofs"]);
-            Vector loadFree = load.GetSubvector(constraintsOfDofs["FreeDofs"]);            
+            Matrix globalStiffnessFree = globalStiffness.GetSubmatrix(globalDegreesOfFreedomInteger, globalDegreesOfFreedomInteger);
+            Vector loadFree = load.GetSubvector(globalDegreesOfFreedomInteger);            
             Vector solution = solver.Solve(globalStiffnessFree, loadFree);
             RefillDisplacements(solution);
         }

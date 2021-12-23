@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <StartupObject>MGroup.XFEM.IsoXFEM.Tests.Program</StartupObject>
   </PropertyGroup>
 
@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\MGroup.NumericalAnalyzers\MGroup.NumericalAnalyzers.csproj" />
     <ProjectReference Include="..\..\src\MGroup.XFEM.IsoXFEM\MGroup.XFEM.IsoXFEM.csproj" />
   </ItemGroup>
 
