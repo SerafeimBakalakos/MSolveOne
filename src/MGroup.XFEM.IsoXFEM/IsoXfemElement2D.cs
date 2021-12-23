@@ -23,34 +23,22 @@ using MGroup.XFEM.Materials.Duplicates;
 namespace MGroup.XFEM.IsoXFEM
 {
 
-   public class IsoXfemElement2D : IXFiniteElement
+	public class IsoXfemElement2D : IIsoXfemElement
 	{
-        public enum PhaseElement
-        {
-            solidElement,
-            voidElement,
-            boundaryElement
-        }
+
 		private const int dim = 2;
 		private readonly int numStandardDofs;
 		public ElasticMaterial2D material;
-        public GeometryProperties geometry;
+		public GeometryProperties geometry;
 		private readonly IElementGeometry elementGeometry;
 		private IReadOnlyList<GaussPoint> gaussPointsBulk;
 		private EvalInterpolation[] evalInterpolationsAtGPsBulk;
-		public List<XNode> nodesOfElement = new List<XNode>();
-        public IEnumerable<XNode> NodesOfElement {get => nodesOfElement;}
-		public int[] dofsOfElement;
+		private readonly List<XNode> nodesOfElement = new List<XNode>();
 		private readonly IDofType[][] dofTypes;
 		public readonly Matrix elasticityMatrix;
 		private readonly double lengthOfElement;
 		private readonly double heigthOfElement;
-		public double areaOfElement;
-		public Matrix stiffnessOfElement;
-		private static IMatrixView defaultStiffness;
-		public PhaseElement phaseElement;
-		public Vector elementLevelSet;
-		public Matrix coordinatesOfElement;
+		private static IMatrixView defaultStiffness;	
 		private static IElementStructuralStiffnessComputation elementStructuralStiffnessComputation;
 
 		public IsoXfemElement2D(int id, ElasticMaterial2D material, GeometryProperties geometry, IEnumerable<XNode> nodesOfElement)
@@ -64,14 +52,17 @@ namespace MGroup.XFEM.IsoXFEM
 				{ material.PoissonRatio*(material.YoungModulus / (1-Math.Pow( material.PoissonRatio, 2))),1*(material.YoungModulus / (1-Math.Pow(material.PoissonRatio, 2))),0},{ 0,0,((1 - material.PoissonRatio)/2)*(material.YoungModulus /(1-Math.Pow(material.PoissonRatio, 2)))} });
 			lengthOfElement = geometry.length / geometry.numberOfElementsX;
 			heigthOfElement = geometry.height / geometry.numberOfElementsY;
-			areaOfElement = lengthOfElement * heigthOfElement;
-			coordinatesOfElement = Matrix.CreateFromArray(new double[,] { { 0, 0 }, { lengthOfElement, 0 }, { lengthOfElement, heigthOfElement }, { 0, heigthOfElement } });
+			AreaOfElement = lengthOfElement * heigthOfElement;
+			CoordinatesOfElement = Matrix.CreateFromArray(new double[,] {{ Nodes[0].X, Nodes[0].Y},
+																		  {Nodes[1].X,Nodes[1].Y },
+																		  {Nodes[2].X, Nodes[2].Y },
+																		  {Nodes[3].X, Nodes[3].Y }});
 			elementStructuralStiffnessComputation = new ElementStructuralStiffnessFEMComputation();
 			if (defaultStiffness == null)
 			{
-				defaultStiffness = elementStructuralStiffnessComputation.ElementStructuralStiffnessComputation(coordinatesOfElement, elasticityMatrix, geometry.thickness);
+				defaultStiffness = elementStructuralStiffnessComputation.ElementStructuralStiffnessComputation(CoordinatesOfElement, elasticityMatrix, geometry.thickness);
 			}
-			stiffnessOfElement = defaultStiffness.CopyToFullMatrix();
+			StiffnessOfElement = defaultStiffness.CopyToFullMatrix();
 			elementGeometry = new ElementQuad4Geometry();
 			int[] nodeIDs = Nodes.Select(n => n.ID).ToArray();
 			(this.Edges, this.Faces) = elementGeometry.FindEdgesFaces(nodeIDs);
@@ -85,7 +76,7 @@ namespace MGroup.XFEM.IsoXFEM
 				dofTypes[i] = new IDofType[] { StructuralDof.TranslationX, StructuralDof.TranslationY };
 			}
 		}
-		
+
 		//public void CalcStiffnessAndArea()
 		//{
 		//	if (elementLevelSet.Min() >= 0)
@@ -129,9 +120,9 @@ namespace MGroup.XFEM.IsoXFEM
 
 		public IReadOnlyList<XNode> Nodes => nodesOfElement;
 
-		public Dictionary<int, IElementDiscontinuityInteraction> InteractingDiscontinuities = new Dictionary<int, IElementDiscontinuityInteraction>();
-
-		public int ID { get; set; }
+		public Dictionary<int, IElementDiscontinuityInteraction> InteractingDiscontinuities  { get;  }
+	
+	    public int ID { get; set; }
 
 		public IElementType ElementType => this;
 
@@ -143,11 +134,15 @@ namespace MGroup.XFEM.IsoXFEM
 
 		public IElementDofEnumerator DofEnumerator { get; set; } = new GenericDofEnumerator();
 
-		public bool MaterialModified => throw new NotImplementedException();
+		public bool MaterialModified { get;  }
+		public double AreaOfElement { get ; set ; }
+		public Matrix StiffnessOfElement { get ; set ; }
+		public int[] DofsOfElement { get; set; }
+		public IIsoXfemElement.Phase PhaseElement { get ; set ; }
+		public Vector ElementLevelSet { get ; set ; }
+		public Matrix CoordinatesOfElement { get; }
 
-		Dictionary<int, IElementDiscontinuityInteraction> IXFiniteElement.InteractingDiscontinuities => throw new NotImplementedException();
-		//??
-		public void SetSubdomainID(int subdomainID) => throw new NotImplementedException();
+		public void SetSubdomainID(int subdomainID) => SubdomainID = subdomainID;
 		public double CalcBulkSizeCartesian() => elementGeometry.CalcBulkSizeCartesian(Nodes);
 		public double CalcBulkSizeNatural() => 4.00;
 		public double[] FindCentroidCartesian() => throw new NotImplementedException();
@@ -171,32 +166,39 @@ namespace MGroup.XFEM.IsoXFEM
 
 		public IMatrix StiffnessMatrix(IElement element)
 		{
-			if (elementLevelSet.Min() >= 0)
+			if (ElementLevelSet!=null)
 			{
-				phaseElement = PhaseElement.solidElement;
-				stiffnessOfElement = defaultStiffness.CopyToFullMatrix();
-				areaOfElement = CalcBulkSizeCartesian();
+				if (ElementLevelSet.Min() >= 0)
+				{
+					PhaseElement = IIsoXfemElement.Phase.solidElement;
+					StiffnessOfElement = defaultStiffness.CopyToFullMatrix();
+					AreaOfElement = CalcBulkSizeCartesian();
+				}
+				else if (ElementLevelSet.Max() <= 0)
+				{
+					PhaseElement = IIsoXfemElement.Phase.voidElement;
+					StiffnessOfElement = defaultStiffness.CopyToFullMatrix();
+					StiffnessOfElement.ScaleIntoThis(0.0001);
+					AreaOfElement = 0.00;
+				}
+				else
+				{
+					PhaseElement = IIsoXfemElement.Phase.boundaryElement;
+					var integration = new XFEMIntegration();
+					integration.MeshAndAreaOfSubElement(CoordinatesOfElement, ElementLevelSet);
+					var elementStructuralStiffnessComputation = new ElementStructuralStiffnessXFEMComputation(integration.coordinatesOfBoundaryElement, integration.connectionOfBoundaryElement);
+					AreaOfElement = integration.areaBoundaryElement;
+					var stiffness = elementStructuralStiffnessComputation.ElementStructuralStiffnessComputation(CoordinatesOfElement, elasticityMatrix, geometry.thickness);
+					StiffnessOfElement = stiffness;
+				}
+				return StiffnessOfElement;
 			}
-			else if (elementLevelSet.Max() <= 0)
+			else 
 			{
-				phaseElement = PhaseElement.voidElement;
-				stiffnessOfElement = defaultStiffness.CopyToFullMatrix();
-				stiffnessOfElement.ScaleIntoThis(0.0001);
-				areaOfElement = 0.00;
+				return StiffnessOfElement;
 			}
-			else
-			{
-				phaseElement = PhaseElement.boundaryElement;
-				var integration = new XFEMIntegration();
-				integration.MeshAndAreaOfSubElement(coordinatesOfElement, elementLevelSet);
-				var elementStructuralStiffnessComputation = new ElementStructuralStiffnessXFEMComputation(integration.coordinatesOfBoundaryElement, integration.connectionOfBoundaryElement);
-				areaOfElement = integration.areaBoundaryElement;
-				var stiffness = elementStructuralStiffnessComputation.ElementStructuralStiffnessComputation(coordinatesOfElement, elasticityMatrix, geometry.thickness);
-				stiffnessOfElement = stiffness;
-			}
-			return stiffnessOfElement;
 		}
-
+		
 		public IMatrix BuildStiffnessMatrixStandard()
 		{
 			// If the element has more than 1 phase, then I cannot use the standard quadrature, since the material is  
@@ -247,7 +249,15 @@ namespace MGroup.XFEM.IsoXFEM
 		public double[] CalculateForcesForLogging(IElement element, double[] localDisplacements) => throw new NotImplementedException();
 		public double[] CalculateAccelerationForces(IElement element, IList<MassAccelerationLoad> loads) => throw new NotImplementedException();
 		public void SaveMaterialState() => throw new NotImplementedException();
-		public IReadOnlyList<IReadOnlyList<IDofType>> GetElementDofTypes(IElement element) => dofTypes;
+		public IReadOnlyList<IReadOnlyList<IDofType>> GetElementDofTypes(IElement element) => dofTypes;		
+	}
+	public static class IsoXfemElement2DExtensions
+	{
+		internal static void RegisterInteractionWithLsm(this IXFiniteElement element,
+		 IElementDiscontinuityInteraction interaction)
+		{
+			element.InteractingDiscontinuities[interaction.ParentGeometryID] = interaction;
+		}
 	}
 }
 

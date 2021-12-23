@@ -58,16 +58,16 @@ namespace MGroup.XFEM.IsoXFEM
 			int cellDataCount = 0;
 			for (int i = 0; i < elements.Count; ++i)
 			{
-				cellDataCount += 1 + elements[i].nodesOfElement.Count;
+				cellDataCount += 1 + elements[i].Nodes.Count;
 			}
 			writer.WriteLine($"\nCELLS {elements.Count} {cellDataCount}");
 			for (int i = 0; i < elements.Count; ++i)
 			{
-				writer.Write(elements[i].nodesOfElement.Count);
-				for (int j = 0; j < elements[i].nodesOfElement.Count; ++j)
+				writer.Write(elements[i].Nodes.Count);
+				for (int j = 0; j < elements[i].Nodes.Count; ++j)
 				{
 					writer.Write(' ');
-					writer.Write(elements[i].nodesOfElement[j].ID);
+					writer.Write(elements[i].Nodes[j].ID);
 				}
 				writer.WriteLine();
 			}

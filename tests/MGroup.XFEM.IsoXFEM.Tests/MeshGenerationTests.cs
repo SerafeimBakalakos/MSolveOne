@@ -23,28 +23,20 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var modelWithNodesExpected = new MeshGeneration(material, geometry);
 			var nodesComputed = modelWithNodesExpected.CreateNodes();			
 			var nodesExpected = new List<XNode>();
-			nodesExpected.Add(new XNode(0, new double[] { 0, 0 } /*true, true*/));
-			nodesExpected.Add(new XNode(1, new double[] { 0, 20 } /*true, true*/));
-			nodesExpected.Add(new XNode(2, new double[] { 0, 40 } /*true, true*/));
-			nodesExpected.Add(new XNode(3, new double[] { 20, 0 } /*false, false*/));
-			nodesExpected.Add(new XNode(4, new double[] { 20, 20 }/*, false, false*/));
-			nodesExpected.Add(new XNode(5, new double[] { 20, 40 }/*, false, false*/));
-			nodesExpected.Add(new XNode(6, new double[] { 40, 0 }/*, false, false*/));
-			nodesExpected.Add(new XNode(7, new double[] { 40, 20 }/*, false, false*/));
-			nodesExpected.Add(new XNode(8, new double[] { 40, 40 }/*, false, false*/));
-			nodesExpected[0].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-			nodesExpected[0].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
-			nodesExpected[1].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-			nodesExpected[1].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
-			nodesExpected[2].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-			nodesExpected[2].Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+			nodesExpected.Add(new XNode(0, new double[] { 0, 0 } ));
+			nodesExpected.Add(new XNode(1, new double[] { 0, 20 } ));
+			nodesExpected.Add(new XNode(2, new double[] { 0, 40 } ));
+			nodesExpected.Add(new XNode(3, new double[] { 20, 0 } ));
+			nodesExpected.Add(new XNode(4, new double[] { 20, 20 }));
+			nodesExpected.Add(new XNode(5, new double[] { 20, 40 }));
+			nodesExpected.Add(new XNode(6, new double[] { 40, 0 }));
+			nodesExpected.Add(new XNode(7, new double[] { 40, 20 }));
+			nodesExpected.Add(new XNode(8, new double[] { 40, 40 }));
 			for (int i = 0; i < nodesExpected.Count; i++)
 			{
 				Assert.Equal(nodesExpected[i].ID, nodesComputed[i].ID);
 				Assert.Equal(nodesExpected[i].X, nodesComputed[i].X);
 				Assert.Equal(nodesExpected[i].Y, nodesComputed[i].Y);
-				Assert.Equal(nodesExpected[i].Constraints.Count, nodesComputed[i].Constraints.Count);
-				//Assert.Equal(nodesExpected[i].IsYConstrained, nodesComputed[i].IsYConstrained);
 			}
 		}
 		[Fact]
@@ -86,21 +78,21 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				nodes[8],
 				nodes[5]
 			}));
-			elementsExpected[0].dofsOfElement = new int[] { 0, 1, 6, 7, 8, 9, 2, 3 };
-			elementsExpected[1].dofsOfElement = new int[] { 2, 3, 8, 9, 10, 11, 4, 5 };
-			elementsExpected[2].dofsOfElement = new int[] { 6, 7, 12, 13, 14, 15, 8, 9 };
-			elementsExpected[3].dofsOfElement = new int[] { 8, 9, 14, 15, 16, 17, 10, 11 };
+			elementsExpected[0].DofsOfElement = new int[] { 0, 1, 6, 7, 8, 9, 2, 3 };
+			elementsExpected[1].DofsOfElement = new int[] { 2, 3, 8, 9, 10, 11, 4, 5 };
+			elementsExpected[2].DofsOfElement = new int[] { 6, 7, 12, 13, 14, 15, 8, 9 };
+			elementsExpected[3].DofsOfElement = new int[] { 8, 9, 14, 15, 16, 17, 10, 11 };
 			for (int i = 0; i < elementsComputed.Count; i++)
 			{
 				var elementComputed = elementsComputed[i];
 				var elementExpected = elementsExpected[i];
-				for (int j = 0; j < elementComputed.nodesOfElement.Count; j++)
+				for (int j = 0; j < elementComputed.Nodes.Count; j++)
 				{
-					Assert.Equal(elementExpected.nodesOfElement[j].ID, elementComputed.nodesOfElement[j].ID);
+					Assert.Equal(elementExpected.Nodes[j].ID, elementComputed.Nodes[j].ID);
 				}
-				for (int j = 0; j < elementComputed.dofsOfElement.Length; j++)
+				for (int j = 0; j < elementComputed.Nodes.Count; j++)
 				{
-					Assert.Equal(elementExpected.dofsOfElement[j], elementComputed.dofsOfElement[j]);
+					Assert.Equal(elementExpected.Nodes[j], elementComputed.Nodes[j]);
 				}
 			}
 		}

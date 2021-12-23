@@ -13,13 +13,17 @@ using MGroup.LinearAlgebra.Distributed;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.XFEM.Entities;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.LinearAlgebra.Matrices;
+using MGroup.LinearAlgebra.Reduction;
+
 
 //TODO: There is a lot of repetition between this FEM.Model and IGA.Model with regards to interconnection data. That code should 
 //      be moved to a common class. Same goes for the interconnection methods of XSubdomain.
 namespace MGroup.XFEM.IsoXFEM
 {
-	public class XModel<IsoXfemElement2D> : IXModel where IsoXfemElement2D : class, IXFiniteElement
+	public class XModel<TElement> : IXModel where TElement : class, IIsoXfemElement
 	{
+		public Vector sizesOfElements;
 		private bool areDataStructuresConnected = false;
 
 		public XModel(int dimension)
@@ -41,12 +45,11 @@ namespace MGroup.XFEM.IsoXFEM
 
 		public int Dimension { get; }
 
-		public Dictionary<int, IsoXfemElement2D> Elements { get; } = new Dictionary<int, IsoXfemElement2D>();
+		public Dictionary<int, TElement> Elements { get; } = new Dictionary<int, TElement>();
 
 		public Dictionary<int, EnrichmentItem> Enrichments { get; } = new Dictionary<int, EnrichmentItem>();
 
-		public StructuralPerfomance levelSetStructuralPerfomance;
-
+		public Vector relativeCriteria;
 		public bool FindConformingSubcells { get; set; } = false;
 
 		public IGeometryModel GeometryModel { get; set; }
@@ -57,11 +60,11 @@ namespace MGroup.XFEM.IsoXFEM
 
 		public List<Load> NodalLoads { get; private set; } = new List<Load>();
 
-		public Dictionary<int, XNode> Nodes { get;  } = new Dictionary<int, XNode>();
+		public Dictionary<int, XNode> Nodes { get; } = new Dictionary<int, XNode>();
 
 		public int NumSubdomains => Subdomains.Count;
 
-		public Dictionary<int, XSubdomain<IsoXfemElement2D>> Subdomains { get; } = new Dictionary<int, XSubdomain<IsoXfemElement2D>>();
+		public Dictionary<int, XSubdomain<TElement>> Subdomains { get; } = new Dictionary<int, XSubdomain<TElement>>();
 
 		public void ConnectDataStructures()
 		{
@@ -73,11 +76,23 @@ namespace MGroup.XFEM.IsoXFEM
 			}
 		}
 
-		public IEnumerable<DirichletElementLoad> EnumerateDirichletBoundaryConditions(int subdomainID) => throw new NotImplementedException();
+		public IEnumerable<DirichletElementLoad> EnumerateDirichletBoundaryConditions(int subdomainID)  
+		{
+			var subdomainLoads = new List<DirichletElementLoad>();
+			foreach (IXFiniteElement element in Subdomains[subdomainID].Elements)
+			{
+				var load = new DirichletElementLoad(element);
+				if (!load.IsZero())
+				{
+					subdomainLoads.Add(load);
+				}
+			}
+			return subdomainLoads;
+		}
 
 		IEnumerable<IElement> IModel.EnumerateElements(int subdomainID) => Subdomains[subdomainID].Elements;
 
-		public IEnumerable<IsoXfemElement2D> EnumerateElements(int subdomainID) => Subdomains[subdomainID].Elements;
+		public IEnumerable<TElement> EnumerateElements(int subdomainID) => Subdomains[subdomainID].Elements;
 
 		//TODO: There must be a better way than recreating the data structures. Nope just remove this. Operating on all elements 
 		//		should be done through IAlgebraicModel. 
@@ -118,7 +133,7 @@ namespace MGroup.XFEM.IsoXFEM
 
 		public void SaveMaterialState()
 		{
-			foreach (XSubdomain<IsoXfemElement2D> subdomain in Subdomains.Values)
+			foreach (XSubdomain<TElement> subdomain in Subdomains.Values)
 			{
 				subdomain.SaveMaterialState();
 			}
@@ -141,24 +156,28 @@ namespace MGroup.XFEM.IsoXFEM
 		/// <param name="solutionFreeDofs">Total displacements of all dofs of each subdomain.</param>
 		public void Update(IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs)
 		{
-			/*UpdateStatePrivate(false, algebraicModel, solutionFreeDofs)*/;
+			for (int el = 0; el < Elements.Count; el++)
+			{
+				int[] connectionOfElement = new int[] { Elements[el].Nodes[0].ID, Elements[el].Nodes[1].ID, Elements[el].Nodes[2].ID, Elements[el].Nodes[3].ID };
+				Vector elementRelativeCriteria = relativeCriteria.GetSubvector(connectionOfElement);
+				IElementDiscontinuityInteraction intersection = new NullElementDiscontinuityInteraction(0, Elements[el]);
+				//IsoXfemElement2DExtensions.RegisterInteractionWithLsm(Elements[el], intersection);
+				Elements[el].ElementLevelSet = elementRelativeCriteria;
+				Elements[el].StiffnessMatrix(Elements[el]);
+				sizesOfElements[el] = Elements[el].AreaOfElement;
+			}
 		}
-
-		public void Update()
-		{
-			levelSetStructuralPerfomance.ComputeStrainEnergyandStrainEnergyDensity();
-			levelSetStructuralPerfomance.ComputeNodalStrainEnergyDensity();
-		}
+		
 		private void BuildInterconnectionData()
 		{
 			// Associate each element with its subdomains
-			//foreach (XSubdomain<IsoXfemElement2D> subdomain in Subdomains.Values)
-			//{
-			//	foreach (IXFiniteElement element in subdomain.Elements)
-			//	{
-			//		element.SetSubdomainID(subdomain.ID);
-			//	}
-			//}
+			foreach (XSubdomain<TElement> subdomain in Subdomains.Values)
+			{
+				foreach (IXFiniteElement element in subdomain.Elements)
+				{
+					element.SetSubdomainID(subdomain.ID);
+				}
+			}
 
 			// Associate each node with its elements
 			foreach (IXFiniteElement element in Elements.Values)
@@ -167,16 +186,16 @@ namespace MGroup.XFEM.IsoXFEM
 			}
 
 			// Associate each node with its subdomains
-			//foreach (XNode node in Nodes.Values)
-			//{
-			//	foreach (IXFiniteElement element in node.ElementsDictionary.Values)
-			//	{
-			//		node.Subdomains.Add(element.SubdomainID);
-			//	}
-			//}
+			foreach (XNode node in Nodes.Values)
+			{
+				foreach (IXFiniteElement element in node.ElementsDictionary.Values)
+				{
+					node.Subdomains.Add(element.SubdomainID);
+				}
+			}
 
 			// Associate each subdomain with its nodes
-			//foreach (XSubdomain<IsoXfemElement2D> subdomain in Subdomains.Values) subdomain.DefineNodesFromElements();
+			foreach (XSubdomain<TElement> subdomain in Subdomains.Values) subdomain.DefineNodesFromElements();
 		}
 
 		private void CalcConformingSubcells()
@@ -223,47 +242,5 @@ namespace MGroup.XFEM.IsoXFEM
 			NodalLoads = activeLoadsStatic;
 		}
 
-		/// <summary>
-		/// Common operations for intializing/updating the model's state.
-		/// </summary>
-		/// <param name="firstAnalysis"></param>
-		/// <param name="subdomainFreeDisplacements">if <paramref name="firstAnalysis"/> == true, this can be null.</param>
-		private void UpdateStatePrivate(bool firstAnalysis, IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs)
-		{
-			// Update the discontinuities
-			if (firstAnalysis) GeometryModel.InitializeGeometry();
-			else GeometryModel.UpdateGeometry(algebraicModel, solutionFreeDofs);
-			GeometryModel.InteractWithMesh();
-
-			// Optionally calculate conforming subcells for elements that interact with discontinuities
-			if (FindConformingSubcells) CalcConformingSubcells();
-
-			// Define enrichments and their dofs
-			//TODO: The enrichments may need to change during the analysis (e.g. branching cracks, crack junctions, etc)
-			if (firstAnalysis)
-			{
-				IEnumerable<EnrichmentItem> enrichments = GeometryModel.Enricher.DefineEnrichments();
-				foreach (EnrichmentItem enrichment in enrichments)
-				{
-					this.Enrichments[enrichment.ID] = enrichment;
-					foreach (IDofType dof in enrichment.EnrichedDofs)
-					{
-						AllDofs.AddDof(dof);
-					}
-				}
-			}
-
-			// Enrich the required nodes
-			GeometryModel.Enricher.ApplyEnrichments();
-
-			// Identify each element's dofs
-			foreach (IXFiniteElement element in Elements.Values) element.IdentifyDofs();
-
-			// Identify each element's integration points and the material properties at those points
-			foreach (IXFiniteElement element in Elements.Values) element.IdentifyIntegrationPointsAndMaterials();
-
-			// Let observers read the current state and update themselves
-			foreach (IModelObserver observer in ModelObservers) observer.Update();
-		}
 	}
 }
