@@ -394,6 +394,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 		private void SolveInterfaceProblem()
 		{
 			var watch = new Stopwatch();
+			watch.Start();
 			bool initalGuessIsZero = GuessInitialSolution();
 
 			// Solver the interface problem
