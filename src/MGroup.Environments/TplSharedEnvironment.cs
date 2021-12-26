@@ -13,10 +13,12 @@ namespace MGroup.Environments
 	/// </summary>
 	public class TplSharedEnvironment : IComputeEnvironment
 	{
+		private readonly bool optimizeBuffers;
 		private ComputeNodeTopology nodeTopology;
 
-		public TplSharedEnvironment()
+		public TplSharedEnvironment(bool optimizeBuffers = false)
 		{
+			this.optimizeBuffers = optimizeBuffers;
 		}
 
 		public bool AllReduceAnd(Dictionary<int, bool> valuePerNode)
@@ -148,6 +150,18 @@ namespace MGroup.Environments
 
 		public void NeighborhoodAllToAll<T>(Dictionary<int, AllToAllNodeData<T>> dataPerNode, bool areRecvBuffersKnown)
 		{
+			if (optimizeBuffers)
+			{
+				NeighborhoodAllToAllOptimized(dataPerNode, areRecvBuffersKnown);
+			}
+			else
+			{
+				NeighborhoodAllToAllGeneral(dataPerNode, areRecvBuffersKnown);
+			}
+		}
+
+		private void NeighborhoodAllToAllGeneral<T>(Dictionary<int, AllToAllNodeData<T>> dataPerNode, bool areRecvBuffersKnown)
+		{
 			CheckNeighborhoodAllToAllInput(dataPerNode, areRecvBuffersKnown);
 			Parallel.ForEach(nodeTopology.Nodes.Keys, thisNodeID =>
 			{
@@ -173,6 +187,36 @@ namespace MGroup.Environments
 					// Copy data from other to this node. 
 					// Copying from this to other node will be done in another iteration of the outer loop.
 					Array.Copy(dataToSend, thisData.recvValues[otherNodeID], bufferLength);
+				}
+			});
+		}
+
+		private void NeighborhoodAllToAllOptimized<T>(Dictionary<int, AllToAllNodeData<T>> dataPerNode, bool areRecvBuffersKnown)
+		{
+			CheckNeighborhoodAllToAllInput(dataPerNode, areRecvBuffersKnown);
+			Parallel.ForEach(nodeTopology.Nodes.Keys, thisNodeID =>
+			{
+				ComputeNode thisNode = nodeTopology.Nodes[thisNodeID];
+				AllToAllNodeData<T> thisData = dataPerNode[thisNodeID];
+
+				foreach (int otherNodeID in thisNode.Neighbors)
+				{
+					if (otherNodeID < thisNodeID)
+					{
+						continue; // We swap buffers once when thisNodeID < otherNodeID.
+					}
+
+					// Receive data from each other node.
+					AllToAllNodeData<T> otherData = dataPerNode[otherNodeID];
+					bool haveCommonData = otherData.sendValues.TryGetValue(thisNodeID, out T[] dataToSend);
+					if (!haveCommonData)
+					{
+						continue;
+					}
+
+					// Just copy references to buffers. 
+					thisData.recvValues[otherNodeID] = dataToSend;
+					otherData.recvValues[thisNodeID] = thisData.sendValues[otherNodeID];
 				}
 			});
 		}

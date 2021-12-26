@@ -259,11 +259,11 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			IComputeEnvironment environment;
 			if (multiThreaded)
 			{
-				environment = new TplSharedEnvironment();
+				environment = new TplSharedEnvironment(true);
 			}
 			else
 			{
-				environment = new SequentialSharedEnvironment();
+				environment = new SequentialSharedEnvironment(true);
 			}
 			environment.Initialize(nodeTopology);
 
@@ -356,11 +356,11 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			IComputeEnvironment environment;
 			if (multiThreaded)
 			{
-				environment = new TplSharedEnvironment();
+				environment = new TplSharedEnvironment(true);
 			}
 			else
 			{
-				environment = new SequentialSharedEnvironment();
+				environment = new SequentialSharedEnvironment(true);
 			}
 			environment.Initialize(nodeTopology);
 
