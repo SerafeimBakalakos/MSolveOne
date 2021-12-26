@@ -296,7 +296,12 @@ namespace MGroup.Solvers.DDM.Tests.ExampleModels
 					commonEntriesExpected[14] = new int[] {  0,  1,                  6,  7,  8,  9 };
 				}
 
-				int[] multiplicitiesComputed = indexer.GetLocalComponent(subdomainID).Multiplicities;
+				double[] inverseMultiplicities = indexer.GetLocalComponent(subdomainID).InverseMultiplicities;
+				var multiplicitiesComputed = new int[inverseMultiplicities.Length];
+				for (int i = 0; i < inverseMultiplicities.Length; ++i)
+				{
+					multiplicitiesComputed[i] = (int)Math.Round(1.0 / inverseMultiplicities[i]);
+				}
 				Assert.True(Utilities.AreEqual(multiplicitiesExpected, multiplicitiesComputed));
 				foreach (int neighborID in commonEntriesExpected.Keys)
 				{

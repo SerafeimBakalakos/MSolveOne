@@ -42,12 +42,12 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			{
 				Dictionary<int, double> countPerNode = Environment.CalcNodeData(node =>
 				{
-					int[] multiplicities = localIndexers[node].Multiplicities;
+					double[] inverseMultiplicities = localIndexers[node].InverseMultiplicities;
 
 					double localCount = 0.0;
-					for (int i = 0; i < multiplicities.Length; ++i)
+					for (int i = 0; i < inverseMultiplicities.Length; ++i)
 					{
-						localCount += 1.0 / multiplicities[i];
+						localCount += inverseMultiplicities[i];
 					}
 
 					return localCount;
@@ -113,10 +113,7 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			/// </summary>
 			public SortedSet<int> ActiveNeighborsOfNode { get; private set; }
 
-			//TODO: Micro optimization: calc and store the inverse multiplicities since multiplication is faster than divison.
-			//      Also in some DDM components I explicitly work with inverse multiplicities, thus this would save memory, 
-			//      computation time and avoid repetitions.
-			public int[] Multiplicities { get; private set; } 
+			public double[] InverseMultiplicities { get; private set; } 
 
 			public ComputeNode Node { get; }
 
@@ -156,19 +153,22 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				this.NumEntries = other.NumEntries;
 				this.commonEntriesWithNeighbors = other.commonEntriesWithNeighbors;
 				this.ActiveNeighborsOfNode = other.ActiveNeighborsOfNode;
-				this.Multiplicities = other.Multiplicities;
+				this.InverseMultiplicities = other.InverseMultiplicities;
 			}
 
 			public int[] GetCommonEntriesWithNeighbor(int neighbor) => commonEntriesWithNeighbors[neighbor];
 
 			public void FindMultiplicities()
 			{
-				Multiplicities = new int[NumEntries];
-				for (int i = 0; i < NumEntries; ++i) Multiplicities[i] = 1;
+				var multiplicities = new int[NumEntries];
+				for (int i = 0; i < NumEntries; ++i) multiplicities[i] = 1;
 				foreach (int[] commonEntries in commonEntriesWithNeighbors.Values)
 				{
-					foreach (int i in commonEntries) Multiplicities[i] += 1;
+					foreach (int i in commonEntries) multiplicities[i] += 1;
 				}
+
+				InverseMultiplicities = new double[NumEntries];
+				for (int i = 0; i < NumEntries; ++i) InverseMultiplicities[i] = 1.0 / multiplicities[i];
 			}
 		}
 	}

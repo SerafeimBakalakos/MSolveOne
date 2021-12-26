@@ -127,12 +127,13 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			{
 				Vector thisLocalVector = this.LocalVectors[node];
 				Vector otherLocalVector = otherVector.LocalVectors[node];
-				int[] multiplicities = Indexer.GetLocalComponent(node).Multiplicities;
+				double[] inverseMultiplicities = Indexer.GetLocalComponent(node).InverseMultiplicities;
 
 				double dotLocal = 0.0;
-				for (int i = 0; i < thisLocalVector.Length; ++i)
+				int length = thisLocalVector.Length;
+				for (int i = 0; i < length; ++i)
 				{
-					dotLocal += thisLocalVector[i] * otherLocalVector[i] / multiplicities[i];
+					dotLocal += thisLocalVector[i] * otherLocalVector[i] * inverseMultiplicities[i];
 				}
 
 				return dotLocal;
@@ -157,12 +158,12 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 		{
 			Dictionary<int, double> localLengths = Environment.CalcNodeData(node =>
 			{
-				int[] multiplicities = Indexer.GetLocalComponent(node).Multiplicities;
+				double[] inverseMultiplicities = Indexer.GetLocalComponent(node).InverseMultiplicities;
 
 				double localLegth = 0.0;
-				for (int i = 0; i < multiplicities.Length; ++i)
+				for (int i = 0; i < inverseMultiplicities.Length; ++i)
 				{
-					localLegth += 1.0 / multiplicities[i];
+					localLegth += inverseMultiplicities[i];
 				}
 
 				return localLegth;
@@ -193,12 +194,12 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			Func<int, double> calcLocalDot = node =>
 			{
 				Vector localVector = this.LocalVectors[node];
-				int[] multiplicities = Indexer.GetLocalComponent(node).Multiplicities;
+				double[] inverseMultiplicities = Indexer.GetLocalComponent(node).InverseMultiplicities;
 
 				double dotLocal = 0.0;
 				for (int i = 0; i < localVector.Length; ++i)
 				{
-					dotLocal += localVector[i] * localVector[i] / multiplicities[i];
+					dotLocal += localVector[i] * localVector[i] * inverseMultiplicities[i];
 				}
 
 				return dotLocal;
@@ -251,7 +252,8 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				{
 					//TODO: This assumes that all entries with multiplicity > 1 are overlapping and must be regularized. 
 					//      Is that always a correct assumption?
-					if (localIndexer.Multiplicities[i] > 1)
+					//TODO: Perhaps some tolerance should be used or the original int[] Multiplicities.
+					if (localIndexer.InverseMultiplicities[i] < 1.0)
 					{
 						orginalLocalVector[i] /= reducedLocalVector[i];
 					}
