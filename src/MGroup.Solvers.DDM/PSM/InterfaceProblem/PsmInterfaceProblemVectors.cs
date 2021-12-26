@@ -10,6 +10,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 {
 	public class PsmInterfaceProblemVectors : IPsmInterfaceProblemVectors
 	{
+		private const bool cacheDistributedVectorBuffers = true;
 		private readonly IComputeEnvironment environment;
 		private readonly IDictionary<int, PsmSubdomainVectors> subdomainVectors;
 
@@ -29,6 +30,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 			Dictionary<int, Vector> fbCondensed = environment.CalcNodeData(
 				subdomainID => subdomainVectors[subdomainID].CalcCondensedRhsVector());
 			InterfaceProblemRhs = new DistributedOverlappingVector(indexer, fbCondensed);
+			InterfaceProblemRhs.CacheSendRecvBuffers = cacheDistributedVectorBuffers;
 			InterfaceProblemRhs.SumOverlappingEntries();
 		}
 

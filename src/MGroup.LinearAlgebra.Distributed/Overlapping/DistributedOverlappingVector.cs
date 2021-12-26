@@ -5,6 +5,7 @@ using System.Text;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.Environments;
 using MGroup.LinearAlgebra.Distributed.LinearAlgebraExtensions;
+using System.Collections.Concurrent;
 
 //TODOMPI: this class will be mainly used for iterative methods. Taking that into account, make optimizations. E.g. work arrays
 //      used as buffers for MPI communication can be reused across vectors, instead of each vector allocating/freeing identical 
@@ -24,6 +25,9 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 {
 	public class DistributedOverlappingVector : IGlobalVector
 	{
+		private ConcurrentDictionary<int, (ConcurrentDictionary<int, double[]> send, ConcurrentDictionary<int, double[]> recv)>	cachedBuffers = 
+			new ConcurrentDictionary<int, (ConcurrentDictionary<int, double[]> send, ConcurrentDictionary<int, double[]> recv)>();
+
 		public DistributedOverlappingVector(DistributedOverlappingIndexer indexer)
 		{
 			this.Indexer = indexer;
@@ -45,6 +49,8 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 			this.Environment = indexer.Environment;
 			this.LocalVectors = Environment.CalcNodeData(createLocalVector);
 		}
+
+		public bool CacheSendRecvBuffers { get; set; } = false;
 
 		public IComputeEnvironment Environment { get; }
 
@@ -94,7 +100,12 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 
 		IGlobalVector IGlobalVector.CreateZero() => CreateZero();
 
-		public DistributedOverlappingVector CreateZero() => new DistributedOverlappingVector(Indexer);
+		public DistributedOverlappingVector CreateZero()
+		{
+			var result = new DistributedOverlappingVector(Indexer);
+			result.CacheSendRecvBuffers = this.CacheSendRecvBuffers;
+			return result;
+		}
 
 		public double DotProduct(IGlobalVector otherVector)
 		{
@@ -268,9 +279,9 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				Vector localVector = LocalVectors[nodeID];
 				DistributedOverlappingIndexer.Local localIndexer = Indexer.GetLocalComponent(nodeID);
 
-				// Find the common entries (to send) of this node with each of its neighbors
+				// Find the common entries (to send and receive) of this node with each of its neighbors
 				var transferData = new AllToAllNodeData<double>();
-				transferData.sendValues = localIndexer.CreateBuffersForAllToAllWithNeighbors();
+				(transferData.sendValues, transferData.recvValues) = GetSendRecvBuffers(nodeID);
 				foreach (int neighborID in localIndexer.ActiveNeighborsOfNode) 
 				{
 					int[] commonEntries = localIndexer.GetCommonEntriesWithNeighbor(neighborID);
@@ -278,8 +289,6 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 					sv.CopyNonContiguouslyFrom(localVector, commonEntries);
 				}
 
-				// Get a buffer for the common entries (to receive) of this node with each of its neighbors. 
-				transferData.recvValues = localIndexer.CreateBuffersForAllToAllWithNeighbors();
 				return transferData;
 			};
 			var dataPerNode = Environment.CalcNodeData(prepareLocalData);
@@ -303,6 +312,46 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				}
 			};
 			Environment.DoPerNode(sumLocalSubvectors);
+		}
+
+		private (ConcurrentDictionary<int, double[]> sendValues, ConcurrentDictionary<int, double[]> recvValues) 
+			GetSendRecvBuffers(int nodeID)
+		{
+			#region debug
+			//CacheSendRecvBuffers = false;
+			#endregion
+			if (CacheSendRecvBuffers)
+			{
+				bool isCached = cachedBuffers.TryGetValue(nodeID, 
+					out (ConcurrentDictionary<int, double[]> send, ConcurrentDictionary<int, double[]> recv) buffers);
+				if (!isCached)
+				{
+					DistributedOverlappingIndexer.Local localIndexer = Indexer.GetLocalComponent(nodeID);
+					buffers = (localIndexer.CreateBuffersForAllToAllWithNeighbors(), 
+						localIndexer.CreateBuffersForAllToAllWithNeighbors());
+					cachedBuffers[nodeID] = buffers;
+				}
+				else
+				{
+					// No need to clear them as they will be overwritten.
+					//foreach (double[] buffer in buffers.send.Values)
+					//{
+					//	Array.Clear(buffer, 0, buffer.Length);
+					//}
+					//foreach (double[] buffer in buffers.recv.Values)
+					//{
+					//	Array.Clear(buffer, 0, buffer.Length);
+					//}
+				}
+				return buffers;
+			}
+			else
+			{
+				DistributedOverlappingIndexer.Local localIndexer = Indexer.GetLocalComponent(nodeID);
+				ConcurrentDictionary<int, double[]> sendValues = localIndexer.CreateBuffersForAllToAllWithNeighbors();
+				ConcurrentDictionary<int, double[]> recvValues = localIndexer.CreateBuffersForAllToAllWithNeighbors();
+				return (sendValues, recvValues);
+			}
 		}
 	}
 }

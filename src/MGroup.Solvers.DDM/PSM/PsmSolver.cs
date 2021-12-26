@@ -32,6 +32,8 @@ namespace MGroup.Solvers.DDM.Psm
 	public class PsmSolver<TMatrix> : ISolver
 		where TMatrix : class, IMatrix
 	{
+		private const bool cacheDistributedVectorBuffers = true;
+
 		protected readonly DistributedAlgebraicModel<TMatrix> algebraicModel;
 		protected readonly IComputeEnvironment environment;
 		protected readonly IPsmInterfaceProblemMatrix interfaceProblemMatrix;
@@ -319,6 +321,7 @@ namespace MGroup.Solvers.DDM.Psm
 				#endregion
 
 				interfaceProblemVectors.InterfaceProblemSolution = new DistributedOverlappingVector(boundaryDofIndexer);
+				interfaceProblemVectors.InterfaceProblemSolution.CacheSendRecvBuffers = cacheDistributedVectorBuffers;
 			}
 			else
 			{
@@ -349,6 +352,7 @@ namespace MGroup.Solvers.DDM.Psm
 							return previousSolution.LocalVectors[subdomainID];
 						}
 					});
+					newSolution.CacheSendRecvBuffers = cacheDistributedVectorBuffers;
 					
 					interfaceProblemVectors.InterfaceProblemSolution = newSolution;
 				}

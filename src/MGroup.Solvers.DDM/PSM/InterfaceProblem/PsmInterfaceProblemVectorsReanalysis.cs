@@ -12,6 +12,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 {
 	public class PsmInterfaceProblemVectorsReanalysis : IPsmInterfaceProblemVectors
 	{
+		private const bool cacheDistributedVectorBuffers = true;
 		private readonly IComputeEnvironment environment;
 		private readonly IModifiedSubdomains modifiedSubdomains;
 		private DistributedOverlappingVector previousCondensedFbVectors;
@@ -51,6 +52,7 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 			});
 
 			InterfaceProblemRhs = new DistributedOverlappingVector(indexer, fbCondensed);
+			InterfaceProblemRhs.CacheSendRecvBuffers = cacheDistributedVectorBuffers;
 			previousCondensedFbVectors = InterfaceProblemRhs.Copy();
 			InterfaceProblemRhs.SumOverlappingEntries();
 		}
