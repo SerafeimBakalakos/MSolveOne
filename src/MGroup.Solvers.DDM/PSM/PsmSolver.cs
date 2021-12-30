@@ -165,137 +165,21 @@ namespace MGroup.Solvers.DDM.Psm
 		{
 			var watchTotal = new Stopwatch();
 			watchTotal.Start();
-			var watch = new Stopwatch();
-			bool isFirstAnalysis = analysisIteration == 0;
 
 			if (LoggerDdm != null)
 			{
 				LoggerDdm.IncrementAnalysisIteration();
 			}
 
-			// Prepare subdomain-level dofs and matrices
-			watch.Start();
-			environment.DoPerNode(subdomainID =>
-			{
-				if (isFirstAnalysis || !reanalysis.SubdomainDofSubsets 
-					|| reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
-				{
-					#region log
-					//Console.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
-					//Debug.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
-					#endregion
-					subdomainDofsPsm[subdomainID].SeparateFreeDofsIntoBoundaryAndInternal();
-					subdomainMatricesPsm[subdomainID].ReorderInternalDofs();
-				}
-				else
-				{
-					Debug.Assert(!subdomainDofsPsm[subdomainID].IsEmpty);
-				}
-
-				if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices 
-					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
-				{
-					#region log
-					//Console.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
-					//Debug.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
-					#endregion
-					subdomainMatricesPsm[subdomainID].HandleDofsWereModified();
-					subdomainMatricesPsm[subdomainID].ExtractKiiKbbKib();
-					//subdomainMatricesPsm[subdomainID].InvertKii();
-				}
-				else
-				{
-					Debug.Assert(!subdomainMatricesPsm[subdomainID].IsEmpty);
-				}
-			});
-
-			//TODO: This should be done together with the extraction. However SuiteSparse already uses multiple threads and should
-			//		not be parallelized at subdomain level too. Instead environment.DoPerNode should be able to run tasks serially by reading a flag.
-			if (directSolverIsNative)
-			{
-				environment.DoPerNodeSerially(subdomainID =>
-				{
-					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
-					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
-					{
-						subdomainMatricesPsm[subdomainID].InvertKii();
-					}
-				});
-			}
-			else
-			{
-				environment.DoPerNode(subdomainID =>
-				{
-					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
-					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
-					{
-						subdomainMatricesPsm[subdomainID].InvertKii();
-					}
-				});
-			}
-			watch.Stop();
-			Logger.LogTaskDuration("Subdomain level dofs and matrices", watch.ElapsedMilliseconds);
-
-			// Intersubdomain dofs
-			watch.Restart();
-			if (isFirstAnalysis || !reanalysis.InterfaceProblemIndexer)
-			{
-				this.boundaryDofIndexer = subdomainTopology.CreateDistributedVectorIndexer(
-					s => subdomainDofsPsm[s].DofOrderingBoundary);
-			}
-			else
-			{
-				this.boundaryDofIndexer = subdomainTopology.RecreateDistributedVectorIndexer(
-					s => subdomainDofsPsm[s].DofOrderingBoundary, this.boundaryDofIndexer,
-					s => reanalysis.ModifiedSubdomains.IsConnectivityModified(s));
-			}
-
-			// Calculating scaling coefficients
-			scaling.CalcScalingMatrices(boundaryDofIndexer);
-			watch.Stop();
-			Logger.LogTaskDuration("Define interface problem dofs", watch.ElapsedMilliseconds);
-
-			// Prepare subdomain-level vectors
-			watch.Restart();
-			environment.DoPerNode(subdomainID =>
-			{
-				if (isFirstAnalysis || !reanalysis.RhsVectors 
-					|| reanalysis.ModifiedSubdomains.IsRhsModified(subdomainID))
-				{
-					#region log
-					//Console.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
-					//Debug.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
-					#endregion
-					subdomainVectors[subdomainID].ExtractBoundaryInternalRhsVectors(
-						fb => scaling.ScaleBoundaryRhsVector(subdomainID, fb));
-				}
-				else
-				{
-					Debug.Assert(!subdomainVectors[subdomainID].IsEmpty);
-				}
-			});
-			watch.Stop();
-			Logger.LogTaskDuration("Subdomain level vectors", watch.ElapsedMilliseconds);
-
-			// Prepare and solve the interface problem
-			watch.Restart();
-			interfaceProblemMatrix.Calculate(boundaryDofIndexer);
-			interfaceProblemVectors.CalcInterfaceRhsVector(boundaryDofIndexer);
+			PrepareSubdomainDofs();
+			PrepareSubdomainMatrices();
+			PrepareGlobal2SubdomainMappings();
+			PrepareSubdomainVectors();
+			PrepareInterfaceProblem();
 			CalcPreconditioner();
-			watch.Stop();
-			Logger.LogTaskDuration("Prepare interface problem", watch.ElapsedMilliseconds); // preconditioner should be together with subdomain operations
 
 			SolveInterfaceProblem();
-
-			// Find the solution at all free dofs
-			watch.Restart();
-			environment.DoPerNode(subdomainID =>
-			{
-				Vector subdomainBoundarySolution = interfaceProblemVectors.InterfaceProblemSolution.LocalVectors[subdomainID];
-				subdomainVectors[subdomainID].CalcStoreSubdomainFreeSolution(subdomainBoundarySolution);
-			});
-			watch.Stop();
-			Logger.LogTaskDuration("Recover solution at all dofs", watch.ElapsedMilliseconds);
+			RecoverSolution();
 
 			watchTotal.Stop();
 			Logger.LogTaskDuration("Solution", watchTotal.ElapsedMilliseconds);
@@ -305,7 +189,11 @@ namespace MGroup.Solvers.DDM.Psm
 
 		protected virtual void CalcPreconditioner()
 		{
+			var watch = new Stopwatch();
+			watch.Start();
 			preconditioner.Calculate(environment, boundaryDofIndexer, interfaceProblemMatrix);
+			watch.Stop();
+			Logger.LogTaskDuration("Prepare preconditioner", watch.ElapsedMilliseconds);
 		}
 
 		protected bool GuessInitialSolution()
@@ -389,6 +277,158 @@ namespace MGroup.Solvers.DDM.Psm
 				Logger.LogTaskDuration("Objective PCG criterion", objectiveConvergenceCriterion.EllapsedMilliseconds);
 				objectiveConvergenceCriterion.EllapsedMilliseconds = 0;
 			}
+		}
+
+		private void PrepareGlobal2SubdomainMappings()
+		{
+			var watch = new Stopwatch();
+			watch.Start();
+			bool isFirstAnalysis = analysisIteration == 0;
+			if (isFirstAnalysis || !reanalysis.InterfaceProblemIndexer)
+			{
+				this.boundaryDofIndexer = subdomainTopology.CreateDistributedVectorIndexer(
+					s => subdomainDofsPsm[s].DofOrderingBoundary);
+			}
+			else
+			{
+				this.boundaryDofIndexer = subdomainTopology.RecreateDistributedVectorIndexer(
+					s => subdomainDofsPsm[s].DofOrderingBoundary, this.boundaryDofIndexer,
+					s => reanalysis.ModifiedSubdomains.IsConnectivityModified(s));
+			}
+
+			// Calculating scaling coefficients
+			scaling.CalcScalingMatrices(boundaryDofIndexer);
+
+			watch.Stop();
+			Logger.LogTaskDuration("Global-subdomain mappings", watch.ElapsedMilliseconds);
+		}
+
+		private void PrepareInterfaceProblem()
+		{
+			var watch = new Stopwatch();
+			watch.Start();
+			interfaceProblemMatrix.Calculate(boundaryDofIndexer);
+			interfaceProblemVectors.CalcInterfaceRhsVector(boundaryDofIndexer);
+			watch.Stop();
+			Logger.LogTaskDuration("Prepare interface problem", watch.ElapsedMilliseconds);
+		}
+
+		private void PrepareSubdomainDofs()
+		{
+			var watch = new Stopwatch();
+			watch.Start();
+			bool isFirstAnalysis = analysisIteration == 0;
+			environment.DoPerNode(subdomainID =>
+			{
+				if (isFirstAnalysis || !reanalysis.SubdomainDofSubsets
+					|| reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
+				{
+					#region log
+					//Console.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
+					//Debug.WriteLine($"Processing boundary & internal dofs of subdomain {subdomainID}");
+					#endregion
+					subdomainDofsPsm[subdomainID].SeparateFreeDofsIntoBoundaryAndInternal();
+					subdomainMatricesPsm[subdomainID].ReorderInternalDofs();
+				}
+				else
+				{
+					Debug.Assert(!subdomainDofsPsm[subdomainID].IsEmpty);
+				}
+			});
+			watch.Stop();
+			Logger.LogTaskDuration("Subdomain level dofs", watch.ElapsedMilliseconds);
+		}
+
+		private void PrepareSubdomainMatrices()
+		{
+			var watch = new Stopwatch();
+			watch.Start();
+			bool isFirstAnalysis = analysisIteration == 0;
+			environment.DoPerNode(subdomainID =>
+			{
+				if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
+					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
+				{
+					#region log
+					//Console.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
+					//Debug.WriteLine($"Processing boundary & internal submatrices of subdomain {subdomainID}");
+					#endregion
+					subdomainMatricesPsm[subdomainID].HandleDofsWereModified();
+					subdomainMatricesPsm[subdomainID].ExtractKiiKbbKib();
+					//subdomainMatricesPsm[subdomainID].InvertKii();
+				}
+				else
+				{
+					Debug.Assert(!subdomainMatricesPsm[subdomainID].IsEmpty);
+				}
+			});
+
+			//TODO: This should be done together with the extraction. However SuiteSparse already uses multiple threads and should
+			//		not be parallelized at subdomain level too. Instead environment.DoPerNode should be able to run tasks serially by reading a flag.
+			if (directSolverIsNative)
+			{
+				environment.DoPerNodeSerially(subdomainID =>
+				{
+					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
+					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
+					{
+						subdomainMatricesPsm[subdomainID].InvertKii();
+					}
+				});
+			}
+			else
+			{
+				environment.DoPerNode(subdomainID =>
+				{
+					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
+					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
+					{
+						subdomainMatricesPsm[subdomainID].InvertKii();
+					}
+				});
+			}
+
+			watch.Stop();
+			Logger.LogTaskDuration("Subdomain level matrices", watch.ElapsedMilliseconds);
+		}
+
+		private void PrepareSubdomainVectors()
+		{
+			var watch = new Stopwatch();
+			watch.Start();
+			bool isFirstAnalysis = analysisIteration == 0;
+			environment.DoPerNode(subdomainID =>
+			{
+				if (isFirstAnalysis || !reanalysis.RhsVectors
+					|| reanalysis.ModifiedSubdomains.IsRhsModified(subdomainID))
+				{
+					#region log
+					//Console.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
+					//Debug.WriteLine($"Processing boundary & internal subvectors of subdomain {subdomainID}");
+					#endregion
+					subdomainVectors[subdomainID].ExtractBoundaryInternalRhsVectors(
+						fb => scaling.ScaleBoundaryRhsVector(subdomainID, fb));
+				}
+				else
+				{
+					Debug.Assert(!subdomainVectors[subdomainID].IsEmpty);
+				}
+			});
+			watch.Stop();
+			Logger.LogTaskDuration("Subdomain level vectors", watch.ElapsedMilliseconds);
+		}
+
+		private void RecoverSolution()
+		{
+			var watch = new Stopwatch();
+			watch.Start();
+			environment.DoPerNode(subdomainID =>
+			{
+				Vector subdomainBoundarySolution = interfaceProblemVectors.InterfaceProblemSolution.LocalVectors[subdomainID];
+				subdomainVectors[subdomainID].CalcStoreSubdomainFreeSolution(subdomainBoundarySolution);
+			});
+			watch.Stop();
+			Logger.LogTaskDuration("Recover solution at all dofs", watch.ElapsedMilliseconds);
 		}
 
 		public class Factory
