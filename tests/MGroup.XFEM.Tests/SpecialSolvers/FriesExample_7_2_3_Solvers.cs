@@ -64,6 +64,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		public static bool objectivePcgCriterion = false;
 		public static bool multiThreaded = false;
 
+		public const bool explicitPsmMatrices = false;
+		public const bool unsafeOptimizations = true;
+
 		[Fact]
 		public static void RunExampleWithDirectSolver()
 		{
@@ -309,7 +312,15 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			}
 			else if (solverChoice == SolverChoice.FetiDPNative)
 			{
-				fetiDPMatrices = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse.Factory(false);
+				if (unsafeOptimizations)
+				{
+					fetiDPMatrices = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparseUnsafe.Factory(false);
+
+				}
+				else
+				{
+					fetiDPMatrices = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse.Factory(false);
+				}
 				coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricSuiteSparse();
 			}
 			else
@@ -409,8 +420,16 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			}
 			else if (solverChoice == SolverChoice.PfetiDPNative)
 			{
-				psmMatrices = new PsmSubdomainMatrixManagerSymmetricSuiteSparse.Factory();
-				fetiDPMatrices = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse.Factory(true);
+				if (unsafeOptimizations)
+				{
+					psmMatrices = new PsmSubdomainMatrixManagerSymmetricSuiteSparseUnsafe.Factory();
+					fetiDPMatrices = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse.Factory(true);
+				}
+				else
+				{
+					psmMatrices = new PsmSubdomainMatrixManagerSymmetricSuiteSparse.Factory();
+					fetiDPMatrices = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse.Factory(true);
+				}
 				coarseProblemMatrix = new FetiDPCoarseProblemMatrixSymmetricSuiteSparse();
 			}
 			else
@@ -422,7 +441,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				environment, psmMatrices, cornerDofs, fetiDPMatrices);
 			solverFactory.CoarseProblemFactory = new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
 			solverFactory.EnableLogging = true;
-			solverFactory.ExplicitSubdomainMatrices = false;
+			solverFactory.ExplicitSubdomainMatrices = explicitPsmMatrices;
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
 			{
 				MaxIterations = 200,
@@ -440,7 +459,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 				solverFactory.ReanalysisOptions = reanalysisOptions;
 				solverFactory.SubdomainTopology = new SubdomainTopologyOptimized();
-				solverFactory.ExplicitSubdomainMatrices = true;
+				solverFactory.ExplicitSubdomainMatrices = explicitPsmMatrices;
 			}
 
 			// Create solver

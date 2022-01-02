@@ -372,6 +372,7 @@ namespace MGroup.Solvers.DDM.Psm
 					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
 					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 					{
+						//Console.WriteLine($"Invert Kii for subdomain {subdomainID}");
 						subdomainMatricesPsm[subdomainID].InvertKii();
 					}
 				});
@@ -383,6 +384,7 @@ namespace MGroup.Solvers.DDM.Psm
 					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
 					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 					{
+						//Console.WriteLine($"Invert Kii for subdomain {subdomainID}");
 						subdomainMatricesPsm[subdomainID].InvertKii();
 					}
 				});

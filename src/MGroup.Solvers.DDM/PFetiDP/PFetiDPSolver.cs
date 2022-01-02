@@ -83,6 +83,9 @@ namespace MGroup.Solvers.DDM.PFetiDP
 
 		protected override void CalcPreconditioner()
 		{
+			var watch = new Stopwatch();
+			watch.Start();
+
 			bool isFirstAnalysis = analysisIteration == 0;
 
 			// Prepare subdomain-level dofs and matrices
@@ -132,6 +135,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
 						|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 					{
+						//Console.WriteLine($"Invert Krr for subdomain {subdomainID}");
 						subdomainMatricesFetiDP[subdomainID].InvertKrr();
 					}
 				});
@@ -143,6 +147,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
 						|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 					{
+						//Console.WriteLine($"Invert Krr for subdomain {subdomainID}");
 						subdomainMatricesFetiDP[subdomainID].InvertKrr();
 					}
 				});
@@ -156,6 +161,9 @@ namespace MGroup.Solvers.DDM.PFetiDP
 			coarseProblemFetiDP.PrepareMatricesForSolution();
 
 			preconditioner.Calculate(environment, boundaryDofIndexer, interfaceProblemMatrix);
+
+			watch.Stop();
+			Logger.LogTaskDuration("Prepare preconditioner", watch.ElapsedMilliseconds);
 		}
 
 		public new class Factory : PsmSolver<TMatrix>.Factory

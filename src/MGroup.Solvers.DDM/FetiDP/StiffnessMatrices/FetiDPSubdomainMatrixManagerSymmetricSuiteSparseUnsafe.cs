@@ -14,7 +14,7 @@ using MGroup.Solvers.Assemblers;
 //TODO: a lot of duplication with the CSparse version
 namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 {
-	public class FetiDPSubdomainMatrixManagerSymmetricSuiteSparse : IFetiDPSubdomainMatrixManager
+	public class FetiDPSubdomainMatrixManagerSymmetricSuiteSparseUnsafe : IFetiDPSubdomainMatrixManager
 	{
 		/// <summary>
 		/// In FETI-DP Krr is also used for the preconditioner. In PFETI-DP only Krr is only used for the Schur complement of 
@@ -28,13 +28,13 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		private readonly SubmatrixExtractorPckCsrCscSym submatrixExtractorCornerRemainder = new SubmatrixExtractorPckCsrCscSym();
 
 		private SymmetricMatrix Kcc;
-		private CsrMatrix Kbb, Kbi, Kcr;
+		private CsrMatrixFaster Kbb, Kbi, Kcr;
 		private SymmetricCscMatrix Kii, Krr;
 		private CholeskySuiteSparse inverseKii, inverseKrr;
 		private DiagonalMatrix inverseKiiDiagonal;
 		private SymmetricMatrix Scc;
 
-		public FetiDPSubdomainMatrixManagerSymmetricSuiteSparse(SubdomainLinearSystem<SymmetricCscMatrix> linearSystem, 
+		public FetiDPSubdomainMatrixManagerSymmetricSuiteSparseUnsafe(SubdomainLinearSystem<SymmetricCscMatrix> linearSystem, 
 			FetiDPSubdomainDofs subdomainDofs, bool clearKrrAfterFactorization)
 		{
 			this.linearSystem = linearSystem;
@@ -49,7 +49,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		public void CalcSchurComplementOfRemainderDofs()
 		{
 			Scc = SymmetricMatrix.CreateZero(Kcc.Order);
-			SchurComplementPckCsrCscSym.CalcSchurComplement(Kcc, Kcr, inverseKrr, Scc);
+			SchurComplementPckCsrCscSym.CalcSchurComplement(Kcc, Kcr.AsSimpleCsr, inverseKrr, Scc);
 		}
 
 		public void ClearSubMatrices()
@@ -81,8 +81,8 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			int[] internalToRemainder = subdomainDofs.DofsInternalToRemainder;
 
 			submatrixExtractorBoundaryInternal.ExtractSubmatrices(Krr, boundaryRemainderToRemainder, internalToRemainder);
-			Kbb = submatrixExtractorBoundaryInternal.Submatrix00;
-			Kbi = submatrixExtractorBoundaryInternal.Submatrix01;
+			Kbb = new CsrMatrixFaster(submatrixExtractorBoundaryInternal.Submatrix00);
+			Kbi = new CsrMatrixFaster(submatrixExtractorBoundaryInternal.Submatrix01);
 			Kii = submatrixExtractorBoundaryInternal.Submatrix11;
 		}
 
@@ -94,7 +94,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 			SymmetricCscMatrix Kff = linearSystem.Matrix;
 			submatrixExtractorCornerRemainder.ExtractSubmatrices(Kff, cornerToFree, remainderToFree);
 			Kcc = submatrixExtractorCornerRemainder.Submatrix00;
-			Kcr = submatrixExtractorCornerRemainder.Submatrix01;
+			Kcr = new CsrMatrixFaster(submatrixExtractorCornerRemainder.Submatrix01);
 			Krr = submatrixExtractorCornerRemainder.Submatrix11;
 
 			submatrixExtractorBoundaryInternal.Clear();
@@ -202,7 +202,7 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 			public IFetiDPSubdomainMatrixManager CreateMatrixManager(
 				SubdomainLinearSystem<SymmetricCscMatrix> linearSystem, FetiDPSubdomainDofs subdomainDofs)
-				=> new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse(linearSystem, subdomainDofs, clearKrrAfterFactorization);
+				=> new FetiDPSubdomainMatrixManagerSymmetricSuiteSparseUnsafe(linearSystem, subdomainDofs, clearKrrAfterFactorization);
 		}
 	}
 }

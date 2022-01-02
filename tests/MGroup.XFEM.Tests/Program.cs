@@ -9,6 +9,8 @@ namespace MGroup.XFEM.Tests
 		{
 			Console.WriteLine("Hello world");
 
+			//MGroup.Solvers.DDM.Tests.PFetiDP.UniformExample.Run();
+
 			RunExample1();
 			//RunExample2();
 
@@ -20,19 +22,19 @@ namespace MGroup.XFEM.Tests
 		private static void RunExample1()
 		{
 			FriesExample_7_2_1_Solvers.maxIterations = 1;
-			FriesExample_7_2_1_Model.heavisideTol = 1E-4;
+			FriesExample_7_2_1_Model.heavisideTol = 1E-3;
 
 			FriesExample_7_2_1_Solvers.outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example1\";
 			//FriesExample_7_2_1_Solvers.outputDirectory = @"C:\Users\cluster\Desktop\Serafeim\results\Example1\";
 			FriesExample_7_2_1_Solvers.outputPlotDirectory = FriesExample_7_2_1_Solvers.outputDirectory + "plots";
 			FriesExample_7_2_1_Solvers.enablePlotting = false;
 
-			FriesExample_7_2_1_Solvers.crackMouthCoords = new double[] { 336, 0 };
-			FriesExample_7_2_1_Solvers.crackFrontCoords = new double[] { 336, 74 };
+			FriesExample_7_2_1_Solvers.crackMouthCoords = new double[] { 337.5, 0 };
+			FriesExample_7_2_1_Solvers.crackFrontCoords = new double[] { 337.5, 74 };
 
-			int numElementsMin = 20;
+			int numElementsMin = 25;
 			FriesExample_7_2_1_Solvers.numElements = new int[] { 9 * numElementsMin, 2 * numElementsMin, numElementsMin };
-			int numSubdomainsMin = 4;
+			int numSubdomainsMin = 5;
 			FriesExample_7_2_1_Solvers.numSubdomains = new int[] { 9 * numSubdomainsMin, 2 * numSubdomainsMin, numSubdomainsMin };
 
 			FriesExample_7_2_1_Solvers.multiThreaded = false;
