@@ -247,8 +247,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		private class MockPropagator : IPropagator
 		{
 			private int iteration = 0;
+			private readonly Random rng = new Random(13);
 
-			public (double[] growthAngles, double[] growthLengths) Propagate(
+			public (double[] growthAngles, double[] growthLengths) PropagateNoNoise(
 				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, ICrackTipSystem[] crackTipSystems)
 			{
 				double growthAngle = -(40.0 / 180.0) * Math.PI;
@@ -260,6 +261,56 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				{
 					growthAngles[i] = theta;
 					growthLengths[i] = da;
+				}
+
+				++iteration;
+				return (growthAngles, growthLengths);
+			}
+
+			public (double[] growthAngles, double[] growthLengths) Propagate(
+				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, ICrackTipSystem[] crackTipSystems)
+			{
+				double growthAngle = -(40.0 / 180.0) * Math.PI;
+				double theta = iteration == 0 ? growthAngle : 0;
+
+				var growthAngles = new double[crackTipSystems.Length];
+				var growthLengths = new double[crackTipSystems.Length];
+				for (int i = 0; i < crackTipSystems.Length; ++i)
+				{
+					double da0;
+					double dTheta;
+					if (iteration < 3)
+					{
+						da0 = da;
+						dTheta = 0;
+					}
+					else if (iteration < 8)
+					{
+						da0 = 0.97 * da;
+						dTheta = (1.0 / 180.0) * Math.PI; ;
+					}
+					else
+					{
+						da0 = 0.93 * da;
+						dTheta = (3.0 / 180.0) * Math.PI; ;
+					}
+					double z = crackTipSystems[i].TipCoordsGlobal[2];
+					double z0 = (minCoords[2] + maxCoords[2]) / 2;
+					double Dz = maxCoords[2] - minCoords[2];
+
+					if (z <= z0)
+					{
+						growthLengths[i] = da0 + (da - da0) / (0.5 * Dz) * (z - minCoords[2]);
+					}
+					else
+					{
+						growthLengths[i] = da0 + (da - da0) / (0.5 * Dz) * (maxCoords[2] - z);
+					}
+
+					double thetaMin = theta - dTheta;
+					double thetaMax = theta + dTheta;
+					growthAngles[i] = thetaMin + (thetaMax - thetaMin) * rng.NextDouble();
+
 				}
 
 				++iteration;

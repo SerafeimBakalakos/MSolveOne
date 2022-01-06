@@ -19,7 +19,7 @@ namespace MGroup.XFEM.Tests
 
 		private static void RunExample1()
 		{
-			FriesExample_7_2_1_Solvers.maxIterations = 5;
+			FriesExample_7_2_1_Solvers.maxIterations = 13;
 			FriesExample_7_2_1_Model.heavisideTol = 1E-4;
 
 			FriesExample_7_2_1_Solvers.outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example1\";
@@ -27,8 +27,8 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_1_Solvers.outputPlotDirectory = FriesExample_7_2_1_Solvers.outputDirectory + "plots";
 			FriesExample_7_2_1_Solvers.enablePlotting = false;
 
-			FriesExample_7_2_1_Solvers.crackMouthCoords = new double[] { 336, 0 };
-			FriesExample_7_2_1_Solvers.crackFrontCoords = new double[] { 336, 74 };
+			FriesExample_7_2_1_Solvers.crackMouthCoords = new double[] { 337.5, 0 };
+			FriesExample_7_2_1_Solvers.crackFrontCoords = new double[] { 337.5, 75 };
 
 			int numElementsMin = 24;
 			FriesExample_7_2_1_Solvers.numElements = new int[] { 9 * numElementsMin, 2 * numElementsMin, numElementsMin };
@@ -41,10 +41,12 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_1_Solvers.ddmReanalysis = false;
 			FriesExample_7_2_1_Solvers.reanalysisExtraDofs = FriesExample_7_2_1_Solvers.ReanalysisExtraDofs.None;
 
+			FriesExample_7_2_1_Solvers.RunAnalysisWithoutSolving();
+			
 			//FriesExample_7_2_1_Solvers.RunExampleWithDirectSolver();
 			//FriesExample_7_2_1_Solvers.RunExampleWithReanalysisSolver();
 			//FriesExample_7_2_1_Solvers.RunExampleWithPFetiDPSolver();
-			FriesExample_7_2_1_Solvers.RunExampleWithFetiDPSolver();
+			//FriesExample_7_2_1_Solvers.RunExampleWithFetiDPSolver();
 		}
 
 		private static void RunExample2()
