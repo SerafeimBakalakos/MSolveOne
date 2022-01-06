@@ -88,7 +88,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			geometryModel.Enricher = new NodeEnricherIndependentCracks(
 				geometryModel, new RelativeAreaSingularityResolver(heavisideTol), tipEnrichmentArea);
 
-			double offset = 0.25 * crackLength;
+			double offset = /*0.25*/ 0.05 * crackLength;
 			double[] cylinderStart = {
 				0.5 * (minCoords[0] + maxCoords[0]), minCoords[1] - offset, 0.5 * (minCoords[2] + maxCoords[2])
 			};
@@ -287,7 +287,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		{
 			private int iteration = 0;
 
-			public (double[] growthAngles, double[] growthLengths) Propagate(
+			public (double[] growthAngles, double[] growthLengths) PropagateNoNoise(
 				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, ICrackTipSystem[] crackTipSystems)
 			{
 				double growthAngle = +(70.0 / 180.0) * Math.PI;
@@ -300,6 +300,53 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 					growthAngles[i] = theta;
 					growthLengths[i] = da;
 				}
+
+				++iteration;
+				return (growthAngles, growthLengths);
+			}
+
+			public (double[] growthAngles, double[] growthLengths) Propagate(
+				IAlgebraicModel algebraicModel, IGlobalVector totalDisplacements, ICrackTipSystem[] crackTipSystems)
+			{
+				//double growthAngle = +(70.0 / 180.0) * Math.PI;
+
+				var growthAngles = new double[crackTipSystems.Length];
+				var growthLengths = new double[crackTipSystems.Length];
+				double theta0;
+				for (int i = 0; i < crackTipSystems.Length; ++i)
+				{
+					if (iteration == 0)
+					{
+						theta0 = +(55.0 / 180.0) * Math.PI;
+					}
+					else if (iteration == 1)
+					{
+						theta0 = +(16 / 180.0) * Math.PI;
+					}
+					else if (iteration >= 10)
+					{
+						theta0 = +(2 / 180.0) * Math.PI;
+					}
+					else
+					{
+						theta0 = 0;
+					}
+
+					if (i == 0 || i == 5)
+					{
+						growthAngles[i] = 1.12 * theta0;
+					}
+					else if (i == 1 || i == 4 || i == 6 || i == 9)
+					{
+						growthAngles[i] = 0.95 * theta0;
+					}
+					else
+					{
+						growthAngles[i] = 1.0 * theta0;
+					}
+					growthLengths[i] = da;
+				}
+
 
 				++iteration;
 				return (growthAngles, growthLengths);

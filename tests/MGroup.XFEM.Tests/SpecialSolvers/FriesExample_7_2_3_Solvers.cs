@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using MGroup.Environments;
+using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Solution;
@@ -185,6 +186,31 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			var solver = factory.BuildSolver(algebraicModel);
 
 			RunAnalysis(model, algebraicModel, solver, solverChoice);
+		}
+
+		public static void RunAnalysisWithoutSolving()
+		{
+			XModel<IXCrackElement> model = FriesExample_7_2_3_Model.DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
+			FriesExample_7_2_3_Model.CreateGeometryModel(model, numElements, outputPlotDirectory);
+			FriesExample_7_2_3_Model.SetupEnrichmentOutput(model, outputPlotDirectory);
+
+			IAlgebraicModel algebraicModel = null;
+			IGlobalVector totalDisplacementsFreeDofs = null;
+			for (int iteration = 0; iteration < maxIterations; ++iteration)
+			{
+				Debug.WriteLine($"Crack propagation step {iteration}");
+				Console.WriteLine($"Crack propagation step {iteration}");
+				//Logger.IncrementAnalysisIteration();
+
+				if (iteration == 0)
+				{
+					model.Initialize();
+				}
+				else
+				{
+					model.Update(algebraicModel, totalDisplacementsFreeDofs);
+				}
+			}
 		}
 
 		private static void RunAnalysis(XModel<IXCrackElement> model, IAlgebraicModel algebraicModel, ISolver solver, 
