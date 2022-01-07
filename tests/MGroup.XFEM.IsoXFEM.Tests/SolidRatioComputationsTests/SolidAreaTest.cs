@@ -1,24 +1,20 @@
-using MGroup.XFEM.IsoXFEM.Solvers;
-using MGroup.LinearAlgebra.Vectors;
-using MGroup.XFEM.Materials.Duplicates;
-using MGroup.MSolve.Discretization;
-using MGroup.MSolve.Discretization.Loads;
-using System;
-using System.Collections.Generic;
-using MGroup.MSolve.Discretization.Dofs;
-using MGroup.MSolve.Solution;
-using MGroup.MSolve.Solution.AlgebraicModel;
-using MGroup.XFEM.Entities;
-using MGroup.Solvers.Direct;
-using MGroup.Constitutive.Structural;
-using MGroup.MSolve.AnalysisWorkflow;
-using MGroup.NumericalAnalyzers;
-
-namespace MGroup.XFEM.IsoXFEM.Tests
+namespace MGroup.XFEM.IsoXFEM.Tests.SolidRatioComputationsTests
 {
+	using System;
+	using System.Collections.Generic;
+	using System.Text;
 
-	public class Example1
-    {
+	using MGroup.LinearAlgebra.Vectors;
+	using MGroup.MSolve.Discretization;
+	using MGroup.MSolve.Discretization.Dofs;
+	using MGroup.XFEM.Entities;
+	using MGroup.XFEM.IsoXFEM.SolidRatioComputations;
+	using MGroup.XFEM.Materials.Duplicates;
+
+	using Xunit;
+
+	public class SolidAreaTest
+	{
 		//                      #2
 		//     .________________________________.
 		//     |                                |
@@ -39,7 +35,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			Upperside,
 			Leftside,
 		}
-		private static ConstrainedSide constrainedSide;
+		private static ConstrainedSide constrainedSide = ConstrainedSide.Leftside;
 		public enum EndLoad
 		{
 			UpperEnd,
@@ -47,14 +43,13 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			BottomEnd
 		}
 		private static EndLoad endload;
-
-		public static void RunExample1()
-        {
-            var geometry = new GeometryProperties(40, 20, 1, 40, 20);
+		[Fact]
+		private void CalculateRatioTest()
+		{
+			var geometry = new GeometryProperties(2, 1, 1, 2, 1);
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
-			constrainedSide = ConstrainedSide.Leftside;
 			var meshGeneration = new MeshGeneration(material, geometry);
 			var mesh = meshGeneration.MakeMesh();
 			foreach (var item in mesh.Item1.Values)
@@ -94,7 +89,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				}
 			}
 			int dimension = 2;
-			var xModel = new XModel<IsoXfemElement2D>(dimension);
+			var xModel = new IsoXFEM.XModel<IsoXfemElement2D>(dimension);
 			xModel.Subdomains[0] = new XSubdomain<IsoXfemElement2D>(0);
 			foreach (var item in mesh.Item1.Keys)
 			{
@@ -105,31 +100,17 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				xModel.Elements[item] = mesh.Item2[item];
 				xModel.Subdomains[0].Elements.Add(mesh.Item2[item]);
 			}
-			endload = EndLoad.BottomEnd;
-			int nodeIDLoad =  (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1) - ((int)endload * (geometry.numberOfElementsY)/2) - 1;
-			Load load;
-			load = new Load()
-			{
-				Node = xModel.Nodes[nodeIDLoad],
-				DOF = StructuralDof.TranslationY,
-				Amount = 1
-			};
-			xModel.NodalLoads.Add(load);
 			xModel.Initialize();
-			//ISolver solver0 = new SkylineLdlSolver();
-			//var femAnalysis = new FEMAnalysis(geometry, xModel, solver0/*, rhs*/);
-			//femAnalysis.Initialize();
-			var solverFactory = new SkylineSolver.Factory();
-			var algebraicModel = solverFactory.BuildAlgebraicModel(xModel);
-			var solver = solverFactory.BuildSolver(algebraicModel);
-			var provider = new ProblemStructural(xModel, algebraicModel, solver);
-			var childAnalyzer = new LinearAnalyzer(xModel, algebraicModel, solver, provider);
-			var parentAnalyzer = new StaticAnalyzer(xModel, algebraicModel, solver, provider, childAnalyzer);
-			//parentAnalyzer.Initialize();
-			//parentAnalyzer.Solve();
-			//var solution = solver.LinearSystem.Solution;
-			var topologyOptimization = new TopologyOptimization(xModel, parentAnalyzer, solver, algebraicModel);
-			topologyOptimization.IsoXfem();
+			Vector nodalStrainEnergyDensity = Vector.CreateFromArray(new double[] { -50, -50, 100, 100, -200, -200 });
+			Vector initialAreas = Vector.CreateWithValue(2, 1);
+			Vector areaOfElementsExpected = Vector.CreateFromArray(new double[] { 0.6666666666666666, 0.33333333333333 });
+			var solidArea = new SolidArea(xModel, initialAreas);
+			solidArea.RelativeCriteria = nodalStrainEnergyDensity;
+			var areaOfElemenetsComputed = solidArea.CalculateSolidRatio();
+			for (int i = 0; i < areaOfElementsExpected.Length; i++)
+			{
+				Assert.Equal(areaOfElementsExpected[i], areaOfElemenetsComputed[i], 10);
+			}
 		}
 	}
 }

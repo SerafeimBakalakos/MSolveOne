@@ -100,12 +100,11 @@ namespace MGroup.XFEM.IsoXFEM
    //         }
         }
 
-        public Tuple<Dictionary<int, XNode>, Dictionary<int, IsoXfemElement2D>> MakeMesh()
+        public (Dictionary<int, XNode> nodes , Dictionary<int, IsoXfemElement2D> elements) MakeMesh()
         {
             var nodes=CreateNodes();
             var elements=CreateElements(nodes);
-			var tuple = new Tuple <Dictionary<int, XNode>,Dictionary<int, IsoXfemElement2D>> (nodes,elements);
-			return tuple;			
+			return (nodes,elements);			
         }
    }
 }

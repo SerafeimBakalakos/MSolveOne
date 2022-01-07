@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <StartupObject>Microsoft.VisualStudio.TestPlatform.TestHost.Program</StartupObject>
+    <StartupObject>MGroup.XFEM.Tests.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>

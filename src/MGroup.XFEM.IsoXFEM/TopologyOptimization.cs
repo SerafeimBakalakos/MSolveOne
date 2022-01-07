@@ -11,6 +11,12 @@ using System.Text;
 using MGroup.XFEM.Entities;
 using System.Linq;
 using MGroup.XFEM.IsoXFEM.SolidRatioComputations;
+using MGroup.NumericalAnalyzers;
+using MGroup.MSolve.Solution;
+using MGroup.Solvers.Direct;
+using MGroup.Solvers.AlgebraicModel;
+using MGroup.MSolve.Solution.AlgebraicModel;
+using MGroup.Constitutive.Structural;
 
 namespace MGroup.XFEM.IsoXFEM
 {
@@ -27,14 +33,20 @@ namespace MGroup.XFEM.IsoXFEM
 		public  Matrix results;
 		private readonly StructuralPerfomance structuralPerfomance;
 		private readonly ISolidRatio solidArea;
+		private /*readonly*/ ISolver solver;
 		public XModel<IsoXfemElement2D> xModel;
-		public FEMAnalysis femAnalysis;
-		public TopologyOptimization (XModel<IsoXfemElement2D> xModel, FEMAnalysis femAnalysis)
+		public StaticAnalyzer parentAnalyzer;
+		public IAlgebraicModel algebraicModel;
+
+		public TopologyOptimization (XModel<IsoXfemElement2D> xModel,  StaticAnalyzer parentAnalyzer, ISolver solver, IAlgebraicModel algebraicModel)
 		{
 			this.xModel = xModel;
-			this.femAnalysis = femAnalysis;
-			this.structuralPerfomance = new StructuralPerfomance(xModel.Nodes, xModel.Elements, xModel.Elements.First().Value.AreaOfElement);
+			this.parentAnalyzer = parentAnalyzer;
+			this.solver = solver;
+			this.algebraicModel = algebraicModel;
+			this.structuralPerfomance = new StructuralPerfomance(xModel.Nodes, xModel.Elements, xModel.Elements.First().Value.AreaOfElement, algebraicModel);
 			this.solidArea = new SolidArea(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.AreaOfElement));
+			parentAnalyzer.Initialize();
 		}
         public void IsoXfem()
         {
@@ -56,9 +68,14 @@ namespace MGroup.XFEM.IsoXFEM
                     {
                         nodalStrainEnergyItPrevious[i] = nodalStrainEnergyIt[i];
                     }
-                }
-                femAnalysis.Solve();
-				(var strainEnergy, var nodalStrainEnergyDensity) =structuralPerfomance.ComputeStrainEnergyAndNodalSEDensity(femAnalysis.displacements);
+					var provider = new ProblemStructural(xModel, algebraicModel, solver);
+					var childAnalyzer = new LinearAnalyzer(xModel, algebraicModel, solver, provider);
+					parentAnalyzer = new StaticAnalyzer(xModel, algebraicModel, solver, provider, childAnalyzer);
+					parentAnalyzer.Initialize(false);
+				}
+				parentAnalyzer.Solve();
+				var solution = solver.LinearSystem.Solution; 
+				(var strainEnergy, var nodalStrainEnergyDensity) =structuralPerfomance.ComputeStrainEnergyAndNodalSEDensity(solution);
                 nodalStrainEnergyIt = nodalStrainEnergyDensity;
                 double totalStrainEnergy = strainEnergy.Sum();
                 StabilizingEvolutionaryProcess(it);
@@ -96,7 +113,7 @@ namespace MGroup.XFEM.IsoXFEM
     //            }
 				#endregion
 			}
-			ResultsWriter.ResultsWriterToTxt(results);
+			//ResultsWriter.ResultsWriterToTxt(results);
         }
         private  void StabilizingEvolutionaryProcess(int iteration)
         {
