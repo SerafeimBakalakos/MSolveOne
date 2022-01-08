@@ -32,31 +32,31 @@ namespace MGroup.XFEM.IsoXFEM
         private  Vector vfEachIteration;
 		public  Matrix results;
 		private readonly StructuralPerfomance structuralPerfomance;
-		private readonly ISolidRatio solidArea;
+		private readonly ISolidRatio solidRatio;
 		private /*readonly*/ ISolver solver;
-		public XModel<IsoXfemElement2D> xModel;
+		public XModel<IIsoXfemElement> xModel;
 		public StaticAnalyzer parentAnalyzer;
 		public IAlgebraicModel algebraicModel;
 
-		public TopologyOptimization (XModel<IsoXfemElement2D> xModel,  StaticAnalyzer parentAnalyzer, ISolver solver, IAlgebraicModel algebraicModel)
+		public TopologyOptimization (XModel<IIsoXfemElement> xModel,ISolidRatio solidRatio,  StaticAnalyzer parentAnalyzer, ISolver solver, IAlgebraicModel algebraicModel)
 		{
 			this.xModel = xModel;
 			this.parentAnalyzer = parentAnalyzer;
 			this.solver = solver;
 			this.algebraicModel = algebraicModel;
 			this.structuralPerfomance = new StructuralPerfomance(xModel.Nodes, xModel.Elements, xModel.Elements.First().Value.AreaOfElement, algebraicModel);
-			this.solidArea = new SolidArea(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.AreaOfElement));
+			this.solidRatio = solidRatio;
 			parentAnalyzer.Initialize();
 		}
         public void IsoXfem()
         {
             nodalStrainEnergyIt = Vector.CreateZero(xModel.Nodes.Count);
             nodalStrainEnergyItPrevious = Vector.CreateZero(xModel.Nodes.Count);
-            Vector initialAreaOfElements = Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements[0].AreaOfElement);
-            var initialAreaElement = initialAreaOfElements[0];
-			xModel.sizesOfElements = Vector.CreateWithValue(xModel.Elements.Count, initialAreaElement);
+            Vector initialSizeOfElements = Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements[0].AreaOfElement);
+            var initialSizeElement = initialSizeOfElements[0];
+			xModel.sizesOfElements = Vector.CreateWithValue(xModel.Elements.Count, initialSizeElement);
 			vfEachIteration = Vector.CreateZero(iterations);
-            var areaOfWholeStructure = initialAreaOfElements.Sum();
+            var sizeOfWholeStructure = initialSizeOfElements.Sum();
             var vfi = 1.00;
             var vfk = 0.00;
             results = Matrix.CreateZero(iterations, 3);            
@@ -86,35 +86,20 @@ namespace MGroup.XFEM.IsoXFEM
                     mlp = 0.99 * initialNodalStrainEnergyMaxValue;
                 }
                 //Results For Txt Files
-                vfEachIteration[it] = xModel.sizesOfElements.Sum() / areaOfWholeStructure;
+                vfEachIteration[it] = xModel.sizesOfElements.Sum() / sizeOfWholeStructure;
                 results[it, 0] = it;
                 results[it, 1] = totalStrainEnergy;
                 results[it, 2] = vfEachIteration[it];
                 //Target Volume Fraction for this iteration
                 Vector casesForVolumeFractionsIt = Vector.CreateFromArray(new double[] { volumeFraction, vfi * (1 - evolutionRate) });
                 vfi = casesForVolumeFractionsIt.Max();
-                var relativeCriteria = UpdatingMLP(vfi, vfk, initialAreaOfElements, areaOfWholeStructure);
+                var relativeCriteria = UpdatingMLP(vfi, vfk, sizeOfWholeStructure);
 				xModel.relativeCriteria = relativeCriteria;
 				xModel.Update(null,null);
 				//PlotPerformanceLevel(it, model.nodes, model.elements, relativeCriteria);
-				#region xModelUpdate
-				//for (int el = 0; el < xModel.Elements.Count; el++)
-    //            {
-    //                int[] connectionOfElement = new int[] { xModel.Elements[el].nodesOfElement[0].ID, xModel.Elements[el].nodesOfElement[1].ID, xModel.Elements[el].nodesOfElement[2].ID, xModel.Elements[el].nodesOfElement[3].ID };
-    //                Vector elementRelativeCriteria = relativeCriteria.GetSubvector(connectionOfElement);
-    //                Matrix elementCoordinates = Matrix.CreateFromArray(new double[,] {{ xModel.Elements[el].nodesOfElement[0].X, xModel.Elements[el].nodesOfElement[0].Y},
-    //                                                                                   {xModel.Elements[el].nodesOfElement[1].X, xModel.Elements[el].nodesOfElement[1].Y },
-    //                                                                                   {xModel.Elements[el].nodesOfElement[2].X, xModel.Elements[el].nodesOfElement[2].Y },
-    //                                                                                   {xModel.Elements[el].nodesOfElement[3].X, xModel.Elements[el].nodesOfElement[3].Y }});
-				//	xModel.Elements[el].coordinatesOfElement = elementCoordinates;
-				//	xModel.Elements[el].elementLevelSet = elementRelativeCriteria;
-				//	xModel.Elements[el].StiffnessMatrix(xModel.Elements[el]);
-				//	areaOfElements[el] = xModel.Elements[el].areaOfElement;
-    //            }
-				#endregion
 			}
-			//ResultsWriter.ResultsWriterToTxt(results);
-        }
+			ResultsWriter.ResultsWriterToTxt(results);
+		}
         private  void StabilizingEvolutionaryProcess(int iteration)
         {
             if (iteration > 0)
@@ -125,9 +110,8 @@ namespace MGroup.XFEM.IsoXFEM
                 }
             }
         }
-        public  Vector UpdatingMLP( double targetVolumeFraction, double volumeFractionIteration, Vector initialAreas, double wholeArea)
+        public  Vector UpdatingMLP( double targetVolumeFraction, double volumeFractionIteration, double wholeSize)
         {
-            int z = 0;
             Vector relativeCriteria = Vector.CreateZero(nodalStrainEnergyIt.Length);
             Vector mlpVector = Vector.CreateZero(nodalStrainEnergyIt.Length);
             while ((Math.Abs(targetVolumeFraction - volumeFractionIteration) / targetVolumeFraction) > 0.001)
@@ -137,12 +121,10 @@ namespace MGroup.XFEM.IsoXFEM
                     mlpVector[i] = mlp;
                 }
                 relativeCriteria = nodalStrainEnergyIt - mlpVector;
-				solidArea.RelativeCriteria = relativeCriteria;
-				var areasofelement = solidArea.CalculateSolidRatio();
-                //var areasofelement = SolidArea(xModel, initialAreas, relativeCriteria);
-				volumeFractionIteration = areasofelement.Sum() / wholeArea;
+				solidRatio.RelativeCriteria = relativeCriteria;
+				var sizeOfElements = solidRatio.CalculateSolidRatio();
+				volumeFractionIteration = sizeOfElements.Sum() / wholeSize;
                 mlp = mlp * volumeFractionIteration / targetVolumeFraction;
-                z++;
             }
             return relativeCriteria;
         }

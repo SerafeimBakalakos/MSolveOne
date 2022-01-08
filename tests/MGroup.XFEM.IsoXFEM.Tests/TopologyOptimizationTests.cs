@@ -9,7 +9,6 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.MSolve.Discretization;
 	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.MSolve.Discretization.Loads;
-	using MGroup.XFEM.IsoXFEM.Solvers;
 	using MGroup.XFEM.Materials.Duplicates;
 	using MGroup.XFEM.IsoXFEM.SolidRatioComputations;
 	using Xunit;
@@ -17,6 +16,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.Constitutive.Structural;
 	using MGroup.NumericalAnalyzers;
 	using MGroup.XFEM.Entities;
+	using System.Linq;
 
 	public class TopologyOptimizationTests
 	{
@@ -41,6 +41,19 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			Leftside,
 		}
 		private static ConstrainedSide constrainedSide = ConstrainedSide.Leftside;
+		//                      
+		//     .________________________________.#0
+		//     |                                |
+		//     |                                |
+		//     |                                |
+		//     |                                |
+		//     |                                |#1
+		//     |                                |      
+		//     |                                |
+		//     |                                |
+		//     |                                |
+		//     .________________________________.#2
+		//                    
 		public enum EndLoad
 		{
 			UpperEnd,
@@ -48,65 +61,84 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			BottomEnd
 		}
 		private static EndLoad endload;
-		
+
 		[Fact]
 
 		private void UpdatingMLPTest()
 		{
+			/// <summary>
+			/// Define material properties and geometry.
+			/// </summary>
 			var geometry = new GeometryProperties(40, 20, 1, 40, 20);
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
+			/// <summary>
+			/// Create mesh.
+			/// </summary>
 			var meshGeneration = new MeshGeneration(material, geometry);
-			var mesh = meshGeneration.MakeMesh();
-			foreach (var item in mesh.Item1.Values)
+			var (nodes, elements) = meshGeneration.MakeMesh();
+			/// <summary>
+			/// Add Constraints, Using enum Constrained Side.
+			/// </summary>
+			constrainedSide = ConstrainedSide.Leftside;
+			foreach (var node in nodes.Values)
 			{
 				switch (constrainedSide)
 				{
 					case ConstrainedSide.Bottomside:
-						if (item.Y == 0)
+						if (node.Y == 0)
 						{
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
 						}
 						break;
 					case ConstrainedSide.Rightside:
-						if (item.X == geometry.length)
+						if (node.X == geometry.length)
 						{
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
 						}
 						break;
 					case ConstrainedSide.Upperside:
-						if (item.Y == geometry.height)
+						if (node.Y == geometry.height)
 						{
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
 						}
 						break;
 					case ConstrainedSide.Leftside:
-						if (item.X == 0)
+						if (node.X == 0)
 						{
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
 						}
 						break;
 					default:
 						break;
 				}
 			}
+			/// <summary>
+			/// X-Model creation.2-D Model.
+			/// </summary>
 			int dimension = 2;
-			var xModel = new IsoXFEM.XModel<IsoXfemElement2D>(dimension);
-			xModel.Subdomains[0] = new XSubdomain<IsoXfemElement2D>(0);
-			foreach (var item in mesh.Item1.Keys)
+			var xModel = new IsoXFEM.XModel<IIsoXfemElement>(dimension);
+			/// <summary>
+			/// Add Subdomain, Nodes and Elements to Model.
+			/// </summary>
+			xModel.Subdomains[0] = new XSubdomain<IIsoXfemElement>(0);
+			foreach (var node in nodes.Keys)
 			{
-				xModel.Nodes[item] = mesh.Item1[item];
+				xModel.Nodes[node] = nodes[node];
 			}
-			foreach (var item in mesh.Item2.Keys)
+			foreach (var element in elements.Keys)
 			{
-				xModel.Elements[item] = mesh.Item2[item];
-				xModel.Subdomains[0].Elements.Add(mesh.Item2[item]);
+				xModel.Elements[element] = elements[element];
+				xModel.Subdomains[0].Elements.Add(elements[element]);
 			}
+			/// <summary>
+			/// Add Loads. Using enum EndLoad in order to choose the node we want to apply the force.
+			/// </summary>
 			endload = EndLoad.BottomEnd;
 			int nodeIDLoad = (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1) - ((int)endload * (geometry.numberOfElementsY) / 2) - 1;
 			Load load;
@@ -117,18 +149,44 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				Amount = 1
 			};
 			xModel.NodalLoads.Add(load);
+			/// <summary>
+			/// Initialize the Model.
+			/// </summary>
 			xModel.Initialize();
+			/// <summary>
+			/// Defines Skyline Solver.
+			/// </summary>
 			var solverFactory = new SkylineSolver.Factory();
 			var algebraicModel = solverFactory.BuildAlgebraicModel(xModel);
 			var solver = solverFactory.BuildSolver(algebraicModel);
+			/// <summary>
+			/// Defines Problem type as Structural.
+			/// </summary>
 			var provider = new ProblemStructural(xModel, algebraicModel, solver);
+			/// <summary>
+			/// Defines Analyzers.
+			/// Chlid Analyzer: Linear
+			/// Parent Analyzer: Static
+			/// </summary>
 			var childAnalyzer = new LinearAnalyzer(xModel, algebraicModel, solver, provider);
 			var parentAnalyzer = new StaticAnalyzer(xModel, algebraicModel, solver, provider, childAnalyzer);
+			/// <summary>
+			/// Defines solidRatio. The Problem is 2D so SolidArea is selected.
+			/// </summary>
+			ISolidRatio solidRatio = new SolidArea(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.AreaOfElement));
+			/// <summary>
+			/// Defines the topology Optimization.
+			/// </summary>
+			var topologyOptimization = new TopologyOptimization(xModel, solidRatio, parentAnalyzer, solver, algebraicModel);
+			/// <summary>
+			/// Defines expected results for the firsts 10 iterations.
+			/// </summary>
 			var mlp10Iterations = Vector.CreateFromArray(new double[] { 1.1588748787736138, 0.00013116325274719682, 0.00060439138724182077, 0.0014090901824856217, 0.0022817600413313054, 0.0028861382523827179, 0.0035357835523449534, 0.0042352927267947432, 0.00490602058830891, 0.0053792332498687539, 0.0058575331187078307 });
 			var vfi10Iterations = Vector.CreateFromArray(new double[] { 0.99, 0.9801, 0.97029899999999991, 0.96059601, 0.95099004989999991, 0.94148014940099989, 0.93206534790698992, 0.92274469442792, 0.91351724748364072, 0.9043820750088043 });
 			var vfk = 0.00;
-			Vector initialAreas = Vector.CreateWithValue(800, 1);
-			var topologyOptimization = new TopologyOptimization(xModel, parentAnalyzer, solver, algebraicModel);
+			/// <summary>
+			/// Check results.Using txt files from Resources.
+			/// </summary>
 			for (int i = 0; i < 10; i++)
 			{
 				var reader1 = new Array1DReader(false);
@@ -155,7 +213,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				{
 					levelSetExpected[j] = levelSet[j];
 				}
-				var levelSetComputed = topologyOptimization.UpdatingMLP(vfi, vfk, initialAreas, 800);
+				var levelSetComputed = topologyOptimization.UpdatingMLP(vfi, vfk, 800);
 				for (int j = 0; j < levelSetExpected.Length; j++)
 				{
 					Assert.Equal(levelSetExpected[j], levelSetComputed[j]);
@@ -167,60 +225,79 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 
 		public void IsoXfemTest()
 		{
+			/// <summary>
+			/// Define material properties and geometry.
+			/// </summary>
 			var geometry = new GeometryProperties(40, 20, 1, 40, 20);
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
+			/// <summary>
+			/// Create mesh.
+			/// </summary>
 			var meshGeneration = new MeshGeneration(material, geometry);
-			var mesh = meshGeneration.MakeMesh();
-			foreach (var item in mesh.Item1.Values)
+			var (nodes, elements) = meshGeneration.MakeMesh();
+			/// <summary>
+			/// Add Constraints, Using enum Constrained Side.
+			/// </summary>
+			constrainedSide = ConstrainedSide.Leftside;
+			foreach (var node in nodes.Values)
 			{
 				switch (constrainedSide)
 				{
 					case ConstrainedSide.Bottomside:
-						if (item.Y == 0)
+						if (node.Y == 0)
 						{
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
 						}
 						break;
 					case ConstrainedSide.Rightside:
-						if (item.X == geometry.length)
+						if (node.X == geometry.length)
 						{
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
 						}
 						break;
 					case ConstrainedSide.Upperside:
-						if (item.Y == geometry.height)
+						if (node.Y == geometry.height)
 						{
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
 						}
 						break;
 					case ConstrainedSide.Leftside:
-						if (item.X == 0)
+						if (node.X == 0)
 						{
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
-							item.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationX, Amount = 0 });
+							node.Constraints.Add(new Constraint() { DOF = StructuralDof.TranslationY, Amount = 0 });
 						}
 						break;
 					default:
 						break;
 				}
 			}
+			/// <summary>
+			/// X-Model creation.2-D Model.
+			/// </summary>
 			int dimension = 2;
-			var xModel = new IsoXFEM.XModel<IsoXfemElement2D>(dimension);
-			xModel.Subdomains[0] = new XSubdomain<IsoXfemElement2D>(0);
-			foreach (var item in mesh.Item1.Keys)
+			var xModel = new IsoXFEM.XModel<IIsoXfemElement>(dimension);
+			/// <summary>
+			/// Add Subdomain, Nodes and Elements to Model.
+			/// </summary>
+			xModel.Subdomains[0] = new XSubdomain<IIsoXfemElement>(0);
+			foreach (var node in nodes.Keys)
 			{
-				xModel.Nodes[item] = mesh.Item1[item];
+				xModel.Nodes[node] = nodes[node];
 			}
-			foreach (var item in mesh.Item2.Keys)
+			foreach (var element in elements.Keys)
 			{
-				xModel.Elements[item] = mesh.Item2[item];
-				xModel.Subdomains[0].Elements.Add(mesh.Item2[item]);
+				xModel.Elements[element] = elements[element];
+				xModel.Subdomains[0].Elements.Add(elements[element]);
 			}
+			/// <summary>
+			/// Add Loads. Using enum EndLoad in order to choose the node we want to apply the force.
+			/// </summary>
 			endload = EndLoad.BottomEnd;
 			int nodeIDLoad = (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1) - ((int)endload * (geometry.numberOfElementsY) / 2) - 1;
 			Load load;
@@ -231,22 +308,46 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				Amount = 1
 			};
 			xModel.NodalLoads.Add(load);
+			/// <summary>
+			/// Initialize the Model.
+			/// </summary>
 			xModel.Initialize();
-			//ISolver solver = new SkylineLdlSolver();
-			//var femAnalysis = new FEMAnalysis(geometry, xModel, solver/*, rhs*/);
-			//femAnalysis.Initialize();
+			/// <summary>
+			/// Defines Skyline Solver.
+			/// </summary>
 			var solverFactory = new SkylineSolver.Factory();
 			var algebraicModel = solverFactory.BuildAlgebraicModel(xModel);
 			var solver = solverFactory.BuildSolver(algebraicModel);
+			/// <summary>
+			/// Defines Problem type as Structural.
+			/// </summary>
 			var provider = new ProblemStructural(xModel, algebraicModel, solver);
+			/// <summary>
+			/// Defines Analyzers.
+			/// Chlid Analyzer: Linear
+			/// Parent Analyzer: Static
+			/// </summary>
 			var childAnalyzer = new LinearAnalyzer(xModel, algebraicModel, solver, provider);
 			var parentAnalyzer = new StaticAnalyzer(xModel, algebraicModel, solver, provider, childAnalyzer);
-			var topologyOptimization = new TopologyOptimization(xModel, parentAnalyzer, solver, algebraicModel);
+			/// <summary>
+			/// Defines solidRatio. The Problem is 2D so SolidArea is selected.
+			/// </summary>
+			ISolidRatio solidRatio = new SolidArea(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.AreaOfElement));
+			/// <summary>
+			/// Defines the topology Optimization and Optimize the problem with IsoXfem Method.
+			/// </summary>
+			var topologyOptimization = new TopologyOptimization(xModel, solidRatio, parentAnalyzer, solver, algebraicModel);
 			topologyOptimization.IsoXfem();
 			var resultsComputed = topologyOptimization.results;
+			/// <summary>
+			/// Expected Results from txt file.
+			/// </summary>
 			var reader = new FullMatrixReader(true);
 			string inputFile = @"C:\Users\ebank\source\repos\MSolveOne\tests\MGroup.XFEM.IsoXFEM.Tests\Resources\OOS_BottomEnd_40x20_InitialStiffness_ComputeOnlyOneTime_CorrectMatlabErrors.txt";
 			var resultsExpected = reader.ReadFile(inputFile);
+			/// <summary>
+			/// Check Results.
+			/// </summary>
 			for (int i = 0; i < resultsExpected.NumRows; i++)
 			{
 				for (int j = 0; j < resultsExpected.NumColumns; j++)

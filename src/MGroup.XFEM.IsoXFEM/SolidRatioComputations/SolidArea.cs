@@ -11,10 +11,10 @@ namespace MGroup.XFEM.IsoXFEM.SolidRatioComputations
 
 	public class SolidArea : ISolidRatio
 	{
-		public XModel<IsoXfemElement2D> ModelX { get; }
+		public XModel<IIsoXfemElement> ModelX { get; }
 		public Vector InitialSizeOfElements { get; }
 		public Vector RelativeCriteria { get; set; }
-		public SolidArea(XModel<IsoXfemElement2D> xModel, Vector initialSizeOfElements)
+		public SolidArea(XModel<IIsoXfemElement> xModel, Vector initialSizeOfElements)
 		{
 			this.ModelX = xModel;
 			this.InitialSizeOfElements = initialSizeOfElements;

@@ -19,14 +19,14 @@ namespace MGroup.XFEM.IsoXFEM
         public Vector strainEnergyDensity;
         public Vector nodalStrainEnergyDensity;
 		private readonly Dictionary<int, XNode> nodes  = new Dictionary<int, XNode>();
-		private readonly Dictionary<int, IsoXfemElement2D> elements  = new Dictionary<int, IsoXfemElement2D>();
-        private readonly double initialArea;
+		private readonly Dictionary<int, IIsoXfemElement> elements  = new Dictionary<int, IIsoXfemElement>();
+        private readonly double initialSize;
 		private readonly IAlgebraicModel algebraicModel;
-        public StructuralPerfomance(Dictionary<int, XNode> nodes, Dictionary<int, IsoXfemElement2D> elements, double initialArea, IAlgebraicModel algebraicModel)
+        public StructuralPerfomance(Dictionary<int, XNode> nodes, Dictionary<int, IIsoXfemElement> elements, double initialSize, IAlgebraicModel algebraicModel)
         {
 			this.nodes = nodes;
 			this.elements = elements;
-            this.initialArea = initialArea;
+            this.initialSize = initialSize;
 			this.algebraicModel = algebraicModel;
         }
 		public (Vector strainEnergy, Vector nodalStrainEnergyDensity) ComputeStrainEnergyAndNodalSEDensity(IGlobalVector displacements)
@@ -42,9 +42,9 @@ namespace MGroup.XFEM.IsoXFEM
             for (int i = 0; i < elements.Count; i++)
             {
 				var Ue = algebraicModel.ExtractElementVector(displacements, elements[i]);
-				Matrix transposeUe = Matrix.CreateZero(1, 8);
-				Vector displacementsElementVector = Vector.CreateZero(8);
-                for (int j = 0; j < 8; j++)
+				Matrix transposeUe = Matrix.CreateZero(1, elements[i].DofsOfElement.Length);
+				Vector displacementsElementVector = Vector.CreateZero(elements[i].DofsOfElement.Length);
+                for (int j = 0; j < Ue.Length; j++)
                 {
                     transposeUe[0, j] = Ue[j];
 					displacementsElementVector[j]= Ue[j];
@@ -53,7 +53,7 @@ namespace MGroup.XFEM.IsoXFEM
                 Matrix secmult = firstmult.MultiplyRight(elements[i].StiffnessOfElement);
                 Vector result = secmult * displacementsElementVector;
                 strainEnergy[i] = result[0];
-                strainEnergyDensity[i] = strainEnergy[i] / initialArea;
+                strainEnergyDensity[i] = strainEnergy[i] / initialSize;
             }
 			return (strainEnergy, strainEnergyDensity);
         }

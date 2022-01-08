@@ -1,6 +1,5 @@
 using System;
 using MGroup.XFEM.IsoXFEM;
-using MGroup.XFEM.IsoXFEM.Solvers;
 using MGroup.LinearAlgebra.Vectors;
 
 namespace MGroup.XFEM.IsoXFEM.Tests

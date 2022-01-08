@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using MGroup.XFEM.IsoXFEM.Solvers;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
 using MGroup.XFEM.Entities;
