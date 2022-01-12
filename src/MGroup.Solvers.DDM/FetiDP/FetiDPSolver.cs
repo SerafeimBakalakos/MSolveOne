@@ -189,150 +189,22 @@ namespace MGroup.Solvers.DDM.FetiDP
 		{
 			var watchTotal = new Stopwatch();
 			watchTotal.Start();
-			var watch = new Stopwatch();
-			bool isFirstAnalysis = analysisIteration == 0;
 
 			if (LoggerDdm != null)
 			{
 				LoggerDdm.IncrementAnalysisIteration();
 			}
 
-			// Prepare subdomain-level dofs and matrices
-			watch.Start();
-			environment.DoPerNode(subdomainID =>
-			{
-				if (isFirstAnalysis || !reanalysis.SubdomainDofSubsets
-					|| reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
-				{
-					#region log
-					//Console.WriteLine($"Processing corner, boundary-remainder & internal dofs of subdomain {subdomainID}");
-					//Debug.WriteLine($"Processing corner, boundary-remainder & internal dofs of subdomain {subdomainID}");
-					#endregion
-					subdomainDofs[subdomainID].SeparateAllFreeDofs(cornerDofs);
-					subdomainMatrices[subdomainID].ReorderRemainderDofs();
-					subdomainLagranges[subdomainID].DefineSubdomainLagrangeMultipliers();
-					subdomainLagranges[subdomainID].CalcSignedBooleanMatrices();
-				}
-				else
-				{
-					Debug.Assert(!subdomainDofs[subdomainID].IsEmpty);
-				}
-
-				if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
-					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
-				{
-					#region log
-					//Console.WriteLine($"Processing corner, boundary-remainder & internal submatrices of subdomain {subdomainID}");
-					//Debug.WriteLine($"Processing corner, boundary-remainder & internal submatrices of subdomain {subdomainID}");
-					#endregion
-					subdomainMatrices[subdomainID].HandleDofsWereModified();
-					subdomainMatrices[subdomainID].ExtractKrrKccKrc();
-					//subdomainMatricesPsm[subdomainID].InvertKii();
-				}
-				else
-				{
-					Debug.Assert(!subdomainMatrices[subdomainID].IsEmpty);
-				}
-			});
-
-			//TODO: This should be done together with the extraction. However SuiteSparse already uses multiple threads and should
-			//		not be parallelized at subdomain level too. Instead environment.DoPerNode should be able to run tasks serially by reading a flag.
-			if (directSolverIsNative)
-			{
-				environment.DoPerNodeSerially(subdomainID =>
-				{
-					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
-					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
-					{
-						subdomainMatrices[subdomainID].InvertKrr();
-					}
-				});
-			}
-			else
-			{
-				environment.DoPerNode(subdomainID =>
-				{
-					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
-					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
-					{
-						subdomainMatrices[subdomainID].InvertKrr();
-					}
-				});
-			}
-			watch.Stop();
-			Logger.LogTaskDuration("Subdomain level dofs and matrices", watch.ElapsedMilliseconds);
-
-			// Intersubdomain lagrange multipliers
-			watch.Restart();
-			if (true/*isFirstAnalysis || !reanalysis.InterfaceProblemIndexer*/)
-			{
-				this.lagrangeVectorIndexer = new DistributedOverlappingIndexer(environment);
-				environment.DoPerNode(subdomainID =>
-				{
-					subdomainLagranges[subdomainID].FindCommonLagrangesWithNeighbors();
-					subdomainLagranges[subdomainID].InitializeDistributedVectorIndexer(
-						this.lagrangeVectorIndexer.GetLocalComponent(subdomainID));
-				});
-			}
-			else
-			{
-			}
-			
-			// Calculating scaling coefficients
-			scaling.CalcScalingMatrices();
-			watch.Stop();
-			Logger.LogTaskDuration("Define interface problem dofs", watch.ElapsedMilliseconds);
-
-			// Prepare subdomain-level vectors
-			watch.Restart();
-			environment.DoPerNode(subdomainID =>
-			{
-				if (isFirstAnalysis || !reanalysis.RhsVectors
-					|| reanalysis.ModifiedSubdomains.IsRhsModified(subdomainID))
-				{
-					#region log
-					//Console.WriteLine($"Processing corner, boundary-remainder & internal subvectors of subdomain {subdomainID}");
-					//Debug.WriteLine($"Processing corner, boundary-remainder & internal subvectors of subdomain {subdomainID}");
-					#endregion
-					subdomainVectors[subdomainID].ExtractRhsSubvectors(
-						fb => scaling.ScaleSubdomainRhsVector(subdomainID, fb));
-					subdomainVectors[subdomainID].CalcCondensedRhsVector();
-				}
-				else
-				{
-					Debug.Assert(!subdomainVectors[subdomainID].IsEmpty);
-				}
-			});
-			watch.Stop();
-			Logger.LogTaskDuration("Subdomain level vectors", watch.ElapsedMilliseconds);
-
-			watch.Restart();
-			// Setup optimizations if coarse dofs are the same as in previous analysis
-			modifiedCornerDofs.Update(reanalysis.ModifiedSubdomains);
-
-			// Prepare coarse problem
-			coarseProblem.FindCoarseProblemDofs(LoggerDdm, modifiedCornerDofs);
-			coarseProblem.PrepareMatricesForSolution();
-			watch.Stop();
-			Logger.LogTaskDuration("Prepare coarse problem", watch.ElapsedMilliseconds);
-
-			// Prepare and solve the interface problem
-			watch.Restart();
-			interfaceProblemMatrix.Calculate(lagrangeVectorIndexer);
-			interfaceProblemVectors.CalcInterfaceRhsVector(lagrangeVectorIndexer);
-			preconditioner.Initialize(
-				environment, lagrangeVectorIndexer, s => subdomainLagranges[s], s => subdomainMatrices[s], scaling);
-			watch.Stop();
-			Logger.LogTaskDuration("Prepare interface problem", watch.ElapsedMilliseconds); // preconditioner should be together with subdomain operations
-
+			PrepareSubdomainDofs();
+			PrepareSubdomainMatrices();
+			PrepareGlobal2SubdomainMappings();
+			PrepareSubdomainVectors();
+			PrepareCoarseProblem();
+			PreparePreconditioner();
+			PrepareInterfaceProblem();
 			SolveInterfaceProblem();
-
-			// Having found the lagrange multipliers, now calculate the solution in term of primal dofs
-			watch.Restart();
-			solutionRecovery.CalcPrimalSolution(
-				interfaceProblemVectors.InterfaceProblemSolution, algebraicModel.LinearSystem.Solution);
-			watch.Stop();
-			Logger.LogTaskDuration("Recover solution at all dofs", watch.ElapsedMilliseconds);
+			RecoverSolution();
+			
 
 			watchTotal.Stop();
 			Logger.LogTaskDuration("Solution", watchTotal.ElapsedMilliseconds);
@@ -389,6 +261,187 @@ namespace MGroup.Solvers.DDM.FetiDP
 			}
 
 			return initalGuessIsZero;
+		}
+
+		private void PrepareCoarseProblem()
+		{
+			var watch = new Stopwatch();
+			watch.Start();
+			watch.Restart();
+			// Setup optimizations if coarse dofs are the same as in previous analysis
+			modifiedCornerDofs.Update(reanalysis.ModifiedSubdomains);
+
+			// Prepare coarse problem
+			coarseProblem.FindCoarseProblemDofs(LoggerDdm, modifiedCornerDofs);
+			coarseProblem.PrepareMatricesForSolution();
+			watch.Stop();
+			Logger.LogTaskDuration("Prepare coarse problem", watch.ElapsedMilliseconds);
+		}
+
+		private void PrepareGlobal2SubdomainMappings()
+		{
+			bool isFirstAnalysis = analysisIteration == 0;
+			var watch = new Stopwatch();
+			watch.Start();
+			if (true/*isFirstAnalysis || !reanalysis.InterfaceProblemIndexer*/)
+			{
+				this.lagrangeVectorIndexer = new DistributedOverlappingIndexer(environment);
+				environment.DoPerNode(subdomainID =>
+				{
+					subdomainLagranges[subdomainID].FindCommonLagrangesWithNeighbors();
+					subdomainLagranges[subdomainID].InitializeDistributedVectorIndexer(
+						this.lagrangeVectorIndexer.GetLocalComponent(subdomainID));
+				});
+			}
+			else
+			{
+			}
+
+			// Calculating scaling coefficients
+			scaling.CalcScalingMatrices();
+			watch.Stop();
+			Logger.LogTaskDuration("Define interface problem dofs", watch.ElapsedMilliseconds);
+
+		}
+
+		private void PrepareInterfaceProblem()
+		{
+			var watch = new Stopwatch();
+			watch.Start();
+			interfaceProblemMatrix.Calculate(lagrangeVectorIndexer);
+			interfaceProblemVectors.CalcInterfaceRhsVector(lagrangeVectorIndexer);
+			watch.Stop();
+			Logger.LogTaskDuration("Prepare interface problem", watch.ElapsedMilliseconds);
+		}
+
+		private void PreparePreconditioner()
+		{
+			var watch = new Stopwatch();
+			watch.Start();
+			preconditioner.Initialize(
+				environment, lagrangeVectorIndexer, s => subdomainLagranges[s], s => subdomainMatrices[s], scaling);
+			watch.Stop();
+			Logger.LogTaskDuration("Prepare preconditioner", watch.ElapsedMilliseconds);
+		}
+
+		private void PrepareSubdomainDofs()
+		{
+			bool isFirstAnalysis = analysisIteration == 0;
+			var watch = new Stopwatch();
+			watch.Start();
+			environment.DoPerNode(subdomainID =>
+			{
+				if (isFirstAnalysis || !reanalysis.SubdomainDofSubsets
+					|| reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
+				{
+					#region log
+					//Console.WriteLine($"Processing corner, boundary-remainder & internal dofs of subdomain {subdomainID}");
+					//Debug.WriteLine($"Processing corner, boundary-remainder & internal dofs of subdomain {subdomainID}");
+					#endregion
+					subdomainDofs[subdomainID].SeparateAllFreeDofs(cornerDofs);
+					subdomainMatrices[subdomainID].ReorderRemainderDofs();
+					subdomainLagranges[subdomainID].DefineSubdomainLagrangeMultipliers();
+					subdomainLagranges[subdomainID].CalcSignedBooleanMatrices();
+				}
+				else
+				{
+					Debug.Assert(!subdomainDofs[subdomainID].IsEmpty);
+				}
+			});
+			watch.Stop();
+			Logger.LogTaskDuration("Subdomain level dofs", watch.ElapsedMilliseconds);
+		}
+
+		private void PrepareSubdomainMatrices()
+		{
+			bool isFirstAnalysis = analysisIteration == 0;
+			var watch = new Stopwatch();
+			watch.Start();
+			environment.DoPerNode(subdomainID =>
+			{
+				if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
+					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
+				{
+					#region log
+					//Console.WriteLine($"Processing corner, boundary-remainder & internal submatrices of subdomain {subdomainID}");
+					//Debug.WriteLine($"Processing corner, boundary-remainder & internal submatrices of subdomain {subdomainID}");
+					#endregion
+					subdomainMatrices[subdomainID].HandleDofsWereModified();
+					subdomainMatrices[subdomainID].ExtractKrrKccKrc();
+					//subdomainMatricesPsm[subdomainID].InvertKrr();
+				}
+				else
+				{
+					Debug.Assert(!subdomainMatrices[subdomainID].IsEmpty);
+				}
+			});
+
+			//TODO: This should be done together with the extraction. However SuiteSparse already uses multiple threads and should
+			//		not be parallelized at subdomain level too. Instead environment.DoPerNode should be able to run tasks serially by reading a flag.
+			if (directSolverIsNative)
+			{
+				environment.DoPerNodeSerially(subdomainID =>
+				{
+					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
+					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
+					{
+						subdomainMatrices[subdomainID].InvertKrr();
+					}
+				});
+			}
+			else
+			{
+				environment.DoPerNode(subdomainID =>
+				{
+					if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
+					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
+					{
+						subdomainMatrices[subdomainID].InvertKrr();
+					}
+				});
+			}
+
+			watch.Stop();
+			Logger.LogTaskDuration("Subdomain level matrices", watch.ElapsedMilliseconds);
+		}
+
+		private void PrepareSubdomainVectors()
+		{
+			bool isFirstAnalysis = analysisIteration == 0;
+			var watch = new Stopwatch();
+			watch.Start();
+			environment.DoPerNode(subdomainID =>
+			{
+				if (isFirstAnalysis || !reanalysis.RhsVectors
+					|| reanalysis.ModifiedSubdomains.IsRhsModified(subdomainID))
+				{
+					#region log
+					//Console.WriteLine($"Processing corner, boundary-remainder & internal subvectors of subdomain {subdomainID}");
+					//Debug.WriteLine($"Processing corner, boundary-remainder & internal subvectors of subdomain {subdomainID}");
+					#endregion
+					subdomainVectors[subdomainID].ExtractRhsSubvectors(
+						fb => scaling.ScaleSubdomainRhsVector(subdomainID, fb));
+					subdomainVectors[subdomainID].CalcCondensedRhsVector();
+				}
+				else
+				{
+					Debug.Assert(!subdomainVectors[subdomainID].IsEmpty);
+				}
+			});
+			watch.Stop();
+			Logger.LogTaskDuration("Subdomain level vectors", watch.ElapsedMilliseconds);
+
+		}
+
+		private void RecoverSolution()
+		{
+			// Having found the lagrange multipliers, now calculate the solution in term of primal dofs
+			var watch = new Stopwatch();
+			watch.Start();
+			solutionRecovery.CalcPrimalSolution(
+				interfaceProblemVectors.InterfaceProblemSolution, algebraicModel.LinearSystem.Solution);
+			watch.Stop();
+			Logger.LogTaskDuration("Recover solution at all dofs", watch.ElapsedMilliseconds);
 		}
 
 		private void SolveInterfaceProblem()
