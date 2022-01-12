@@ -62,5 +62,6 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 		void ReorderInternalDofs();
 
 		void ReorderRemainderDofs();
+		Matrix CalcInvKrrTimesKrc();
 	}
 }

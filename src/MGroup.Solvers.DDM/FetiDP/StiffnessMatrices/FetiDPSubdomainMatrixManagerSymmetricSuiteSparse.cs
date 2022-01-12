@@ -46,6 +46,20 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		public IMatrix SchurComplementOfRemainderDofs => Scc;
 
+		public Matrix CalcInvKrrTimesKrc()
+		{
+			int numCornerDofs = Kcr.NumRows;
+			int numRemainderDofs = Kcr.NumColumns;
+			var result = Matrix.CreateZero(numRemainderDofs, numCornerDofs);
+			for (int j = 0; j < numCornerDofs; ++j)
+			{
+				Vector colKrc = Kcr.GetRow(j);
+				Vector colResult = inverseKrr.SolveLinearSystem(colKrc);
+				result.SetSubcolumn(j, colResult, 0);
+			}
+			return result;
+		}
+
 		public void CalcSchurComplementOfRemainderDofs()
 		{
 			Scc = SymmetricMatrix.CreateZero(Kcc.Order);

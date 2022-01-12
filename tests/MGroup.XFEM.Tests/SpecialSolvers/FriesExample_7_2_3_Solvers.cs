@@ -314,7 +314,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			{
 				if (unsafeOptimizations)
 				{
-					fetiDPMatrices = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparseUnsafe.Factory(false);
+					//fetiDPMatrices = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparseUnsafe.Factory(false);
+					fetiDPMatrices = new FetiDPSubdomainMatrixManagerSymmetricSuiteSparse.Factory(false);
 
 				}
 				else

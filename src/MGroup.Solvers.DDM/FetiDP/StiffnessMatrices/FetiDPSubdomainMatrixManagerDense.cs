@@ -31,6 +31,11 @@ namespace MGroup.Solvers.DDM.FetiDP.StiffnessMatrices
 
 		public IMatrix SchurComplementOfRemainderDofs => Scc;
 
+		public Matrix CalcInvKrrTimesKrc()
+		{
+			throw new NotImplementedException();
+		}
+
 		public void CalcSchurComplementOfRemainderDofs()
 		{
 			Scc = Kcc - Kcr * inverseKrr * Krc;

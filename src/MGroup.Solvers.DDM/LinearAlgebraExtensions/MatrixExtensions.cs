@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.Solvers.DDM.LinearAlgebraExtensions.Matrices;
 
 //TODO: Use BLAS whenever possible
 namespace MGroup.Solvers.DDM.LinearAlgebraExtensions
