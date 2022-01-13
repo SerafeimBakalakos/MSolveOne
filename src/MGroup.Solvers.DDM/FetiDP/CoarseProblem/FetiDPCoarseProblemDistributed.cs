@@ -26,27 +26,27 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		private readonly Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices;
 		private readonly IFetiDPCoarseProblemDistributedPreconditioner coarseProblemPreconditioner;
 		private readonly IDistributedIterativeMethod coarseProblemSolver;
-		private readonly bool areSchurComplementsExplicit;
+		//private readonly bool areSchurComplementsExplicit;
 
 		private DistributedOverlappingIndexer cornerDofIndexer;
 		private DistributedOverlappingTransformation coarseProblemMatrix;
 
 		public FetiDPCoarseProblemDistributed(IComputeEnvironment environment, ISubdomainTopology subdomainTopology,
 			Func<int, FetiDPSubdomainDofs> getSubdomainDofs, Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices,
-			IDistributedIterativeMethod coarseProblemSolver, bool useJacobiPreconditioner, bool areSchurComplementsExplicit)
+			IDistributedIterativeMethod coarseProblemSolver, bool useJacobiPreconditioner/*, bool areSchurComplementsExplicit*/)
 		{
 			this.environment = environment;
 			this.subdomainTopology = subdomainTopology;
 			this.getSubdomainDofs = getSubdomainDofs;
 			this.getSubdomainMatrices = getSubdomainMatrices;
 			this.coarseProblemSolver = coarseProblemSolver;
-			this.areSchurComplementsExplicit = areSchurComplementsExplicit;
+			//this.areSchurComplementsExplicit = areSchurComplementsExplicit;
 
 			if (useJacobiPreconditioner)
 			{
 				coarseProblemPreconditioner = new FetiDPCoarseProblemDistributedPreconditionerJacobi(
 					environment, getSubdomainMatrices);
-				this.areSchurComplementsExplicit = true;
+				//this.areSchurComplementsExplicit = true;
 			}
 			else
 			{
@@ -67,17 +67,17 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 		public void PrepareMatricesForSolution()
 		{
-			if (areSchurComplementsExplicit)
-			{
-				environment.DoPerNode(s => getSubdomainMatrices(s).CalcSchurComplementOfRemainderDofs());
+			//if (areSchurComplementsExplicit)
+			//{
+				//environment.DoPerNode(s => getSubdomainMatrices(s).CalcSchurComplementOfRemainderDofs()); // this is done by the solver
 				coarseProblemMatrix = new DistributedOverlappingTransformation(cornerDofIndexer,
 					(s, vIn, vOut) => getSubdomainMatrices(s).SchurComplementOfRemainderDofs.MultiplyIntoResult(vIn, vOut));
-			}
-			else
-			{
-				coarseProblemMatrix = new DistributedOverlappingTransformation(cornerDofIndexer,
-					(s, vIn, vOut) => getSubdomainMatrices(s).MultiplySchurComplementImplicitly(vIn, vOut));
-			}
+			//}
+			//else
+			//{
+			//	coarseProblemMatrix = new DistributedOverlappingTransformation(cornerDofIndexer,
+			//		(s, vIn, vOut) => getSubdomainMatrices(s).MultiplySchurComplementImplicitly(vIn, vOut));
+			//}
 			coarseProblemPreconditioner.Calculate(cornerDofIndexer);
 		}
 
@@ -98,7 +98,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 		{
 			public Factory()
 			{
-				AreSchurComplementsExplicit = true;
+				//AreSchurComplementsExplicit = true;
 				UseJacobiPreconditioner = true;
 
 				var pcgBuilder = new PcgAlgorithm.Builder();
@@ -107,7 +107,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 				CoarseProblemSolver = pcgBuilder.Build();
 			}
 
-			public bool AreSchurComplementsExplicit { get; set; }
+			//public bool AreSchurComplementsExplicit { get; set; }
 
 			public IDistributedIterativeMethod CoarseProblemSolver { get; set; }
 
@@ -118,7 +118,7 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 				Func<int, FetiDPSubdomainDofs> getSubdomainDofs, Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices)
 			{
 				return new FetiDPCoarseProblemDistributed(environment, subdomainTopology, getSubdomainDofs,
-					getSubdomainMatrices, CoarseProblemSolver, UseJacobiPreconditioner, AreSchurComplementsExplicit);
+					getSubdomainMatrices, CoarseProblemSolver, UseJacobiPreconditioner/*, AreSchurComplementsExplicit*/);
 			}
 		}
 	}

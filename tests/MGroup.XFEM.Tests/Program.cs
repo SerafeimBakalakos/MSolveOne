@@ -45,8 +45,8 @@ namespace MGroup.XFEM.Tests
 
 			//FriesExample_7_2_1_Solvers.RunExampleWithDirectSolver();
 			//FriesExample_7_2_1_Solvers.RunExampleWithReanalysisSolver();
-			//FriesExample_7_2_1_Solvers.RunExampleWithPFetiDPSolver();
-			FriesExample_7_2_1_Solvers.RunExampleWithFetiDPSolver();
+			FriesExample_7_2_1_Solvers.RunExampleWithPFetiDPSolver();
+			//FriesExample_7_2_1_Solvers.RunExampleWithFetiDPSolver();
 		}
 
 		private static void RunExample2()

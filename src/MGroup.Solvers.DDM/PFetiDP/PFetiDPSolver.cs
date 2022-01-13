@@ -137,6 +137,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 					{
 						//Console.WriteLine($"Invert Krr for subdomain {subdomainID}");
 						subdomainMatricesFetiDP[subdomainID].InvertKrr();
+						subdomainMatricesFetiDP[subdomainID].CalcSchurComplementOfRemainderDofs();
 					}
 				});
 			}
@@ -149,6 +150,7 @@ namespace MGroup.Solvers.DDM.PFetiDP
 					{
 						//Console.WriteLine($"Invert Krr for subdomain {subdomainID}");
 						subdomainMatricesFetiDP[subdomainID].InvertKrr();
+						subdomainMatricesFetiDP[subdomainID].CalcSchurComplementOfRemainderDofs();
 					}
 				});
 			}

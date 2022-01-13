@@ -396,6 +396,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 					{
 						subdomainMatrices[subdomainID].InvertKrr();
+						subdomainMatrices[subdomainID].CalcSchurComplementOfRemainderDofs();
 					}
 				});
 			}
@@ -407,6 +408,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
 					{
 						subdomainMatrices[subdomainID].InvertKrr();
+						subdomainMatrices[subdomainID].CalcSchurComplementOfRemainderDofs();
 					}
 				});
 			}

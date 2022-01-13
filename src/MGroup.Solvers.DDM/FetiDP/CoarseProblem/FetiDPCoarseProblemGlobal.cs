@@ -81,7 +81,8 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 
 		public void PrepareMatricesForSolution()
 		{
-			environment.DoPerNode(subdomainID => getSubdomainMatrices(subdomainID).CalcSchurComplementOfRemainderDofs());
+			// This is done by the solver itself
+			//environment.DoPerNode(subdomainID => getSubdomainMatrices(subdomainID).CalcSchurComplementOfRemainderDofs());
 
 			Dictionary<int, IMatrix> subdomainMatricesScc =
 				environment.CalcNodeDataAndTransferToGlobalMemory(s => getSubdomainMatrices(s).SchurComplementOfRemainderDofs);
