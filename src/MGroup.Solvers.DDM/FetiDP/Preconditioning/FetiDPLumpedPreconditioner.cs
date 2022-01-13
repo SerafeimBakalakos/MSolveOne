@@ -42,6 +42,12 @@ namespace MGroup.Solvers.DDM.FetiDP.Preconditioning
 			xe.SumOverlappingEntries();
 		}
 
+		public void CalcSubdomainMatrices(int subdomainID)
+		{
+			IFetiDPSubdomainMatrixManager subdomainMatrices = getSubdomainMatrices(subdomainID);
+			subdomainMatrices.ExtractKiiKbbKib(); //TODO: Only extract Kbb
+		}
+
 		public void Initialize(IComputeEnvironment environment, DistributedOverlappingIndexer lagrangeVectorIndexer,
 			Func<int, SubdomainLagranges> getSubdomainLagranges, Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices,
 			IFetiDPScaling scaling)
@@ -51,12 +57,6 @@ namespace MGroup.Solvers.DDM.FetiDP.Preconditioning
 			this.getSubdomainLagranges = getSubdomainLagranges;
 			this.getSubdomainMatrices = getSubdomainMatrices;
 			this.scaling = scaling;
-
-			environment.DoPerNode(s =>
-			{
-				IFetiDPSubdomainMatrixManager subdomainMatrices = getSubdomainMatrices(s);
-				subdomainMatrices.ExtractKiiKbbKib(); //TODO: Only extract Kbb
-			});
 		}
 	}
 }

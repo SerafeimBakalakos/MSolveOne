@@ -343,7 +343,6 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 			if (ddmReanalysis)
 			{
-				throw new NotImplementedException();
 				var observer = new SubdomainEnrichmentsModifiedObserver();
 				model.GeometryModel.Enricher.Observers.Add(observer);
 				var reanalysisOptions = FetiDPReanalysisOptions.CreateWithAllEnabled(observer);
@@ -352,7 +351,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 				solverFactory.ReanalysisOptions = reanalysisOptions;
 				solverFactory.SubdomainTopology = new SubdomainTopologyOptimized();
-				solverFactory.ExplicitSubdomainMatrices = true;
+				solverFactory.ExplicitSubdomainMatrices = false;
 			}
 
 			// Create solver

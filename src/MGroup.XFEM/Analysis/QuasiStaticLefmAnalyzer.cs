@@ -123,7 +123,9 @@ namespace MGroup.XFEM.Analysis
 
 				// Solve the linear system
 				//watch.Restart();
+				Console.WriteLine("Solution phase start");
 				solver.Solve();
+				Console.WriteLine("Solution phase end");
 				#region debug
 				//Debug.WriteLine($"norm(u)={solver.LinearSystem.Solution.Norm2()}");
 				#endregion

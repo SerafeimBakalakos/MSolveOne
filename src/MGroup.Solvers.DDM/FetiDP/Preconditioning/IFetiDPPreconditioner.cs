@@ -12,6 +12,8 @@ namespace MGroup.Solvers.DDM.FetiDP.Preconditioning
 {
 	public interface IFetiDPPreconditioner : IPreconditioner
 	{
+		void CalcSubdomainMatrices(int subdomainID);
+
 		void Initialize(IComputeEnvironment environment, DistributedOverlappingIndexer lagrangeVectorIndexer,
 			Func<int, SubdomainLagranges> getSubdomainLagranges, Func<int, IFetiDPSubdomainMatrixManager> getSubdomainMatrices,
 			IFetiDPScaling scaling);

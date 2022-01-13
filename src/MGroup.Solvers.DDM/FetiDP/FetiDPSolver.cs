@@ -130,7 +130,8 @@ namespace MGroup.Solvers.DDM.FetiDP
 
 			if (reanalysis.RhsVectors)
 			{
-				throw new NotImplementedException();
+				this.interfaceProblemVectors = new FetiDPInterfaceProblemVectors(
+					environment, coarseProblem, subdomainLagranges, subdomainMatrices, subdomainVectors);
 			}
 			else
 			{
@@ -316,10 +317,19 @@ namespace MGroup.Solvers.DDM.FetiDP
 
 		private void PreparePreconditioner()
 		{
+			bool isFirstAnalysis = analysisIteration == 0;
 			var watch = new Stopwatch();
 			watch.Start();
 			preconditioner.Initialize(
 				environment, lagrangeVectorIndexer, s => subdomainLagranges[s], s => subdomainMatrices[s], scaling);
+			environment.DoPerNode(subdomainID =>
+			{
+				if (isFirstAnalysis || !reanalysis.SubdomainSubmatrices
+					|| reanalysis.ModifiedSubdomains.IsMatrixModified(subdomainID))
+				{
+					preconditioner.CalcSubdomainMatrices(subdomainID);
+				}
+			});
 			watch.Stop();
 			Logger.LogTaskDuration("Prepare preconditioner", watch.ElapsedMilliseconds);
 		}
