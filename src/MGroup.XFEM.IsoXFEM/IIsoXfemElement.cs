@@ -16,12 +16,13 @@ namespace MGroup.XFEM.IsoXFEM
 			voidElement,
 			boundaryElement
 		}
-		public double AreaOfElement { get; set; }
+		public double SizeOfElement { get; set; }
 		public Matrix StiffnessOfElement { get; set; }
-		public int[] DofsOfElement { get; set; }
 		public Phase PhaseElement { get; set; }
 		public Vector ElementLevelSet { get; set; }
 		public Matrix CoordinatesOfElement { get; }
+
+		public void DefinePhaseOfElement();
 
 	}
 }

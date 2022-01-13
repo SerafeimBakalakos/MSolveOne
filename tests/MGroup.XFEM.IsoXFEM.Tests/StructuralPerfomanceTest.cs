@@ -180,7 +180,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// </summary>
 			var solution = solver.LinearSystem.Solution;
 			double initialArea = 100;
-			var structuralPerfomance = new StructuralPerfomance(xModel.Nodes, xModel.Elements, initialArea, algebraicModel);
+			var structuralPerfomance = new StructuralPerfomance(xModel.Dimension,xModel.Nodes, xModel.Elements, initialArea, algebraicModel);
 			/// <summary>
 			/// Run Method ComputeStrainEnergyandStrainEnergyDensity.
 			/// </summary>
@@ -314,7 +314,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// </summary>
 			var solution = solver.LinearSystem.Solution;
 			double initialArea = 100;
-			var structuralPerfomance = new StructuralPerfomance(xModel.Nodes, xModel.Elements, initialArea, algebraicModel);
+			var structuralPerfomance = new StructuralPerfomance(xModel.Dimension, xModel.Nodes, xModel.Elements, initialArea, algebraicModel);
 			/// <summary>
 			/// Run Method ComputeStrainEnergyAndNodalSEDensity.
 			/// </summary>

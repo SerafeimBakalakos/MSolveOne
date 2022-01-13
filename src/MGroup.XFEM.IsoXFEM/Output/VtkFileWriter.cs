@@ -31,7 +31,7 @@ namespace MGroup.XFEM.IsoXFEM
 		}
 
 		//TODO: Perhaps the mesh should be injected into the contructor
-		public void WriteMesh(Dictionary<int, XNode>  nodes, List<IsoXfemElement2D> elements)
+		public void WriteMesh(Dictionary<int, XNode>  nodes, Dictionary<int, IIsoXfemElement> elements)
 		{
 			if (writeFieldsNext) throw new InvalidOperationException("A mesh has already been written.");
 

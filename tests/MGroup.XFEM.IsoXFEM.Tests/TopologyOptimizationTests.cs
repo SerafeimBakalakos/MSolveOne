@@ -173,7 +173,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Defines solidRatio. The Problem is 2D so SolidArea is selected.
 			/// </summary>
-			ISolidRatio solidRatio = new SolidArea(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.AreaOfElement));
+			ISolidRatio solidRatio = new SolidArea(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.SizeOfElement));
 			/// <summary>
 			/// Defines the topology Optimization.
 			/// </summary>
@@ -332,7 +332,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Defines solidRatio. The Problem is 2D so SolidArea is selected.
 			/// </summary>
-			ISolidRatio solidRatio = new SolidArea(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.AreaOfElement));
+			ISolidRatio solidRatio = new SolidArea(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.SizeOfElement));
 			/// <summary>
 			/// Defines the topology Optimization and Optimize the problem with IsoXfem Method.
 			/// </summary>
@@ -343,7 +343,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// Expected Results from txt file.
 			/// </summary>
 			var reader = new FullMatrixReader(true);
-			string inputFile = @"C:\Users\ebank\source\repos\MSolveOne\tests\MGroup.XFEM.IsoXFEM.Tests\Resources\OOS_BottomEnd_40x20_InitialStiffness_ComputeOnlyOneTime_CorrectMatlabErrors.txt";
+			string inputFile = @"C:\Users\ebank\source\repos\MSolveOne\tests\MGroup.XFEM.IsoXFEM.Tests\Resources\OOS_BottomEnd_40x20_Using_ConformingSubcells.txt";
 			var resultsExpected = reader.ReadFile(inputFile);
 			/// <summary>
 			/// Check Results.

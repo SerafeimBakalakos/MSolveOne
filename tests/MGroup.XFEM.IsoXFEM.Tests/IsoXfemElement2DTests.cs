@@ -11,7 +11,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.MSolve.Discretization;
 	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.XFEM.Materials.Duplicates;
-
+	using MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator;
 	public class IsoXfemElement2DTests
 	{
 		[Fact]
@@ -55,7 +55,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			{ 0.0549450549451,   -0.0137362637363,  -0.247252747253, 0.178571428571,  -0.302197802198, 0.0137362637363, 0.494505494505,  -0.178571428571},
 			{0.0137362637363,  -0.302197802198, 0.178571428571,  -0.247252747253, -0.0137362637363,    0.0549450549451, -0.178571428571, 0.494505494505 } });
 			Matrix coordinatesOfElementComputed = element.CoordinatesOfElement;
-			double areaOfElementComputed = element.AreaOfElement;
+			double areaOfElementComputed = element.SizeOfElement;
 			Matrix stiffnessOfElementComputed = element.StiffnessOfElement;
 			Assert.Equal(areaOfElementExpected, areaOfElementComputed);
 			for (int i = 0; i < coordinatesOfElementExpected.NumRows; i++)
@@ -96,6 +96,17 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				new XNode(1, new double[] { 0, 20 } )
 			});
 			element.ElementLevelSet = Vector.CreateFromArray(new double[] { 10, -10, -10, 10 });
+			element.DefinePhaseOfElement();
+			ISolidOnlyTriangulator triangulator = new SolidOnlyTriangulator2D();
+			triangulator.ElementNodalLevelSetValues = element.ElementLevelSet;
+			element.ConformingSubcells = triangulator.FindConformingMesh(element, null, null);
+			var sizeofelement = 0.0;
+			foreach (var subcell in element.ConformingSubcells)
+			{
+				(var centroid, var sizesubcell) = subcell.FindCentroidAndBulkSizeCartesian(element);
+				sizeofelement += sizesubcell;
+			}
+			element.SizeOfElement = sizeofelement;
 			element.StiffnessMatrix(element);
 			var areaOfElementExpected = 200.00;
 			var stiffnessOfElementExpected= Matrix.CreateFromArray(new double[,] { { 0.29532967033, 0.133928571429, - 0.151098901099, - 0.051510989011, - 0.123626373626, - 0.0927197802198, - 0.0206043956044,    0.0103021978022},
@@ -106,7 +117,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			{ -0.0927197802198,  -0.123626373626, -0.00343406593407, -0.0137362637363,    0.0446428571429, 0.10989010989,   0.051510989011,  0.0274725274725},
 			{ -0.0206043956044,  -0.0103021978022,  -0.123626373626, 0.0927197802198, -0.151098901099, 0.051510989011,  0.29532967033,   -0.133928571429},
 			{ 0.0103021978022, -0.288461538462, 0.0858516483516, -0.123626373626, 0.0377747252747, 0.0274725274725, -0.133928571429, 0.384615384615 }});
-			var areaOfElementComputed = element.AreaOfElement;
+			var areaOfElementComputed = element.SizeOfElement;
 			var stiffnessOfElementComputed = element.StiffnessOfElement;
 			Assert.Equal(areaOfElementExpected, areaOfElementComputed);
 			for (int i = 0; i < stiffnessOfElementExpected.NumRows; i++)

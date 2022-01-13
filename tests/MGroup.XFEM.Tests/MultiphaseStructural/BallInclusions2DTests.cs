@@ -91,10 +91,10 @@ namespace MGroup.XFEM.Tests.MultiphaseStructural
 			bool cohesiveInterfaces = false;
 			double cohesiveness = 1E8;
 
-			if (!Directory.Exists(outputDirectory))
-			{
-				Directory.CreateDirectory(outputDirectory);
-			}
+			//if (!Directory.Exists(outputDirectory))
+			//{
+			//	Directory.CreateDirectory(outputDirectory);
+			//}
 
 			// Create model and LSM
 			XModel<IXMultiphaseElement> model = CreateModel(inclusionE, cohesiveInterfaces, cohesiveness);

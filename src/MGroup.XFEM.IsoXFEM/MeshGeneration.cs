@@ -39,13 +39,6 @@ namespace MGroup.XFEM.IsoXFEM
 							nodes[node4ID]
 					};
 					var element = new IsoXfemElement2D(el, material, geometry, nodesOfElement);
-					int[] dofs = new int[8];
-					for (int k = 0; k < nodesOfElement.Length; k++)
-					{
-						dofs[2 * k] = 2 * element.Nodes[k].ID;
-						dofs[2 * k + 1] = 2 * element.Nodes[k].ID + 1;
-					}
-					element.DofsOfElement = dofs;
 					elements.Add(el,element);
 					el = el + 1;
 				}
@@ -76,28 +69,6 @@ namespace MGroup.XFEM.IsoXFEM
 			}
 			return nodes;
 		}
-
-		public void FindElementsOnNodes()
-		{
-			//foreach (IsoXfemElement2D element in elements)
-			//{
-			//	foreach (XNode node in element.Nodes) node.ElementsDictionary[element.ID] = element;
-			//}
-			//for (int k = 0; k < nodes.Count; k++)
-   //         {
-   //             for (int i = 0; i <elements.Count ; i++)
-   //             {
-   //                 var element = elements[i];
-   //                 for (int j = 0; j <element.nodesOfElement.Count ; j++)
-   //                 {
-   //                     if (element.nodesOfElement[j].ID==k)
-   //                     {
-   //                         nodes[k].elementsOnNode.Add(elements[i]);                            
-   //                     }
-   //                 }
-   //             }
-   //         }
-        }
 
         public (Dictionary<int, XNode> nodes , Dictionary<int, IsoXfemElement2D> elements) MakeMesh()
         {

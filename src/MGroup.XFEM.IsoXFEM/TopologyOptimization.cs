@@ -44,7 +44,7 @@ namespace MGroup.XFEM.IsoXFEM
 			this.parentAnalyzer = parentAnalyzer;
 			this.solver = solver;
 			this.algebraicModel = algebraicModel;
-			this.structuralPerfomance = new StructuralPerfomance(xModel.Nodes, xModel.Elements, xModel.Elements.First().Value.AreaOfElement, algebraicModel);
+			this.structuralPerfomance = new StructuralPerfomance(xModel.Dimension,xModel.Nodes, xModel.Elements, xModel.Elements.First().Value.SizeOfElement, algebraicModel);
 			this.solidRatio = solidRatio;
 			parentAnalyzer.Initialize();
 		}
@@ -52,7 +52,7 @@ namespace MGroup.XFEM.IsoXFEM
         {
             nodalStrainEnergyIt = Vector.CreateZero(xModel.Nodes.Count);
             nodalStrainEnergyItPrevious = Vector.CreateZero(xModel.Nodes.Count);
-            Vector initialSizeOfElements = Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements[0].AreaOfElement);
+            Vector initialSizeOfElements = Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements[0].SizeOfElement);
             var initialSizeElement = initialSizeOfElements[0];
 			xModel.sizesOfElements = Vector.CreateWithValue(xModel.Elements.Count, initialSizeElement);
 			vfEachIteration = Vector.CreateZero(iterations);
@@ -96,7 +96,7 @@ namespace MGroup.XFEM.IsoXFEM
                 var relativeCriteria = UpdatingMLP(vfi, vfk, sizeOfWholeStructure);
 				xModel.relativeCriteria = relativeCriteria;
 				xModel.Update(null,null);
-				//PlotPerformanceLevel(it, model.nodes, model.elements, relativeCriteria);
+				//PlotPerformanceLevel(it, xModel.Nodes, xModel.Elements, relativeCriteria);
 			}
 			ResultsWriter.ResultsWriterToTxt(results);
 		}
@@ -184,9 +184,9 @@ namespace MGroup.XFEM.IsoXFEM
   //          return newArea;
   //      }
 		#endregion
-		public static void PlotPerformanceLevel(int iteration, Dictionary<int, XNode>  nodes , List<IsoXfemElement2D> elements, Vector nodalValues)
+		public static void PlotPerformanceLevel(int iteration, Dictionary<int, XNode>  nodes, Dictionary<int, IIsoXfemElement>  elements, Vector nodalValues)
         {                    
-            string path = $"{ Paths.OutputDirectory}\\OOS2BottomEnd_40x20_SkylineLDL_InitialStiffness_ComputeOnlyOneTime_CorrectMatlabErrors{iteration}.vtk";
+            string path = $"{ Paths.OutputDirectory}\\OOS_12_BottomEnd_40x20_SkylineLDL_InitialStiffness_ComputeOnlyOneTime_CorrectMatlabErrors{iteration}.vtk";
             var writer = new VtkFileWriter(path);
             writer.WriteMesh(nodes, elements);
             writer.WriteScalarField("performance_level", nodalValues.RawData);

@@ -78,10 +78,6 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				nodes[8],
 				nodes[5]
 			}));
-			elementsExpected[0].DofsOfElement = new int[] { 0, 1, 6, 7, 8, 9, 2, 3 };
-			elementsExpected[1].DofsOfElement = new int[] { 2, 3, 8, 9, 10, 11, 4, 5 };
-			elementsExpected[2].DofsOfElement = new int[] { 6, 7, 12, 13, 14, 15, 8, 9 };
-			elementsExpected[3].DofsOfElement = new int[] { 8, 9, 14, 15, 16, 17, 10, 11 };
 			for (int i = 0; i < elementsComputed.Count; i++)
 			{
 				var elementComputed = elementsComputed[i];

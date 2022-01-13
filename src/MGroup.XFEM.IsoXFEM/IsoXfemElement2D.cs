@@ -52,7 +52,7 @@ namespace MGroup.XFEM.IsoXFEM
 				{ material.PoissonRatio*(material.YoungModulus / (1-Math.Pow( material.PoissonRatio, 2))),1*(material.YoungModulus / (1-Math.Pow(material.PoissonRatio, 2))),0},{ 0,0,((1 - material.PoissonRatio)/2)*(material.YoungModulus /(1-Math.Pow(material.PoissonRatio, 2)))} });
 			lengthOfElement = geometry.length / geometry.numberOfElementsX;
 			heigthOfElement = geometry.height / geometry.numberOfElementsY;
-			AreaOfElement = lengthOfElement * heigthOfElement;
+			SizeOfElement = lengthOfElement * heigthOfElement;
 			CoordinatesOfElement = Matrix.CreateFromArray(new double[,] {{ Nodes[0].X, Nodes[0].Y},
 																		  {Nodes[1].X,Nodes[1].Y },
 																		  {Nodes[2].X, Nodes[2].Y },
@@ -135,9 +135,8 @@ namespace MGroup.XFEM.IsoXFEM
 		public IElementDofEnumerator DofEnumerator { get; set; } = new GenericDofEnumerator();
 
 		public bool MaterialModified { get;  }
-		public double AreaOfElement { get ; set ; }
+		public double SizeOfElement { get ; set ; }
 		public Matrix StiffnessOfElement { get ; set ; }
-		public int[] DofsOfElement { get; set; }
 		public IIsoXfemElement.Phase PhaseElement { get ; set ; }
 		public Vector ElementLevelSet { get ; set ; }
 		public Matrix CoordinatesOfElement { get; }
@@ -168,26 +167,27 @@ namespace MGroup.XFEM.IsoXFEM
 		{
 			if (ElementLevelSet!=null)
 			{
-				if (ElementLevelSet.Min() >= 0)
+				if (/*ElementLevelSet.Min() >= 0 */PhaseElement == IIsoXfemElement.Phase.solidElement)
 				{
-					PhaseElement = IIsoXfemElement.Phase.solidElement;
+					//PhaseElement = IIsoXfemElement.Phase.solidElement;
 					StiffnessOfElement = defaultStiffness.CopyToFullMatrix();
-					AreaOfElement = CalcBulkSizeCartesian();
+					//AreaOfElement = CalcBulkSizeCartesian();
 				}
-				else if (ElementLevelSet.Max() <= 0)
+				else if (/*ElementLevelSet.Max() <= 0*/PhaseElement == IIsoXfemElement.Phase.voidElement)
 				{
-					PhaseElement = IIsoXfemElement.Phase.voidElement;
+					//PhaseElement = IIsoXfemElement.Phase.voidElement;
 					StiffnessOfElement = defaultStiffness.CopyToFullMatrix();
 					StiffnessOfElement.ScaleIntoThis(0.0001);
-					AreaOfElement = 0.00;
+					//AreaOfElement = 0.00;
 				}
 				else
 				{
-					PhaseElement = IIsoXfemElement.Phase.boundaryElement;
-					var integration = new XFEMIntegration();
-					integration.MeshAndAreaOfSubElement(CoordinatesOfElement, ElementLevelSet);
-					var elementStructuralStiffnessComputation = new ElementStructuralStiffnessXFEMComputation(integration.coordinatesOfBoundaryElement, integration.connectionOfBoundaryElement);
-					AreaOfElement = integration.areaBoundaryElement;
+					//PhaseElement = IIsoXfemElement.Phase.boundaryElement;
+					//var integration = new XFEMIntegration();
+					//integration.MeshAndAreaOfSubElement(CoordinatesOfElement, ElementLevelSet);
+					//var elementStructuralStiffnessComputation = new ElementStructuralStiffnessXFEMComputation(integration.coordinatesOfBoundaryElement, integration.connectionOfBoundaryElement);
+					var elementStructuralStiffnessComputation = new ElementStructuralStiffnessXFEMComputation(ConformingSubcells);
+					//AreaOfElement = integration.areaBoundaryElement;					
 					var stiffness = elementStructuralStiffnessComputation.ElementStructuralStiffnessComputation(CoordinatesOfElement, elasticityMatrix, geometry.thickness);
 					StiffnessOfElement = stiffness;
 				}
@@ -249,7 +249,25 @@ namespace MGroup.XFEM.IsoXFEM
 		public double[] CalculateForcesForLogging(IElement element, double[] localDisplacements) => throw new NotImplementedException();
 		public double[] CalculateAccelerationForces(IElement element, IList<MassAccelerationLoad> loads) => throw new NotImplementedException();
 		public void SaveMaterialState() => throw new NotImplementedException();
-		public IReadOnlyList<IReadOnlyList<IDofType>> GetElementDofTypes(IElement element) => dofTypes;		
+		public IReadOnlyList<IReadOnlyList<IDofType>> GetElementDofTypes(IElement element) => dofTypes;
+		public void DefinePhaseOfElement()
+		{
+			if (ElementLevelSet.Min() >= 0)
+			{
+				PhaseElement = IIsoXfemElement.Phase.solidElement;
+				SizeOfElement = CalcBulkSizeCartesian();
+			}
+			else if (ElementLevelSet.Max() <= 0)
+			{
+				PhaseElement = IIsoXfemElement.Phase.voidElement;
+				SizeOfElement = 0.00;
+			}
+			else
+			{
+				PhaseElement = IIsoXfemElement.Phase.boundaryElement;
+			}
+		}
+		
 	}
 	public static class IsoXfemElement2DExtensions
 	{

@@ -172,7 +172,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Defines solidRatio. The Problem is 2D so SolidArea is selected.
 			/// </summary>
-			ISolidRatio solidRatio = new SolidArea(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.AreaOfElement));
+			ISolidRatio solidRatio = new SolidArea(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.SizeOfElement));
 			/// <summary>
 			/// Defines the topology Optimization and Optimize the problem with IsoXfem Method.
 			/// </summary>

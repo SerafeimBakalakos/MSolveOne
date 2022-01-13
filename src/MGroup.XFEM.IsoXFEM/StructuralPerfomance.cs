@@ -18,12 +18,14 @@ namespace MGroup.XFEM.IsoXFEM
         public Vector strainEnergy;
         public Vector strainEnergyDensity;
         public Vector nodalStrainEnergyDensity;
+		private readonly int dimension;
 		private readonly Dictionary<int, XNode> nodes  = new Dictionary<int, XNode>();
 		private readonly Dictionary<int, IIsoXfemElement> elements  = new Dictionary<int, IIsoXfemElement>();
         private readonly double initialSize;
 		private readonly IAlgebraicModel algebraicModel;
-        public StructuralPerfomance(Dictionary<int, XNode> nodes, Dictionary<int, IIsoXfemElement> elements, double initialSize, IAlgebraicModel algebraicModel)
+        public StructuralPerfomance(int dimension, Dictionary<int, XNode> nodes, Dictionary<int, IIsoXfemElement> elements, double initialSize, IAlgebraicModel algebraicModel)
         {
+			this.dimension = dimension;
 			this.nodes = nodes;
 			this.elements = elements;
             this.initialSize = initialSize;
@@ -42,8 +44,8 @@ namespace MGroup.XFEM.IsoXFEM
             for (int i = 0; i < elements.Count; i++)
             {
 				var Ue = algebraicModel.ExtractElementVector(displacements, elements[i]);
-				Matrix transposeUe = Matrix.CreateZero(1, elements[i].DofsOfElement.Length);
-				Vector displacementsElementVector = Vector.CreateZero(elements[i].DofsOfElement.Length);
+				Matrix transposeUe = Matrix.CreateZero(1, elements[i].Nodes.Count*dimension);
+				Vector displacementsElementVector = Vector.CreateZero(elements[i].Nodes.Count * dimension);
                 for (int j = 0; j < Ue.Length; j++)
                 {
                     transposeUe[0, j] = Ue[j];
