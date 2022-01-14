@@ -112,25 +112,25 @@ namespace MGroup.XFEM.Cracks.Geometry
 		{
 			TipElements.Clear();
 
-			//foreach (IXCrackElement element in model.Elements.Values)
-			//{
-			//	IElementDiscontinuityInteraction interaction = CrackGeometry_v2.Intersect(element);
-			//	if (interaction.BoundaryOfGeometryInteractsWithElement)
-			//	{
-			//		TipElements.Add(element);
-			//		element.RegisterInteractionWithCrack(this, interaction);
-			//	}
-			//	else if (interaction.RelativePosition == RelativePositionCurveElement.Intersecting)
-			//	{
-			//		IntersectedElements.Add(element);
-			//		element.RegisterInteractionWithCrack(this, interaction);
-			//	}
-			//	else if (interaction.RelativePosition == RelativePositionCurveElement.Conforming)
-			//	{
-			//		ConformingElements.Add(element);
-			//		element.RegisterInteractionWithCrack(this, interaction);
-			//	}
-			//}
+			foreach (IXCrackElement element in model.Elements.Values)
+			{
+				IElementDiscontinuityInteraction interaction = CrackGeometry_v2.Intersect(element);
+				if (interaction.BoundaryOfGeometryInteractsWithElement)
+				{
+					TipElements.Add(element);
+					element.RegisterInteractionWithCrack(this, interaction);
+				}
+				else if (interaction.RelativePosition == RelativePositionCurveElement.Intersecting)
+				{
+					IntersectedElements.Add(element);
+					element.RegisterInteractionWithCrack(this, interaction);
+				}
+				else if (interaction.RelativePosition == RelativePositionCurveElement.Conforming)
+				{
+					ConformingElements.Add(element);
+					element.RegisterInteractionWithCrack(this, interaction);
+				}
+			}
 
 			// Call observers to pull any state they want
 			foreach (ICrackObserver observer in Observers) observer.Update();

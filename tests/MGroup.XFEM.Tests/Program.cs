@@ -30,7 +30,7 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_1_Solvers.crackMouthCoords = new double[] { 337.5, 0 };
 			FriesExample_7_2_1_Solvers.crackFrontCoords = new double[] { 337.5, 75 };
 
-			int numElementsMin = 10;
+			int numElementsMin = 15;
 			FriesExample_7_2_1_Solvers.numElements = new int[] { 9 * numElementsMin, 2 * numElementsMin, numElementsMin };
 			int numSubdomainsMin = 8;
 			FriesExample_7_2_1_Solvers.numSubdomains = new int[] { 9 * numSubdomainsMin, 2 * numSubdomainsMin, numSubdomainsMin };
@@ -59,7 +59,7 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_3_Solvers.outputPlotDirectory = FriesExample_7_2_3_Solvers.outputDirectory + "plots";
 			FriesExample_7_2_3_Solvers.enablePlotting = false;
 
-			int numElementsMin = 10;
+			int numElementsMin = 20;
 			FriesExample_7_2_3_Solvers.numElements = new int[] { 2 * numElementsMin, numElementsMin, 2 * numElementsMin };
 			int numSubdomainsMin = 7;
 			FriesExample_7_2_3_Solvers.numSubdomains = new int[] { 2 * numSubdomainsMin, numSubdomainsMin, 2 * numSubdomainsMin };
