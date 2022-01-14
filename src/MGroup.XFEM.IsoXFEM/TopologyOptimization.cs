@@ -33,19 +33,21 @@ namespace MGroup.XFEM.IsoXFEM
 		public  Matrix results;
 		private readonly StructuralPerfomance structuralPerfomance;
 		private readonly ISolidRatio solidRatio;
+		private  StaticAnalyzer parentAnalyzer;
 		private /*readonly*/ ISolver solver;
 		public XModel<IIsoXfemElement> xModel;
-		public StaticAnalyzer parentAnalyzer;
 		public IAlgebraicModel algebraicModel;
 
-		public TopologyOptimization (XModel<IIsoXfemElement> xModel,ISolidRatio solidRatio,  StaticAnalyzer parentAnalyzer, ISolver solver, IAlgebraicModel algebraicModel)
+		public TopologyOptimization (XModel<IIsoXfemElement> xModel,ISolidRatio solidRatio,  ISolver solver, IAlgebraicModel algebraicModel)
 		{
 			this.xModel = xModel;
-			this.parentAnalyzer = parentAnalyzer;
 			this.solver = solver;
 			this.algebraicModel = algebraicModel;
 			this.structuralPerfomance = new StructuralPerfomance(xModel.Dimension,xModel.Nodes, xModel.Elements, xModel.Elements.First().Value.SizeOfElement, algebraicModel);
 			this.solidRatio = solidRatio;
+			var provider = new ProblemStructural(xModel, algebraicModel, solver);
+			var childAnalyzer = new LinearAnalyzer(xModel, algebraicModel, solver, provider);
+			parentAnalyzer = new StaticAnalyzer(xModel, algebraicModel, solver, provider, childAnalyzer);
 			parentAnalyzer.Initialize();
 		}
         public void IsoXfem()
@@ -70,7 +72,7 @@ namespace MGroup.XFEM.IsoXFEM
                     }
 					var provider = new ProblemStructural(xModel, algebraicModel, solver);
 					var childAnalyzer = new LinearAnalyzer(xModel, algebraicModel, solver, provider);
-					parentAnalyzer = new StaticAnalyzer(xModel, algebraicModel, solver, provider, childAnalyzer);
+				    parentAnalyzer = new StaticAnalyzer(xModel, algebraicModel, solver, provider, childAnalyzer);
 					parentAnalyzer.Initialize(false);
 				}
 				parentAnalyzer.Solve();
@@ -128,62 +130,6 @@ namespace MGroup.XFEM.IsoXFEM
             }
             return relativeCriteria;
         }
-   # region solidArea function
-		//public static Vector SolidArea(XModel<IsoXfemElement2D> xModel, Vector initialAreasOfElements, Vector relativeCriteria)
-  //      {
-  //          Vector newArea = Vector.CreateZero(initialAreasOfElements.Length);
-  //          double areaRatio = 1.00;
-  //          for (int i = 0; i < xModel.Elements.Count; i++)
-  //          {
-  //              int[] connectionOfElement = new int[] { xModel.Elements[i].nodesOfElement[0].ID, xModel.Elements[i].nodesOfElement[1].ID, xModel.Elements[i].nodesOfElement[2].ID, xModel.Elements[i].nodesOfElement[3].ID };
-  //              if (relativeCriteria.GetSubvector(connectionOfElement).Min() > 0)//solid element
-  //              {
-  //                  areaRatio = 1;
-  //              }
-  //              else if (relativeCriteria.GetSubvector(connectionOfElement).Max() < 0)// void element
-  //              {
-  //                  areaRatio = 0;
-  //              }
-  //              else //boundary element
-  //              {
-  //                  Matrix s = Matrix.CreateZero(21, 21);
-  //                  Matrix t = Matrix.CreateZero(21, 21);
-  //                  for (int j = 0; j < 21; j++)
-  //                  {
-  //                      double v = -1;
-  //                      for (int k = 0; k < 21; k++)
-  //                      {
-  //                          t[k, j] = v;
-  //                          s[j, k] = v;
-  //                          v = v + 0.1;
-  //                      }
-  //                  }
-  //                  int m = 0;
-  //                  Vector tmpPhi = Vector.CreateZero(441);
-  //                  for (int j = 0; j < 21; j++)
-  //                  {
-  //                      for (int k = 0; k < 21; k++)
-  //                      {
-  //                          tmpPhi[m] = (1 - s[j, k]) * (1 - t[j, k]) * 0.25 * relativeCriteria[connectionOfElement[0]] + (1 + s[j, k]) * (1 - t[j, k]) * 0.25 * relativeCriteria[connectionOfElement[1]] + (1 + s[j, k]) * (1 + t[j, k]) * 0.25 * relativeCriteria[connectionOfElement[2]] + (1 - s[j, k]) * (1 + t[j, k]) * 0.25 * relativeCriteria[connectionOfElement[3]];
-  //                          m++;
-
-  //                      }
-  //                  }
-  //                  double numofNoNegative = 0;
-  //                  for (int j = 0; j < tmpPhi.Length; j++)
-  //                  {
-  //                      if (tmpPhi[j] >= 0.00)
-  //                      {
-  //                          numofNoNegative++;
-  //                      }
-  //                  }
-  //                  areaRatio = numofNoNegative / tmpPhi.Length;
-  //              }
-  //              newArea[i] = areaRatio * initialAreasOfElements[i];
-  //          }
-  //          return newArea;
-  //      }
-		#endregion
 		public static void PlotPerformanceLevel(int iteration, Dictionary<int, XNode>  nodes, Dictionary<int, IIsoXfemElement>  elements, Vector nodalValues)
         {                    
             string path = $"{ Paths.OutputDirectory}\\OOS_12_BottomEnd_40x20_SkylineLDL_InitialStiffness_ComputeOnlyOneTime_CorrectMatlabErrors{iteration}.vtk";

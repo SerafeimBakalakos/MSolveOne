@@ -159,25 +159,13 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var solverFactory = new SkylineSolver.Factory();
 			var algebraicModel = solverFactory.BuildAlgebraicModel(xModel);
 			var solver = solverFactory.BuildSolver(algebraicModel);
-			/// <summary>
-			/// Defines Problem type as Structural.
-			/// </summary>
-			var provider = new ProblemStructural(xModel, algebraicModel, solver);
-			/// <summary>
-			/// Defines Analyzers.
-			/// Chlid Analyzer: Linear
-			/// Parent Analyzer: Static
-			/// </summary>
-			var childAnalyzer = new LinearAnalyzer(xModel, algebraicModel, solver, provider);
-			var parentAnalyzer = new StaticAnalyzer(xModel, algebraicModel, solver, provider, childAnalyzer);
-			/// <summary>
 			/// Defines solidRatio. The Problem is 2D so SolidArea is selected.
 			/// </summary>
 			ISolidRatio solidRatio = new SolidArea(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.SizeOfElement));
 			/// <summary>
 			/// Defines the topology Optimization.
 			/// </summary>
-			var topologyOptimization = new TopologyOptimization(xModel, solidRatio, parentAnalyzer, solver, algebraicModel);
+			var topologyOptimization = new TopologyOptimization(xModel, solidRatio, solver, algebraicModel);
 			/// <summary>
 			/// Defines expected results for the firsts 10 iterations.
 			/// </summary>
@@ -319,24 +307,13 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var algebraicModel = solverFactory.BuildAlgebraicModel(xModel);
 			var solver = solverFactory.BuildSolver(algebraicModel);
 			/// <summary>
-			/// Defines Problem type as Structural.
-			/// </summary>
-			var provider = new ProblemStructural(xModel, algebraicModel, solver);
-			/// <summary>
-			/// Defines Analyzers.
-			/// Chlid Analyzer: Linear
-			/// Parent Analyzer: Static
-			/// </summary>
-			var childAnalyzer = new LinearAnalyzer(xModel, algebraicModel, solver, provider);
-			var parentAnalyzer = new StaticAnalyzer(xModel, algebraicModel, solver, provider, childAnalyzer);
-			/// <summary>
 			/// Defines solidRatio. The Problem is 2D so SolidArea is selected.
 			/// </summary>
 			ISolidRatio solidRatio = new SolidArea(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.SizeOfElement));
 			/// <summary>
 			/// Defines the topology Optimization and Optimize the problem with IsoXfem Method.
 			/// </summary>
-			var topologyOptimization = new TopologyOptimization(xModel, solidRatio, parentAnalyzer, solver, algebraicModel);
+			var topologyOptimization = new TopologyOptimization(xModel, solidRatio, solver, algebraicModel);
 			topologyOptimization.IsoXfem();
 			var resultsComputed = topologyOptimization.results;
 			/// <summary>
