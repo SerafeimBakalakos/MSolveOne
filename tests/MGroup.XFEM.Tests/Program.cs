@@ -42,11 +42,12 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_1_Solvers.objectivePcgCriterion = false;
 			FriesExample_7_2_1_Solvers.ddmReanalysis = true;
 			FriesExample_7_2_1_Solvers.reanalysisExtraDofs = FriesExample_7_2_1_Solvers.ReanalysisExtraDofs.None;
+			FriesExample_7_2_1_Solvers.preconditionerFetiDP = FriesExample_7_2_1_Solvers.PreconditionerFetiDP.Lumped;
 
 			//FriesExample_7_2_1_Solvers.RunExampleWithDirectSolver();
 			//FriesExample_7_2_1_Solvers.RunExampleWithReanalysisSolver();
-			FriesExample_7_2_1_Solvers.RunExampleWithPFetiDPSolver();
-			//FriesExample_7_2_1_Solvers.RunExampleWithFetiDPSolver();
+			//FriesExample_7_2_1_Solvers.RunExampleWithPFetiDPSolver();
+			FriesExample_7_2_1_Solvers.RunExampleWithFetiDPSolver();
 		}
 
 		private static void RunExample2()
@@ -76,6 +77,7 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_3_Solvers.objectivePcgCriterion = false;
 			FriesExample_7_2_3_Solvers.ddmReanalysis = false;
 			FriesExample_7_2_3_Solvers.reanalysisExtraDofs = FriesExample_7_2_3_Solvers.ReanalysisExtraDofs.None;
+			FriesExample_7_2_3_Solvers.preconditionerFetiDP = FriesExample_7_2_3_Solvers.PreconditionerFetiDP.Dirichlet;
 
 			//FriesExample_7_2_3_Solvers.RunExampleWithDirectSolver();
 			//FriesExample_7_2_3_Solvers.RunExampleWithReanalysisSolver();

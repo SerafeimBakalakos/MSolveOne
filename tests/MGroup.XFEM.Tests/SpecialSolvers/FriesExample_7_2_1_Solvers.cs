@@ -13,6 +13,7 @@ using MGroup.Solvers.DDM;
 using MGroup.Solvers.DDM.FetiDP;
 using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
 using MGroup.Solvers.DDM.FetiDP.InterfaceProblem;
+using MGroup.Solvers.DDM.FetiDP.Preconditioning;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 using MGroup.Solvers.DDM.Output;
 using MGroup.Solvers.DDM.PFetiDP;
@@ -35,6 +36,11 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 {
 	public static class FriesExample_7_2_1_Solvers
 	{
+		public enum PreconditionerFetiDP
+		{
+			Dirichlet, DiagonalDirichlet, Lumped
+		}
+
 		private enum SolverChoice 
 		{ 
 			DirectManaged, DirectNative, DirectReanalysis, PfetiDPManaged, PfetiDPNative, FetiDPManaged, FetiDPNative 
@@ -68,6 +74,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 		public const bool explicitPsmMatrices = false;
 		public const bool unsafeOptimizations = true;
+		public static PreconditionerFetiDP preconditionerFetiDP = PreconditionerFetiDP.Dirichlet;
 
 		[Fact]
 		public static void RunExampleWithDirectSolver()
@@ -215,6 +222,10 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			{
 				msg.AppendLine($"reanalysis extra modified dofs={reanalysisExtraDofs}");
 			}
+			if (solverChoice == SolverChoice.FetiDPManaged || solverChoice == SolverChoice.FetiDPNative)
+			{
+				msg.AppendLine($"FETI-DP preconditioner = {preconditionerFetiDP}");
+			}
 
 			var normLogger = new SolutionNormLogger(Path.Combine(outputDirectory, "solution_norm.txt"));
 			normLogger.ExtraInfo = msg.ToString();
@@ -340,6 +351,18 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				ResidualTolerance = iterTol,
 				UseObjectiveConvergenceCriterion = objectivePcgCriterion
 			};
+			if (preconditionerFetiDP == PreconditionerFetiDP.Dirichlet)
+			{
+				solverFactory.Preconditioner = new FetiDPDirichletPreconditioner();
+			}
+			else if (preconditionerFetiDP == PreconditionerFetiDP.DiagonalDirichlet)
+			{
+				solverFactory.Preconditioner = new FetiDPDiagonalDirichletPreconditioner();
+			}
+			else
+			{
+				solverFactory.Preconditioner = new FetiDPLumpedPreconditioner();
+			}
 
 			if (ddmReanalysis)
 			{
