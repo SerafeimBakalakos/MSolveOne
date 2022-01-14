@@ -181,7 +181,7 @@ namespace MGroup.XFEM.IsoXFEM
 			Matrix elementCoordinatesWithIntersectionAndCentrePoints = elementCoordinatesWithIntersection.AppendBottom(meanCoordinate);
 			return (elementCoordinatesWithIntersectionAndCentrePoints, connectionCircularNoNegativeNodesWithIntersection);
 		}
-		public (int[,], double) ConnectionOfSubTrianglesAndAreaSubElement(int[] nodesofSubTriangles, Matrix coordsOfSubTriangles)
+		public int[,] ConnectionOfSubTriangles(int[] nodesofSubTriangles, Matrix coordsOfSubTriangles)
 		{
 			//For Example:
 			//                  LevelSet                                     
@@ -191,7 +191,7 @@ namespace MGroup.XFEM.IsoXFEM
 			//       |\            /|               |                                                   {5,3,6},
 			//       | \          / |               |                                                   {3,0,6}}
 			//       |  \   +    /  |        -      |
-			//       |   \      /   |               |                              areaOfSubElement=2   
+			//       |   \      /   |               |                              
 			//       |    \    /    |               |
 			//       |     \  /     |               |
 			//       |      #6.     |               |
@@ -205,19 +205,13 @@ namespace MGroup.XFEM.IsoXFEM
 			//                      |
 			//                      |
 			int[,] trianglesConnection = new int[nodesofSubTriangles.Length - 1, 3];
-			Vector trianlgeArea = Vector.CreateZero((nodesofSubTriangles.Length - 1));
 			for (int i = 0; i < nodesofSubTriangles.Length - 1; i++)
 			{
 				trianglesConnection[i, 0] = nodesofSubTriangles[i];
 				trianglesConnection[i, 1] = nodesofSubTriangles[i + 1];
 				trianglesConnection[i, 2] = coordsOfSubTriangles.NumRows - 1;
-				int[] triangleConn = new int[3] { trianglesConnection[i, 0], trianglesConnection[i, 1], trianglesConnection[i, 2] };
-				Matrix triangleCoords = coordsOfSubTriangles.GetSubmatrix(triangleConn, new int[] { 0, 1 });
-				int N = triangleCoords.NumRows;
-				trianlgeArea[i] = GeometryCalculations.Polygonarea(triangleCoords, N);
 			}
-			var areaOfSubElement = trianlgeArea.Sum();
-			return (trianglesConnection, areaOfSubElement);
+			return trianglesConnection;
 		}
 		public ElementSubtriangle2D [] CreateSubTrianglesOfElement(Matrix coordinatesOfElement, Matrix coordinatesOfTriangles, int[,] connectionOfTriangles)
 		{
@@ -277,7 +271,7 @@ namespace MGroup.XFEM.IsoXFEM
 			//Coordinates of positive, intersection and centre points
 			(Matrix elementCoordinatesWithIntersectionAndCentrePoints, int[] connectionCircularNoNegativeNodesWithIntersection) = CoordinatesNodesofXFEMpoints(elementConnectionCircularWithIntersectionPoints, elementCoordinatesWithIntersection, elementsNodalLevelSetWithIntersectionPoints);
 			//Construct sub - triangular elements and compute their area
-			var (trianglesConnection, areaOfSubElement) = ConnectionOfSubTrianglesAndAreaSubElement(connectionCircularNoNegativeNodesWithIntersection, elementCoordinatesWithIntersectionAndCentrePoints);
+			var trianglesConnection = ConnectionOfSubTriangles(connectionCircularNoNegativeNodesWithIntersection, elementCoordinatesWithIntersectionAndCentrePoints);
 			var subtriangles = CreateSubTrianglesOfElement(coordinatesOfElement, elementCoordinatesWithIntersectionAndCentrePoints, trianglesConnection);
 			return subtriangles;
 		}
