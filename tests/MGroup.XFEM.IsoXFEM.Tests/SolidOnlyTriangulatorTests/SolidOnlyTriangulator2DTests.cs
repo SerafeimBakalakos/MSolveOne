@@ -79,6 +79,27 @@ namespace MGroup.XFEM.IsoXFEM.Tests.SolidOnlyTriangulatorTests
 		[Fact]
 		private void CreateSubTrianglesOfElementTest()
 		{
+			//For Example:
+			//                  LevelSet                                     
+			//                      |
+			//      #3           #5 |               #2                            
+			//       .______________._______________.                                                   
+			//       |\            /|               |                                                  
+			//       | \          / |               |                                                  
+			//       |  \   +    /  |        -      |
+			//       |   \      /   |               |                              
+			//       |    \    /    |               |
+			//       |     \  /     |               |
+			//       |      #6.     |               |
+			//       |      / \     |               |
+			//       |     /   \    |               |
+			//       |    /     \   |               |
+			//       |   /       \  |               |
+			//       |  /         \ |               |
+			//       | /           \|               |
+			//     #0.____________#4.______________#1.
+			//                      |
+			//                      |
 			Matrix coordinatesOfElement = Matrix.CreateFromArray(new double[,] { { 0, 0 }, { 10, 0 }, { 10, 10 }, { 0, 10 } });
 			Matrix elementCoordinatesWithIntersectionPoints = Matrix.CreateFromArray(new double[,] { { 0, 0 }, { 10, 0 }, { 10, 10 }, { 0, 10 }, { 5, 0 }, { 5, 10 }, { 2.5, 5 } });
 			int[,] trianglesConnection = new int[,] { { 0, 4, 6 }, { 4, 5, 6 }, { 5, 3, 6 }, { 3, 0, 6 } };
