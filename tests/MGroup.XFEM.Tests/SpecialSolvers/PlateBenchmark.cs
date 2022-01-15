@@ -183,7 +183,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		public static void SetupPartitioningOutput(IComputeEnvironment environment, XModel<IXCrackElement> model, 
 			CrackFetiDPCornerDofsPlusLogging cornerDofs, string outputDirectory)
 		{
-			model.ModelObservers.Add(new PartitioningPlotter(outputDirectory, model, 2));
+			model.ModelObservers.Add(new PartitioningPlotter(outputDirectory, model, 2, true));
+			model.ModelObservers.Add(new BoundaryNodesPlotter(environment, model, outputDirectory));
 			model.ModelObservers.Add(new CornerNodesPlotter(environment, model, cornerDofs, outputDirectory));
 		}
 

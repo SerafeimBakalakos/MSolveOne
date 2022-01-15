@@ -34,7 +34,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 {
 	public static class PlateBenchmarkSolvers
 	{
-		private const string workDirectory = @"C:\Users\Serafeim\Desktop\DDM\PFETIDP\XFEM\plate2D";
+		private const string workDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Theory\Plate2D";
+		//private const string workDirectory = @"C:\Users\Serafeim\Desktop\DDM\PFETIDP\XFEM\plate2D";
 
 		[Fact]
 		public static void AnalyzeWithSkylineSolver()
