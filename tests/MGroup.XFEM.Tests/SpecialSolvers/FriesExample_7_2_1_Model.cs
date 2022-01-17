@@ -70,7 +70,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			crackGeometry.InitializeGeometry(model.Nodes.Values);
 
 			// Expected crack path
-			for (int t = 0; t < maxIterations; ++t)
+			for (int t = 0; t < maxIterations - 1; ++t)
 			{
 				ICrackFront3D crackFront = crackGeometry.CrackFront;
 				int numTips = crackFront.ActiveTips.Count;
