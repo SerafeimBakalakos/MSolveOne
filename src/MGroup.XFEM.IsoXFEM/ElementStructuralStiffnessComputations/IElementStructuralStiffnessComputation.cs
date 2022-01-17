@@ -7,6 +7,6 @@ namespace MGroup.XFEM.IsoXFEM.ElementStructuralStiffnessComputations
 {
     public interface IElementStructuralStiffnessComputation
     {
-       Matrix ElementStructuralStiffnessComputation(Matrix coordinatesOfElement, Matrix elasticityMatrix, double thickness);
+       //Matrix ElementStructuralStiffnessComputation(IIsoXfemElement element/*Matrix coordinatesOfElement, Matrix elasticityMatrix, double thickness*/);
     }
 }

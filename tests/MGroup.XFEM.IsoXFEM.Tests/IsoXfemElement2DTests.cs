@@ -72,7 +72,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 					Assert.Equal(stiffnessOfElementExpected[i, j], stiffnessOfElementComputed[i, j],8);
 				}
 			}
-			var Kstnd = element.BuildStiffnessMatrixStandard();
+			var Kstnd = element.BuildStiffnessMatrix();
 			for (int i = 0; i < stiffnessOfElementExpected.NumRows; i++)
 			{
 				for (int j = 0; j < stiffnessOfElementExpected.NumColumns; j++)
