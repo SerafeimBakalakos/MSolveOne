@@ -28,8 +28,7 @@ namespace MGroup.XFEM.IsoXFEM
 
 		private const int dim = 2;
 		private readonly int numStandardDofs;
-		public ElasticMaterial2D material;
-		public GeometryProperties geometry;
+		private readonly GeometryProperties geometry;
 		private readonly IElementGeometry elementGeometry;
 		private IReadOnlyList<GaussPoint> gaussPointsBulk;
 		private EvalInterpolation[] evalInterpolationsAtGPsBulk;
@@ -44,7 +43,6 @@ namespace MGroup.XFEM.IsoXFEM
 		{
 			ID = id >= 0 ? id : -id;
 			this.geometry = geometry;
-			this.material = material;
 			this.nodesOfElement.AddRange(nodesOfElement);
 			ElasticityMatrix = Matrix.CreateFromArray(new double[,]
 				{{ 1* (material.YoungModulus / (1-Math.Pow( material.PoissonRatio, 2))), material.PoissonRatio*(material.YoungModulus /(1-Math.Pow( material.PoissonRatio, 2))), 0},
