@@ -28,13 +28,13 @@ namespace MGroup.XFEM.IsoXFEM
         private const int iterations = 200;
         public /*private*/  Vector nodalStrainEnergyIt;
         private  Vector nodalStrainEnergyItPrevious;
-		public /*private*/ double mlp;
+		public  double mlp;
         private  Vector vfEachIteration;
 		public  Matrix results;
 		private readonly StructuralPerfomance structuralPerfomance;
 		private readonly ISolidRatio solidRatio;
 		private  StaticAnalyzer parentAnalyzer;
-		private /*readonly*/ ISolver solver;
+		private ISolver solver;
 		public XModel<IIsoXfemElement> xModel;
 		public IAlgebraicModel algebraicModel;
 

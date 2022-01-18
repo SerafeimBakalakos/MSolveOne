@@ -253,6 +253,7 @@ namespace MGroup.XFEM.IsoXFEM
 						sizeofelement += sizesubcell;
 					}
 					element.SizeOfElement = sizeofelement;
+					//var gausspoints = element.IntegrationBulk.GenerateIntegrationPoints(element);
 				}
 			}
 		}

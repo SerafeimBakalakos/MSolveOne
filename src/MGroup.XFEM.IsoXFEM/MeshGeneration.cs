@@ -19,10 +19,10 @@ namespace MGroup.XFEM.IsoXFEM
             this.material = material;
             this.geometry = geometry;
         }
-		public Dictionary<int, IsoXfemElement2D> CreateElements(Dictionary<int, XNode> nodes)
+		public Dictionary<int, IIsoXfemElement> CreateElements(Dictionary<int, XNode> nodes)
 		{
 			int el = 0;
-			var elements = new Dictionary<int, IsoXfemElement2D>();
+			var elements = new Dictionary<int, IIsoXfemElement>();
 			for (int i = 0; i < geometry.numberOfElementsX; i++)
 			{
 				for (int j = 0; j < geometry.numberOfElementsY; j++)
@@ -70,7 +70,7 @@ namespace MGroup.XFEM.IsoXFEM
 			return nodes;
 		}
 
-        public (Dictionary<int, XNode> nodes , Dictionary<int, IsoXfemElement2D> elements) MakeMesh()
+        public (Dictionary<int, XNode> nodes , Dictionary<int, IIsoXfemElement> elements) MakeMesh()
         {
             var nodes=CreateNodes();
             var elements=CreateElements(nodes);

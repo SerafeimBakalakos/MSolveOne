@@ -14,7 +14,7 @@ namespace MGroup.XFEM.IsoXFEM.Output
         {
             var writer = new FullMatrixWriter();
             writer.NumericFormat = new ExponentialFormat() { NumDecimalDigits = 17 };
-            string path = $"{Paths.OutputForTxtResults}\\OOS_BottomEnd_40x20_Using_ConformingSubcells.txt";
+            string path = $"{Paths.OutputForTxtResults}\\OOSnew_BottomEnd_40x20.txt";
             writer.WriteToFile(results, path);
         }
 
