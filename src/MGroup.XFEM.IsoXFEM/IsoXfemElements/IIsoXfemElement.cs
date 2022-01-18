@@ -1,4 +1,4 @@
-namespace MGroup.XFEM.IsoXFEM
+namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 {
 	using System;
 	using System.Collections.Generic;

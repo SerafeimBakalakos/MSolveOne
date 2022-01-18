@@ -10,6 +10,7 @@ using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.NumericalAnalyzers;
 using MGroup.Solvers.AlgebraicModel;
 using MGroup.XFEM.Entities;
+using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 
 namespace MGroup.XFEM.IsoXFEM
 {

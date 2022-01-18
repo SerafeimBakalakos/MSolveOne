@@ -20,7 +20,7 @@ using MGroup.MSolve.Discretization.Loads;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.XFEM.Materials.Duplicates;
 
-namespace MGroup.XFEM.IsoXFEM
+namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 {
 
 	public class IsoXfemElement2D : IIsoXfemElement

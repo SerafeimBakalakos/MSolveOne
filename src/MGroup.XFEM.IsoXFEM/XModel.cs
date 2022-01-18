@@ -17,6 +17,7 @@ using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Reduction;
 using MGroup.XFEM.Geometry.LSM;
 using MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator;
+using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 
 
 //TODO: There is a lot of repetition between this FEM.Model and IGA.Model with regards to interconnection data. That code should 

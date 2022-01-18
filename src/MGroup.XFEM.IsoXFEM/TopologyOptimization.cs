@@ -17,6 +17,7 @@ using MGroup.Solvers.Direct;
 using MGroup.Solvers.AlgebraicModel;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Constitutive.Structural;
+using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 
 namespace MGroup.XFEM.IsoXFEM
 {

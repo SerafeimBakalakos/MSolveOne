@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.XFEM.Entities;
+using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 
 namespace MGroup.XFEM.IsoXFEM
 {

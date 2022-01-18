@@ -7,6 +7,7 @@ using MGroup.XFEM.Entities;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.XFEM.Materials.Duplicates;
+using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 
 namespace MGroup.XFEM.IsoXFEM
 {
