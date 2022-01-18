@@ -10,13 +10,14 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.MSolve.Discretization;
 	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.XFEM.Materials.Duplicates;
+	using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 
 	public class MeshGenerationTests
 	{
 		[Fact]
 		private void CreateNodesTest()
 		{
-			var geometry = new GeometryProperties(40, 40, 1, 2, 2);
+			var geometry = new GeometryProperties(40, 40, 1, new int[] { 2, 2 });
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
@@ -42,7 +43,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		[Fact]
 		private void CreateElementTest()
 		{
-			var geometry = new GeometryProperties(40, 40, 1, 2, 2);
+			var geometry = new GeometryProperties(40, 40, 1, new int[] { 2, 2 });
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
@@ -92,63 +93,5 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				}
 			}
 		}
-		//[Fact]
-		//private void FindElementsOnNodesTests()
-		//{
-		//	var geometry = new GeometryProperties(40, 40, 1, 2, 2);
-		//	var material = new ElasticMaterial2D(StressState2D.PlaneStress);
-		//	material.YoungModulus = 1;
-		//	material.PoissonRatio = 0.3;
-		//	var model = new Model(material, geometry);
-		//	model.CreateNodes();
-		//	model.CreateElements();
-		//	model.FindElementsOnNodes();
-		//	var nodesWithElementsExpected = new List<List<IsoXfemElement2D>>();
-		//	var list0 = new List<IsoXfemElement2D>();
-		//	list0.Add(model.elements[0]);
-		//	var list1 = new List<IsoXfemElement2D>();
-		//	list1.Add(model.elements[0]);
-		//	list1.Add(model.elements[1]);
-		//	var list2 = new List<IsoXfemElement2D>();
-		//	list2.Add(model.elements[1]);
-		//	var list3 = new List<IsoXfemElement2D>();
-		//	list3.Add(model.elements[0]);
-		//	list3.Add(model.elements[2]);
-		//	var list4= new List<IsoXfemElement2D>();
-		//	list4.Add(model.elements[0]);
-		//	list4.Add(model.elements[1]);
-		//	list4.Add(model.elements[2]);
-		//	list4.Add(model.elements[3]);
-		//	var list5 = new List<IsoXfemElement2D>();
-		//	list5.Add(model.elements[1]);
-		//	list5.Add(model.elements[3]);
-		//	var list6 = new List<IsoXfemElement2D>();
-		//	list6.Add(model.elements[2]);
-		//	var list7= new List<IsoXfemElement2D>();
-		//	list7.Add(model.elements[2]);
-		//	list7.Add(model.elements[3]);
-		//	var list8 = new List<IsoXfemElement2D>();
-		//	list8.Add(model.elements[3]);
-		//	nodesWithElementsExpected.Add(list0);
-		//	nodesWithElementsExpected.Add(list1);
-		//	nodesWithElementsExpected.Add(list2);
-		//	nodesWithElementsExpected.Add(list3);
-		//	nodesWithElementsExpected.Add(list4);
-		//	nodesWithElementsExpected.Add(list5);
-		//	nodesWithElementsExpected.Add(list6);
-		//	nodesWithElementsExpected.Add(list7);
-		//	nodesWithElementsExpected.Add(list8);
-		//	var nodesWithElementsComputed = model.nodes;
-		//	for (int i = 0; i < nodesWithElementsComputed.Count; i++)
-		//	{
-		//		var nodeWithElementsComputed = nodesWithElementsComputed[i];
-		//		var nodeWithElementsExpected = nodesWithElementsExpected[i];
-		//		for (int j = 0; j < nodeWithElementsComputed.ElementsDictionary.Count; j++)
-		//		{
-		//			var key = nodeWithElementsExpected[j].ID;
-		//			Assert.Equal(nodeWithElementsExpected[j].ID, nodeWithElementsComputed.ElementsDictionary[key].ID);
-		//		}
-		//	}
-		//}
 	}
 }

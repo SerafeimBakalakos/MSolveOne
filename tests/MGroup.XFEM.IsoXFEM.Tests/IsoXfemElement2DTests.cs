@@ -12,12 +12,14 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.XFEM.Materials.Duplicates;
 	using MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator;
+	using MGroup.XFEM.IsoXFEM.IsoXfemElements;
+
 	public class IsoXfemElement2DTests
 	{
 		[Fact]
 		public void IsoXfemElement2DTest()
 		{
-			var geometry = new GeometryProperties(40, 40, 1, 2, 2);
+			var geometry = new GeometryProperties(40, 40, 1, new int[] { 2, 2 });
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
@@ -83,7 +85,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		[Fact]
 		public void CalcStiffnesAndAreaTest()
 		{
-			var geometry = new GeometryProperties(40, 40, 1, 2, 2);
+			var geometry = new GeometryProperties(40, 40, 1, new int[] { 2, 2 });
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;

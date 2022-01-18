@@ -47,8 +47,8 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 			ElasticityMatrix = Matrix.CreateFromArray(new double[,]
 				{{ 1* (material.YoungModulus / (1-Math.Pow( material.PoissonRatio, 2))), material.PoissonRatio*(material.YoungModulus /(1-Math.Pow( material.PoissonRatio, 2))), 0},
 				{ material.PoissonRatio*(material.YoungModulus / (1-Math.Pow( material.PoissonRatio, 2))),1*(material.YoungModulus / (1-Math.Pow(material.PoissonRatio, 2))),0},{ 0,0,((1 - material.PoissonRatio)/2)*(material.YoungModulus /(1-Math.Pow(material.PoissonRatio, 2)))} });
-			lengthOfElement = geometry.length / geometry.numberOfElementsX;
-			heigthOfElement = geometry.height / geometry.numberOfElementsY;
+			lengthOfElement = geometry.length / geometry.NumberOfElementsX;
+			heigthOfElement = geometry.height / geometry.NumberOfElementsY;
 			Thickness = geometry.thickness;
 			SizeOfElement = lengthOfElement * heigthOfElement;
 			elementGeometry = new ElementQuad4Geometry();
@@ -71,33 +71,6 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 			}
 			StiffnessOfElement = defaultStiffness.CopyToFullMatrix();
 		}
-
-		//public void CalcStiffnessAndArea()
-		//{
-		//	if (elementLevelSet.Min() >= 0)
-		//	{
-		//		phaseElement = PhaseElement.solidElement;
-		//		stiffnessOfElement = defaultStiffness.CopyToFullMatrix();
-		//		areaOfElement = lengthOfElement * heigthOfElement;
-		//	}
-		//	else if (elementLevelSet.Max() <= 0)
-		//	{
-		//		phaseElement = PhaseElement.voidElement;
-		//		stiffnessOfElement = defaultStiffness.CopyToFullMatrix();
-		//		stiffnessOfElement.ScaleIntoThis(0.0001);
-		//		areaOfElement = 0.00;
-		//	}
-		//	else
-		//	{
-		//		phaseElement = PhaseElement.boundaryElement;
-		//		var integration = new XFEMIntegration();
-		//		integration.MeshAndAreaOfSubElement(coordinatesOfElement, elementLevelSet);
-		//		var elementStructuralStiffnessComputation = new ElementStructuralStiffnessXFEMComputation(integration.coordinatesOfBoundaryElement, integration.connectionOfBoundaryElement);
-		//		areaOfElement = integration.areaBoundaryElement;
-		//		var stiffness = elementStructuralStiffnessComputation.ElementStructuralStiffnessComputation(coordinatesOfElement, elasticityMatrix, geometry.thickness);
-		//		stiffnessOfElement = stiffness;
-		//	}
-		//}
 
 		public IReadOnlyList<GaussPoint> BulkIntegrationPoints => throw new NotImplementedException();
 
@@ -198,8 +171,6 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 		
 		public IMatrix BuildStiffnessMatrix()
 		{
-			// If the element has more than 1 phase, then I cannot use the standard quadrature, since the material is  
-			// different on each phase.
 			IdentifyIntegrationPointsAndMaterials();
 			var Kss = Matrix.CreateZero(numStandardDofs, numStandardDofs);
 			for (int i = 0; i < gaussPointsBulk.Count; ++i)

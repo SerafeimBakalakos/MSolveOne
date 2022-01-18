@@ -16,6 +16,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.Constitutive.Structural;
 	using MGroup.NumericalAnalyzers;
 	using MGroup.XFEM.Entities;
+	using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 	using System.Linq;
 
 	public class TopologyOptimizationTests
@@ -69,7 +70,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Define material properties and geometry.
 			/// </summary>
-			var geometry = new GeometryProperties(40, 20, 1, 40, 20);
+			var geometry = new GeometryProperties(40, 20, 1, new int[] { 40, 20});
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
@@ -140,7 +141,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// Add Loads. Using enum EndLoad in order to choose the node we want to apply the force.
 			/// </summary>
 			endload = EndLoad.BottomEnd;
-			int nodeIDLoad = (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1) - ((int)endload * (geometry.numberOfElementsY) / 2) - 1;
+			int nodeIDLoad = (geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1) - ((int)endload * (geometry.NumberOfElementsY) / 2) - 1;
 			Load load;
 			load = new Load()
 			{
@@ -216,7 +217,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Define material properties and geometry.
 			/// </summary>
-			var geometry = new GeometryProperties(40, 20, 1, 40, 20);
+			var geometry = new GeometryProperties(40, 20, 1, new int[] { 40, 20 });
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
@@ -287,7 +288,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// Add Loads. Using enum EndLoad in order to choose the node we want to apply the force.
 			/// </summary>
 			endload = EndLoad.BottomEnd;
-			int nodeIDLoad = (geometry.numberOfElementsX + 1) * (geometry.numberOfElementsY + 1) - ((int)endload * (geometry.numberOfElementsY) / 2) - 1;
+			int nodeIDLoad = (geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1) - ((int)endload * (geometry.NumberOfElementsY) / 2) - 1;
 			Load load;
 			load = new Load()
 			{

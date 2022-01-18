@@ -24,12 +24,12 @@ namespace MGroup.XFEM.IsoXFEM
 		{
 			int el = 0;
 			var elements = new Dictionary<int, IIsoXfemElement>();
-			for (int i = 0; i < geometry.numberOfElementsX; i++)
+			for (int i = 0; i < geometry.NumberOfElementsX; i++)
 			{
-				for (int j = 0; j < geometry.numberOfElementsY; j++)
+				for (int j = 0; j < geometry.NumberOfElementsY; j++)
 				{
 					var node1ID = el + i;
-					var node2ID = node1ID + geometry.numberOfElementsY + 1;
+					var node2ID = node1ID + geometry.NumberOfElementsY + 1;
 					var node3ID = node2ID + 1;
 					var node4ID = node1ID + 1;
 					var nodesOfElement = new[]
@@ -53,20 +53,20 @@ namespace MGroup.XFEM.IsoXFEM
 			var coordY = 0.0;
 			int id = 0;
 			var nodes = new Dictionary<int, XNode>();
-			for (int i = 0; i < (geometry.numberOfElementsX + 1); i++)
+			for (int i = 0; i < (geometry.NumberOfElementsX + 1); i++)
 			{
-				for (int j = 0; j < (geometry.numberOfElementsY + 1); j++)
+				for (int j = 0; j < (geometry.NumberOfElementsY + 1); j++)
 				{
 					var nodeX = coordX;
 					var nodeY = coordY;					
 					double[] coords = { nodeX, nodeY };
 					var node = new XNode(id, coords);				
 					nodes.Add(id,node);
-					coordY = coordY + geometry.height / geometry.numberOfElementsY;
+					coordY = coordY + geometry.height / geometry.NumberOfElementsY;
 					id = id + 1;
 				}
 				coordY = 0;
-				coordX = coordX + geometry.length / geometry.numberOfElementsX;
+				coordX = coordX + geometry.length / geometry.NumberOfElementsX;
 			}
 			return nodes;
 		}
