@@ -7,7 +7,7 @@ namespace MGroup.XFEM.IsoXFEM.SolidRatioComputations
 	using MGroup.LinearAlgebra.Matrices;
 	using MGroup.LinearAlgebra.Reduction;
 	using MGroup.LinearAlgebra.Vectors;
-	using MGroup.XFEM.Elements;
+	using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 
 	public class SolidArea : ISolidRatio
 	{

@@ -5,6 +5,7 @@ namespace MGroup.XFEM.IsoXFEM.SolidRatioComputations
 	using System.Text;
 
 	using MGroup.LinearAlgebra.Vectors;
+	using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 
 	class SolidVolume : ISolidRatio
 	{
