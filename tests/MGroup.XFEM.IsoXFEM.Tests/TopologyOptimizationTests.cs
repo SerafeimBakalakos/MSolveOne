@@ -17,6 +17,8 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.NumericalAnalyzers;
 	using MGroup.XFEM.Entities;
 	using MGroup.XFEM.IsoXFEM.IsoXfemElements;
+	using MGroup.XFEM.IsoXFEM.MeshGeneration;
+
 	using System.Linq;
 
 	public class TopologyOptimizationTests
@@ -77,7 +79,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Create mesh.
 			/// </summary>
-			var meshGeneration = new MeshGeneration(material, geometry);
+			IMeshGeneration meshGeneration = new MeshGeneration2D(material, geometry);
 			var (nodes, elements) = meshGeneration.MakeMesh();
 			/// <summary>
 			/// Add Constraints, Using enum Constrained Side.
@@ -224,7 +226,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Create mesh.
 			/// </summary>
-			var meshGeneration = new MeshGeneration(material, geometry);
+			IMeshGeneration meshGeneration = new MeshGeneration2D(material, geometry);
 			var (nodes, elements) = meshGeneration.MakeMesh();
 			/// <summary>
 			/// Add Constraints, Using enum Constrained Side.

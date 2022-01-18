@@ -12,6 +12,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests.SolidRatioComputationsTests
 	using MGroup.XFEM.IsoXFEM.SolidRatioComputations;
 	using MGroup.XFEM.Materials.Duplicates;
 	using MGroup.XFEM.IsoXFEM.IsoXfemElements;
+	using MGroup.XFEM.IsoXFEM.MeshGeneration;
 
 	using Xunit;
 
@@ -71,7 +72,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests.SolidRatioComputationsTests
 			/// <summary>
 			/// Create mesh.
 			/// </summary>
-			var meshGeneration = new MeshGeneration(material, geometry);
+			IMeshGeneration meshGeneration = new MeshGeneration2D(material, geometry);
 			var (nodes, elements) = meshGeneration.MakeMesh();
 			/// <summary>
 			/// Add Constraints, Using enum Constrained Side.

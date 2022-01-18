@@ -14,6 +14,7 @@ using MGroup.MSolve.AnalysisWorkflow;
 using MGroup.NumericalAnalyzers;
 using MGroup.XFEM.IsoXFEM.SolidRatioComputations;
 using MGroup.XFEM.IsoXFEM.IsoXfemElements;
+using MGroup.XFEM.IsoXFEM.MeshGeneration;
 
 using System.Linq;
 
@@ -77,7 +78,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Create mesh.
 			/// </summary>
-			var meshGeneration = new MeshGeneration(material, geometry);
+			IMeshGeneration meshGeneration = new MeshGeneration2D(material, geometry);
 			var (nodes,elements) = meshGeneration.MakeMesh();
 			/// <summary>
 			/// Add Constraints, Using enum Constrained Side.

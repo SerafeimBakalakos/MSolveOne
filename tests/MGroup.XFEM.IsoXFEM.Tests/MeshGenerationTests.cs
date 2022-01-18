@@ -11,6 +11,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.XFEM.Materials.Duplicates;
 	using MGroup.XFEM.IsoXFEM.IsoXfemElements;
+	using MGroup.XFEM.IsoXFEM.MeshGeneration;
 
 	public class MeshGenerationTests
 	{
@@ -21,7 +22,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
-			var modelWithNodesExpected = new MeshGeneration(material, geometry);
+			IMeshGeneration modelWithNodesExpected = new MeshGeneration2D(material, geometry);
 			var nodesComputed = modelWithNodesExpected.CreateNodes();			
 			var nodesExpected = new List<XNode>();
 			nodesExpected.Add(new XNode(0, new double[] { 0, 0 } ));
@@ -47,7 +48,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
-			var model = new MeshGeneration(material, geometry);
+			IMeshGeneration model = new MeshGeneration2D(material, geometry);
 			var nodes = model.CreateNodes();
 			var elementsComputed = model.CreateElements(nodes);
 			var elementsExpected = new List<IsoXfemElement2D>();
