@@ -61,7 +61,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		public static int[] numSubdomains = new int[] { 2 * numSubdomainsMin, numSubdomainsMin, 2 * numSubdomainsMin };
 		public static int[][] numElementsPerSubdomain = null;
 		
-		public static int maxIterations = 15;
+		public static int maxIterations = 16;
 		public const double fractureToughness = double.MaxValue;
 
 		public static bool ddmReanalysis = false;
