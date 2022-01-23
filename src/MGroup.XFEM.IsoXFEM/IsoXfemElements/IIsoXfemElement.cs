@@ -20,7 +20,6 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 		public Matrix StiffnessOfElement { get; set; }
 		public Phase PhaseElement { get; set; }
 		public Vector ElementLevelSet { get; set; }
-		public Matrix ElasticityMatrix { get; set; }
 		public double Thickness { get;  }
 		public void DefinePhaseOfElement();
 

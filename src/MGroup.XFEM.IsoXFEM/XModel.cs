@@ -159,22 +159,6 @@ namespace MGroup.XFEM.IsoXFEM
 		/// <param name="solutionFreeDofs">Total displacements of all dofs of each subdomain.</param>
 		public void Update(IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs)
 		{
-			//double[] nodalLevelSetValues = relativeCriteria.CopyToArray();
-			//IClosedGeometry SimpleLevelSet;
-			//if (Dimension == 2) SimpleLevelSet = new SimpleLsm2D(0, nodalLevelSetValues);
-			//else if (Dimension == 3) SimpleLevelSet = new SimpleLsm3D(0, nodalLevelSetValues);
-			//else throw new NotImplementedException();
-			//for (int el = 0; el < Elements.Count; el++)
-			//{
-			//	//IElementDiscontinuityInteraction intersection=SimpleLevelSet.Intersect(Elements[el]);
-			//	int[] connectionOfElement = new int[] { Elements[el].Nodes[0].ID, Elements[el].Nodes[1].ID, Elements[el].Nodes[2].ID, Elements[el].Nodes[3].ID };
-			//	Vector elementRelativeCriteria = relativeCriteria.GetSubvector(connectionOfElement);
-			//	//IElementDiscontinuityInteraction intersection = new NullElementDiscontinuityInteraction(0, Elements[el]);
-			//	//IsoXfemElement2DExtensions.RegisterInteractionWithLsm(Elements[el], intersection);
-			//	Elements[el].ElementLevelSet = elementRelativeCriteria;
-			//	Elements[el].StiffnessMatrix(Elements[el]);
-			//	sizesOfElements[el] = Elements[el].AreaOfElement;
-			//}
 			CalcConformingSubcells();
 			int i = 0;
 			foreach(var element in Elements.Values)
@@ -183,7 +167,6 @@ namespace MGroup.XFEM.IsoXFEM
 				sizesOfElements[i] = element.SizeOfElement;
 				i++;
 			}
-
 		}
 		
 		private void BuildInterconnectionData()
@@ -254,7 +237,6 @@ namespace MGroup.XFEM.IsoXFEM
 						sizeofelement += sizesubcell;
 					}
 					element.SizeOfElement = sizeofelement;
-					//var gausspoints = element.IntegrationBulk.GenerateIntegrationPoints(element);
 				}
 			}
 		}

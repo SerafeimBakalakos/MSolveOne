@@ -29,6 +29,7 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 		private const int dim = 2;
 		private readonly int numStandardDofs;
 		private readonly GeometryProperties geometry;
+		private readonly ElasticMaterial2D material;
 		private readonly IElementGeometry elementGeometry;
 		private IReadOnlyList<GaussPoint> gaussPointsBulk;
 		private EvalInterpolation[] evalInterpolationsAtGPsBulk;
@@ -37,16 +38,13 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 		private readonly double lengthOfElement;
 		private readonly double heigthOfElement;
 		private static IMatrixView defaultStiffness;	
-		//private static IElementStructuralStiffnessComputation elementStructuralStiffnessComputation;
 
 		public IsoXfemElement2D(int id, ElasticMaterial2D material, GeometryProperties geometry, IEnumerable<XNode> nodesOfElement)
 		{
 			ID = id >= 0 ? id : -id;
+			this.material = material;
 			this.geometry = geometry;
-			this.nodesOfElement.AddRange(nodesOfElement);
-			ElasticityMatrix = Matrix.CreateFromArray(new double[,]
-				{{ 1* (material.YoungModulus / (1-Math.Pow( material.PoissonRatio, 2))), material.PoissonRatio*(material.YoungModulus /(1-Math.Pow( material.PoissonRatio, 2))), 0},
-				{ material.PoissonRatio*(material.YoungModulus / (1-Math.Pow( material.PoissonRatio, 2))),1*(material.YoungModulus / (1-Math.Pow(material.PoissonRatio, 2))),0},{ 0,0,((1 - material.PoissonRatio)/2)*(material.YoungModulus /(1-Math.Pow(material.PoissonRatio, 2)))} });
+			this.nodesOfElement.AddRange(nodesOfElement);			
 			lengthOfElement = geometry.length / geometry.NumberOfElementsX;
 			heigthOfElement = geometry.height / geometry.NumberOfElementsY;
 			Thickness = geometry.thickness;
@@ -63,16 +61,14 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 			{
 				dofTypes[i] = new IDofType[] { StructuralDof.TranslationX, StructuralDof.TranslationY };
 			}
-			//elementStructuralStiffnessComputation = new ElementStructuralStiffnessFEMComputation();
 			if (defaultStiffness == null)
 			{
-				//defaultStiffness = elementStructuralStiffnessComputation.ElementStructuralStiffnessComputation(this);
 				defaultStiffness = BuildStiffnessMatrix();
 			}
 			StiffnessOfElement = defaultStiffness.CopyToFullMatrix();
 		}
 
-		public IReadOnlyList<GaussPoint> BulkIntegrationPoints => throw new NotImplementedException();
+		public IReadOnlyList<GaussPoint> BulkIntegrationPoints => gaussPointsBulk;
 
 		public IElementSubcell[] ConformingSubcells { get; set; }
 
@@ -107,7 +103,6 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 		public Matrix StiffnessOfElement { get ; set ; }
 		public IIsoXfemElement.Phase PhaseElement { get ; set ; }
 		public Vector ElementLevelSet { get ; set ; }
-		public Matrix ElasticityMatrix { get; set; }
 		public double Thickness { get; }
 
 		public void SetSubdomainID(int subdomainID) => SubdomainID = subdomainID;
@@ -136,28 +131,17 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 		{
 			if (ElementLevelSet!=null)
 			{
-				if (/*ElementLevelSet.Min() >= 0 */PhaseElement == IIsoXfemElement.Phase.solidElement)
+				if (PhaseElement == IIsoXfemElement.Phase.solidElement)
 				{
-					//PhaseElement = IIsoXfemElement.Phase.solidElement;
 					StiffnessOfElement = defaultStiffness.CopyToFullMatrix();
-					//AreaOfElement = CalcBulkSizeCartesian();
 				}
-				else if (/*ElementLevelSet.Max() <= 0*/PhaseElement == IIsoXfemElement.Phase.voidElement)
+				else if (PhaseElement == IIsoXfemElement.Phase.voidElement)
 				{
-					//PhaseElement = IIsoXfemElement.Phase.voidElement;
 					StiffnessOfElement = defaultStiffness.CopyToFullMatrix();
 					StiffnessOfElement.ScaleIntoThis(0.0001);
-					//AreaOfElement = 0.00;
 				}
 				else
 				{
-					//PhaseElement = IIsoXfemElement.Phase.boundaryElement;
-					//var integration = new XFEMIntegration();
-					//integration.MeshAndAreaOfSubElement(CoordinatesOfElement, ElementLevelSet);
-					//var elementStructuralStiffnessComputation = new ElementStructuralStiffnessXFEMComputation(integration.coordinatesOfBoundaryElement, integration.connectionOfBoundaryElement);
-					//var elementStructuralStiffnessComputation = new ElementStructuralStiffnessXFEMComputation(ConformingSubcells);
-					//AreaOfElement = integration.areaBoundaryElement;					
-					//var stiffness = elementStructuralStiffnessComputation.ElementStructuralStiffnessComputation(CoordinatesOfElement, ElasticityMatrix, geometry.thickness);
 					var stiffness = BuildStiffnessMatrix();
 					StiffnessOfElement = stiffness.CopyToFullMatrix();
 				}
@@ -179,14 +163,14 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 				EvalInterpolation evalInterpolation = evalInterpolationsAtGPsBulk[i];
 				double dV = evalInterpolation.Jacobian.DirectDeterminant * geometry.thickness;
 
-				//// Material properties
-				//IMatrixView constitutive = materialsAtGPsBulk[i].ConstitutiveMatrix;
+				// Material properties
+				IMatrixView constitutive = material.ConstitutiveMatrix;
 
 				// Deformation matrix:  Bs = grad(Ns)
 				Matrix deformation = CalcDeformationMatrixStandard(evalInterpolation);
 
 				// Contribution of this gauss point to the element stiffness matrix: Kss = sum(Bs^T * c * Bs  *  dV*w)
-				Matrix partial = deformation.ThisTransposeTimesOtherTimesThis(ElasticityMatrix);
+				Matrix partial = deformation.ThisTransposeTimesOtherTimesThis(constitutive);
 				Kss.AxpyIntoThis(partial, dV * gaussPoint.Weight);
 			}
 			return Kss;
