@@ -266,6 +266,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			{
 				msg.Append($"numSubdomains={numSubdomains[0]}x{numSubdomains[1]}x{numSubdomains[2]}");
 				msg.AppendLine($", reanalysis={ddmReanalysis}, multithreaded environment={multiThreaded}, PSM tolerance={iterTol}");
+				msg.AppendLine($", corner dofs strategy = {CrackFetiDPCornerDofs.strategy}");
 			}
 			else if (solverChoice == SolverChoice.DirectReanalysis)
 			{
@@ -340,7 +341,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				minMultiplicity = 2;
 			}
 			var cornerDofs = new CrackFetiDPCornerDofsPlusLogging(environment, model, stdDofs,
-				sub => UniformDdmCrackModelBuilder3D.FindCornerNodes(sub, minMultiplicity), 0);
+				sub => UniformDdmCrackModelBuilder3D.FindCornerNodes(sub, minMultiplicity));
 			if (numSubdomains[2] == 1)
 			{
 				//// We need an extra corner node at the edge subdomains
@@ -459,7 +460,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				minMultiplicity = 2;
 			}
 			var cornerDofs = new CrackFetiDPCornerDofsPlusLogging(environment, model, stdDofs,
-				sub => UniformDdmCrackModelBuilder3D.FindCornerNodes(sub, minMultiplicity), 0);
+				sub => UniformDdmCrackModelBuilder3D.FindCornerNodes(sub, minMultiplicity));
 			if (numSubdomains[2] == 1)
 			{
 				//// We need an extra corner node at the edge subdomains

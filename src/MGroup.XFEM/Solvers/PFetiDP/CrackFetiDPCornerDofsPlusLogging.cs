@@ -18,9 +18,8 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 	public class CrackFetiDPCornerDofsPlusLogging : CrackFetiDPCornerDofs
 	{
 		public CrackFetiDPCornerDofsPlusLogging(IComputeEnvironment environment, IXModel model, 
-			IEnumerable<IDofType> standardCornerDofs, Func<ISubdomain, IEnumerable<INode>> getStandardCornerNodesOfSubdomain,
-			int strategy = 1)
-			: base(environment, model, standardCornerDofs, getStandardCornerNodesOfSubdomain, strategy)
+			IEnumerable<IDofType> standardCornerDofs, Func<ISubdomain, IEnumerable<INode>> getStandardCornerNodesOfSubdomain)
+			: base(environment, model, standardCornerDofs, getStandardCornerNodesOfSubdomain)
 		{
 		}
 

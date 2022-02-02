@@ -14,8 +14,16 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 {
 	public class CrackFetiDPCornerDofs : ICornerDofSelection
 	{
-		//TODO: StaretgyPattern
-		protected readonly int strategy = 1; 
+		//TODO: Use StrategyPattern instead of this monstrocity
+		/// <summary>
+		/// Strategy of selecting corner dofs of a boundary-enriched node: 
+		/// </summary>
+		public enum Strategy
+		{
+			AllDofs, HeavisideAndAllTipDofs, HeavisideAndFirstTipDofs, StandardDofs
+		}
+
+		public static Strategy strategy = Strategy.HeavisideAndAllTipDofs;
 
 		protected readonly IComputeEnvironment environment;
 		protected readonly IXModel model;
@@ -29,14 +37,9 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 		/// <param name="model"></param>
 		/// <param name="standardCornerDofs"></param>
 		/// <param name="getStandardCornerNodesOfSubdomain"></param>
-		/// <param name="strategy">
-		/// Strategy of selecting corner dofs of a boundary-enriched node: 
-		/// 0 = all dofs, 1 = heaviside and tip dofs, 2 = heaviside and first tip enrichment dofs, 3 = std dofs
-		/// </param>
 		public CrackFetiDPCornerDofs(IComputeEnvironment environment, IXModel model, IEnumerable<IDofType> standardCornerDofs, 
-			Func<ISubdomain, IEnumerable<INode>> getStandardCornerNodesOfSubdomain, int strategy = 1)
+			Func<ISubdomain, IEnumerable<INode>> getStandardCornerNodesOfSubdomain)
 		{
-			this.strategy = strategy;
 			this.environment = environment;
 			this.model = model;
 			this.standardCornerDofs = new HashSet<int>(standardCornerDofs.Select(dof => model.AllDofs.GetIdOfDof(dof)));
@@ -76,8 +79,7 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 			// at one point and exiting at another. The linear dependence is caused when boundary nodes have dofs enriched by 
 			// a step enrichment or the 1st of the 4 crack tip enrichments.  
 
-
-			if (strategy == 0)
+			if (strategy == Strategy.AllDofs)
 			{
 				XNode node = model.Nodes[nodeID];
 				if ((node.Subdomains.Count > 1) && node.IsEnriched) //TODO: With geometric tip enrichment this will return a huge number of nodes
@@ -85,7 +87,7 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 					return true;
 				}
 			}
-			else if (strategy == 1)
+			else if (strategy == Strategy.HeavisideAndAllTipDofs)
 			{
 				IDofType dof = model.AllDofs.GetDofWithId(dofID);
 				if (dof is EnrichedDof enrichedDof)
@@ -105,13 +107,16 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 					}
 				}
 			}
-			else if (strategy == 2)
+			else if (strategy == Strategy.HeavisideAndFirstTipDofs)
 			{
 				IDofType dof = model.AllDofs.GetDofWithId(dofID);
 				if (dof is EnrichedDof enrichedDof)
 				{
 					IEnrichmentFunction enrichment = enrichedDof.Enrichment;
-					if ((enrichment is IStepEnrichment) || (enrichment is IsotropicBrittleTipEnrichments2D.Func0))
+					if ((enrichment is IStepEnrichment) 
+						|| (enrichment is IsotropicBrittleTipEnrichments2D.Func0)
+						|| (enrichment is IsotropicBrittleTipEnrichments2DCaching.Func0)
+						|| (enrichment is IsotropicBrittleTipEnrichments_v2.Func0))
 					{
 						XNode node = model.Nodes[nodeID];
 						if (node.Subdomains.Count > 1)
@@ -125,7 +130,7 @@ namespace MGroup.XFEM.Solvers.PFetiDP
 					}
 				}
 			}
-			else if (strategy == 3)
+			else if (strategy == Strategy.StandardDofs)
 			{
 				XNode node = model.Nodes[nodeID];
 				if ((node.Subdomains.Count > 1) && node.IsEnriched) //TODO: With geometric tip enrichment this will return a huge number of nodes
