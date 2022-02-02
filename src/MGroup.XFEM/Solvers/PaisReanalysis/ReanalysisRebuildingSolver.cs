@@ -32,9 +32,9 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 		private readonly double factorizationPivotTolerance;
 
 		private CholeskySuiteSparse factorization;
-		private int iteration = 0;
+		protected int iteration = 0;
 
-		private ReanalysisRebuildingSolver(ReanalysisAlgebraicModel<DokMatrixAdapter> algebraicModel, 
+		protected ReanalysisRebuildingSolver(ReanalysisAlgebraicModel<DokMatrixAdapter> algebraicModel, 
 			IReanalysisExtraDofsStrategy extraDofsStrategy, double factorizationPivotTolerance)
 		{
 			this.AlgebraicModel = algebraicModel;
@@ -121,7 +121,7 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 		/// <summary>
 		/// Solves the linear system with back-forward substitution. If the matrix has been modified, it will be refactorized.
 		/// </summary>
-		public void Solve()
+		public virtual void Solve()
 		{
 			if (iteration == 0)
 			{
@@ -211,7 +211,7 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			}
 		}
 
-		private (ISet<int> colsToAdd, ISet<int> colsToRemove, HashSet<int> extraCols) FindModifiedColumns()
+		protected (ISet<int> colsToAdd, ISet<int> colsToRemove, HashSet<int> extraCols) FindModifiedColumns()
 		{
 			var colsToAdd = new HashSet<int>();
 			var colsToRemove = new HashSet<int>();
@@ -235,7 +235,7 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			return (new SortedSet<int>(colsToAdd), new SortedSet<int>(colsToRemove), extraModifiedCols);
 		}
 
-		private void ReleaseResources()
+		protected void ReleaseResources()
 		{
 			if (factorization != null)
 			{
@@ -257,7 +257,7 @@ namespace MGroup.XFEM.Solvers.PaisReanalysis
 			}
 		}
 
-		private void UpdateInactiveDofs()
+		protected void UpdateInactiveDofs()
 		{
 			PreviouslyInactiveDofs.Clear();
 			int numColumns = LinearSystem.Matrix.SingleMatrix.DokMatrix.NumColumns;
