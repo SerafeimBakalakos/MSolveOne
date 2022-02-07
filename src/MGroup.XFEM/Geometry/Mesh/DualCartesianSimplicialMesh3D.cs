@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -13,7 +13,7 @@ namespace MGroup.XFEM.Geometry.Mesh
     /// </summary>
     public class DualCartesianSimplicialMesh3D : DualCartesianSimplicialMeshBase
     {
-        private DualCartesianSimplicialMesh3D(UniformCartesianMesh3D coarseMesh, UniformSimplicialMesh3D fineMesh)
+        public DualCartesianSimplicialMesh3D(UniformCartesianMesh3D coarseMesh, UniformSimplicialMesh3D fineMesh)
             : base(3, coarseMesh, fineMesh, 6)
         {
             CoarseToFineElementOffsets = FindElementOffsets(multiple);

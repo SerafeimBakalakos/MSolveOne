@@ -21,7 +21,7 @@ using System.Linq;
 namespace MGroup.XFEM.IsoXFEM.Tests
 {
 
-	public class Example1
+	public class Example2D
     {
 		//                      #2
 		//     .________________________________.
@@ -66,7 +66,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		}
 		private static EndLoad endload;
 
-		public static void RunExample1()
+		public static void RunExample2D()
         {
 			/// <summary>
 			/// Define material properties and geometry.

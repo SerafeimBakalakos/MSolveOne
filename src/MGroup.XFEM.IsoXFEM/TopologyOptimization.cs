@@ -18,6 +18,7 @@ using MGroup.Solvers.AlgebraicModel;
 using MGroup.MSolve.Solution.AlgebraicModel;
 using MGroup.Constitutive.Structural;
 using MGroup.XFEM.IsoXFEM.IsoXfemElements;
+using MGroup.MSolve.Discretization.Mesh;
 
 namespace MGroup.XFEM.IsoXFEM
 {
@@ -26,11 +27,11 @@ namespace MGroup.XFEM.IsoXFEM
 
         private const double volumeFraction = 0.5;
         private const double evolutionRate = 0.01;
-        private const int iterations = 200;
+        private const int iterations = 20;
         public /*private*/  Vector nodalStrainEnergyIt;
         private  Vector nodalStrainEnergyItPrevious;
 		public  double mlp;
-        private  Vector vfEachIteration;
+        private Vector vfEachIteration;
 		public  Matrix results;
 		private readonly StructuralPerfomance structuralPerfomance;
 		private readonly ISolidRatio solidRatio;
@@ -65,6 +66,8 @@ namespace MGroup.XFEM.IsoXFEM
             results = Matrix.CreateZero(iterations, 3);            
             for (int it = 0; it < iterations; it++)
             {
+				Console.WriteLine("iter=" + it);
+				ResultsWriter.VolumeForEachElementWriter(it, xModel.Dimension, xModel.Elements);
                 if (it > 0)
                 {
                     for (int i = 0; i < nodalStrainEnergyItPrevious.Length; i++)
@@ -131,10 +134,11 @@ namespace MGroup.XFEM.IsoXFEM
             }
             return relativeCriteria;
         }
-		public static void PlotPerformanceLevel(int iteration, Dictionary<int, XNode>  nodes, Dictionary<int, IIsoXfemElement>  elements, Vector nodalValues)
+		public  void PlotPerformanceLevel(int iteration, Dictionary<int, XNode>  nodes, Dictionary<int, IIsoXfemElement>  elements, Vector nodalValues)
         {                    
-            string path = $"{ Paths.OutputDirectory}\\OOS_12_BottomEnd_40x20_SkylineLDL_InitialStiffness_ComputeOnlyOneTime_CorrectMatlabErrors{iteration}.vtk";
-            var writer = new VtkFileWriter(path);
+            string path = $"{ Paths.OutputDirectory}\\3D_40_20_2{iteration}.vtk";
+			CellType cellType = xModel.Elements.First().Value.CellType;
+            var writer = new VtkFileWriter(path, xModel.Dimension, cellType);
             writer.WriteMesh(nodes, elements);
             writer.WriteScalarField("performance_level", nodalValues.RawData);
 

@@ -18,6 +18,9 @@ using MGroup.LinearAlgebra.Reduction;
 using MGroup.XFEM.Geometry.LSM;
 using MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator;
 using MGroup.XFEM.IsoXFEM.IsoXfemElements;
+using MGroup.XFEM.Geometry.Mesh;
+using MGroup.XFEM.Geometry.Primitives;
+using MGroup.XFEM.Geometry.LSM.DualMesh;
 
 
 //TODO: There is a lot of repetition between this FEM.Model and IGA.Model with regards to interconnection data. That code should 
@@ -53,6 +56,9 @@ namespace MGroup.XFEM.IsoXFEM
 		public Dictionary<int, EnrichmentItem> Enrichments { get; } = new Dictionary<int, EnrichmentItem>();
 
 		public Vector relativeCriteria;
+
+		public IXGeometryDescription levelSetDescription;
+		public DualCartesianSimplicialMesh3D Mesh { get; set; }
 		public bool FindConformingSubcells { get; set; } = false;
 
 		public IGeometryModel GeometryModel { get; set; }
@@ -159,6 +165,18 @@ namespace MGroup.XFEM.IsoXFEM
 		/// <param name="solutionFreeDofs">Total displacements of all dofs of each subdomain.</param>
 		public void Update(IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs)
 		{
+			if (Dimension==3)
+			{
+				var geometry = new Sphere(0, 0, 0, 0);
+				var levelSetStorage = new LsmStorageRaw(Dimension, relativeCriteria.CopyToArray());
+				levelSetDescription = new DualMeshLsm(0, geometry, Mesh, levelSetStorage);
+				//levelSetDescription = new SimpleLsm3D(0, relativeCriteria.CopyToArray());
+				foreach (var element in Elements)
+				{
+					var intersection= levelSetDescription.Intersect(element.Value);
+					element.Value.RegisterInteractionWithLsm3D(intersection);
+				}
+			}
 			CalcConformingSubcells();
 			int i = 0;
 			foreach(var element in Elements.Values)
@@ -208,14 +226,6 @@ namespace MGroup.XFEM.IsoXFEM
 
 			foreach (IIsoXfemElement element in Elements.Values)
 			{
-				//var intersections = new List<IElementDiscontinuityInteraction>();
-				//foreach (IElementDiscontinuityInteraction interaction in element.InteractingDiscontinuities.Values)
-				//{
-				//	if (interaction.RelativePosition == RelativePositionCurveElement.Intersecting)
-				//	{
-				//		intersections.Add(interaction);
-				//	}
-				//}
 				int[] connectionOfElement = new int[element.Nodes.Count];
 				int i = 0;
 				foreach (var node in element.Nodes)
@@ -228,8 +238,26 @@ namespace MGroup.XFEM.IsoXFEM
 				element.DefinePhaseOfElement();
 				if (element.PhaseElement == IIsoXfemElement.Phase.boundaryElement)
 				{
-					triangulator.ElementNodalLevelSetValues = element.ElementLevelSet;
-					element.ConformingSubcells = triangulator.FindConformingMesh(element, null, null);
+					if (Dimension == 3)
+					{
+						var intersections = new List<IElementDiscontinuityInteraction>();
+						foreach (IElementDiscontinuityInteraction interaction in element.InteractingDiscontinuities.Values)
+						{
+							if (interaction.RelativePosition == RelativePositionCurveElement.Intersecting)
+							{
+								intersections.Add(interaction);
+							}
+						}
+						IMeshTolerance meshTolerance = new MinimumSideMeshTolerance();
+						triangulator.LevelSetDescription = levelSetDescription;
+						element.ConformingSubcells = triangulator.FindConformingMesh(element, intersections, meshTolerance);
+					}
+					else if (Dimension == 2)
+					{
+						triangulator.ElementNodalLevelSetValues = element.ElementLevelSet;
+						element.ConformingSubcells = triangulator.FindConformingMesh(element, null, null);
+					}
+					else throw new NotImplementedException();
 					var sizeofelement = 0.0;
 					foreach (var subcell in element.ConformingSubcells)
 					{

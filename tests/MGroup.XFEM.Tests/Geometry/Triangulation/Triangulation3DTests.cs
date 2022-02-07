@@ -30,6 +30,7 @@ namespace MGroup.XFEM.Tests.Geometry.Triangulation
 			intersections[0].Add(new double[] { +0.25, -1.00, -1.00 });
 			points.AddRange(intersections[0]);
 
+
 			var triangulator = new MIConvexHullTriangulator3D();
 			IList<Tetrahedron3D> tetahedra = triangulator.CreateMesh(points);
 

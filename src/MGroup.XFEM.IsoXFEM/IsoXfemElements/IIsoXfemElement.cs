@@ -7,6 +7,7 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 	using MGroup.LinearAlgebra.Matrices;
 	using MGroup.LinearAlgebra.Vectors;
 	using MGroup.XFEM.Elements;
+	using MGroup.XFEM.Entities;
 
 	public interface IIsoXfemElement: IXFiniteElement
 	{
@@ -16,12 +17,14 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 			voidElement,
 			boundaryElement
 		}
+
+		public int[] IdOnAxis { get; set; }
 		public double SizeOfElement { get; set; }
 		public Matrix StiffnessOfElement { get; set; }
 		public Phase PhaseElement { get; set; }
 		public Vector ElementLevelSet { get; set; }
 		public double Thickness { get;  }
 		public void DefinePhaseOfElement();
-
+		public void SetIdOnAxis(params int[] idOnAxis);
 	}
 }

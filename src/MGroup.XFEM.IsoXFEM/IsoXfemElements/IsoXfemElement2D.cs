@@ -104,7 +104,7 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 		public IIsoXfemElement.Phase PhaseElement { get ; set ; }
 		public Vector ElementLevelSet { get ; set ; }
 		public double Thickness { get; }
-
+		public int[] IdOnAxis { get ; set ; }
 		public void SetSubdomainID(int subdomainID) => SubdomainID = subdomainID;
 		public double CalcBulkSizeCartesian() => elementGeometry.CalcBulkSizeCartesian(Nodes);
 		public double CalcBulkSizeNatural() => 4.00;
@@ -219,7 +219,8 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 				PhaseElement = IIsoXfemElement.Phase.boundaryElement;
 			}
 		}
-		
+
+		public void SetIdOnAxis(params int[] idOnAxis) => IdOnAxis = idOnAxis;
 	}
 	public static class IsoXfemElement2DExtensions
 	{

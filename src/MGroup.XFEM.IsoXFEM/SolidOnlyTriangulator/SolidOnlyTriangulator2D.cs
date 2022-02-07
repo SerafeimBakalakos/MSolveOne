@@ -16,6 +16,7 @@ namespace MGroup.XFEM.IsoXFEM
 	public class SolidOnlyTriangulator2D : ISolidOnlyTriangulator
 	{
 		public Vector ElementNodalLevelSetValues { get ; set ; }
+		public IXGeometryDescription LevelSetDescription { get ; set ; }
 
 		public Tuple<Vector, Matrix, Vector> IntersectionPoints(Matrix elementCoordinates, Vector elementNodalLevelSet)
 		{

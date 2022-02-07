@@ -7,8 +7,9 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	class Program
 	{
 		static void Main(string[] args)
-		{			
-			Example1.RunExample1();
+		{
+			//Example2D.RunExample2D();
+			Example3D.RunExample3D();
 		}
 	}
 }

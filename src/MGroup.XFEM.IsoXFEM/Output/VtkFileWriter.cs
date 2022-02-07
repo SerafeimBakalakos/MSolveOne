@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using MGroup.LinearAlgebra.Matrices;
+using MGroup.MSolve.Discretization.Mesh;
 using MGroup.XFEM.Entities;
 using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 
@@ -13,10 +14,25 @@ namespace MGroup.XFEM.IsoXFEM
 		public const string vtkReaderVersion = "4.1";
 		private readonly StreamWriter writer;
 		private bool writeFieldsNext;
+		public int dimension;
+		public int cellCode;
 		//private int numVertices = -1;
 
-		public VtkFileWriter(string filePath)
+		public VtkFileWriter(string filePath, int dimension, CellType cellType)
 		{
+			this.dimension = dimension;
+			if (cellType==CellType.Quad4)
+			{
+				cellCode = 9;
+			}
+			else if (cellType==CellType.Hexa8)
+			{
+				cellCode = 12;
+			}
+			else if (cellType==CellType.Tet4)
+			{
+				cellCode = 10;
+			}
 			this.writer = new StreamWriter(filePath);
 			writer.Write("# vtk DataFile Version ");
 			writer.WriteLine(vtkReaderVersion);
@@ -49,10 +65,20 @@ namespace MGroup.XFEM.IsoXFEM
 			//}
 			//else
 			//{
+			if (dimension==2)
+			{
 				for (int i = 0; i < nodes.Count; ++i)
 				{
 					writer.WriteLine($"{nodes[i].X} {nodes[i].Y} 0.0");
 				}
+			}
+			else if (dimension == 3)
+			{
+				for (int i = 0; i < nodes.Count; ++i)
+				{
+					writer.WriteLine($"{nodes[i].X} {nodes[i].Y} {nodes[i].Z}");
+				}
+			}
 			//}
 
 			// Cell connectivity
@@ -75,10 +101,9 @@ namespace MGroup.XFEM.IsoXFEM
 
 			// Cell types
 			writer.WriteLine("\nCELL_TYPES " + elements.Count);
-			int quad4Code = 9;
 			for (int i = 0; i < elements.Count; ++i)
 			{
-				writer.WriteLine(quad4Code);
+				writer.WriteLine(cellCode);
 			}
 		}
 

@@ -1,22 +1,24 @@
-namespace MGroup.XFEM.IsoXFEM.Tests.SolidRatioComputationsTests
+namespace MGroup.XFEM.IsoXFEM.Tests
 {
 	using System;
 	using System.Collections.Generic;
+	using System.Linq;
 	using System.Text;
 
 	using MGroup.LinearAlgebra.Vectors;
 	using MGroup.MSolve.Discretization;
 	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.MSolve.Discretization.Loads;
+	using MGroup.Solvers.Direct;
 	using MGroup.XFEM.Entities;
 	using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 	using MGroup.XFEM.IsoXFEM.MeshGeneration;
-	using MGroup.XFEM.Materials.Duplicates;
 	using MGroup.XFEM.IsoXFEM.SolidRatioComputations;
+	using MGroup.XFEM.Materials.Duplicates;
 
 	using Xunit;
 
-	public class SolidVolumeTest
+	public class Example3D
 	{
 		//                      
 		//     .________________________________.
@@ -65,21 +67,21 @@ namespace MGroup.XFEM.IsoXFEM.Tests.SolidRatioComputationsTests
 			BottomEnd
 		}
 		private static EdgeLoad endload;
-		[Fact]
-		private void CalculateRatioTest()
+		public static void RunExample3D()
 		{
 			/// <summary>
 			/// Define material properties and geometry.
 			/// </summary>
-			var geometry = new GeometryProperties(2, 2, 2, new int[] { 2, 2, 2 });
+			var geometry = new GeometryProperties(40, 20, 2, new int[] { 40, 20, 2 });
 			var material = new ElasticMaterial3D();
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
 			/// <summary>
 			/// Create mesh.
 			/// </summary>
-			IMeshGeneration meshGeneration = new MeshGeneration3D(material, geometry);
+			var meshGeneration = new MeshGeneration3D(material, geometry);
 			var (nodes, elements) = meshGeneration.MakeMesh();
+			var dualMesh=meshGeneration.CreateDualMesh();
 			/// <summary>
 			/// Add Constraints, Using enum Constrained Side.
 			/// </summary>
@@ -146,6 +148,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests.SolidRatioComputationsTests
 			/// </summary>
 			int dimension = 3;
 			var xModel = new IsoXFEM.XModel<IIsoXfemElement>(dimension);
+			xModel.Mesh = dualMesh;
 			/// <summary>
 			/// Add Subdomain, Nodes and Elements to Model.
 			/// </summary>
@@ -163,7 +166,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests.SolidRatioComputationsTests
 			/// Add Loads. Using enum EndLoad in order to choose the node we want to apply the force.
 			/// </summary>
 			endload = EdgeLoad.MiddleEnd;
-			int nodeIDLoad = (geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1)*(geometry.NumberOfElementsZ + 1) - (int)endload *(geometry.NumberOfElementsY/2)*(geometry.NumberOfElementsZ+1)- 1 - geometry.NumberOfElementsZ;
+			int nodeIDLoad = (geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1) * (geometry.NumberOfElementsZ + 1) - (int)endload * (geometry.NumberOfElementsY / 2) * (geometry.NumberOfElementsZ + 1) - 1 - geometry.NumberOfElementsZ;
 			for (int i = 0; i < (geometry.NumberOfElementsZ + 1); i++)
 			{
 				Load load;
@@ -180,23 +183,20 @@ namespace MGroup.XFEM.IsoXFEM.Tests.SolidRatioComputationsTests
 			/// Initialize the Model.
 			/// </summary>
 			xModel.Initialize();
-			Vector nodalStrainEnergyDensity = Vector.CreateZero((geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1) * (geometry.NumberOfElementsZ + 1));
-			for (int i = 0; i < 9; i++)
-			{
-				nodalStrainEnergyDensity[i] = -50;
-				nodalStrainEnergyDensity[i + 9] = 100;
-				nodalStrainEnergyDensity[i + 18] = -200;
-			}
-			Vector initialVolume = Vector.CreateWithValue(8, 1);
-			Vector volumeOfElementsExpected = Vector.CreateFromArray(new double[] { 0.6666666666666666, 0.6666666666666666, 0.6666666666666666, 0.6666666666666666, 0.33333333333333, 0.33333333333333, 0.33333333333333, 0.33333333333333 });
-			var solidVolume = new SolidVolume(xModel, initialVolume);
-			solidVolume.RelativeCriteria = nodalStrainEnergyDensity;
-			var volumeOfElemenetsComputed = solidVolume.CalculateSolidRatio();
-			for (int i = 0; i < volumeOfElementsExpected.Length; i++)
-			{
-				Assert.Equal(volumeOfElementsExpected[i], volumeOfElemenetsComputed[i], 10);
-			}
+			/// <summary>
+			/// Defines Skyline Solver.
+			/// </summary>
+			var solverFactory = new SkylineSolver.Factory();
+			var algebraicModel = solverFactory.BuildAlgebraicModel(xModel);
+			var solver = solverFactory.BuildSolver(algebraicModel);
+			/// Defines solidRatio. The Problem is 3D so SolidVolume is selected.
+			/// </summary>
+			ISolidRatio solidRatio = new SolidVolume(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.SizeOfElement));
+			/// <summary>
+			/// Defines the topology Optimization and Optimize the problem with IsoXfem Method.
+			/// </summary>
+			var topologyOptimization = new TopologyOptimization(xModel, solidRatio, solver, algebraicModel);
+			topologyOptimization.IsoXfem();
 		}
 	}
 }
-

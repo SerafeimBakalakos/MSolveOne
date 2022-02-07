@@ -323,7 +323,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// Expected Results from txt file.
 			/// </summary>
 			var reader = new FullMatrixReader(true);
-			string inputFile = @"C:\Users\ebank\source\repos\MSolveOne\tests\MGroup.XFEM.IsoXFEM.Tests\Resources\OOS_BottomEnd_40x20_Using_ConformingSubcells.txt";
+			string inputFile = @"C:\Users\ebank\source\repos\MSolveOne\tests\MGroup.XFEM.IsoXFEM.Tests\Resources\OOSnew_BottomEnd_40x20.txt";
 			var resultsExpected = reader.ReadFile(inputFile);
 			/// <summary>
 			/// Check Results.

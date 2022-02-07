@@ -82,7 +82,7 @@ namespace MGroup.XFEM.Materials.Duplicates
 		public double[] Stresses => stressesNew;
 
 		/// <summary>
-		/// Returns the constitutive matrix of the material for the current strain state
+		/// Returns the constitutive matrix of the material for the current strain state.
 		/// </summary>
 		public IMatrixView ConstitutiveMatrix
 		{

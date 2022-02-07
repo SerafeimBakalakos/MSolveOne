@@ -13,6 +13,7 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 	using MGroup.MSolve.Discretization.Loads;
 	using MGroup.MSolve.Discretization.Mesh;
 	using MGroup.XFEM.ElementGeometry;
+	using MGroup.XFEM.Elements;
 	using MGroup.XFEM.Entities;
 	using MGroup.XFEM.Geometry;
 	using MGroup.XFEM.Geometry.ConformingMesh;
@@ -50,7 +51,7 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 			int[] nodeIDs = Nodes.Select(n => n.ID).ToArray();
 			(this.Edges, this.Faces) = elementGeometry.FindEdgesFaces(nodeIDs);
 			Interpolation = InterpolationHexa8.UniqueInstance;
-			IntegrationStandard = GaussLegendre3D.GetQuadratureWithOrder(2, 2,2);
+			IntegrationStandard = GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2);
 			IntegrationBulk = new IntegrationWithConformingSubtetrahedra3D(TetrahedronQuadrature.Order2Points4);
 			this.numStandardDofs = Nodes.Count * dim;
 			dofTypes = new IDofType[Nodes.Count][];
@@ -87,8 +88,7 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 
 		public IReadOnlyList<XNode> Nodes => nodesOfElement;
 
-		public Dictionary<int, IElementDiscontinuityInteraction> InteractingDiscontinuities { get; }
-
+		public Dictionary<int, IElementDiscontinuityInteraction> InteractingDiscontinuities { get; } = new Dictionary<int, IElementDiscontinuityInteraction>();
 		public int ID { get ; set ; }
 
 		public IElementType ElementType => this;
@@ -97,11 +97,13 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 
 		public CellType CellType => CellType.Hexa8;
 
-		public IElementDofEnumerator DofEnumerator { get ; set ; }
+		public IElementDofEnumerator DofEnumerator { get ; set ; } = new GenericDofEnumerator();
 
 		public bool MaterialModified { get; }
 
 		IReadOnlyList<INode> IElement.Nodes => this.Nodes;
+
+		public int[] IdOnAxis { get ; set ; }
 
 		public double CalcBulkSizeCartesian() => elementGeometry.CalcBulkSizeCartesian(Nodes);
 		public double CalcBulkSizeNatural() => 8.00;
@@ -127,8 +129,9 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 				PhaseElement = IIsoXfemElement.Phase.boundaryElement;
 			}
 		}
+		public void SetIdOnAxis(params int[] idOnAxis) => IdOnAxis = idOnAxis;
 		public double[] FindCentroidCartesian() => throw new NotImplementedException();
-		public IReadOnlyList<IReadOnlyList<IDofType>> GetElementDofTypes(IElement element) => throw new NotImplementedException();
+		public IReadOnlyList<IReadOnlyList<IDofType>> GetElementDofTypes(IElement element) =>  dofTypes;
 		public void IdentifyDofs() { }
 		public void IdentifyIntegrationPointsAndMaterials()
 		{
@@ -143,6 +146,7 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 				evalInterpolationsAtGPsBulk[i] = Interpolation.EvaluateAllAt(Nodes, gaussPointsBulk[i].Coordinates);
 			}
 		}
+		
 		public IMatrix MassMatrix(IElement element) => throw new NotImplementedException();
 		public void ResetMaterialModified() => throw new NotImplementedException();
 		public void SaveMaterialState() => throw new NotImplementedException();
@@ -221,6 +225,14 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 				deformation[5, col2] = dNdx;
 			}
 			return deformation;
+		}		
+	}
+	public static class IsoXfemElement3DExtensions
+	{
+		public static void RegisterInteractionWithLsm3D(this IXFiniteElement element,
+		 IElementDiscontinuityInteraction interaction)
+		{
+			element.InteractingDiscontinuities[interaction.ParentGeometryID] = interaction;
 		}
 	}
 }
