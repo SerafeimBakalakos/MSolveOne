@@ -145,7 +145,8 @@ namespace MGroup.Solvers.DDM.FetiDP
 			IPcgResidualConvergence convergenceCriterion;
 			if (interfaceProblemSolverFactory.UseObjectiveConvergenceCriterion)
 			{
-				this.objectiveConvergenceCriterion = new ObjectiveConvergenceCriterion<TMatrix>(algebraicModel, solutionRecovery);
+				this.objectiveConvergenceCriterion = new ObjectiveConvergenceCriterion<TMatrix>(
+					environment, algebraicModel, solutionRecovery);
 				convergenceCriterion = this.objectiveConvergenceCriterion;
 			}
 			else

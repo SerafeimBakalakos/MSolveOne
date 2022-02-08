@@ -402,6 +402,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				ResidualTolerance = iterTol,
 				UseObjectiveConvergenceCriterion = objectivePcgCriterion
 			};
+			MGroup.Solvers.DDM.FetiDP.InterfaceProblem.ObjectiveConvergenceCriterion<SymmetricCscMatrix>.optimizationsForSymmetricCscMatrix = true;
+
+
 			if (preconditionerFetiDP == PreconditionerFetiDP.Dirichlet)
 			{
 				solverFactory.Preconditioner = new FetiDPDirichletPreconditioner();
@@ -522,6 +525,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				ResidualTolerance = iterTol,
 				UseObjectiveConvergenceCriterion = objectivePcgCriterion
 			};
+			MGroup.Solvers.DDM.PSM.InterfaceProblem.ObjectiveConvergenceCriterion<SymmetricCscMatrix>.optimizationsForSymmetricCscMatrix = true;
+
 
 			if (ddmReanalysis)
 			{

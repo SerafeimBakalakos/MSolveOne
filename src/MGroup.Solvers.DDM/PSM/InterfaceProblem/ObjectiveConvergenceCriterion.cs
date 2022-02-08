@@ -8,6 +8,7 @@ using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG;
 using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
+using MGroup.Solvers.DDM.LinearAlgebraExtensions;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PSM.Vectors;
 
@@ -21,10 +22,14 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 	public class ObjectiveConvergenceCriterion<TMatrix> : IPcgResidualConvergence
 		where TMatrix: class, IMatrix
 	{
+		public static bool optimizationsForSymmetricCscMatrix = false;
+
 		private readonly IComputeEnvironment environment;
 		private readonly DistributedAlgebraicModel<TMatrix> algebraicModel;
 		private readonly Func<int, PsmSubdomainVectors> getSubdomainVectors;
+
 		private double normF0;
+		private DistributedOverlappingMatrix<CsrMatrix> KffCsr;
 
 		public ObjectiveConvergenceCriterion(IComputeEnvironment environment, DistributedAlgebraicModel<TMatrix> algebraicModel, 
 			Func<int, PsmSubdomainVectors> getSubdomainVectors)
@@ -51,10 +56,21 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 				Uf.LocalVectors[subdomainID] = ufs;
 			});
 
-			IGlobalMatrix Kff = algebraicModel.LinearSystem.Matrix;
 			IGlobalVector Ff = algebraicModel.LinearSystem.RhsVector;
 			IGlobalVector residual = Ff.CreateZero();
-			Kff.MultiplyVector(Uf, residual);
+			if (optimizationsForSymmetricCscMatrix)
+			{
+				if (KffCsr == null)
+				{
+					KffCsr = CopyKffToCsr();
+				}
+				KffCsr.MultiplyVector(Uf, residual);
+			}
+			else
+			{
+				IGlobalMatrix Kff = algebraicModel.LinearSystem.Matrix;
+				Kff.MultiplyVector(Uf, residual);
+			}
 			residual.LinearCombinationIntoThis(-1.0, Ff, +1.0);
 			double result = residual.Norm2() / normF0;
 			watch.Stop();
@@ -68,6 +84,25 @@ namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 		public void Initialize(PcgAlgorithmBase pcg)
 		{
 			normF0 = algebraicModel.LinearSystem.RhsVector.Norm2();
+
+			if (optimizationsForSymmetricCscMatrix)
+			{
+				// Just reset the matrix here, so that its creation can be done in a section of code that will be timed.
+				KffCsr = null;
+			}
+		}
+
+		private DistributedOverlappingMatrix<CsrMatrix> CopyKffToCsr()
+		{
+			var indexer = algebraicModel.FreeDofIndexer;
+			var KffCsr = new DistributedOverlappingMatrix<CsrMatrix>(indexer);
+			environment.DoPerNode(subdomainID =>
+			{
+				TMatrix Kffs = algebraicModel.LinearSystem.Matrix.LocalMatrices[subdomainID];
+				var KffsCasted = Kffs as SymmetricCscMatrix;
+				KffCsr.LocalMatrices[subdomainID] = KffsCasted.ConvertToCsr();
+			});
+			return KffCsr;
 		}
 	}
 }
