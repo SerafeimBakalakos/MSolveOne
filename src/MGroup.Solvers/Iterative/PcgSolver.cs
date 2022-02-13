@@ -20,7 +20,7 @@ using MGroup.Solvers.AlgebraicModel;
 namespace MGroup.Solvers.Iterative
 {
 	/// <summary>
-	/// Iterative solver for models with only 1 subdomain. Uses the Proconditioned Conjugate Gradient algorithm.
+	/// Iterative solver for models with only 1 subdomain. Uses the Preconditioned Conjugate Gradient algorithm.
 	/// Authors: Serafeim Bakalakos
 	/// </summary>
 	public class PcgSolver : SingleSubdomainSolverBase<CsrMatrix>
@@ -90,6 +90,7 @@ namespace MGroup.Solvers.Iterative
 			watch.Stop();
 			Logger.LogTaskDuration("Iterative algorithm", watch.ElapsedMilliseconds);
 			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
+			Logger.LogNumDofs("Free dofs", LinearSystem.RhsVector.Length);
 			Logger.IncrementAnalysisStep();
 		}
 

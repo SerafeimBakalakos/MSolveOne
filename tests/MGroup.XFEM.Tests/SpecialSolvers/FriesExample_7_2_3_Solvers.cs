@@ -259,7 +259,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 			var msg = new StringBuilder();
 			msg.Append($"{DateTime.Now}, solver={solverChoice.ToString()}");
-			msg.AppendLine($", numElements={numElements[0]}x{numElements[1]}x{numElements[2]}," +
+			msg.AppendLine($", numElements={numElements[0]}x{numElements[1]}x{numElements[2]}, poisson ratio={FriesExample_7_2_3_Model.v}" +
 				$" heaviside tol={FriesExample_7_2_3_Model.heavisideTol}, tip enrichment radius={FriesExample_7_2_3_Model.tipEnrichmentArea}");
 			if (solverChoice == SolverChoice.PfetiDPManaged || solverChoice == SolverChoice.PfetiDPNative
 				|| solverChoice == SolverChoice.FetiDPManaged || solverChoice == SolverChoice.FetiDPNative)
@@ -398,7 +398,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			solverFactory.ExplicitSubdomainMatrices = false;
 			solverFactory.InterfaceProblemSolverFactory = new FetiDPInterfaceProblemSolverFactoryPcg()
 			{
-				MaxIterations = 200,
+				MaxIterations = 2000,
 				ResidualTolerance = iterTol,
 				UseObjectiveConvergenceCriterion = objectivePcgCriterion
 			};
@@ -521,7 +521,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			solverFactory.ExplicitSubdomainMatrices = explicitPsmMatrices;
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
 			{
-				MaxIterations = 200,
+				MaxIterations = 600,
 				ResidualTolerance = iterTol,
 				UseObjectiveConvergenceCriterion = objectivePcgCriterion
 			};

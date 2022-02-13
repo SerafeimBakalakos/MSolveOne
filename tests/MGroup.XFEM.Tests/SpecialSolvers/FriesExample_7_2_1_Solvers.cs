@@ -262,12 +262,13 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 			var msg = new StringBuilder();
 			msg.Append($"{DateTime.Now}, solver={solverChoice.ToString()}");
-			msg.AppendLine($", numElements={numElements[0]}x{numElements[1]}x{numElements[2]}");
+			msg.AppendLine($", numElements={numElements[0]}x{numElements[1]}x{numElements[2]}, poisson ratio={FriesExample_7_2_1_Model.v}");
 			if (solverChoice == SolverChoice.PfetiDPManaged || solverChoice == SolverChoice.PfetiDPNative
 				|| solverChoice == SolverChoice.FetiDPManaged || solverChoice == SolverChoice.FetiDPNative)
 			{
 				msg.Append($"numSubdomains={numSubdomains[0]}x{numSubdomains[1]}x{numSubdomains[2]}");
 				msg.AppendLine($", reanalysis={ddmReanalysis}, multithreaded environment={multiThreaded}, iterative tolerance={iterTol}");
+				msg.AppendLine($", corner dofs strategy = {CrackFetiDPCornerDofs.strategy}");
 			}
 			else if (solverChoice == SolverChoice.DirectReanalysis)
 			{
@@ -398,7 +399,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			solverFactory.ExplicitSubdomainMatrices = false;
 			solverFactory.InterfaceProblemSolverFactory = new FetiDPInterfaceProblemSolverFactoryPcg()
 			{
-				MaxIterations = 200,
+				MaxIterations = 2000,
 				ResidualTolerance = iterTol,
 				UseObjectiveConvergenceCriterion = objectivePcgCriterion
 			};
@@ -521,7 +522,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			solverFactory.ExplicitSubdomainMatrices = explicitPsmMatrices;
 			solverFactory.InterfaceProblemSolverFactory = new PsmInterfaceProblemSolverFactoryPcg()
 			{
-				MaxIterations = 200,
+				MaxIterations = 600,
 				ResidualTolerance = iterTol,
 				UseObjectiveConvergenceCriterion = objectivePcgCriterion
 			};

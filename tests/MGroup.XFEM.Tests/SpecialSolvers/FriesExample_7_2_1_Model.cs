@@ -35,7 +35,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		public static readonly double[] minCoords = new double[] { 0, 0, 0 };
 		public static readonly double[] maxCoords = new double[] { 675, 150, 75 };
 
-		private const double E = 3E7, v = 0.3, load = -1000;
+		public static double E = 3E7, v = 0.3, load = -1000;
 		private static readonly double[] loadCoords = { 487.5, 150 };
 		private static readonly double[] support0Coords = { 257.5, 0 };
 		private static readonly double[] support1Coords = { 637.5, 0 };

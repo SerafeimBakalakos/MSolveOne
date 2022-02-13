@@ -35,7 +35,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		public static readonly double[] minCoords = new double[] { 0, 0, 0 };
 		public static readonly double[] maxCoords = new double[] { 200, 100, 200 };
 
-		private const double E = 3E7, v = 0.3;
+		public static double E = 3E7, v = 0.3;
 		public static double crackLength = 49, crackRadius = 25;
 		public static double uPrescribed = crackLength, radiusPrescribed = crackRadius;
 
