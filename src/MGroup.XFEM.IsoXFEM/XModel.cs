@@ -248,7 +248,7 @@ namespace MGroup.XFEM.IsoXFEM
 								intersections.Add(interaction);
 							}
 						}
-						IMeshTolerance meshTolerance = new MinimumSideMeshTolerance();
+						IMeshTolerance meshTolerance = new UserDefinedMeshTolerance(Elements.First().Value.CalcBulkSizeCartesian());
 						triangulator.LevelSetDescription = levelSetDescription;
 						element.ConformingSubcells = triangulator.FindConformingMesh(element, intersections, meshTolerance);
 					}
