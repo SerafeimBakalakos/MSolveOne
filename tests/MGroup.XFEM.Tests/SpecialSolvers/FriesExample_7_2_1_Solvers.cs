@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using MGroup.Environments;
+using MGroup.LinearAlgebra.Iterative.PreconditionedConjugateGradient;
+using MGroup.LinearAlgebra.Iterative.Termination;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.MSolve.Discretization.Dofs;
 using MGroup.MSolve.Solution;
@@ -20,6 +22,7 @@ using MGroup.Solvers.DDM.PFetiDP;
 using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.Direct;
+using MGroup.Solvers.Iterative;
 using MGroup.XFEM.Analysis;
 using MGroup.XFEM.Cracks.Geometry;
 using MGroup.XFEM.Cracks.PropagationTermination;
@@ -43,7 +46,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 
 		private enum SolverChoice 
 		{ 
-			DirectManaged, DirectNative, DirectReanalysis, PfetiDPManaged, PfetiDPNative, FetiDPManaged, FetiDPNative 
+			DirectManaged, DirectNative, DirectReanalysis, PfetiDPManaged, PfetiDPNative, FetiDPManaged, FetiDPNative, PcgJacobi 
 		}
 
 		public enum ReanalysisExtraDofs
@@ -75,6 +78,25 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		public const bool explicitPsmMatrices = false;
 		public const bool unsafeOptimizations = true;
 		public static PreconditionerFetiDP preconditionerFetiDP = PreconditionerFetiDP.Dirichlet;
+
+
+		[Fact]
+		public static void RunExampleWithPcgSolver()
+		{
+			XModel<IXCrackElement> model = FriesExample_7_2_1_Model.DescribePhysicalModel(numElements).BuildSingleSubdomainModel();
+			if (enablePlotting)
+			{
+				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements, crackMouthCoords, crackFrontCoords, outputPlotDirectory);
+				FriesExample_7_2_1_Model.SetupEnrichmentOutput(model, outputPlotDirectory);
+			}
+			else
+			{
+				FriesExample_7_2_1_Model.CreateGeometryModel(model, numElements, crackMouthCoords, crackFrontCoords);
+			}
+			SolverChoice solverChoice = SolverChoice.PcgJacobi;
+			(ISolver solver, IAlgebraicModel algebraicModel) = SetupPcgSolver(model, solverChoice);
+			RunAnalysis(model, algebraicModel, solver, solverChoice);
+		}
 
 		[Fact]
 		public static void RunExampleWithDirectSolver()
@@ -274,6 +296,10 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			{
 				msg.AppendLine($"reanalysis extra modified dofs={reanalysisExtraDofs}");
 			}
+			else if (solverChoice == SolverChoice.PcgJacobi)
+			{
+				msg.AppendLine($"iterative tolerance={iterTol}");
+			}
 			if (solverChoice == SolverChoice.FetiDPManaged || solverChoice == SolverChoice.FetiDPNative)
 			{
 				msg.AppendLine($"FETI-DP preconditioner = {preconditionerFetiDP}");
@@ -293,6 +319,19 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			//analyzer.Logger.WriteToFile(performanceOutputFile, true);
 			solver.Logger.WriteAggregatesToFile(performanceOutputFile, true);
 			solver.Logger.WriteToFile(performanceOutputFile, true);
+		}
+
+		private static (ISolver, IAlgebraicModel) SetupPcgSolver(XModel<IXCrackElement> model, SolverChoice solverChoice)
+		{
+			var pcgBuilder = new PcgAlgorithm.Builder();
+			pcgBuilder.ResidualTolerance = iterTol;
+			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(1000000);
+			var solverFactory = new PcgSolver.Factory();
+			solverFactory.PcgAlgorithm = pcgBuilder.Build();
+			var algebraicModel = solverFactory.BuildAlgebraicModel(model);
+			var solver = solverFactory.BuildSolver(algebraicModel);
+			solver.EnableMklForSolutionOnly = true;
+			return (solver, algebraicModel);
 		}
 
 		private static (ISolver, IAlgebraicModel) SetupDirectSolver(XModel<IXCrackElement> model, SolverChoice solverChoice)

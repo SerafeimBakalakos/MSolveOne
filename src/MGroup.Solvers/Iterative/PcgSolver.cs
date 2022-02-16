@@ -16,6 +16,7 @@ using MGroup.Solvers.DofOrdering.Reordering;
 using MGroup.MSolve.Solution.LinearSystem;
 using MGroup.Solvers.LinearSystem;
 using MGroup.Solvers.AlgebraicModel;
+using MGroup.LinearAlgebra;
 
 namespace MGroup.Solvers.Iterative
 {
@@ -38,6 +39,8 @@ namespace MGroup.Solvers.Iterative
 			this.pcgAlgorithm = pcgAlgorithm;
 			this.preconditionerFactory = preconditionerFactory;
 		}
+
+		public bool EnableMklForSolutionOnly { get; set; } = false;
 
 		public override void HandleMatrixWillBeSet()
 		{
@@ -78,9 +81,18 @@ namespace MGroup.Solvers.Iterative
 
 			// Iterative algorithm
 			watch.Start();
+			LinearAlgebraProviderChoice defaultProvider = LibrarySettings.LinearAlgebraProviders;
+			if (EnableMklForSolutionOnly)
+			{
+				LibrarySettings.LinearAlgebraProviders = LinearAlgebraProviderChoice.MKL;
+			}
 			IterativeStatistics stats = pcgAlgorithm.Solve(matrix, preconditioner,
 				LinearSystem.RhsVector.SingleVector, LinearSystem.Solution.SingleVector,
 				true, () => Vector.CreateZero(systemSize)); //TODO: This way, we don't know that x0=0, which will result in an extra b-A*0
+			if (EnableMklForSolutionOnly)
+			{
+				LibrarySettings.LinearAlgebraProviders = defaultProvider;
+			}
 			if (!stats.HasConverged)
 			{
 				throw new IterativeSolverNotConvergedException(Name + " did not converge to a solution. PCG algorithm run for"
