@@ -42,6 +42,8 @@ namespace MGroup.Solvers.Iterative
 
 		public bool EnableMklForSolutionOnly { get; set; } = false;
 
+		public ObjectiveConvergenceCriterion ObjectiveConvergenceCrit { get; set; }
+
 		public override void HandleMatrixWillBeSet()
 		{
 			mustUpdatePreconditioner = true;
@@ -103,6 +105,11 @@ namespace MGroup.Solvers.Iterative
 			Logger.LogTaskDuration("Iterative algorithm", watch.ElapsedMilliseconds);
 			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
 			Logger.LogNumDofs("Free dofs", LinearSystem.RhsVector.Length);
+			if (ObjectiveConvergenceCrit != null)
+			{
+				Logger.LogTaskDuration("Objective PCG criterion", ObjectiveConvergenceCrit.EllapsedMilliseconds);
+				ObjectiveConvergenceCrit.EllapsedMilliseconds = 0;
+			}
 			Logger.IncrementAnalysisStep();
 		}
 

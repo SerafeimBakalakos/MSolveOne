@@ -326,11 +326,22 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 			var pcgBuilder = new PcgAlgorithm.Builder();
 			pcgBuilder.ResidualTolerance = iterTol;
 			pcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(1000000);
+
+			var objectiveCrit = new MGroup.Solvers.Iterative.ObjectiveConvergenceCriterion();
+			if (objectivePcgCriterion)
+			{
+				pcgBuilder.Convergence = objectiveCrit;
+			}
+
 			var solverFactory = new PcgSolver.Factory();
 			solverFactory.PcgAlgorithm = pcgBuilder.Build();
 			var algebraicModel = solverFactory.BuildAlgebraicModel(model);
 			var solver = solverFactory.BuildSolver(algebraicModel);
 			solver.EnableMklForSolutionOnly = true;
+			if (objectivePcgCriterion)
+			{
+				solver.ObjectiveConvergenceCrit = objectiveCrit;
+			}
 			return (solver, algebraicModel);
 		}
 

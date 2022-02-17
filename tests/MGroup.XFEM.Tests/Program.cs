@@ -34,18 +34,18 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_1_Solvers.outputPlotDirectory = FriesExample_7_2_1_Solvers.outputDirectory + "plots";
 			FriesExample_7_2_1_Solvers.enablePlotting = false;
 
-			FriesExample_7_2_1_Solvers.crackMouthCoords = new double[] { 337.5, 0 };
-			FriesExample_7_2_1_Solvers.crackFrontCoords = new double[] { 337.5, 74 };
+			FriesExample_7_2_1_Solvers.crackMouthCoords = new double[] { 336, 0 };
+			FriesExample_7_2_1_Solvers.crackFrontCoords = new double[] { 336, 74 };
 			FriesExample_7_2_1_Model.v = 0.3;
 
-			int numElementsMin = 5;
+			int numElementsMin = 20;
 			FriesExample_7_2_1_Solvers.numElements = new int[] { 9 * numElementsMin, 2 * numElementsMin, numElementsMin };
 			int numSubdomainsMin = 1;
 			FriesExample_7_2_1_Solvers.numSubdomains = new int[] { 9 * numSubdomainsMin, 2 * numSubdomainsMin, numSubdomainsMin };
 
 			FriesExample_7_2_1_Solvers.multiThreaded = true;
 			FriesExample_7_2_1_Solvers.iterTol = 1E-7;
-			FriesExample_7_2_1_Solvers.objectivePcgCriterion = true;
+			FriesExample_7_2_1_Solvers.objectivePcgCriterion = false;
 			FriesExample_7_2_1_Solvers.ddmReanalysis = false;
 			FriesExample_7_2_1_Solvers.reanalysisExtraDofs = FriesExample_7_2_1_Solvers.ReanalysisExtraDofs.None;
 			FriesExample_7_2_1_Solvers.preconditionerFetiDP = FriesExample_7_2_1_Solvers.PreconditionerFetiDP.Dirichlet;
