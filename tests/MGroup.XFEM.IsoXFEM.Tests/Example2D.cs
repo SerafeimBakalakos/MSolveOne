@@ -78,8 +78,9 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Create mesh.
 			/// </summary>
-			IMeshGeneration meshGeneration = new MeshGeneration2D(material, geometry);
+			var meshGeneration = new MeshGeneration2D(material, geometry);
 			var (nodes,elements) = meshGeneration.MakeMesh();
+			var dualMesh = meshGeneration.CreateDualMesh();
 			/// <summary>
 			/// Add Constraints, Using enum Constrained Side.
 			/// </summary>
@@ -125,6 +126,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// </summary>
 			int dimension = 2;
 			var xModel = new XModel<IIsoXfemElement>(dimension);
+			xModel.Mesh = dualMesh;
 			/// <summary>
 			/// Add Subdomain, Nodes and Elements to Model.
 			/// </summary>
@@ -141,7 +143,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Add Loads. Using enum EndLoad in order to choose the node we want to apply the force.
 			/// </summary>
-			endload = EndLoad.BottomEnd;
+			endload = EndLoad.MiddleEnd;
 			int nodeIDLoad =  (geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1) - ((int)endload * (geometry.NumberOfElementsY)/2) - 1;
 			Load load;
 			load = new Load()
