@@ -9,6 +9,8 @@ using MGroup.MSolve.Discretization.Dofs;
 using MGroup.XFEM.Materials.Duplicates;
 using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 using MGroup.XFEM.IsoXFEM.MeshGeneration;
+using MGroup.XFEM.Geometry.Mesh;
+using MGroup.MSolve.Meshes.Structured;
 
 namespace MGroup.XFEM.IsoXFEM.MeshGeneration
 {
@@ -41,6 +43,7 @@ namespace MGroup.XFEM.IsoXFEM.MeshGeneration
 							nodes[node4ID]
 					};
 					var element = new IsoXfemElement2D(el, material, GeometryOfModel, nodesOfElement);
+					element.SetIdOnAxis(new int[] { i, j });
 					elements.Add(el,element);
 					el = el + 1;
 				}
@@ -78,5 +81,21 @@ namespace MGroup.XFEM.IsoXFEM.MeshGeneration
             var elements=CreateElements(nodes);
 			return (nodes,elements);			
         }
-   }
+
+		public DualCartesianSimplicialMesh2D CreateDualMesh()
+		{
+			int[] numElements = { GeometryOfModel.NumberOfElementsX, GeometryOfModel.NumberOfElementsY};
+			int[] numNodes = { GeometryOfModel.NumberOfElementsX + 1, GeometryOfModel.NumberOfElementsY + 1 };
+			double[] minCoords = { 0, 0};
+			double[] maxCoords = { GeometryOfModel.length, GeometryOfModel.height};
+			var coarseMesh = new UniformCartesianMesh2D.Builder(minCoords, maxCoords, numElements)
+				//.SetMajorMinorAxis(1, 0) //TODO: Implement the other options in the mesh class and the builder.
+				//.SetElementNodeOrderDefault()
+				.BuildMesh();
+			var fineMesh = new UniformSimplicialMesh2D.Builder(minCoords, maxCoords, numNodes)
+				//.SetMajorMinorAxis(2, 0)
+				.BuildMesh();
+			return new DualCartesianSimplicialMesh2D(coarseMesh, fineMesh);
+		}
+	}
 }
