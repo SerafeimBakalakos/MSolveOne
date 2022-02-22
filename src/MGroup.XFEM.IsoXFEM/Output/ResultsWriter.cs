@@ -20,13 +20,13 @@ namespace MGroup.XFEM.IsoXFEM.Output
 		{
 			var writer = new FullMatrixWriter();
 			writer.NumericFormat = new ExponentialFormat() { NumDecimalDigits = 17 };
-			string path = $"{Paths.OutputForTxtResults}\\3D_12x6x1.txt";
+			string path = $"{Paths.OutputForTxtResults}\\MSolve2DTriangulator_40x20BottomEnd.txt";
 			writer.WriteToFile(results, path);
 		}
 
 		public static void VolumeForEachElementWriter(int iter, int dimension, Dictionary<int, IIsoXfemElement> Elements)
 		{
-			string path = $"{Paths.OutputElementsSize}\\ElementsSize_iter_{iter}.txt";
+			string path = $"{Paths.OutputElementsSize}\\ElementsSize_iter_{iter}_Dimension_{dimension}.txt";
 
 			using (var writer = new StreamWriter(path))
 			{
@@ -128,18 +128,48 @@ namespace MGroup.XFEM.IsoXFEM.Output
 						writer.WriteLine($"element {index}:  ");
 						if (element.InteractingDiscontinuities != null)
 						{
+							var pointcompare = new Point3DComparer();
+							var sortedVertices = new SortedSet<double[]>(pointcompare);
 							foreach (var intersections in element.InteractingDiscontinuities.Values)
 							{
 								var intersectionVertices = intersections.GetVerticesForTriangulation();
-								var pointcompare = new Point3DComparer();
-								var sorted = new SortedSet<double[]>(pointcompare);
 								foreach (var intersection in intersectionVertices)
 								{
-									string vertices = $"{intersection[0]},{intersection[1]},{intersection[2]}";
+									sortedVertices.Add(intersection);									
+								}
+								foreach (var pointvertice in sortedVertices)
+								{
+									string vertices = $"{pointvertice[0]},{pointvertice[1]},{pointvertice[2]}";
 									writer.WriteLine($"\t\t ξ,ζ,η {vertices}");
 								}
 							}	
 						}
+					}
+				}
+			}
+		}
+		public static void NodalLevelSetsWriter(int iter, int dimension, Dictionary<int, XNode> Nodes, Vector nodalLevelSet)
+		{
+			string path = $"{Paths.OutputElementsSize}\\NodalLevelSets_iter_{iter}.txt";
+
+			using (var writer = new StreamWriter(path))
+			{
+				if (dimension == 3)
+				{
+					foreach (var node in Nodes.Values)
+					{
+						string index = $"{node.Coordinates[0]},{node.Coordinates[1]},{node.Coordinates[2]}";
+						writer.WriteLine($"node {index}:  ");
+						writer.WriteLine($"\t\t levelsetValue={ nodalLevelSet[node.ID]} ");
+					}
+				}
+				else
+				{
+					foreach (var node in Nodes.Values)
+					{
+						string index = $"{node.Coordinates[0]},{node.Coordinates[1]}";
+						writer.WriteLine($"node {index}:  ");
+						writer.WriteLine($"\t\t levelsetValue={ nodalLevelSet[node.ID]} ");
 					}
 				}
 			}
