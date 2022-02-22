@@ -27,7 +27,7 @@ namespace MGroup.XFEM.IsoXFEM
 
         private const double volumeFraction = 0.5;
         private const double evolutionRate = 0.01;
-        private const int iterations = 20;
+        private const int iterations = 200;
         public /*private*/  Vector nodalStrainEnergyIt;
         private  Vector nodalStrainEnergyItPrevious;
 		public  double mlp;
@@ -67,8 +67,10 @@ namespace MGroup.XFEM.IsoXFEM
             for (int it = 0; it < iterations; it++)
             {
 				Console.WriteLine("iter=" + it);
-				ResultsWriter.VolumeForEachElementWriter(it, xModel.Dimension, xModel.Elements);
-                if (it > 0)
+				//ResultsWriter.VolumeForEachElementWriter(it, xModel.Dimension, xModel.Elements);
+				//ResultsWriter.GaussPointsWriter(it,xModel.Dimension, xModel.Elements);
+				//ResultsWriter.InteractionPoints3DWriter(it, xModel.Dimension, xModel.Elements);
+				if (it > 0)
                 {
                     for (int i = 0; i < nodalStrainEnergyItPrevious.Length; i++)
                     {
@@ -89,7 +91,7 @@ namespace MGroup.XFEM.IsoXFEM
                 if (it == 0)
                 {
                     double initialNodalStrainEnergyMaxValue = nodalStrainEnergyIt.Max();
-                    mlp = 0.99 * initialNodalStrainEnergyMaxValue;
+                    mlp = (1-evolutionRate)* initialNodalStrainEnergyMaxValue;
                 }
                 //Results For Txt Files
                 vfEachIteration[it] = xModel.sizesOfElements.Sum() / sizeOfWholeStructure;
@@ -100,11 +102,12 @@ namespace MGroup.XFEM.IsoXFEM
                 Vector casesForVolumeFractionsIt = Vector.CreateFromArray(new double[] { volumeFraction, vfi * (1 - evolutionRate) });
                 vfi = casesForVolumeFractionsIt.Max();
                 var relativeCriteria = UpdatingMLP(vfi, vfk, sizeOfWholeStructure);
+				//ResultsWriter.NodalLevelSetsWriter(it, xModel.Dimension, xModel.Nodes, relativeCriteria);
 				xModel.relativeCriteria = relativeCriteria;
 				xModel.Update(null,null);
 				//PlotPerformanceLevel(it, xModel.Nodes, xModel.Elements, relativeCriteria);
 			}
-			ResultsWriter.ResultsWriterToTxt(results);
+			//ResultsWriter.ResultsWriterToTxt(results);
 		}
         private  void StabilizingEvolutionaryProcess(int iteration)
         {
@@ -136,7 +139,7 @@ namespace MGroup.XFEM.IsoXFEM
         }
 		public  void PlotPerformanceLevel(int iteration, Dictionary<int, XNode>  nodes, Dictionary<int, IIsoXfemElement>  elements, Vector nodalValues)
         {                    
-            string path = $"{ Paths.OutputDirectory}\\3D_40_20_2{iteration}.vtk";
+            string path = $"{ Paths.OutputDirectory}\\MSolve2DTriangulator_40x20BottomEnd_iter{iteration}.vtk";
 			CellType cellType = xModel.Elements.First().Value.CellType;
             var writer = new VtkFileWriter(path, xModel.Dimension, cellType);
             writer.WriteMesh(nodes, elements);
