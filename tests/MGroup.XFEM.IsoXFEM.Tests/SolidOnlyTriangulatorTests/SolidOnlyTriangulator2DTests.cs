@@ -5,6 +5,8 @@ namespace MGroup.XFEM.IsoXFEM.Tests.SolidOnlyTriangulatorTests
 	using System.Text;
 	using System.Linq;
 
+	using MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator;
+
 	using MGroup.LinearAlgebra.Matrices;
 	using MGroup.LinearAlgebra.Vectors;
 
