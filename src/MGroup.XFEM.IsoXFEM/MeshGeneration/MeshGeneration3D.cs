@@ -19,7 +19,7 @@ namespace MGroup.XFEM.IsoXFEM.MeshGeneration
 			this.material = material;
 			this.GeometryOfModel = geometry;
 		}
-
+		#region Z-Y-X
 		public Dictionary<int, IIsoXfemElement> CreateElements(Dictionary<int, XNode> nodes)
 		{
 			int el = 0;
@@ -33,7 +33,7 @@ namespace MGroup.XFEM.IsoXFEM.MeshGeneration
 					for (int k = 0; k < GeometryOfModel.NumberOfElementsZ; k++)
 					{
 						var node1ID = el + j;
-						var node2ID = node1ID + (GeometryOfModel.NumberOfElementsY + 1)*(GeometryOfModel.NumberOfElementsZ + 1);
+						var node2ID = node1ID + (GeometryOfModel.NumberOfElementsY + 1) * (GeometryOfModel.NumberOfElementsZ + 1);
 						var node3ID = node2ID + (GeometryOfModel.NumberOfElementsZ + 1);
 						var node4ID = node1ID + (GeometryOfModel.NumberOfElementsZ + 1);
 						var node5ID = node1ID + 1;
@@ -50,10 +50,10 @@ namespace MGroup.XFEM.IsoXFEM.MeshGeneration
 							nodes[node6ID],
 							nodes[node7ID],
 							nodes[node8ID]
-					     };
+						 };
 						var element = new IsoXfemElement3D(idOfElement, material, GeometryOfModel, nodesOfElement);
 						elements.Add(idOfElement, element);
-						element.SetIdOnAxis(new int[] {i, j, k });
+						element.SetIdOnAxis(new int[] { i, j, k });
 						el = el + 1;
 						idOfElement++;
 					}
@@ -62,6 +62,7 @@ namespace MGroup.XFEM.IsoXFEM.MeshGeneration
 			}
 			return elements;
 		}
+
 		public Dictionary<int, XNode> CreateNodes()
 		{
 			var coordX = 0.0;
@@ -93,6 +94,81 @@ namespace MGroup.XFEM.IsoXFEM.MeshGeneration
 			}
 			return nodes;
 		}
+		#endregion
+		//public Dictionary<int, IIsoXfemElement> CreateElements(Dictionary<int, XNode> nodes)
+		//{
+		//	int el = 0;
+		//	int idOfElement = 0;
+		//	var elements = new Dictionary<int, IIsoXfemElement>();
+		//	for (int i = 0; i < GeometryOfModel.NumberOfElementsZ; i++)
+		//	{
+		//		el = i * el;
+		//		for (int j = 0; j < GeometryOfModel.NumberOfElementsY; j++)
+		//		{
+		//			for (int k = 0; k < GeometryOfModel.NumberOfElementsX; k++)
+		//			{
+		//				var node1ID = el + j;
+		//				var node2ID = node1ID + 1;
+		//				var node3ID = node2ID + (GeometryOfModel.NumberOfElementsX + 1);
+		//				var node4ID = node3ID - 1;
+		//				var node5ID = node1ID + (GeometryOfModel.NumberOfElementsX+1)*(GeometryOfModel.NumberOfElementsY + 1);
+		//				var node6ID = node5ID + 1;
+		//				var node7ID = node6ID + (GeometryOfModel.NumberOfElementsX + 1);
+		//				var node8ID = node7ID - 1;
+		//				var nodesOfElement = new[]
+		//				{
+		//					nodes[node1ID],
+		//					nodes[node2ID],
+		//					nodes[node3ID],
+		//					nodes[node4ID],
+		//					nodes[node5ID],
+		//					nodes[node6ID],
+		//					nodes[node7ID],
+		//					nodes[node8ID]
+		//				 };
+		//				var element = new IsoXfemElement3D(idOfElement, material, GeometryOfModel, nodesOfElement);
+		//				elements.Add(idOfElement, element);
+		//				element.SetIdOnAxis(new int[] { k, j, i });
+		//				el = el + 1;
+		//				idOfElement++;
+		//			}
+		//		}
+		//		el = (GeometryOfModel.NumberOfElementsY + 1) * (GeometryOfModel.NumberOfElementsZ + 1);
+		//	}
+		//	return elements;
+		//}
+
+		//public Dictionary<int, XNode> CreateNodes()
+		//{
+		//	var coordX = 0.0;
+		//	var coordY = 0.0;
+		//	var coordZ = 0.0;
+		//	int id = 0;
+		//	var nodes = new Dictionary<int, XNode>();
+		//	for (int i = 0; i < (GeometryOfModel.NumberOfElementsZ + 1); i++)
+		//	{
+		//		for (int j = 0; j < (GeometryOfModel.NumberOfElementsY + 1); j++)
+		//		{
+		//			for (int k = 0; k < (GeometryOfModel.NumberOfElementsX + 1); k++)
+		//			{
+		//				var nodeX = coordX;
+		//				var nodeY = coordY;
+		//				var nodeZ = coordZ;
+		//				double[] coords = { nodeX, nodeY, nodeZ };
+		//				var node = new XNode(id, coords);
+		//				nodes.Add(id, node);
+		//				coordX = coordX + GeometryOfModel.length / GeometryOfModel.NumberOfElementsX;
+		//				id = id + 1;
+		//			}
+		//			coordX = 0;
+		//			coordY = coordY + GeometryOfModel.height / GeometryOfModel.NumberOfElementsY;
+		//		}
+		//		coordX = 0;
+		//		coordY = 0;
+		//		coordZ = coordZ + GeometryOfModel.thickness / GeometryOfModel.NumberOfElementsZ;
+		//	}
+		//	return nodes;
+		//}
 		public (Dictionary<int, XNode> nodes, Dictionary<int, IIsoXfemElement> elements) MakeMesh()
 		{
 			var nodes = CreateNodes();
