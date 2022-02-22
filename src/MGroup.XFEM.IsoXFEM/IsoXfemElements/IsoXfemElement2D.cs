@@ -84,9 +84,9 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 
 		public IReadOnlyList<XNode> Nodes => nodesOfElement;
 
-		public Dictionary<int, IElementDiscontinuityInteraction> InteractingDiscontinuities  { get;  }
-	
-	    public int ID { get; set; }
+		public Dictionary<int, IElementDiscontinuityInteraction> InteractingDiscontinuities  { get; } = new Dictionary<int, IElementDiscontinuityInteraction>();
+
+		public int ID { get; set; }
 
 		public IElementType ElementType => this;
 
@@ -224,7 +224,7 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 	}
 	public static class IsoXfemElement2DExtensions
 	{
-		internal static void RegisterInteractionWithLsm(this IXFiniteElement element,
+		internal static void RegisterInteractionWithLsm2D(this IXFiniteElement element,
 		 IElementDiscontinuityInteraction interaction)
 		{
 			element.InteractingDiscontinuities[interaction.ParentGeometryID] = interaction;
