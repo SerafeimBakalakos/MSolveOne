@@ -1,4 +1,4 @@
-namespace MGroup.XFEM.IsoXFEM
+namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 {
 	using System;
 	using System.Collections.Generic;
