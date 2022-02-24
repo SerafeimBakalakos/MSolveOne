@@ -2,6 +2,7 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 {
 	using System;
 	using System.Collections.Generic;
+	using System.Linq;
 	using System.Text;
 
 	using MGroup.LinearAlgebra.Vectors;
@@ -46,20 +47,20 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 		//	subtetrahedra[0] = new ElementSubtetrahedron3D(new Tetrahedron3D(coordinatesAll[0], coordinatesAll[1], coordinatesAll[9], coordinatesAll[14]));
 		}
 		
-		public /*(List<double[]> coordinatesOfIntersectionPoints, int[] indexOfPositiveNodes)*/ void FindIntersection(List<IsoXfemElementSubtetrahedon3D> boundarySubtetrahedra3D)
+		public List<double[]>  FindIntersection(IsoXfemElementSubtetrahedon3D boundaryTet4, IXFiniteElement element)
 		{
+			List<double[]> coordinatesOfIntersectionPoints = new List<double[]>();
+			//List<int> indexOfPositiveNodes = new List<int>();
 			int numberOfIntersectionPointsOfBrick = 0;
-			foreach (var boundaryTet4 in boundarySubtetrahedra3D)
+			List<int[]> indexOfIntersectionNodes = new List<int[]>();
+			int numberIntersectionPointsOfTet4 = 0;
+			int[,] edgesOfTet4 = new int[,] { { 0, 1 }, { 0, 2 }, { 0, 3 }, { 1, 2 }, { 1, 3 }, { 2, 3 } };
+			for (int i = 0; i < edgesOfTet4.GetLength(0); i++)
 			{
-				List<int[]> indexOfIntersectionNodes = new List<int[]>();
-				int numberIntersectionPointsOfTet4 = 0;
-				int[,] edgesOfTet4 = new int[,] { { 0, 1 }, { 0, 2 }, { 0, 3 }, { 1, 2 }, { 1, 3 }, { 2, 3 } };
-				for (int i = 0; i < edgesOfTet4.GetLength(0); i++)
+				if (boundaryTet4.NodalLevelSetValues[edgesOfTet4[i, 0]] * boundaryTet4.NodalLevelSetValues[edgesOfTet4[i, 1]] < 0)
 				{
-					if (boundaryTet4.NodalLevelSetValues[edgesOfTet4[i, 0]] * boundaryTet4.NodalLevelSetValues[edgesOfTet4[i, 1]] < 0)
-					{
-						numberIntersectionPointsOfTet4++;
-						numberOfIntersectionPointsOfBrick++;
+					numberIntersectionPointsOfTet4++;
+					numberOfIntersectionPointsOfBrick++;
 						if (boundaryTet4.NodalLevelSetValues[edgesOfTet4[i, 0]] > 0)
 						{
 							var indxOfIntersection = new int[] { edgesOfTet4[i, 0], edgesOfTet4[i, 1] };
@@ -73,15 +74,49 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 				         var x1 = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4][0]];
 						 var x2 = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4][1]];
 						 var rel = Math.Abs(boundaryTet4.NodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4][0]] / boundaryTet4.NodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4][1]]);
-						var intersectionPointCoordinates = new double[3];
-						intersectionPointCoordinates[0] = x1[0] + (x2[0] - x1[0]) * rel / (1 + rel);
-						intersectionPointCoordinates[1] = x1[1] + (x2[1] - x1[1]) * rel / (1 + rel);
-						intersectionPointCoordinates[2] = x1[2] + (x2[2] - x1[2]) * rel / (1 + rel);
-					}
+						 var intersectionPointCoordinates = new double[3];
+						 intersectionPointCoordinates[0] = x1[0] + (x2[0] - x1[0]) * rel / (1 + rel);
+						 intersectionPointCoordinates[1] = x1[1] + (x2[1] - x1[1]) * rel / (1 + rel);
+						 intersectionPointCoordinates[2] = x1[2] + (x2[2] - x1[2]) * rel / (1 + rel);
+						 var interpolationIntersection = element.Interpolation.EvaluateAllAt(element.Nodes, intersectionPointCoordinates);
+						 var shapeFunctionValuesIntersection = interpolationIntersection.ShapeFunctions;
+						var relativeCriteriaIntersection = 0.0;
+						for (int k = 0; k < ElementNodalLevelSetValues.Length; k++)
+						{
+							relativeCriteriaIntersection = relativeCriteriaIntersection + ElementNodalLevelSetValues[i] * shapeFunctionValuesIntersection[i];
+						}
+						var relativeCriteriaFirstNode = ElementNodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4][0]];
+						var relativeCriteriaSecondNode = ElementNodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4][1]];
+						//Stabilize intersection coordinates
+						var absLevelSetValues = new double[] { Math.Abs(relativeCriteriaFirstNode), Math.Abs(relativeCriteriaSecondNode) };
+						while ((Math.Abs(relativeCriteriaIntersection / absLevelSetValues.Average()) > 0.0001))
+						{
+							if (relativeCriteriaIntersection<0)
+							{
+								x2 = intersectionPointCoordinates;
+								relativeCriteriaSecondNode = relativeCriteriaIntersection;
+							}
+							else
+							{
+								x1 = intersectionPointCoordinates;
+								relativeCriteriaFirstNode = relativeCriteriaIntersection;
+							}
+							rel = Math.Abs(relativeCriteriaFirstNode / relativeCriteriaSecondNode);							
+							intersectionPointCoordinates[0] = x1[0] + (x2[0] - x1[0]) * rel / (1 + rel);
+							intersectionPointCoordinates[1] = x1[1] + (x2[1] - x1[1]) * rel / (1 + rel);
+							intersectionPointCoordinates[2] = x1[2] + (x2[2] - x1[2]) * rel / (1 + rel);
+							interpolationIntersection = element.Interpolation.EvaluateAllAt(element.Nodes, intersectionPointCoordinates);
+						    shapeFunctionValuesIntersection = interpolationIntersection.ShapeFunctions;
+							relativeCriteriaIntersection = 0.0;
+							for (int k = 0; k < ElementNodalLevelSetValues.Length; k++)
+							{
+								relativeCriteriaIntersection = relativeCriteriaIntersection + ElementNodalLevelSetValues[i] * shapeFunctionValuesIntersection[i];
+							}
+						}
+						coordinatesOfIntersectionPoints.Add(intersectionPointCoordinates);
 				}
-			} 
-
-			
+				}
+			return coordinatesOfIntersectionPoints;
 		}
 		public Vector CalcNodalLevelSetOfSubTet4(ElementEdge edge, double[] centreOfFace, double[] centroid, IXFiniteElement element)
 		{
