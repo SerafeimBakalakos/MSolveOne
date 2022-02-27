@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -7,9 +7,6 @@ using MGroup.XFEM.Interpolation;
 
 namespace MGroup.XFEM.Geometry.Mesh
 {
-    /// <summary>
-    /// This work only for a very specific division of 1 Quad into 2 triangles.
-    /// </summary>
     public abstract class DualCartesianSimplicialMeshBase : IDualMesh
     {
         protected readonly ICartesianMesh coarseMesh;
@@ -134,11 +131,9 @@ namespace MGroup.XFEM.Geometry.Mesh
             return fineElementIDs;
         }
 
-        //TODO: These mapping and its inverse must also work for points on edges of the fine and coarse mesh.
+        //TODO: This mapping and its inverse must also work for points on edges of the fine and coarse mesh.
         public abstract double[] MapPointFineNaturalToCoarseNatural(int[] fineElementIdx, double[] coordsFineNatural);
 
         public abstract DualMeshPoint CalcShapeFunctions(int coarseElementID, double[] coarseNaturalCoords);
-
-        
     }
 }

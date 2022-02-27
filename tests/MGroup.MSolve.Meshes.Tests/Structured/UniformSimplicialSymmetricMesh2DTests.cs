@@ -21,8 +21,8 @@ namespace MGroup.MSolve.Meshes.Tests.Structured
 			double[] minCoords = { 0, 0 };
 			double[] maxCoords = { 6, 4 };
 			int[] numNodes = { 7, 5 };
-			//var mesh = new UniformSimplicialMesh2DSymmetric.Builder(minCoords, maxCoords, numNodes).SetMajorAxis(0).BuildMesh();
-			var mesh = new UniformSimplicialSymmetricMesh2D.Builder(minCoords, maxCoords, numNodes).BuildMesh();
+			var mesh = new UniformSimplicialSymmetricMesh2D.Builder(minCoords, maxCoords, numNodes).SetMajorAxis(0).BuildMesh();
+			//var mesh = new UniformSimplicialSymmetricMesh2D.Builder(minCoords, maxCoords, numNodes).BuildMesh();
 			writer.WriteMesh(path, mesh, 2);
 		}
 	}

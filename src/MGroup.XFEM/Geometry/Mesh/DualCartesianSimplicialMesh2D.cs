@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -145,7 +145,7 @@ namespace MGroup.XFEM.Geometry.Mesh
             {
                 for (int i = 0; i < multiple[0]; ++i)
                 {
-                    // Offset from the fine element that has the same first node as the coarse element
+                    // Offset from the fine cartesian element that has the same first node as the coarse element
                     offsets.Add(new int[] { i, j });
                 }
             }
