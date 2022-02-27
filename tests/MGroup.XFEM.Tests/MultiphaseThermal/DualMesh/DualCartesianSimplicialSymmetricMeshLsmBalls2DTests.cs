@@ -130,11 +130,8 @@ namespace MGroup.XFEM.Tests.MultiphaseThermal.DualMesh
 			}
 		}
 
-		[Theory]
-		[InlineData(DualMeshLsmChoice.Global)]
-		//[InlineData(DualMeshLsmChoice.Fixed)]
-		//[InlineData(DualMeshLsmChoice.Local)]
-		public static void TestLevelSetsAtRandomPoints(DualMeshLsmChoice lsmChoice)
+		[Fact]
+		public static void TestLevelSetsAtRandomPoints()
 		{
 			try
 			{
@@ -143,10 +140,10 @@ namespace MGroup.XFEM.Tests.MultiphaseThermal.DualMesh
 					Directory.CreateDirectory(outputDirectory);
 				}
 
-				var mesh = new DualCartesianSimplicialMesh2D.Builder(minCoords, maxCoords, numNodesCoarse, numNodesFine)
+				var mesh = new DualCartesianSimplicialSymmetricMesh2D.Builder(minCoords, maxCoords, numNodesCoarse, numNodesFine)
 					.BuildMesh();
 				XModel<IXMultiphaseElement> coarseModel = CreateModel(mesh.CoarseMesh);
-				var dualMeshLsm = new DualMeshLsm(0, initialCurve, mesh, lsmChoice.Create(dim));
+				var dualMeshLsm = new DualMeshLsmSymmetric(0, initialCurve, mesh);
 
 				int numPointsPerElemPerAxis = 15;
 				var allPoints = new Dictionary<double[], double>();
@@ -194,11 +191,8 @@ namespace MGroup.XFEM.Tests.MultiphaseThermal.DualMesh
 			}
 		}
 
-		[Theory]
-		[InlineData(DualMeshLsmChoice.Global)]
-		//[InlineData(DualMeshLsmChoice.Fixed)]
-		//[InlineData(DualMeshLsmChoice.Local)]
-		public static void TestModel(DualMeshLsmChoice lsmChoice)
+		[Fact]
+		public static void TestModel()
 		{
 			try
 			{
@@ -208,10 +202,10 @@ namespace MGroup.XFEM.Tests.MultiphaseThermal.DualMesh
 				}
 
 				// Create model and LSM
-				var mesh = new DualCartesianSimplicialMesh2D.Builder(minCoords, maxCoords, numNodesCoarse, numNodesFine).BuildMesh();
+				var mesh = new DualCartesianSimplicialSymmetricMesh2D.Builder(minCoords, maxCoords, numNodesCoarse, numNodesFine).BuildMesh();
 				XModel<IXMultiphaseElement> model = CreateModel(mesh.CoarseMesh);
 				model.FindConformingSubcells = true;
-				PhaseGeometryModel geometryModel = CreatePhases(lsmChoice, model, mesh);
+				PhaseGeometryModel geometryModel = CreatePhases(model, mesh);
 
 				// Plot phases of nodes
 				geometryModel.InteractionObservers.Add(new NodalPhasesPlotter(outputDirectory, model));
@@ -315,8 +309,7 @@ namespace MGroup.XFEM.Tests.MultiphaseThermal.DualMesh
 			return model;
 		}
 
-		private static PhaseGeometryModel CreatePhases(DualMeshLsmChoice lsmChoice,
-			XModel<IXMultiphaseElement> model, IDualMesh mesh)
+		private static PhaseGeometryModel CreatePhases(XModel<IXMultiphaseElement> model, DualCartesianSimplicialSymmetricMeshBase mesh)
 		{
 			var geometricModel = new PhaseGeometryModel(model);
 			model.GeometryModel = geometricModel;
@@ -327,7 +320,7 @@ namespace MGroup.XFEM.Tests.MultiphaseThermal.DualMesh
 			var phase = new LsmPhase(1, geometricModel, -1);
 			geometricModel.Phases[phase.ID] = phase;
 
-			var dualMeshLsm = new DualMeshLsm(0, initialCurve, mesh, lsmChoice.Create(dim));
+			var dualMeshLsm = new DualMeshLsmSymmetric(0, initialCurve, mesh);
 			var boundary = new ClosedPhaseBoundary(phase.ID, dualMeshLsm, defaultPhase, phase);
 			defaultPhase.ExternalBoundaries.Add(boundary);
 			defaultPhase.Neighbors.Add(phase);

@@ -39,7 +39,38 @@ namespace MGroup.XFEM.Geometry.Mesh
 
 		public IStructuredMesh CoarseMesh => coarseMesh;
 
-		protected abstract IIsoparametricInterpolation FineElementInterpolation { get; }
+		public abstract IIsoparametricInterpolation CoarseElementInterpolation { get; }
+
+		public abstract IIsoparametricInterpolation FineElementInterpolation { get; }
+
+		public int[] FindSurroundingCoarseNodesForFineNode(int fineNodeID)
+		{
+			int[] fineNodeIdx = FineMesh.GetNodeIdx(fineNodeID);
+			var coarseNodeIndicesPerAxis = new List<int>[Dimension];
+			for (int d = 0; d < Dimension; d++)
+			{
+				coarseNodeIndicesPerAxis[d] = new List<int>(2);
+				if (fineNodeIdx[d] % 2 == 0)
+				{
+					// Coarse and fine node idx coincide (in this axis)
+					coarseNodeIndicesPerAxis[d].Add(fineNodeIdx[d] / 2); 
+				}
+				else
+				{
+					// Fine node idx lies between 2 fine node indices (in this axis)
+					coarseNodeIndicesPerAxis[d].Add(fineNodeIdx[d] / 2);
+					coarseNodeIndicesPerAxis[d].Add(fineNodeIdx[d] / 2 + 1);
+				}
+			}
+			List<int[]> coarseNodeIndices = CombineIndices(coarseNodeIndicesPerAxis);
+
+			var coarseNodeIDs = new int[coarseNodeIndices.Count];
+			for (int n = 0; n < coarseNodeIndices.Count; ++n)
+			{
+				coarseNodeIDs[n] = CoarseMesh.GetNodeID(coarseNodeIndices[n]);
+			}
+			return coarseNodeIDs;
+		}
 
 		/// <summary>
 		/// If the node in the fine mesh does not correspond to a node in the coarse mesh, -1 will be returned
@@ -112,9 +143,42 @@ namespace MGroup.XFEM.Geometry.Mesh
 			return fineElementIDs;
 		}
 
+		public abstract DualMeshPoint CalcShapeFunctions(int coarseElementID, double[] coarseNaturalCoords);
+
 		//TODO: This mapping and its inverse must also work for points on edges of the fine and coarse mesh.
 		public abstract double[] MapPointFineNaturalToCoarseNatural(int[] fineElementIdx, double[] coordsFineNatural);
 
-		public abstract DualMeshPoint CalcShapeFunctions(int coarseElementID, double[] coarseNaturalCoords);
+		private static List<int[]> CombineIndices(List<int>[] indicesPerAxis)
+		{
+			var result = new List<int[]>();
+			if (indicesPerAxis.Length == 2)
+			{
+				foreach (int j in indicesPerAxis[1])
+				{
+					foreach (int i in indicesPerAxis[0])
+					{
+						result.Add(new int[] { i, j });
+					}
+				}
+			}
+			else if (indicesPerAxis.Length == 3)
+			{
+				foreach (int k in indicesPerAxis[2])
+				{
+					foreach (int j in indicesPerAxis[1])
+					{
+						foreach (int i in indicesPerAxis[0])
+						{
+							result.Add(new int[] { i, j, k });
+						}
+					}
+				}
+			}
+			else
+			{
+				throw new NotImplementedException();
+			}
+			return result;
+		}
 	}
 }

@@ -17,53 +17,9 @@ namespace MGroup.XFEM.Geometry.Mesh
 		{
 		}
 
-		protected override IIsoparametricInterpolation FineElementInterpolation { get; } = InterpolationTri3.UniqueInstance;
+		public override IIsoparametricInterpolation CoarseElementInterpolation { get; } = InterpolationQuad4.UniqueInstance;
 
-		//TODO: These mapping and its inverse must also work for points on edges/faces of the fine and coarse mesh.
-		public override double[] MapPointFineNaturalToCoarseNatural(int[] fineElementIdx, double[] coordsFineNatural)
-		{
-			// Map from the fine triangle to the coarse quad. 
-			// To prove these formulas, use the interpolation from natural triangle to natural quad system.
-			double r = coordsFineNatural[0];
-			double s = coordsFineNatural[1];
-			var coordsQuad = new double[2];
-			if (fineElementIdx[2] == 0)
-			{
-				//   /\
-				//  /  \
-				// /____\
-				coordsQuad[0] = -r +s;
-				coordsQuad[1] = -r -s;
-			}
-			else if (fineElementIdx[2] == 1)
-			{
-				//   /|
-				//  / |
-				//  \ |
-				//   \|
-				coordsQuad[0] = +r +s;
-				coordsQuad[1] = -r +s;
-			}
-			else if (fineElementIdx[2] == 2)
-			{
-				// ____
-				// \  /
-				//  \/
-				coordsQuad[0] = +r -s;
-				coordsQuad[1] = +r +s;
-			}
-			else
-			{
-				Debug.Assert(fineElementIdx[2] == 3);
-				// |\
-				// | \
-				// | /
-				// |/
-				coordsQuad[0] = -r -s;
-				coordsQuad[1] = +r -s;
-			}
-			return coordsQuad;
-		}
+		public override IIsoparametricInterpolation FineElementInterpolation { get; } = InterpolationTri3.UniqueInstance;
 
 		public override DualMeshPoint CalcShapeFunctions(int coarseElementID, double[] coarseNaturalCoords)
 		{
@@ -143,6 +99,52 @@ namespace MGroup.XFEM.Geometry.Mesh
 			result.FineElementIdx[Dimension] = subtriangle;
 
 			return result;
+		}
+
+		//TODO: These mapping and its inverse must also work for points on edges/faces of the fine and coarse mesh.
+		public override double[] MapPointFineNaturalToCoarseNatural(int[] fineElementIdx, double[] coordsFineNatural)
+		{
+			// Map from the fine triangle to the coarse quad. 
+			// To prove these formulas, use the interpolation from natural triangle to natural quad system.
+			double r = coordsFineNatural[0];
+			double s = coordsFineNatural[1];
+			var coordsQuad = new double[2];
+			if (fineElementIdx[2] == 0)
+			{
+				//   /\
+				//  /  \
+				// /____\
+				coordsQuad[0] = -r + s;
+				coordsQuad[1] = -r - s;
+			}
+			else if (fineElementIdx[2] == 1)
+			{
+				//   /|
+				//  / |
+				//  \ |
+				//   \|
+				coordsQuad[0] = +r + s;
+				coordsQuad[1] = -r + s;
+			}
+			else if (fineElementIdx[2] == 2)
+			{
+				// ____
+				// \  /
+				//  \/
+				coordsQuad[0] = +r - s;
+				coordsQuad[1] = +r + s;
+			}
+			else
+			{
+				Debug.Assert(fineElementIdx[2] == 3);
+				// |\
+				// | \
+				// | /
+				// |/
+				coordsQuad[0] = -r - s;
+				coordsQuad[1] = +r - s;
+			}
+			return coordsQuad;
 		}
 
 		public class Builder
