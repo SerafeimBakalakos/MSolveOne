@@ -153,26 +153,36 @@ namespace MGroup.XFEM.Geometry.Mesh
 			private readonly double[] maxCoordinates;
 			private readonly int[] numNodesCoarse;
 			private readonly int[] numNodesFine;
-			private readonly int majorAxis;
+			private int axisMajorChoice = 0;
 
-			public Builder(double[] minCoordinates, double[] maxCoordinates, int[] numNodesCoarse, int[] numNodesFine, 
-				int majorAxis = 0)
+			public Builder(double[] minCoordinates, double[] maxCoordinates, int[] numNodesCoarse, int[] numNodesFine)
 			{
 				this.minCoordinates = minCoordinates;
 				this.maxCoordinates = maxCoordinates;
 				this.numNodesCoarse = numNodesCoarse;
 				this.numNodesFine = numNodesFine;
-				this.majorAxis = majorAxis;
+			}
+
+			/// <summary>
+			/// The node IDs will be ordered such that they are contiguous along dimension <paramref name="axis"/>. Calling this
+			/// method overrides the default node order: nodes are contiguous in the dimension with mininum number of nodes.
+			/// </summary>
+			/// <param name="axis">The axis along which node ids will be contiguous. 0 for x or 1 for y.</param>
+			/// <returns>This object for chaining.</returns>
+			public Builder SetMajorAxis(int axis)
+			{
+				this.axisMajorChoice = axis;
+				return this;
 			}
 
 			public DualCartesianSimplicialSymmetricMesh2D BuildMesh()
 			{
 				int[] numElementsCoarse = { numNodesCoarse[0] - 1, numNodesCoarse[1] - 1 };
 				var coarseMesh = new UniformCartesianMesh2D.Builder(minCoordinates, maxCoordinates, numElementsCoarse)
-					.SetMajorAxis(majorAxis) //TODO: Implement the other options in the mesh class and the builder.
+					.SetMajorAxis(axisMajorChoice) //TODO: Implement the other options in the mesh class and the builder.
 					.BuildMesh();
 				var fineMesh = new UniformSimplicialSymmetricMesh2D.Builder(minCoordinates, maxCoordinates, numNodesFine)
-					.SetMajorAxis(majorAxis)
+					.SetMajorAxis(axisMajorChoice)
 					.BuildMesh();
 				return new DualCartesianSimplicialSymmetricMesh2D(coarseMesh, fineMesh);
 			}
