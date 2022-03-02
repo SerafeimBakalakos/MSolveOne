@@ -58,7 +58,7 @@ namespace MGroup.XFEM.IsoXFEM
 		public Vector relativeCriteria;
 
 		public IXGeometryDescription levelSetDescription;
-		public DualCartesianSimplicialMeshBase Mesh { get; set; }
+		public IDualMesh Mesh { get; set; }
 		public bool FindConformingSubcells { get; set; } = false;
 
 		public IGeometryModel GeometryModel { get; set; }
@@ -179,14 +179,23 @@ namespace MGroup.XFEM.IsoXFEM
 			}
 			//else
 			//{
-			//	var geometry = new Circle2D(0, 0, 0);
-			//	var levelSetStorage = new LsmStorageRaw(Dimension, relativeCriteria.CopyToArray());
-			//	levelSetDescription = new DualMeshLsm(0, geometry, Mesh, levelSetStorage);
+			//	//var geometry = new Circle2D(0, 0, 0);
+			//	//var levelSetStorage = new LsmStorageRaw(Dimension, relativeCriteria.CopyToArray());
+			//	levelSetDescription = new DualMeshLsmSymmetric(0, relativeCriteria.CopyToArray(), (DualCartesianSimplicialSymmetricMeshBase)Mesh);
 			//	//levelSetDescription = new SimpleLsm3D(0, relativeCriteria.CopyToArray());
 			//	foreach (var element in Elements)
 			//	{
+			//		#region Debug
+			//		//if (element.Value.ID == 740)
+			//		//{
+			//		//	Console.WriteLine();
+			//		//}
+			//		#endregion
 			//		var intersection = levelSetDescription.Intersect(element.Value);
-			//		element.Value.RegisterInteractionWithLsm2D(intersection);
+			//		if (intersection.RelativePosition== RelativePositionCurveElement.Intersecting)
+			//		{
+			//			element.Value.RegisterInteractionWithLsm2D(intersection);
+			//		}					
 			//	}
 			//}
 			CalcConformingSubcells();
@@ -232,7 +241,7 @@ namespace MGroup.XFEM.IsoXFEM
 		private void CalcConformingSubcells()
 		{
 			ISolidOnlyTriangulator triangulator;
-			if (Dimension == 2) triangulator = new SolidOnlyMSolveTriangulator2D();
+			if (Dimension == 2) triangulator = new SolidOnlyTriangulator2D();
 			else if (Dimension == 3) triangulator = new SolidOnlyMSolveTriangulator3D();
 			else throw new NotImplementedException();
 
@@ -247,6 +256,13 @@ namespace MGroup.XFEM.IsoXFEM
 				}
 				Vector elementRelativeCriteria = relativeCriteria.GetSubvector(connectionOfElement);
 				element.ElementLevelSet = elementRelativeCriteria;
+				#region Debug
+				//if (element.ID==740)
+				//{
+				//	Console.WriteLine();
+				//}
+				#endregion
+
 				element.DefinePhaseOfElement();
 				if (element.PhaseElement == IIsoXfemElement.Phase.boundaryElement)
 				{
@@ -267,6 +283,18 @@ namespace MGroup.XFEM.IsoXFEM
 					}
 					else if (Dimension == 2)
 					{
+						//var intersections = new List<IElementDiscontinuityInteraction>();
+						//foreach (IElementDiscontinuityInteraction interaction in element.InteractingDiscontinuities.Values)
+						//{
+						//	//if (interaction.RelativePosition == RelativePositionCurveElement.Intersecting)
+						//	//{
+						//	intersections.Add(interaction);
+						//	//}
+						//}
+						//IMeshTolerance meshTolerance = new MinimumSideMeshTolerance();
+						////IMeshTolerance meshTolerance = new UserDefinedMeshTolerance(Elements.First().Value.CalcBulkSizeCartesian());
+						//triangulator.LevelSetDescription = levelSetDescription;
+						//element.ConformingSubcells = triangulator.FindConformingMesh(element, intersections, meshTolerance);
 						triangulator.ElementNodalLevelSetValues = element.ElementLevelSet;
 						element.ConformingSubcells = triangulator.FindConformingMesh(element, null, null);
 					}

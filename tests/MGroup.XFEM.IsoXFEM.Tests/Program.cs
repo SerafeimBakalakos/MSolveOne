@@ -8,8 +8,8 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	{
 		static void Main(string[] args)
 		{
-			//Example2D.RunExample2D();
-			Example3D.RunExample3D();
+			Example2D.RunExample2D();
+			//Example3D.RunExample3D();
 		}
 	}
 }

@@ -165,8 +165,11 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Add Loads. Using enum EndLoad in order to choose the node we want to apply the force.
 			/// </summary>
-			endload = EdgeLoad.MiddleEnd;
+			endload = EdgeLoad.BottomEnd;
+			//Z-Y-X
 			int nodeIDLoad = (geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1) * (geometry.NumberOfElementsZ + 1) - (int)endload * (geometry.NumberOfElementsY / 2) * (geometry.NumberOfElementsZ + 1) - 1 - geometry.NumberOfElementsZ;
+			//X-Y-Z
+			//int nodeIDLoad = (geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1) * (geometry.NumberOfElementsZ + 1) - (int)endload * (geometry.NumberOfElementsY / 2) * (geometry.NumberOfElementsX + 1) - 1 - (geometry.NumberOfElementsZ)*(geometry.NumberOfElementsX+1)*(geometry.NumberOfElementsY+1);
 			for (int i = 0; i < (geometry.NumberOfElementsZ + 1); i++)
 			{
 				Load load;
@@ -178,6 +181,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				};
 				xModel.NodalLoads.Add(load);
 				nodeIDLoad++;
+				//nodeIDLoad = nodeIDLoad + (geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1);
 			}
 			/// <summary>
 			/// Initialize the Model.
@@ -190,7 +194,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			var algebraicModel = solverFactory.BuildAlgebraicModel(xModel);
 			var solver = solverFactory.BuildSolver(algebraicModel);
 			/// Defines solidRatio. The Problem is 3D so SolidVolume is selected.
-			/// </summary>
+			/// <summary>
 			ISolidRatio solidRatio = new SolidVolume(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.SizeOfElement));
 			/// <summary>
 			/// Defines the topology Optimization and Optimize the problem with IsoXfem Method.

@@ -12,7 +12,7 @@ namespace MGroup.XFEM.Geometry.Mesh
     /// </summary>
     public class DualCartesianSimplicialMesh2D : DualCartesianSimplicialMeshBase
     {
-        public DualCartesianSimplicialMesh2D(UniformCartesianMesh2D coarseMesh, UniformSimplicialMesh2D fineMesh)
+        private DualCartesianSimplicialMesh2D(UniformCartesianMesh2D coarseMesh, UniformSimplicialMesh2D fineMesh)
             : base(2, coarseMesh, fineMesh, 2)
         {
             CoarseToFineElementOffsets = FindElementOffsets(multiple);

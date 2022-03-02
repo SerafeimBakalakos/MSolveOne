@@ -18,10 +18,19 @@ namespace MGroup.XFEM.IsoXFEM.Output
 	{
 		public static void ResultsWriterToTxt(Matrix results)
 		{
-			var writer = new FullMatrixWriter();
-			writer.NumericFormat = new ExponentialFormat() { NumDecimalDigits = 17 };
-			string path = $"{Paths.OutputForTxtResults}\\MSolve2DTriangulator_40x20BottomEnd.txt";
-			writer.WriteToFile(results, path);
+			//var writer = new FullMatrixWriter();
+			//writer.NumericFormat = new ExponentialFormat() { NumDecimalDigits = 17 };
+			string path = $"{Paths.OutputForTxtResults}\\2DTriangulator_100x50.txt";
+			using (var writer = new StreamWriter(path))
+			{
+				for (int i = 0; i < results.NumRows; i++)
+				{
+					writer.WriteLine($"iter {results[i,0]}:  ");
+					writer.WriteLine($"\t\t SED={ results[i, 1]} ");
+					writer.WriteLine($"\t\t VolumeFraction={ results[i, 2]} ");
+				}
+			}
+            //writer.WriteToFile(results, path);
 		}
 
 		public static void VolumeForEachElementWriter(int iter, int dimension, Dictionary<int, IIsoXfemElement> Elements)

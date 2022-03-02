@@ -22,8 +22,11 @@ namespace MGroup.XFEM.Geometry.ConformingMesh
             // Gather the vertices
             List<double[]> vertices = points.ToList();
 
-            // Call 3rd-party mesh generator
-            var meshCells = Triangulation.CreateDelaunay(vertices).Cells.ToArray();
+			// Call 3rd-party mesh generator
+			var triangulation = Triangulation.CreateDelaunay(vertices);
+			var cells = triangulation.Cells;
+			var cellsArray=cells.ToArray();
+			var meshCells = Triangulation.CreateDelaunay(vertices).Cells.ToArray();
 
             // Repackage the triangle cells
             var triangles = new List<Triangle2D>(meshCells.Length);

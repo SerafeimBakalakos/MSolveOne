@@ -82,20 +82,24 @@ namespace MGroup.XFEM.IsoXFEM.MeshGeneration
 			return (nodes,elements);			
         }
 
-		public DualCartesianSimplicialMesh2D CreateDualMesh()
+		public DualCartesianSimplicialSymmetricMesh2D CreateDualMesh()
 		{
 			int[] numElements = { GeometryOfModel.NumberOfElementsX, GeometryOfModel.NumberOfElementsY};
-			int[] numNodes = { GeometryOfModel.NumberOfElementsX + 1, GeometryOfModel.NumberOfElementsY + 1 };
+			int[] numNodesCoarse = { GeometryOfModel.NumberOfElementsX + 1, GeometryOfModel.NumberOfElementsY + 1 };
+			int[] numNodesFine = { 2 * (numNodesCoarse[0] - 1) + 1, 2 * (numNodesCoarse[1] - 1) + 1 };
 			double[] minCoords = { 0, 0};
 			double[] maxCoords = { GeometryOfModel.length, GeometryOfModel.height};
-			var coarseMesh = new UniformCartesianMesh2D.Builder(minCoords, maxCoords, numElements)
-				//.SetMajorMinorAxis(1, 0) //TODO: Implement the other options in the mesh class and the builder.
-				//.SetElementNodeOrderDefault()
-				.BuildMesh();
-			var fineMesh = new UniformSimplicialMesh2D.Builder(minCoords, maxCoords, numNodes)
-				//.SetMajorMinorAxis(2, 0)
-				.BuildMesh();
-			return new DualCartesianSimplicialMesh2D(coarseMesh, fineMesh);
+			//var coarseMesh = new UniformCartesianMesh2D.Builder(minCoords, maxCoords, numElements)
+			//	.SetMajorAxis(1) //TODO: Implement the other options in the mesh class and the builder.
+			//							 //.SetElementNodeOrderDefault()
+			//	.BuildMesh();
+			//var fineMesh = new UniformSimplicialSymmetricMesh2D.Builder(minCoords, maxCoords, numNodesFine)
+			//	.SetMajorAxis(1)
+			//	.BuildMesh();
+			var dualMesh = new DualCartesianSimplicialSymmetricMesh2D.Builder(
+				minCoords, maxCoords, numNodesCoarse, numNodesFine)
+				.SetMajorAxis(1).BuildMesh();
+			return dualMesh;
 		}
 	}
 }

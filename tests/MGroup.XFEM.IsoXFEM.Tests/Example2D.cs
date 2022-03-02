@@ -71,7 +71,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Define material properties and geometry.
 			/// </summary>
-			var geometry = new GeometryProperties(40, 20, 1, new int[] { 40, 20 });
+			var geometry = new GeometryProperties(40, 20, 1, new int[] { 100, 50 });
 			var material = new ElasticMaterial2D(StressState2D.PlaneStress);
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;

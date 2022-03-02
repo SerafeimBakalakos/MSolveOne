@@ -47,14 +47,22 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 		//	subtetrahedra[0] = new ElementSubtetrahedron3D(new Tetrahedron3D(coordinatesAll[0], coordinatesAll[1], coordinatesAll[9], coordinatesAll[14]));
 		}
 		
-		public List<double[]>  FindIntersection(IsoXfemElementSubtetrahedon3D boundaryTet4, IXFiniteElement element)
+		public (List<double[]> ,List<int>,List<int[]>)  FindIntersection(IsoXfemElementSubtetrahedon3D boundaryTet4, IXFiniteElement element)
 		{
 			List<double[]> coordinatesOfIntersectionPoints = new List<double[]>();
 			//List<int> indexOfPositiveNodes = new List<int>();
 			int numberOfIntersectionPointsOfBrick = 0;
 			List<int[]> indexOfIntersectionNodes = new List<int[]>();
+			List<int> nodesWithPositiveValues = new List<int>();
 			int numberIntersectionPointsOfTet4 = 0;
 			int[,] edgesOfTet4 = new int[,] { { 0, 1 }, { 0, 2 }, { 0, 3 }, { 1, 2 }, { 1, 3 }, { 2, 3 } };
+			for (int i = 0; i < boundaryTet4.NodalLevelSetValues.Length; i++)
+			{
+				if (boundaryTet4.NodalLevelSetValues[i]>0)
+				{
+					nodesWithPositiveValues.Add(i);
+				}
+			}
 			for (int i = 0; i < edgesOfTet4.GetLength(0); i++)
 			{
 				if (boundaryTet4.NodalLevelSetValues[edgesOfTet4[i, 0]] * boundaryTet4.NodalLevelSetValues[edgesOfTet4[i, 1]] < 0)
@@ -116,7 +124,7 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 						coordinatesOfIntersectionPoints.Add(intersectionPointCoordinates);
 				}
 				}
-			return coordinatesOfIntersectionPoints;
+			return (coordinatesOfIntersectionPoints, nodesWithPositiveValues, indexOfIntersectionNodes);
 		}
 		public Vector CalcNodalLevelSetOfSubTet4(ElementEdge edge, double[] centreOfFace, double[] centroid, IXFiniteElement element)
 		{
@@ -156,7 +164,21 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 		public IElementSubcell[] FindConformingMesh(IXFiniteElement element, IEnumerable<IElementDiscontinuityInteraction> intersections, IMeshTolerance meshTolerance) => throw new NotImplementedException();
 		//public IElementSubcell[] FindConformingMesh(IXFiniteElement element, IEnumerable<IElementDiscontinuityInteraction> intersections, IMeshTolerance meshTolerance)
 		//{
+		//	var subTets4 = CreateSubTetrahedra(element);
+		//	var (solidsubTets4, boundarysubTets4) = ClassifySubtetrahedra(subTets4);
+		//	foreach (var boundarysubTet in boundarysubTets4)
+		//	{
+		//		var (intersectionPoints, positiveNodes, indexOfIntersectionNodes) = FindIntersection(boundarysubTet, element);
+		//		if (intersectionPoints.Count == 3 & positiveNodes.Count == 1)
+		//		{
+		//			var solidpart = new IsoXfemElementSubtetrahedon3D(new Tetrahedron3D(intersectionPoints[0], intersectionPoints[1], intersectionPoints[2], boundarysubTet.VerticesNatural[positiveNodes[0]]));
+		//			solidsubTets4.Add(solidpart);
+		//		}
+		//		else if (intersectionPoints.Count == 3 & positiveNodes.Count == 1)
+		//		{
 
+		//		}
+		//	}
 		//}
 
 	}

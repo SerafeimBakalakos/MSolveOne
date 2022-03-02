@@ -7,6 +7,7 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 	using MGroup.LinearAlgebra.Reduction;
 	using MGroup.LinearAlgebra.Vectors;
 	using MGroup.MSolve.Discretization.Mesh;
+	using MGroup.XFEM.ElementGeometry;
 	using MGroup.XFEM.Elements;
 	using MGroup.XFEM.Entities;
 	using MGroup.XFEM.Geometry;
@@ -19,8 +20,10 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 		public IsoXfemElementSubtetrahedon3D(Tetrahedron3D tetraNatural)
 		{
 			VerticesNatural = tetraNatural.Vertices;
+			elementGeometry = new ElementTet4Geometry();
 		}
 
+		private readonly IElementGeometry elementGeometry;
 		public Vector NodalLevelSetValues { get; set; }
 		public enum Phase
 		{
