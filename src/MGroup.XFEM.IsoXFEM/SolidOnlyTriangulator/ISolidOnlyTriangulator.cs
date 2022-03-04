@@ -10,6 +10,7 @@ namespace MGroup.XFEM.IsoXFEM
 
 	public interface ISolidOnlyTriangulator : IConformingTriangulator
 	{
+		public Vector NodalLevelSetModel { get; set; }
 		public Vector ElementNodalLevelSetValues { get; set; }
 		public IXGeometryDescription LevelSetDescription { get; set; }
 	}

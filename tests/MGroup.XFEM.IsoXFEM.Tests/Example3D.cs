@@ -72,7 +72,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Define material properties and geometry.
 			/// </summary>
-			var geometry = new GeometryProperties(40, 20, 2, new int[] { 40, 20, 2 });
+			var geometry = new GeometryProperties(40, 20, 1, new int[] { 20, 10, 1 });
 			var material = new ElasticMaterial3D();
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
@@ -148,7 +148,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// </summary>
 			int dimension = 3;
 			var xModel = new IsoXFEM.XModel<IIsoXfemElement>(dimension);
-			xModel.Mesh = dualMesh;
+			//xModel.Mesh = dualMesh;
 			/// <summary>
 			/// Add Subdomain, Nodes and Elements to Model.
 			/// </summary>
@@ -165,7 +165,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Add Loads. Using enum EndLoad in order to choose the node we want to apply the force.
 			/// </summary>
-			endload = EdgeLoad.BottomEnd;
+			endload = EdgeLoad.MiddleEnd;
 			//Z-Y-X
 			int nodeIDLoad = (geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1) * (geometry.NumberOfElementsZ + 1) - (int)endload * (geometry.NumberOfElementsY / 2) * (geometry.NumberOfElementsZ + 1) - 1 - geometry.NumberOfElementsZ;
 			//X-Y-Z

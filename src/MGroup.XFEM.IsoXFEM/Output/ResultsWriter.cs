@@ -20,7 +20,7 @@ namespace MGroup.XFEM.IsoXFEM.Output
 		{
 			//var writer = new FullMatrixWriter();
 			//writer.NumericFormat = new ExponentialFormat() { NumDecimalDigits = 17 };
-			string path = $"{Paths.OutputForTxtResults}\\2DTriangulator_100x50.txt";
+			string path = $"{Paths.OutputForTxtResults}\\3DTriangulator_40x20x1.txt";
 			using (var writer = new StreamWriter(path))
 			{
 				for (int i = 0; i < results.NumRows; i++)

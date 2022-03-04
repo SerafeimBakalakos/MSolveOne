@@ -139,7 +139,7 @@ namespace MGroup.XFEM.IsoXFEM
         }
 		public  void PlotPerformanceLevel(int iteration, Dictionary<int, XNode>  nodes, Dictionary<int, IIsoXfemElement>  elements, Vector nodalValues)
         {                    
-            string path = $"{ Paths.OutputDirectory}\\2DTriangulator_100x50_iter{iteration}.vtk";
+            string path = $"{ Paths.OutputDirectory}\\3DTriangulator_40x20x1_iter{iteration}.vtk";
 			CellType cellType = xModel.Elements.First().Value.CellType;
             var writer = new VtkFileWriter(path, xModel.Dimension, cellType);
             writer.WriteMesh(nodes, elements);

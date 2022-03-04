@@ -15,6 +15,8 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 	{
 		public Vector ElementNodalLevelSetValues { get; set; }
 		public IXGeometryDescription LevelSetDescription { get ; set; }
+		public Vector NodalLevelSetModel { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
 		IElementSubcell[] IConformingTriangulator.FindConformingMesh(
 			IXFiniteElement element, IEnumerable<IElementDiscontinuityInteraction> intersections, IMeshTolerance meshTolerance)
 			=> FindConformingMesh(element, intersections, meshTolerance);

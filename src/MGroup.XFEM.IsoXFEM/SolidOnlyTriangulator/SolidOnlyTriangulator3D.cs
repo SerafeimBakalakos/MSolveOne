@@ -1,10 +1,12 @@
 namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 {
 	using System;
+	using System.Collections;
 	using System.Collections.Generic;
 	using System.Linq;
 	using System.Text;
 
+	using MGroup.LinearAlgebra.Reduction;
 	using MGroup.LinearAlgebra.Vectors;
 	using MGroup.XFEM.ElementGeometry;
 	using MGroup.XFEM.Elements;
@@ -16,6 +18,7 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 
 	public class SolidOnlyTriangulator3D : ISolidOnlyTriangulator
 	{
+		public Vector NodalLevelSetModel { get; set; }
 		public Vector ElementNodalLevelSetValues { get ; set ; }
 		public IXGeometryDescription LevelSetDescription { get ; set ; }
 
@@ -79,62 +82,75 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 							var indxOfIntersection = new int[] { edgesOfTet4[i, 1], edgesOfTet4[i, 0] };
 							indexOfIntersectionNodes.Add(indxOfIntersection);
 						}
-				         var x1 = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4][0]];
-						 var x2 = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4][1]];
-						 var rel = Math.Abs(boundaryTet4.NodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4][0]] / boundaryTet4.NodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4][1]]);
+				         var x1 = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][0]];
+						 var x2 = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][1]];
+						 var rel = Math.Abs(boundaryTet4.NodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][0]] / boundaryTet4.NodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][1]]);
 						 var intersectionPointCoordinates = new double[3];
 						 intersectionPointCoordinates[0] = x1[0] + (x2[0] - x1[0]) * rel / (1 + rel);
 						 intersectionPointCoordinates[1] = x1[1] + (x2[1] - x1[1]) * rel / (1 + rel);
 						 intersectionPointCoordinates[2] = x1[2] + (x2[2] - x1[2]) * rel / (1 + rel);
-						 var interpolationIntersection = element.Interpolation.EvaluateAllAt(element.Nodes, intersectionPointCoordinates);
-						 var shapeFunctionValuesIntersection = interpolationIntersection.ShapeFunctions;
+					    var shapeFunctionValuesIntersection = EvaluateAt(intersectionPointCoordinates);
 						var relativeCriteriaIntersection = 0.0;
 						for (int k = 0; k < ElementNodalLevelSetValues.Length; k++)
 						{
 							relativeCriteriaIntersection = relativeCriteriaIntersection + ElementNodalLevelSetValues[i] * shapeFunctionValuesIntersection[i];
 						}
-						var relativeCriteriaFirstNode = ElementNodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4][0]];
-						var relativeCriteriaSecondNode = ElementNodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4][1]];
-						//Stabilize intersection coordinates
-						var absLevelSetValues = new double[] { Math.Abs(relativeCriteriaFirstNode), Math.Abs(relativeCriteriaSecondNode) };
-						while ((Math.Abs(relativeCriteriaIntersection / absLevelSetValues.Average()) > 0.0001))
+						var relativeCriteriaFirstNode = ElementNodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][0]];
+						var relativeCriteriaSecondNode = ElementNodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][1]];
+					//Stabilize intersection coordinates
+					var absLevelSetValues = new double[] { Math.Abs(relativeCriteriaFirstNode), Math.Abs(relativeCriteriaSecondNode) };
+					while ((Math.Abs(relativeCriteriaIntersection / absLevelSetValues.Average()) > 0.0001))
+					{
+						if (relativeCriteriaIntersection < 0)
 						{
-							if (relativeCriteriaIntersection<0)
-							{
-								x2 = intersectionPointCoordinates;
-								relativeCriteriaSecondNode = relativeCriteriaIntersection;
-							}
-							else
-							{
-								x1 = intersectionPointCoordinates;
-								relativeCriteriaFirstNode = relativeCriteriaIntersection;
-							}
-							rel = Math.Abs(relativeCriteriaFirstNode / relativeCriteriaSecondNode);							
-							intersectionPointCoordinates[0] = x1[0] + (x2[0] - x1[0]) * rel / (1 + rel);
-							intersectionPointCoordinates[1] = x1[1] + (x2[1] - x1[1]) * rel / (1 + rel);
-							intersectionPointCoordinates[2] = x1[2] + (x2[2] - x1[2]) * rel / (1 + rel);
-							interpolationIntersection = element.Interpolation.EvaluateAllAt(element.Nodes, intersectionPointCoordinates);
-						    shapeFunctionValuesIntersection = interpolationIntersection.ShapeFunctions;
-							relativeCriteriaIntersection = 0.0;
-							for (int k = 0; k < ElementNodalLevelSetValues.Length; k++)
-							{
-								relativeCriteriaIntersection = relativeCriteriaIntersection + ElementNodalLevelSetValues[i] * shapeFunctionValuesIntersection[i];
-							}
+							x2 = intersectionPointCoordinates;
+							relativeCriteriaSecondNode = relativeCriteriaIntersection;
 						}
-						coordinatesOfIntersectionPoints.Add(intersectionPointCoordinates);
+						else
+						{
+							x1 = intersectionPointCoordinates;
+							relativeCriteriaFirstNode = relativeCriteriaIntersection;
+						}
+						rel = Math.Abs(relativeCriteriaFirstNode / relativeCriteriaSecondNode);
+						intersectionPointCoordinates[0] = x1[0] + (x2[0] - x1[0]) * rel / (1 + rel);
+						intersectionPointCoordinates[1] = x1[1] + (x2[1] - x1[1]) * rel / (1 + rel);
+						intersectionPointCoordinates[2] = x1[2] + (x2[2] - x1[2]) * rel / (1 + rel);
+						var newshapeFunctionValuesIntersection = EvaluateAt(intersectionPointCoordinates);
+						relativeCriteriaIntersection = 0.0;
+						for (int k = 0; k < ElementNodalLevelSetValues.Length; k++)
+						{
+							relativeCriteriaIntersection = relativeCriteriaIntersection + ElementNodalLevelSetValues[i] * newshapeFunctionValuesIntersection[i];
+						}
+					}
+					coordinatesOfIntersectionPoints.Add(intersectionPointCoordinates);
 				}
 				}
 			return (coordinatesOfIntersectionPoints, nodesWithPositiveValues, indexOfIntersectionNodes);
 		}
+		public double[] EvaluateAt(double[] naturalPoint)
+		{
+			double xi = naturalPoint[0];
+			double eta = naturalPoint[1];
+			double zeta = naturalPoint[2];
+			var oneOverEight = 0.125;
+			var values = new double[8];
+			values[0] = oneOverEight * (1 - xi) * (1 - eta) * (1 - zeta);
+			values[1] = oneOverEight * (1 + xi) * (1 - eta) * (1 - zeta);
+			values[2] = oneOverEight * (1 + xi) * (1 + eta) * (1 - zeta);
+			values[3] = oneOverEight * (1 - xi) * (1 + eta) * (1 - zeta);
+			values[4] = oneOverEight * (1 - xi) * (1 - eta) * (1 + zeta);
+			values[5] = oneOverEight * (1 + xi) * (1 - eta) * (1 + zeta);
+			values[6] = oneOverEight * (1 + xi) * (1 + eta) * (1 + zeta);
+			values[7] = oneOverEight * (1 - xi) * (1 + eta) * (1 + zeta);
+			return values;
+		}
 		public Vector CalcNodalLevelSetOfSubTet4(ElementEdge edge, double[] centreOfFace, double[] centroid, IXFiniteElement element)
 		{
 			Vector nodalLevelSetSubTet4 = Vector.CreateZero(4);
-			nodalLevelSetSubTet4[0] = ElementNodalLevelSetValues[edge.NodeIDs[0]];
-			nodalLevelSetSubTet4[1] = ElementNodalLevelSetValues[edge.NodeIDs[1]];
-			var interpolationCentreOfFace = element.Interpolation.EvaluateAllAt(element.Nodes, centreOfFace);
-			var shapeFunctionValuesCentreOfFace = interpolationCentreOfFace.ShapeFunctions;
-			var interpolationCentroid = element.Interpolation.EvaluateAllAt(element.Nodes, centroid);
-			var shapeFunctionValuesCentroid = interpolationCentroid.ShapeFunctions;
+			nodalLevelSetSubTet4[0] = NodalLevelSetModel[edge.NodeIDs[0]];
+			nodalLevelSetSubTet4[1] = NodalLevelSetModel[edge.NodeIDs[1]];
+			var shapeFunctionValuesCentreOfFace = EvaluateAt(centreOfFace);
+			var shapeFunctionValuesCentroid = EvaluateAt(centroid);
 			for (int i = 0; i < ElementNodalLevelSetValues.Length; i++)
 			{
 				nodalLevelSetSubTet4[2] = nodalLevelSetSubTet4[2] + ElementNodalLevelSetValues[i] * shapeFunctionValuesCentreOfFace[i];
@@ -161,25 +177,145 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 			return (solidSubtetrahedra3D, boundarySubtetrahedra3D);
 		}
 
-		public IElementSubcell[] FindConformingMesh(IXFiniteElement element, IEnumerable<IElementDiscontinuityInteraction> intersections, IMeshTolerance meshTolerance) => throw new NotImplementedException();
-		//public IElementSubcell[] FindConformingMesh(IXFiniteElement element, IEnumerable<IElementDiscontinuityInteraction> intersections, IMeshTolerance meshTolerance)
-		//{
-		//	var subTets4 = CreateSubTetrahedra(element);
-		//	var (solidsubTets4, boundarysubTets4) = ClassifySubtetrahedra(subTets4);
-		//	foreach (var boundarysubTet in boundarysubTets4)
-		//	{
-		//		var (intersectionPoints, positiveNodes, indexOfIntersectionNodes) = FindIntersection(boundarysubTet, element);
-		//		if (intersectionPoints.Count == 3 & positiveNodes.Count == 1)
-		//		{
-		//			var solidpart = new IsoXfemElementSubtetrahedon3D(new Tetrahedron3D(intersectionPoints[0], intersectionPoints[1], intersectionPoints[2], boundarysubTet.VerticesNatural[positiveNodes[0]]));
-		//			solidsubTets4.Add(solidpart);
-		//		}
-		//		else if (intersectionPoints.Count == 3 & positiveNodes.Count == 1)
-		//		{
+		//public IElementSubcell[] FindConformingMesh(IXFiniteElement element, IEnumerable<IElementDiscontinuityInteraction> intersections, IMeshTolerance meshTolerance) => throw new NotImplementedException();
+		public IElementSubcell[] FindConformingMesh(IXFiniteElement element, IEnumerable<IElementDiscontinuityInteraction> intersections, IMeshTolerance meshTolerance)
+		{
+			var maxvalue = ElementNodalLevelSetValues.Max();
+			for (int i = 0; i < ElementNodalLevelSetValues.Length; i++)
+			{
+				if (ElementNodalLevelSetValues[i]==0)
+				{
+					ElementNodalLevelSetValues[i] = maxvalue * 0.0001;
+				}
+			}
+			var subTets4 = CreateSubTetrahedra(element);
+			var (solidsubTets4, boundarysubTets4) = ClassifySubtetrahedra(subTets4);
+			foreach (var boundarysubTet in boundarysubTets4)
+			{
+				var (intersectionPoints, positiveNodes, indexOfIntersectionNodes) = FindIntersection(boundarysubTet, element);
+				if (intersectionPoints.Count == 3 & positiveNodes.Count == 1)
+				{
+					var solidpart = new IsoXfemElementSubtetrahedon3D(new Tetrahedron3D(intersectionPoints[0], intersectionPoints[1], intersectionPoints[2], boundarysubTet.VerticesNatural[positiveNodes[0]]));
+					solidsubTets4.Add(solidpart);
+				}
+				else if (intersectionPoints.Count == 3 & positiveNodes.Count == 3)
+				{
+					var triangles = new Triangle2D[]
+					{ new Triangle2D(boundarysubTet.VerticesNatural[positiveNodes[0]], boundarysubTet.VerticesNatural[positiveNodes[1]], boundarysubTet.VerticesNatural[positiveNodes[2]]),
+					  new Triangle2D(intersectionPoints[0], intersectionPoints[1], intersectionPoints[2])};
+					var coordinatesOfFirstQuad = new List<double[]>();
+					coordinatesOfFirstQuad.Add(intersectionPoints[0]);
+					coordinatesOfFirstQuad.Add(intersectionPoints[1]);
+					coordinatesOfFirstQuad.Add(boundarysubTet.VerticesNatural[indexOfIntersectionNodes[1][0]]);
+					coordinatesOfFirstQuad.Add(boundarysubTet.VerticesNatural[indexOfIntersectionNodes[0][0]]);
+					var coordinatesOfSecQuad = new List<double[]>();
+					coordinatesOfSecQuad.Add(intersectionPoints[1]);
+					coordinatesOfSecQuad.Add(intersectionPoints[2]);
+					coordinatesOfSecQuad.Add(boundarysubTet.VerticesNatural[indexOfIntersectionNodes[2][0]]);
+					coordinatesOfSecQuad.Add(boundarysubTet.VerticesNatural[indexOfIntersectionNodes[1][0]]);
+					var coordinatesOfThirdQuad = new List<double[]>();
+					coordinatesOfThirdQuad.Add(intersectionPoints[2]);
+					coordinatesOfThirdQuad.Add(intersectionPoints[0]);
+					coordinatesOfThirdQuad.Add(boundarysubTet.VerticesNatural[indexOfIntersectionNodes[0][0]]);
+					coordinatesOfThirdQuad.Add(boundarysubTet.VerticesNatural[indexOfIntersectionNodes[2][0]]);
+					var quadrilaterals = new ConvexPolygon2D[]
+					{ new ConvexPolygon2D(coordinatesOfFirstQuad),
+					  new ConvexPolygon2D(coordinatesOfSecQuad),
+					  new ConvexPolygon2D(coordinatesOfThirdQuad)};
+					var allTriangles = new List<Triangle2D>();
+					allTriangles.AddRange(triangles);
+					for (int i = 0; i < quadrilaterals.Length; i++)
+					{
+						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[0], quadrilaterals[i].Vertices[1], quadrilaterals[i].Vertices[2]));
+					}
+					for (int i = 0; i < quadrilaterals.Length; i++)
+					{
+						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[2], quadrilaterals[i].Vertices[3], quadrilaterals[i].Vertices[0]));
+					}
+					var coordinates = new List<double[]>();
+					coordinates.AddRange(new double[][] { boundarysubTet.VerticesNatural[positiveNodes[0]], boundarysubTet.VerticesNatural[positiveNodes[1]], boundarysubTet.VerticesNatural[positiveNodes[2]] });
+					coordinates.AddRange(new double[][] { intersectionPoints[0], intersectionPoints[1], intersectionPoints[2] });
+					var centre = Utilities.FindCentroid((IEnumerable<double[]>)coordinates);
+					foreach (var triangle in allTriangles)
+					{
+						solidsubTets4.Add(new IsoXfemElementSubtetrahedon3D(new Tetrahedron3D(triangle.Vertices[0], triangle.Vertices[1], triangle.Vertices[2], centre)));
+					}
+				}
+				else if (intersectionPoints.Count == 4)
+				{
+					var a1 = new List<int>();
+					for (int i = 0; i < indexOfIntersectionNodes.Count; i++)
+					{
+						if (indexOfIntersectionNodes[i][0] == indexOfIntersectionNodes[0][0])
+						{
+							a1.Add(i);
+						}
+					}
+					var arrayA1 = a1.ToArray();
+					var b1 = ArraysMethods.SetDiff(new int[] { 0 }, arrayA1);
+					var a2 = new List<int>();
+					for (int i = 0; i < indexOfIntersectionNodes.Count; i++)
+					{
+						if (indexOfIntersectionNodes[i][1] == indexOfIntersectionNodes[b1[0]][1])
+						{
+							a2.Add(i);
+						}
+					}
+					var arrayA2 = a2.ToArray();
+					var b2 = ArraysMethods.SetDiff(new int[] { b1[0] }, arrayA2);
+					var b3 = ArraysMethods.SetDiff(new int[] { 0, b1[0], b2[0] }, new int[] { 0, 1, 2, 3 });
+					var triangles = new Triangle2D[]
+					{ new Triangle2D(intersectionPoints[0], intersectionPoints[b1[0]], boundarysubTet.VerticesNatural[indexOfIntersectionNodes[0][0]]),
+					  new Triangle2D(intersectionPoints[b2[0]], intersectionPoints[b3[0]], boundarysubTet.VerticesNatural[indexOfIntersectionNodes[b2[0]][0]])};
+					var coordinatesOfFirstQuad = new List<double[]>();
+					coordinatesOfFirstQuad.Add(intersectionPoints[0]);
+					coordinatesOfFirstQuad.Add(intersectionPoints[b1[0]]);
+					coordinatesOfFirstQuad.Add(intersectionPoints[b2[0]]);
+					coordinatesOfFirstQuad.Add(intersectionPoints[b3[0]]);
+					var coordinatesOfSecQuad = new List<double[]>();
+					coordinatesOfSecQuad.Add(intersectionPoints[b1[0]]);
+					coordinatesOfSecQuad.Add(intersectionPoints[b2[0]]);
+					coordinatesOfSecQuad.Add(boundarysubTet.VerticesNatural[indexOfIntersectionNodes[b3[0]][0]]);
+					coordinatesOfSecQuad.Add(boundarysubTet.VerticesNatural[indexOfIntersectionNodes[0][0]]);
+					var coordinatesOfThirdQuad = new List<double[]>();
+					coordinatesOfThirdQuad.Add(intersectionPoints[b3[0]]);
+					coordinatesOfThirdQuad.Add(intersectionPoints[0]);
+					coordinatesOfThirdQuad.Add(boundarysubTet.VerticesNatural[indexOfIntersectionNodes[0][0]]);
+					coordinatesOfThirdQuad.Add(boundarysubTet.VerticesNatural[indexOfIntersectionNodes[b3[0]][0]]);
+					var quadrilaterals = new ConvexPolygon2D[]
+					{ new ConvexPolygon2D(coordinatesOfFirstQuad),
+					  new ConvexPolygon2D(coordinatesOfSecQuad),
+					  new ConvexPolygon2D(coordinatesOfThirdQuad)};
+					var allTriangles = new List<Triangle2D>();
+					allTriangles.AddRange(triangles);
+					for (int i = 0; i < quadrilaterals.Length; i++)
+					{
+						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[0], quadrilaterals[i].Vertices[1], quadrilaterals[i].Vertices[2]));
+					}
+					for (int i = 0; i < quadrilaterals.Length; i++)
+					{
+						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[2], quadrilaterals[i].Vertices[3], quadrilaterals[i].Vertices[0]));
+					}
+					var coordinates = new List<double[]>();
+					for (int i = 0; i < positiveNodes.Count; i++)
+					{
+						coordinates.Add(boundarysubTet.VerticesNatural[positiveNodes[i]]);
 
-		//		}
-		//	}
-		//}
-
+					}
+					coordinates.AddRange(new double[][] { intersectionPoints[0], intersectionPoints[1], intersectionPoints[2] });
+					var centre = Utilities.FindCentroid((IEnumerable<double[]>)coordinates);
+					foreach (var triangle in allTriangles)
+					{
+						solidsubTets4.Add(new IsoXfemElementSubtetrahedon3D(new Tetrahedron3D(triangle.Vertices[0], triangle.Vertices[1], triangle.Vertices[2], centre)));
+					}
+				}				
+			}
+			ElementSubtetrahedron3D[] solidTets4 = new ElementSubtetrahedron3D[solidsubTets4.Count] ;
+			for (int i = 0; i < solidsubTets4.Count; i++)
+			{
+				solidTets4[i] = new ElementSubtetrahedron3D(new Tetrahedron3D(solidsubTets4[i].VerticesNatural[0], solidsubTets4[i].VerticesNatural[1], solidsubTets4[i].VerticesNatural[2], solidsubTets4[i].VerticesNatural[3]));
+			}
+			return solidTets4;
+		}
 	}
 }

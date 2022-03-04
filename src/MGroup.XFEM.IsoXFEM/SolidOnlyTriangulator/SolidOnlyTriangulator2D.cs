@@ -15,6 +15,8 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 
 	public class SolidOnlyTriangulator2D : ISolidOnlyTriangulator
 	{
+		public Vector NodalLevelSetModel { get; set; }
+
 		public Vector ElementNodalLevelSetValues { get ; set ; }
 		public IXGeometryDescription LevelSetDescription { get ; set ; }
 

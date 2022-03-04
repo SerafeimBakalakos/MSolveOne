@@ -177,6 +177,7 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 		}	
 	    public Vector ElementNodalLevelSetValues { get ; set; }
 		public IXGeometryDescription LevelSetDescription { get ; set ; }
+		public Vector NodalLevelSetModel { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
 		private Dictionary<int, (XNode, bool)> SolidNodes(IXFiniteElement element)
 	    {
