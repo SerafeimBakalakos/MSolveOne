@@ -11,13 +11,14 @@ namespace MGroup.XFEM.IsoXFEM.Tests.SolidOnlyTriangulatorTests
 	using MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator;
 	using Xunit;
 	using MGroup.XFEM.Geometry.Primitives;
+	using MGroup.LinearAlgebra.Vectors;
 
 	public class SolidOnlyTriangulator3DTests
 	{
 		[Fact]
 		private void CreateSubTetrahedraTest()
 		{
-			var geometry = new GeometryProperties(20, 20, 20, new int[] { 2, 2, 2 });
+			var geometry = new GeometryProperties(2, 2, 2, new int[] { 2, 2, 2 });
 			var material = new ElasticMaterial3D();
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
@@ -34,7 +35,16 @@ namespace MGroup.XFEM.IsoXFEM.Tests.SolidOnlyTriangulatorTests
 				nodes[13],
 				nodes[4]
 			});
+			Vector nodalStrainEnergyDensity = Vector.CreateZero((geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1) * (geometry.NumberOfElementsZ + 1));
+			for (int i = 0; i < 9; i++)
+			{
+				nodalStrainEnergyDensity[i] = -50;
+				nodalStrainEnergyDensity[i + 9] = 100;
+				nodalStrainEnergyDensity[i + 18] = -200;
+			}
 			var triangulator = new SolidOnlyTriangulator3D();
+			triangulator.NodalLevelSetModel = nodalStrainEnergyDensity;
+			triangulator.ElementNodalLevelSetValues = Vector.CreateFromArray(new double[] { -50, 100, 100, -50, -50, 100, 100, -50 });
 			var subtetrahedraComputed=triangulator.CreateSubTetrahedra(element);
 			var vertices = new List<double[]>();
 			vertices.AddRange(new double[][] { new double[] { -1,-1,-1}, new double[] { +1, -1, -1 } ,
@@ -82,8 +92,64 @@ namespace MGroup.XFEM.IsoXFEM.Tests.SolidOnlyTriangulatorTests
 				}
 				num++;
 			}
-
-
+			subtetrahedraExpected[0].NodalLevelSetValues = Vector.CreateFromArray(new double[] { -50, 100, 25, 25 });
+			subtetrahedraExpected[1].NodalLevelSetValues = Vector.CreateFromArray(new double[] { 100, 100, 25, 25 });
+			subtetrahedraExpected[2].NodalLevelSetValues = Vector.CreateFromArray(new double[] { 100, -50, 25, 25 });
+			subtetrahedraExpected[3].NodalLevelSetValues = Vector.CreateFromArray(new double[] { -50, -50, 25, 25 });
+			subtetrahedraExpected[4].NodalLevelSetValues = Vector.CreateFromArray(new double[] { -50, 100, 25, 25 });
+			subtetrahedraExpected[5].NodalLevelSetValues = Vector.CreateFromArray(new double[] { 100, 100, 25, 25 });
+			subtetrahedraExpected[6].NodalLevelSetValues = Vector.CreateFromArray(new double[] { 100, -50, 25, 25 });
+			subtetrahedraExpected[7].NodalLevelSetValues = Vector.CreateFromArray(new double[] { -50, -50, 25, 25 });
+			subtetrahedraExpected[8].NodalLevelSetValues = Vector.CreateFromArray(new double[] { -50, 100, 25, 25 });
+			subtetrahedraExpected[9].NodalLevelSetValues = Vector.CreateFromArray(new double[] { -50, -50, 25, 25 });
+			subtetrahedraExpected[10].NodalLevelSetValues = Vector.CreateFromArray(new double[] { -50, 100, 25, 25 });
+			subtetrahedraExpected[11].NodalLevelSetValues = Vector.CreateFromArray(new double[] { 100, 100, 25, 25 });
+			subtetrahedraExpected[12].NodalLevelSetValues = Vector.CreateFromArray(new double[] { 100, -50, 25, 25 });
+			subtetrahedraExpected[13].NodalLevelSetValues = Vector.CreateFromArray(new double[] { 100, 100, 25, 25 });
+			subtetrahedraExpected[14].NodalLevelSetValues = Vector.CreateFromArray(new double[] { 100, -50, 25, 25 });
+			subtetrahedraExpected[15].NodalLevelSetValues = Vector.CreateFromArray(new double[] { -50, -50, 25, 25 });
+			subtetrahedraExpected[16].NodalLevelSetValues = Vector.CreateFromArray(new double[] { -50, -50, -50, 25 });
+			subtetrahedraExpected[17].NodalLevelSetValues = Vector.CreateFromArray(new double[] { -50,-50, -50, 25 });
+			subtetrahedraExpected[18].NodalLevelSetValues = Vector.CreateFromArray(new double[] { -50, -50, -50, 25 });
+			subtetrahedraExpected[19].NodalLevelSetValues = Vector.CreateFromArray(new double[] { -50, -50, -50, 25 });
+			subtetrahedraExpected[20].NodalLevelSetValues = Vector.CreateFromArray(new double[] { 100, 100, 100, 25 });
+			subtetrahedraExpected[21].NodalLevelSetValues = Vector.CreateFromArray(new double[] { 100, 100, 100, 25 });
+			subtetrahedraExpected[22].NodalLevelSetValues = Vector.CreateFromArray(new double[] { 100, 100, 100, 25 });
+			subtetrahedraExpected[23].NodalLevelSetValues = Vector.CreateFromArray(new double[] { 100, 100, 100, 25 });
+			subtetrahedraExpected[0].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[1].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.solidSubTet4;
+			subtetrahedraExpected[2].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[3].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[4].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[5].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.solidSubTet4;
+			subtetrahedraExpected[6].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[7].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[8].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[9].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[10].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[11].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.solidSubTet4;
+			subtetrahedraExpected[12].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[13].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.solidSubTet4;
+			subtetrahedraExpected[14].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[15].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[16].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[17].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[18].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[19].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4;
+			subtetrahedraExpected[20].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.solidSubTet4;
+			subtetrahedraExpected[21].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.solidSubTet4;
+			subtetrahedraExpected[22].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.solidSubTet4;
+			subtetrahedraExpected[23].PhaseOfSubTet4 = IsoXfemElementSubtetrahedon3D.Phase.solidSubTet4;
+			num = 0;
+			foreach (var tet4 in subtetrahedraComputed)
+			{
+				for (int i = 0; i < tet4.NodalLevelSetValues.Length; i++)
+				{
+					Assert.Equal(subtetrahedraExpected[num].NodalLevelSetValues[i], tet4.NodalLevelSetValues[i]);
+				}
+				Assert.Equal(subtetrahedraExpected[num].PhaseOfSubTet4, tet4.PhaseOfSubTet4);
+				num++;
+			}
 		}
-    }
+	}
 }
