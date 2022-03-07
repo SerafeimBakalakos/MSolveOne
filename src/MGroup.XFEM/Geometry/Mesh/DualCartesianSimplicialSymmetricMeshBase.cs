@@ -148,7 +148,7 @@ namespace MGroup.XFEM.Geometry.Mesh
 		//TODO: This mapping and its inverse must also work for points on edges of the fine and coarse mesh.
 		public abstract double[] MapPointFineNaturalToCoarseNatural(int[] fineElementIdx, double[] coordsFineNatural);
 
-		private static List<int[]> CombineIndices(List<int>[] indicesPerAxis)
+		private static List<int[]> CombineIndices(List<int>[] indicesPerAxis) //TODO: This should be abstract and implemented in 2D/3D classes.
 		{
 			var result = new List<int[]>();
 			if (indicesPerAxis.Length == 2)

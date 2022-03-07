@@ -115,7 +115,7 @@ namespace MGroup.MSolve.Discretization.Mesh
         //	  10 |  21    12| 
         //	    \|         \| 
         //		 4----16----5
-        Hexa27,
+        Hexa27, //TODO: this numbering is definitely off
 
 
         //         3          
