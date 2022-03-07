@@ -82,9 +82,15 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 							var indxOfIntersection = new int[] { edgesOfTet4[i, 1], edgesOfTet4[i, 0] };
 							indexOfIntersectionNodes.Add(indxOfIntersection);
 						}
-				         var x1 = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][0]];
-						 var x2 = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][1]];
-						 var rel = Math.Abs(boundaryTet4.NodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][0]] / boundaryTet4.NodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][1]]);
+					     var x1 = new double[3];
+				          x1[0] = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][0]][0];
+					      x1[1] = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4 - 1][0]][1];
+					      x1[2] = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4 - 1][0]][2];
+					      var x2 = new double[3];
+					      x2[0] = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][1]][0];
+					      x2[1] = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4 - 1][1]][1];
+					      x2[2] = boundaryTet4.VerticesNatural[indexOfIntersectionNodes[numberIntersectionPointsOfTet4 - 1][1]][2];
+					     var rel = Math.Abs(boundaryTet4.NodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][0]] / boundaryTet4.NodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][1]]);
 						 var intersectionPointCoordinates = new double[3];
 						 intersectionPointCoordinates[0] = x1[0] + (x2[0] - x1[0]) * rel / (1 + rel);
 						 intersectionPointCoordinates[1] = x1[1] + (x2[1] - x1[1]) * rel / (1 + rel);
@@ -93,22 +99,26 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 						var relativeCriteriaIntersection = 0.0;
 						for (int k = 0; k < ElementNodalLevelSetValues.Length; k++)
 						{
-							relativeCriteriaIntersection = relativeCriteriaIntersection + ElementNodalLevelSetValues[i] * shapeFunctionValuesIntersection[i];
+							relativeCriteriaIntersection += ElementNodalLevelSetValues[k] * shapeFunctionValuesIntersection[k];
 						}
 						var relativeCriteriaFirstNode = ElementNodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][0]];
 						var relativeCriteriaSecondNode = ElementNodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][1]];
 					//Stabilize intersection coordinates
-					var absLevelSetValues = new double[] { Math.Abs(relativeCriteriaFirstNode), Math.Abs(relativeCriteriaSecondNode) };
-					while ((Math.Abs(relativeCriteriaIntersection / absLevelSetValues.Average()) > 0.0001))
+					var whileValue = Math.Abs(relativeCriteriaIntersection / new double[] { Math.Abs(relativeCriteriaFirstNode), Math.Abs(relativeCriteriaSecondNode) }.Average());
+					while (Math.Abs(relativeCriteriaIntersection / new double[] { Math.Abs(relativeCriteriaFirstNode), Math.Abs(relativeCriteriaSecondNode) }.Average()) > 0.0001)
 					{
 						if (relativeCriteriaIntersection < 0)
 						{
-							x2 = intersectionPointCoordinates;
+							x2[0] = intersectionPointCoordinates[0];
+							x2[1] = intersectionPointCoordinates[1];
+							x2[2] = intersectionPointCoordinates[2];
 							relativeCriteriaSecondNode = relativeCriteriaIntersection;
 						}
 						else
 						{
-							x1 = intersectionPointCoordinates;
+							x1[0] = intersectionPointCoordinates[0];
+							x1[1] = intersectionPointCoordinates[1];
+							x1[2] = intersectionPointCoordinates[2];
 							relativeCriteriaFirstNode = relativeCriteriaIntersection;
 						}
 						rel = Math.Abs(relativeCriteriaFirstNode / relativeCriteriaSecondNode);
@@ -119,12 +129,12 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 						relativeCriteriaIntersection = 0.0;
 						for (int k = 0; k < ElementNodalLevelSetValues.Length; k++)
 						{
-							relativeCriteriaIntersection = relativeCriteriaIntersection + ElementNodalLevelSetValues[i] * newshapeFunctionValuesIntersection[i];
+							relativeCriteriaIntersection += ElementNodalLevelSetValues[k] * newshapeFunctionValuesIntersection[k];
 						}
 					}
 					coordinatesOfIntersectionPoints.Add(intersectionPointCoordinates);
 				}
-				}
+			}
 			return (coordinatesOfIntersectionPoints, nodesWithPositiveValues, indexOfIntersectionNodes);
 		}
 		public double[] EvaluateAt(double[] naturalPoint)
@@ -165,11 +175,11 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 			List<IsoXfemElementSubtetrahedon3D> boundarySubtetrahedra3D = new List<IsoXfemElementSubtetrahedon3D>();
 			for (int i = 0; i < subtetrahedra3D.Length; i++)
 			{
-				if ((int)subtetrahedra3D[i].PhaseOfSubTet4 == 0)
+				if (subtetrahedra3D[i].PhaseOfSubTet4 == IsoXfemElementSubtetrahedon3D.Phase.solidSubTet4)
 				{
 					solidSubtetrahedra3D.Add(subtetrahedra3D[i]);
 				}
-				else if ((int)subtetrahedra3D[i].PhaseOfSubTet4 == 2)
+				else if (subtetrahedra3D[i].PhaseOfSubTet4 == IsoXfemElementSubtetrahedon3D.Phase.boundarySubTet4)
 				{
 					boundarySubtetrahedra3D.Add(subtetrahedra3D[i]);
 				}
@@ -180,14 +190,6 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 		//public IElementSubcell[] FindConformingMesh(IXFiniteElement element, IEnumerable<IElementDiscontinuityInteraction> intersections, IMeshTolerance meshTolerance) => throw new NotImplementedException();
 		public IElementSubcell[] FindConformingMesh(IXFiniteElement element, IEnumerable<IElementDiscontinuityInteraction> intersections, IMeshTolerance meshTolerance)
 		{
-			var maxvalue = ElementNodalLevelSetValues.Max();
-			for (int i = 0; i < ElementNodalLevelSetValues.Length; i++)
-			{
-				if (ElementNodalLevelSetValues[i]==0)
-				{
-					ElementNodalLevelSetValues[i] = maxvalue * 0.0001;
-				}
-			}
 			var subTets4 = CreateSubTetrahedra(element);
 			var (solidsubTets4, boundarysubTets4) = ClassifySubtetrahedra(subTets4);
 			foreach (var boundarysubTet in boundarysubTets4)
