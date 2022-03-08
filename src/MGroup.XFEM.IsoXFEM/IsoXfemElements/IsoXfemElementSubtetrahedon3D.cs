@@ -19,19 +19,20 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 	{
 		public IsoXfemElementSubtetrahedon3D(Tetrahedron3D tetraNatural)
 		{
+
 			VerticesNatural = tetraNatural.Vertices;
 			elementGeometry = new ElementTet4Geometry();
 		}
 
 		private readonly IElementGeometry elementGeometry;
 		public Vector NodalLevelSetValues { get; set; }
-		public enum Phase
+		public  enum Phase
 		{
 			solidSubTet4,
 			voidSubTet4,
 			boundarySubTet4
 		}
-		public Phase PhaseOfSubTet4 { get; set; }
+		public  Phase PhaseOfSubTet4 { get; set; }
 		public void DefinePhaseOfElement()
 		{
 			for (int i = 0; i < NodalLevelSetValues.Length; i++)
@@ -54,6 +55,8 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 				PhaseOfSubTet4 = Phase.boundarySubTet4;
 			}
 		}
+		public int ID { get; set; }
+
 		public CellType CellType => CellType.Tet4;
 
 		public IList<double[]> VerticesNatural { get; }
