@@ -71,7 +71,7 @@ namespace MGroup.XFEM.Integration
 
                 // The integral would need to be multiplied with |detJ|. 
                 // It is simpler for the caller to have it already included in the weight.
-                double naturalWeight = gp.Weight * detJ;
+                double naturalWeight = gp.Weight * Math.Abs(detJ);
                 elementGaussPoints[i] = new GaussPoint(naturalCoords, naturalWeight);
             }
 
