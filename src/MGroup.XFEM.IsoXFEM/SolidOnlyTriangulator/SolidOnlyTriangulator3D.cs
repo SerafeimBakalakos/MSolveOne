@@ -39,6 +39,7 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 					subtetrahedra[numOfSubTet4] = new IsoXfemElementSubtetrahedon3D(new Tetrahedron3D(edge.NodesNatural[0], edge.NodesNatural[1], centreofFace, centroid));
 					subtetrahedra[numOfSubTet4].NodalLevelSetValues = CalcNodalLevelSetOfSubTet4(edge, centreofFace, centroid, element);
 					subtetrahedra[numOfSubTet4].DefinePhaseOfElement();
+					subtetrahedra[numOfSubTet4].ID = numOfSubTet4;
 					numOfSubTet4++;
 				}
 			}
@@ -104,7 +105,6 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 						var relativeCriteriaFirstNode = ElementNodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][0]];
 						var relativeCriteriaSecondNode = ElementNodalLevelSetValues[indexOfIntersectionNodes[numberIntersectionPointsOfTet4-1][1]];
 					//Stabilize intersection coordinates
-					var whileValue = Math.Abs(relativeCriteriaIntersection / new double[] { Math.Abs(relativeCriteriaFirstNode), Math.Abs(relativeCriteriaSecondNode) }.Average());
 					while (Math.Abs(relativeCriteriaIntersection / new double[] { Math.Abs(relativeCriteriaFirstNode), Math.Abs(relativeCriteriaSecondNode) }.Average()) > 0.0001)
 					{
 						if (relativeCriteriaIntersection < 0)
@@ -304,7 +304,7 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 						coordinates.Add(boundarysubTet.VerticesNatural[positiveNodes[i]]);
 
 					}
-					coordinates.AddRange(new double[][] { intersectionPoints[0], intersectionPoints[1], intersectionPoints[2] });
+					coordinates.AddRange(new double[][] { intersectionPoints[0], intersectionPoints[1], intersectionPoints[2], intersectionPoints[3] });
 					var centre = Utilities.FindCentroid((IEnumerable<double[]>)coordinates);
 					foreach (var triangle in allTriangles)
 					{
