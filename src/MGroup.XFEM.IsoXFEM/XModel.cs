@@ -306,7 +306,7 @@ namespace MGroup.XFEM.IsoXFEM
 					foreach (var subcell in element.ConformingSubcells)
 					{
 						(var centroid, var sizesubcell) = subcell.FindCentroidAndBulkSizeCartesian(element);
-						sizeofelement += sizesubcell;
+						sizeofelement += Math.Abs(sizesubcell);
 					}
 					element.SizeOfElement = sizeofelement;
 				}
