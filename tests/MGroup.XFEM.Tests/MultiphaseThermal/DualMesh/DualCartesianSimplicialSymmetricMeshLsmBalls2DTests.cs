@@ -80,7 +80,7 @@ namespace MGroup.XFEM.Tests.MultiphaseThermal.DualMesh
 				}
 
 				// Fine mesh
-				var fineMesh = new UniformSimplicialMesh2D.Builder(minCoords, maxCoords, numNodesFine).BuildMesh();
+				var fineMesh = new UniformSimplicialSymmetricMesh2D.Builder(minCoords, maxCoords, numNodesFine).BuildMesh();
 				XModel<IXMultiphaseElement> fineModel = CreateModel(fineMesh);
 				var fineOutputMesh = new ContinuousOutputMesh(fineModel.Nodes.Values.OrderBy(n => n.ID).ToList(), 
 					fineModel.EnumerateElements());

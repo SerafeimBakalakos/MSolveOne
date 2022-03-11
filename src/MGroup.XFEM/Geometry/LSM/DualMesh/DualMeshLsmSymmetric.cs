@@ -115,6 +115,20 @@ namespace MGroup.XFEM.Geometry.LSM.DualMesh
 
 		public int ID { get; }
 
+		public double[] CopyLevelSetsCoarse()
+		{
+			var copy = new double[levelSetsCoarseMesh.Length];
+			Array.Copy(levelSetsCoarseMesh, copy, copy.Length);
+			return copy;
+		}
+
+		public double[] CopyLevelSetsFine()
+		{
+			var copy = new double[levelSetsFineMesh.Length];
+			Array.Copy(levelSetsFineMesh, copy, copy.Length);
+			return copy;
+		}
+
 		public IElementDiscontinuityInteraction Intersect(IXFiniteElement element)
 		{
 			// WARNING: This optimization must be avoided. Coarse elements may be flagged as disjoint incorrectly .
