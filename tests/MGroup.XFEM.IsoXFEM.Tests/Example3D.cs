@@ -72,7 +72,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// <summary>
 			/// Define material properties and geometry.
 			/// </summary>
-			var geometry = new GeometryProperties(40, 20, 1, new int[] { 20, 10, 1 });
+			var geometry = new GeometryProperties(40, 20, 1, new int[] {40, 20, 1 });
 			var material = new ElasticMaterial3D();
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
@@ -148,7 +148,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// </summary>
 			int dimension = 3;
 			var xModel = new IsoXFEM.XModel<IIsoXfemElement>(dimension);
-			//xModel.Mesh = dualMesh;
+			xModel.Mesh = dualMesh;
 			/// <summary>
 			/// Add Subdomain, Nodes and Elements to Model.
 			/// </summary>
@@ -177,7 +177,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				{
 					Node = xModel.Nodes[nodeIDLoad],
 					DOF = StructuralDof.TranslationY,
-					Amount = 1
+					Amount = 0.5
 				};
 				xModel.NodalLoads.Add(load);
 				nodeIDLoad++;
