@@ -14,17 +14,17 @@ using MGroup.XFEM.Interpolation;
 //		the signed distances.
 namespace MGroup.XFEM.Geometry.LSM.DualMesh
 {
-	public class DualMeshLsmSymmetric : IClosedGeometry
+	public class DualMeshLsmSymmetric_OLD : IClosedGeometry
 	{
 		private readonly int dimension;
-		private readonly DualCartesianSimplicialSymmetricMeshBase dualMesh;
+		private readonly DualCartesianSimplicialSymmetricMeshBase_OLD dualMesh;
 		private readonly IIsoparametricInterpolation fineMeshInterpolation;
 		private readonly ILsmElementInteractionFactory interactionStrategy;
 		private readonly double intersectionNodeProximityTolerance;
 		private readonly double[] levelSetsCoarseMesh;
 		private readonly double[] levelSetsFineMesh;
 
-		public DualMeshLsmSymmetric(int id, IClosedManifold originalGeometry, DualCartesianSimplicialSymmetricMeshBase dualMesh,
+		public DualMeshLsmSymmetric_OLD(int id, IClosedManifold originalGeometry, DualCartesianSimplicialSymmetricMeshBase_OLD dualMesh,
 			double intersectionNodeProximityTolerance = 1E-6)
 		{
 			this.dualMesh = dualMesh;
@@ -69,7 +69,7 @@ namespace MGroup.XFEM.Geometry.LSM.DualMesh
 			levelSetsFineMesh = InitializeLevelSetsFineMesh(levelSetsCoarseMesh, dualMesh);
 		}
 
-		public DualMeshLsmSymmetric(int id, double[] levelSetsCoarseMesh, DualCartesianSimplicialSymmetricMeshBase dualMesh,
+		public DualMeshLsmSymmetric_OLD(int id, double[] levelSetsCoarseMesh, DualCartesianSimplicialSymmetricMeshBase_OLD dualMesh,
 			double intersectionNodeProximityTolerance = 1E-6)
 		{
 			this.dualMesh = dualMesh;
@@ -114,20 +114,6 @@ namespace MGroup.XFEM.Geometry.LSM.DualMesh
 		}
 
 		public int ID { get; }
-
-		public double[] CopyLevelSetsCoarse()
-		{
-			var copy = new double[levelSetsCoarseMesh.Length];
-			Array.Copy(levelSetsCoarseMesh, copy, copy.Length);
-			return copy;
-		}
-
-		public double[] CopyLevelSetsFine()
-		{
-			var copy = new double[levelSetsFineMesh.Length];
-			Array.Copy(levelSetsFineMesh, copy, copy.Length);
-			return copy;
-		}
 
 		public IElementDiscontinuityInteraction Intersect(IXFiniteElement element)
 		{
@@ -240,7 +226,7 @@ namespace MGroup.XFEM.Geometry.LSM.DualMesh
 		}
 
 		private static double[] InitializeLevelSetsFineMesh(double[] levelSetsCoarseMesh, 
-			DualCartesianSimplicialSymmetricMeshBase dualMesh)
+			DualCartesianSimplicialSymmetricMeshBase_OLD dualMesh)
 		{
 			var levelSetsFineMesh = new double[dualMesh.FineMesh.NumNodesTotal];
 			for (int fineNodeID = 0; fineNodeID < dualMesh.FineMesh.NumNodesTotal; ++fineNodeID) //TODO: The fine mesh node IDs might not be contiguous

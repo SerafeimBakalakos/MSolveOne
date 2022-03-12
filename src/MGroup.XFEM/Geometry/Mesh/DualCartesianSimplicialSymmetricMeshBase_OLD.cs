@@ -7,14 +7,14 @@ using MGroup.XFEM.Interpolation;
 
 namespace MGroup.XFEM.Geometry.Mesh
 {
-	public abstract class DualCartesianSimplicialSymmetricMeshBase : IDualMesh
+	public abstract class DualCartesianSimplicialSymmetricMeshBase_OLD : IDualMesh
 	{
 		protected readonly ICartesianMesh coarseMesh;
 		protected readonly IStructuredMesh fineMesh;
 		protected readonly int numFineElementsPerCoarseElement;
 		protected readonly int numSimplicesPerCartesianCell;
 
-		protected DualCartesianSimplicialSymmetricMeshBase(int dimension, ICartesianMesh coarseMesh, IStructuredMesh fineMesh,
+		protected DualCartesianSimplicialSymmetricMeshBase_OLD(int dimension, ICartesianMesh coarseMesh, IStructuredMesh fineMesh,
 			int numSimplicesPerCartesianCell) 
 		{
 			this.Dimension = dimension;
@@ -148,7 +148,7 @@ namespace MGroup.XFEM.Geometry.Mesh
 		//TODO: This mapping and its inverse must also work for points on edges of the fine and coarse mesh.
 		public abstract double[] MapPointFineNaturalToCoarseNatural(int[] fineElementIdx, double[] coordsFineNatural);
 
-		private static List<int[]> CombineIndices(List<int>[] indicesPerAxis) //TODO: This should be abstract and implemented in 2D/3D classes.
+		private static List<int[]> CombineIndices(List<int>[] indicesPerAxis)
 		{
 			var result = new List<int[]>();
 			if (indicesPerAxis.Length == 2)

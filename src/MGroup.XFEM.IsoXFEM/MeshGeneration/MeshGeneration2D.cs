@@ -82,7 +82,7 @@ namespace MGroup.XFEM.IsoXFEM.MeshGeneration
 			return (nodes,elements);			
         }
 
-		public DualCartesianSimplicialSymmetricMesh2D CreateDualMesh()
+		public DualCartesianSimplicialSymmetricMesh2D_OLD CreateDualMesh()
 		{
 			int[] numElements = { GeometryOfModel.NumberOfElementsX, GeometryOfModel.NumberOfElementsY};
 			int[] numNodesCoarse = { GeometryOfModel.NumberOfElementsX + 1, GeometryOfModel.NumberOfElementsY + 1 };
@@ -96,7 +96,7 @@ namespace MGroup.XFEM.IsoXFEM.MeshGeneration
 			//var fineMesh = new UniformSimplicialSymmetricMesh2D.Builder(minCoords, maxCoords, numNodesFine)
 			//	.SetMajorAxis(1)
 			//	.BuildMesh();
-			var dualMesh = new DualCartesianSimplicialSymmetricMesh2D.Builder(
+			var dualMesh = new DualCartesianSimplicialSymmetricMesh2D_OLD.Builder(
 				minCoords, maxCoords, numNodesCoarse, numNodesFine)
 				.SetMajorAxis(1).BuildMesh();
 			return dualMesh;
