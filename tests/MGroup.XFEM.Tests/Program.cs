@@ -47,13 +47,13 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_1_Solvers.iterTol = 1E-7;
 			FriesExample_7_2_1_Solvers.objectivePcgCriterion = true;
 			FriesExample_7_2_1_Solvers.ddmReanalysis = true;
-			FriesExample_7_2_3_Solvers.reanalysisInitialGuess = true;
+			FriesExample_7_2_1_Solvers.reanalysisInitialGuess = true;
 			FriesExample_7_2_1_Solvers.preconditionerFetiDP = FriesExample_7_2_1_Solvers.PreconditionerFetiDP.Dirichlet;
 
 			CrackFetiDPCornerDofs.strategy = CrackFetiDPCornerDofs.Strategy.HeavisideAndAllTipDofs;
 
-			FriesExample_7_2_1_Solvers.RunExampleWithPFetiDPSolver();
-			//FriesExample_7_2_1_Solvers.RunExampleWithFetiDPSolver();
+			//FriesExample_7_2_1_Solvers.RunExampleWithPFetiDPSolver();
+			FriesExample_7_2_1_Solvers.RunExampleWithFetiDPSolver();
 		}
 
 		private static void RunExample2()
@@ -61,8 +61,8 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_3_Model.heavisideTol = 1E-4;
 			FriesExample_7_2_3_Solvers.maxIterations = 16;
 
-			//FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example2\";
-			FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\cluster\Desktop\Serafeim\results\Example2\";
+			FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example2\";
+			//FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\cluster\Desktop\Serafeim\results\Example2\";
 			FriesExample_7_2_3_Solvers.outputPlotDirectory = FriesExample_7_2_3_Solvers.outputDirectory + "plots";
 			FriesExample_7_2_3_Solvers.enablePlotting = false;
 
@@ -81,8 +81,8 @@ namespace MGroup.XFEM.Tests
 			FriesExample_7_2_3_Solvers.reanalysisInitialGuess = true;
 			FriesExample_7_2_3_Solvers.preconditionerFetiDP = FriesExample_7_2_3_Solvers.PreconditionerFetiDP.Dirichlet;
 
-			FriesExample_7_2_3_Solvers.RunExampleWithPFetiDPSolver();
-			//FriesExample_7_2_3_Solvers.RunExampleWithFetiDPSolver();
+			//FriesExample_7_2_3_Solvers.RunExampleWithPFetiDPSolver();
+			FriesExample_7_2_3_Solvers.RunExampleWithFetiDPSolver();
 		}
 	}
 }

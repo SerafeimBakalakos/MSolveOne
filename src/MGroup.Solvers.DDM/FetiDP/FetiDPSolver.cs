@@ -18,6 +18,7 @@ using MGroup.Solvers.DDM.FetiDP.CoarseProblem;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.FetiDP.InterfaceProblem;
 using MGroup.Solvers.DDM.FetiDP.Preconditioning;
+using MGroup.Solvers.DDM.FetiDP.Reanalysis;
 using MGroup.Solvers.DDM.FetiDP.Scaling;
 using MGroup.Solvers.DDM.FetiDP.StiffnessMatrices;
 using MGroup.Solvers.DDM.FetiDP.Vectors;
@@ -39,6 +40,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 		private readonly ICornerDofSelection cornerDofs;
 		private readonly ICrossPointStrategy crossPointStrategy;
 		private readonly IComputeEnvironment environment;
+		private readonly IInitialSolutionGuessStrategy initialSolutionGuessStrategy;
 		private readonly IFetiDPInterfaceProblemMatrix interfaceProblemMatrix;
 		private readonly IDistributedIterativeMethod interfaceProblemSolver;
 		private readonly IFetiDPInterfaceProblemVectors interfaceProblemVectors;
@@ -139,6 +141,17 @@ namespace MGroup.Solvers.DDM.FetiDP
 					environment, coarseProblem, subdomainLagranges, subdomainMatrices, subdomainVectors);
 			}
 
+			if (reanalysis.PreviousSolution)
+			{
+				//TODO: Refactor this. There must be more than 2 choices. This one here is appropriate for XFEM, but not nonlinear problems.
+				this.initialSolutionGuessStrategy =
+					new SameSolutionAtCommonDofsGuess(environment, reanalysis, s => subdomainLagranges[s]);
+			}
+			else
+			{
+				this.initialSolutionGuessStrategy = new ZeroInitialSolutionGuess();
+			}
+
 			this.solutionRecovery = new FetiDPSolutionRecovery(environment, coarseProblem, scaling,
 				s => subdomainDofs[s], s => subdomainLagranges[s], s => subdomainMatrices[s], s => subdomainVectors[s]);
 
@@ -206,7 +219,7 @@ namespace MGroup.Solvers.DDM.FetiDP
 			PrepareInterfaceProblem();
 			SolveInterfaceProblem();
 			RecoverSolution();
-			
+
 
 			watchTotal.Stop();
 			Logger.LogTaskDuration("Solution", watchTotal.ElapsedMilliseconds);
@@ -216,53 +229,19 @@ namespace MGroup.Solvers.DDM.FetiDP
 
 		private bool GuessInitialSolution()
 		{
-			// Initial guess of solution vector
-			bool initalGuessIsZero = (analysisIteration == 0) || (!reanalysis.PreviousSolution);
-
-			if (initalGuessIsZero)
+			bool guessIsZero;
+			if (analysisIteration == 0)
 			{
-				#region log
-				//Console.WriteLine("Allocating new solution vector.");
-				//Debug.WriteLine("Allocating new solution vector.");
-				#endregion
-
-				interfaceProblemVectors.InterfaceProblemSolution = new DistributedOverlappingVector(lagrangeVectorIndexer);
+				(interfaceProblemVectors.InterfaceProblemSolution, guessIsZero) =
+					initialSolutionGuessStrategy.GuessFirstSolution(lagrangeVectorIndexer);
 			}
 			else
 			{
 				DistributedOverlappingVector previousSolution = interfaceProblemVectors.InterfaceProblemSolution;
-				if (lagrangeVectorIndexer.IsCompatibleVector(previousSolution))
-				{
-					// Do nothing to modify the stored solution vector.
-					#region log
-					//Console.WriteLine("Reusing the previous solution vector.");
-					//Debug.WriteLine("Reusing the previous solution vector.");
-					#endregion
-				}
-				else
-				{
-					// The dof orderings of some subdomains may remain the same, in which case we can reuse the previous values.
-					var newSolution = new DistributedOverlappingVector(lagrangeVectorIndexer, subdomainID =>
-					{
-						if (reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
-						{
-							#region log
-							//Console.WriteLine($"Reusing the previous solution subvector for subdomain {subdomainID}.");
-							//Debug.WriteLine($"Reusing the previous solution subvector for subdomain {subdomainID}.");
-							#endregion
-							return Vector.CreateZero(lagrangeVectorIndexer.GetLocalComponent(subdomainID).NumEntries);
-						}
-						else
-						{
-							return previousSolution.LocalVectors[subdomainID];
-						}
-					});
-
-					interfaceProblemVectors.InterfaceProblemSolution = newSolution;
-				}
+				(interfaceProblemVectors.InterfaceProblemSolution, guessIsZero) =
+					initialSolutionGuessStrategy.GuessNextSolution(lagrangeVectorIndexer, previousSolution);
 			}
-
-			return initalGuessIsZero;
+			return guessIsZero;
 		}
 
 		private void PrepareCoarseProblem()

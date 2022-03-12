@@ -167,7 +167,6 @@ namespace MGroup.Solvers.DDM.Psm
 
 		public string Name => name;
 
-
 		public virtual void HandleMatrixWillBeSet()
 		{
 		}
@@ -225,63 +224,6 @@ namespace MGroup.Solvers.DDM.Psm
 			}
 			interfaceProblemVectors.InterfaceProblemSolution.CacheSendRecvBuffers = cacheDistributedVectorBuffers;
 			return guessIsZero;
-
-
-			//// Initial guess of solution vector
-			//bool initalGuessIsZero = (analysisIteration == 0) || (!reanalysis.PreviousSolution);
-
-			//if (initalGuessIsZero)
-			//{
-			//	#region log
-			//	//Console.WriteLine("Allocating new solution vector.");
-			//	//Debug.WriteLine("Allocating new solution vector.");
-			//	#endregion
-
-			//	interfaceProblemVectors.InterfaceProblemSolution = new DistributedOverlappingVector(boundaryDofIndexer);
-			//	interfaceProblemVectors.InterfaceProblemSolution.CacheSendRecvBuffers = cacheDistributedVectorBuffers;
-			//}
-			//else
-			//{
-			//	DistributedOverlappingVector previousSolution = interfaceProblemVectors.InterfaceProblemSolution;
-			//	if (boundaryDofIndexer.IsCompatibleVector(previousSolution))
-			//	{
-			//		// Do nothing to modify the stored solution vector.
-			//		#region log
-			//		//Console.WriteLine("Reusing the previous solution vector.");
-			//		//Debug.WriteLine("Reusing the previous solution vector.");
-			//		#endregion
-			//	}
-			//	else
-			//	{
-			//		// The dof orderings of some subdomains may remain the same, in which case we can reuse the previous values.
-			//		var newSolution = new DistributedOverlappingVector(boundaryDofIndexer, subdomainID =>
-			//		{
-			//			//ERROR: If one subdomain is unmodified and its neighbor is modified, then this process will lead to 
-			//			//		common boundary dofs having different values (the previous value for the unmodified subdomain 
-			//			//		or 0 for the modified).
-			//			if (reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
-			//			{
-			//				#region log
-			//				//Console.WriteLine($"Reusing the previous solution subvector for subdomain {subdomainID}.");
-			//				//Debug.WriteLine($"Reusing the previous solution subvector for subdomain {subdomainID}.");
-			//				#endregion
-			//				return Vector.CreateZero(boundaryDofIndexer.GetLocalComponent(subdomainID).NumEntries);
-			//			}
-			//			else
-			//			{
-
-			//				return previousSolution.LocalVectors[subdomainID];
-			//			}
-			//		});
-
-
-
-			//		newSolution.CacheSendRecvBuffers = cacheDistributedVectorBuffers;
-			//		interfaceProblemVectors.InterfaceProblemSolution = newSolution;
-			//	}
-			//}
-
-			//return initalGuessIsZero;
 		}
 
 		protected void SolveInterfaceProblem()
