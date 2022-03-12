@@ -19,6 +19,7 @@ using MGroup.Solvers.DDM.PSM;
 using MGroup.Solvers.DDM.PSM.Dofs;
 using MGroup.Solvers.DDM.PSM.InterfaceProblem;
 using MGroup.Solvers.DDM.PSM.Preconditioning;
+using MGroup.Solvers.DDM.PSM.Reanalysis;
 using MGroup.Solvers.DDM.PSM.Scaling;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.DDM.PSM.Vectors;
@@ -36,6 +37,7 @@ namespace MGroup.Solvers.DDM.Psm
 
 		protected readonly DistributedAlgebraicModel<TMatrix> algebraicModel;
 		protected readonly IComputeEnvironment environment;
+		protected readonly IInitialSolutionGuessStrategy initialSolutionGuessStrategy;
 		protected readonly IPsmInterfaceProblemMatrix interfaceProblemMatrix;
 		protected readonly IDistributedIterativeMethod interfaceProblemSolver;
 		protected readonly IPsmInterfaceProblemVectors interfaceProblemVectors;
@@ -114,6 +116,17 @@ namespace MGroup.Solvers.DDM.Psm
 			else
 			{
 				this.interfaceProblemVectors = new PsmInterfaceProblemVectors(environment, subdomainVectors);
+			}
+
+			if (reanalysis.PreviousSolution)
+			{
+				//TODO: Refactor this. There must be more than 2 choices. This one here is appropriate for XFEM, but not nonlinear problems.
+				this.initialSolutionGuessStrategy = 
+					new SameSolutionAtCommonDofsGuess(environment, reanalysis, s => subdomainDofsPsm[s]);
+			}
+			else
+			{
+				this.initialSolutionGuessStrategy = new ZeroInitialSolutionGuess();
 			}
 
 			IPcgResidualConvergence convergenceCriterion;
@@ -198,55 +211,77 @@ namespace MGroup.Solvers.DDM.Psm
 
 		protected bool GuessInitialSolution()
 		{
-			// Initial guess of solution vector
-			bool initalGuessIsZero = (analysisIteration == 0) || (!reanalysis.PreviousSolution);
-
-			if (initalGuessIsZero)
+			bool guessIsZero;
+			if (analysisIteration == 0)
 			{
-				#region log
-				//Console.WriteLine("Allocating new solution vector.");
-				//Debug.WriteLine("Allocating new solution vector.");
-				#endregion
-
-				interfaceProblemVectors.InterfaceProblemSolution = new DistributedOverlappingVector(boundaryDofIndexer);
-				interfaceProblemVectors.InterfaceProblemSolution.CacheSendRecvBuffers = cacheDistributedVectorBuffers;
+				(interfaceProblemVectors.InterfaceProblemSolution, guessIsZero) = 
+					initialSolutionGuessStrategy.GuessFirstSolution(boundaryDofIndexer);
 			}
 			else
 			{
 				DistributedOverlappingVector previousSolution = interfaceProblemVectors.InterfaceProblemSolution;
-				if (boundaryDofIndexer.IsCompatibleVector(previousSolution))
-				{
-					// Do nothing to modify the stored solution vector.
-					#region log
-					//Console.WriteLine("Reusing the previous solution vector.");
-					//Debug.WriteLine("Reusing the previous solution vector.");
-					#endregion
-				}
-				else
-				{
-					// The dof orderings of some subdomains may remain the same, in which case we can reuse the previous values.
-					var newSolution = new DistributedOverlappingVector(boundaryDofIndexer, subdomainID =>
-					{
-						if (reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
-						{
-							#region log
-							//Console.WriteLine($"Reusing the previous solution subvector for subdomain {subdomainID}.");
-							//Debug.WriteLine($"Reusing the previous solution subvector for subdomain {subdomainID}.");
-							#endregion
-							return Vector.CreateZero(boundaryDofIndexer.GetLocalComponent(subdomainID).NumEntries);
-						}
-						else
-						{
-							return previousSolution.LocalVectors[subdomainID];
-						}
-					});
-					newSolution.CacheSendRecvBuffers = cacheDistributedVectorBuffers;
-					
-					interfaceProblemVectors.InterfaceProblemSolution = newSolution;
-				}
+				(interfaceProblemVectors.InterfaceProblemSolution, guessIsZero) =
+					initialSolutionGuessStrategy.GuessNextSolution(boundaryDofIndexer, previousSolution);
 			}
+			interfaceProblemVectors.InterfaceProblemSolution.CacheSendRecvBuffers = cacheDistributedVectorBuffers;
+			return guessIsZero;
 
-			return initalGuessIsZero;
+
+			//// Initial guess of solution vector
+			//bool initalGuessIsZero = (analysisIteration == 0) || (!reanalysis.PreviousSolution);
+
+			//if (initalGuessIsZero)
+			//{
+			//	#region log
+			//	//Console.WriteLine("Allocating new solution vector.");
+			//	//Debug.WriteLine("Allocating new solution vector.");
+			//	#endregion
+
+			//	interfaceProblemVectors.InterfaceProblemSolution = new DistributedOverlappingVector(boundaryDofIndexer);
+			//	interfaceProblemVectors.InterfaceProblemSolution.CacheSendRecvBuffers = cacheDistributedVectorBuffers;
+			//}
+			//else
+			//{
+			//	DistributedOverlappingVector previousSolution = interfaceProblemVectors.InterfaceProblemSolution;
+			//	if (boundaryDofIndexer.IsCompatibleVector(previousSolution))
+			//	{
+			//		// Do nothing to modify the stored solution vector.
+			//		#region log
+			//		//Console.WriteLine("Reusing the previous solution vector.");
+			//		//Debug.WriteLine("Reusing the previous solution vector.");
+			//		#endregion
+			//	}
+			//	else
+			//	{
+			//		// The dof orderings of some subdomains may remain the same, in which case we can reuse the previous values.
+			//		var newSolution = new DistributedOverlappingVector(boundaryDofIndexer, subdomainID =>
+			//		{
+			//			//ERROR: If one subdomain is unmodified and its neighbor is modified, then this process will lead to 
+			//			//		common boundary dofs having different values (the previous value for the unmodified subdomain 
+			//			//		or 0 for the modified).
+			//			if (reanalysis.ModifiedSubdomains.IsConnectivityModified(subdomainID))
+			//			{
+			//				#region log
+			//				//Console.WriteLine($"Reusing the previous solution subvector for subdomain {subdomainID}.");
+			//				//Debug.WriteLine($"Reusing the previous solution subvector for subdomain {subdomainID}.");
+			//				#endregion
+			//				return Vector.CreateZero(boundaryDofIndexer.GetLocalComponent(subdomainID).NumEntries);
+			//			}
+			//			else
+			//			{
+
+			//				return previousSolution.LocalVectors[subdomainID];
+			//			}
+			//		});
+
+
+
+			//		newSolution.CacheSendRecvBuffers = cacheDistributedVectorBuffers;
+			//		interfaceProblemVectors.InterfaceProblemSolution = newSolution;
+			//	}
+			//}
+
+			//return initalGuessIsZero;
 		}
 
 		protected void SolveInterfaceProblem()

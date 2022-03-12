@@ -9,6 +9,7 @@ using MGroup.LinearAlgebra.Distributed.Overlapping;
 using MGroup.Solvers.DDM.PSM.StiffnessMatrices;
 using MGroup.Solvers.DDM.LinearSystem;
 using System.Diagnostics;
+using MGroup.Solvers.DDM.PSM.Reanalysis;
 
 namespace MGroup.Solvers.DDM.PSM.InterfaceProblem
 {

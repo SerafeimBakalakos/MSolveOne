@@ -10,6 +10,7 @@ using MGroup.LinearAlgebra.Distributed.Overlapping;
 using System.Diagnostics;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.Solvers.DDM.LinearSystem;
+using MGroup.Solvers.DDM.PSM.Reanalysis;
 
 namespace MGroup.Solvers.DDM.PSM.Scaling
 {

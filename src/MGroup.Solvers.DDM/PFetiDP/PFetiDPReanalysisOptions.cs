@@ -4,6 +4,7 @@ using System.Text;
 using MGroup.Solvers.DDM.FetiDP.Dofs;
 using MGroup.Solvers.DDM.LinearSystem;
 using MGroup.Solvers.DDM.PSM;
+using MGroup.Solvers.DDM.PSM.Reanalysis;
 
 namespace MGroup.Solvers.DDM.PFetiDP
 {

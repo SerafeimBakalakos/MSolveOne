@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MGroup.Solvers.DDM.LinearSystem;
 
-namespace MGroup.Solvers.DDM.PSM
+namespace MGroup.Solvers.DDM.PSM.Reanalysis
 {
 	public class PsmReanalysisOptions : ReanalysisOptions
 	{

@@ -70,6 +70,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		public const double fractureToughness = double.MaxValue;
 
 		public static bool ddmReanalysis = false;
+		public static bool reanalysisInitialGuess = false;
 		public static ReanalysisExtraDofs reanalysisExtraDofs = ReanalysisExtraDofs.AllNearModified;
 		public static double iterTol = 1E-10;
 		public static bool objectivePcgCriterion = false;
@@ -475,7 +476,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				model.GeometryModel.Enricher.Observers.Add(observer);
 				var reanalysisOptions = FetiDPReanalysisOptions.CreateWithAllEnabled(observer);
 				//var reanalysisOptions = PFetiDPReanalysisOptions.CreateWithAllDisabled();
-				reanalysisOptions.PreviousSolution = false; // This causes errors if enabled
+				reanalysisOptions.PreviousSolution = reanalysisInitialGuess;
 
 				solverFactory.ReanalysisOptions = reanalysisOptions;
 				solverFactory.SubdomainTopology = new SubdomainTopologyOptimized();
@@ -585,7 +586,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 				model.GeometryModel.Enricher.Observers.Add(observer);
 				var reanalysisOptions = PFetiDPReanalysisOptions.CreateWithAllEnabled(observer);
 				//var reanalysisOptions = PFetiDPReanalysisOptions.CreateWithAllDisabled();
-				reanalysisOptions.PreviousSolution = false; // This causes errors if enabled
+				reanalysisOptions.PreviousSolution = reanalysisInitialGuess;
 
 				solverFactory.ReanalysisOptions = reanalysisOptions;
 				solverFactory.SubdomainTopology = new SubdomainTopologyOptimized();

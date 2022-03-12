@@ -63,9 +63,6 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				multiplyMatrixVectorPerComputeNode(nodeID, localX, localY);
 			};
 			Environment.DoPerNode(multiplyLocal);
-			#region debug
-			//Environment.DoPerNodeSerially(multiplyLocal);
-			#endregion
 
 			output.SumOverlappingEntries();
 		}
