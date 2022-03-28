@@ -226,13 +226,29 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 					  new ConvexPolygon2D(coordinatesOfThirdQuad)};
 					var allTriangles = new List<Triangle2D>();
 					allTriangles.AddRange(triangles);
+					//for (int i = 0; i < quadrilaterals.Length; i++)
+					//{
+					//	allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[0], quadrilaterals[i].Vertices[1], quadrilaterals[i].Vertices[2]));
+					//}
+					//for (int i = 0; i < quadrilaterals.Length; i++)
+					//{
+					//	allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[2], quadrilaterals[i].Vertices[3], quadrilaterals[i].Vertices[0]));
+					//}
 					for (int i = 0; i < quadrilaterals.Length; i++)
 					{
-						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[0], quadrilaterals[i].Vertices[1], quadrilaterals[i].Vertices[2]));
+						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[0], quadrilaterals[i].Vertices[1], Utilities.FindCentroid((IEnumerable<double[]>)quadrilaterals[i].Vertices)));
 					}
 					for (int i = 0; i < quadrilaterals.Length; i++)
 					{
-						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[2], quadrilaterals[i].Vertices[3], quadrilaterals[i].Vertices[0]));
+						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[1], quadrilaterals[i].Vertices[2], Utilities.FindCentroid((IEnumerable<double[]>)quadrilaterals[i].Vertices)));
+					}
+					for (int i = 0; i < quadrilaterals.Length; i++)
+					{
+						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[2], quadrilaterals[i].Vertices[3], Utilities.FindCentroid((IEnumerable<double[]>)quadrilaterals[i].Vertices)));
+					}
+					for (int i = 0; i < quadrilaterals.Length; i++)
+					{
+						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[3], quadrilaterals[i].Vertices[0], Utilities.FindCentroid((IEnumerable<double[]>)quadrilaterals[i].Vertices)));
 					}
 					var coordinates = new List<double[]>();
 					coordinates.AddRange(new double[][] { boundarysubTet.VerticesNatural[positiveNodes[0]], boundarysubTet.VerticesNatural[positiveNodes[1]], boundarysubTet.VerticesNatural[positiveNodes[2]] });
@@ -290,13 +306,29 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 					  new ConvexPolygon2D(coordinatesOfThirdQuad)};
 					var allTriangles = new List<Triangle2D>();
 					allTriangles.AddRange(triangles);
+					//for (int i = 0; i < quadrilaterals.Length; i++)
+					//{
+					//	allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[0], quadrilaterals[i].Vertices[1], quadrilaterals[i].Vertices[2]));
+					//}
+					//for (int i = 0; i < quadrilaterals.Length; i++)
+					//{
+					//	allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[2], quadrilaterals[i].Vertices[3], quadrilaterals[i].Vertices[0]));
+					//}
 					for (int i = 0; i < quadrilaterals.Length; i++)
 					{
-						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[0], quadrilaterals[i].Vertices[1], quadrilaterals[i].Vertices[2]));
+						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[0], quadrilaterals[i].Vertices[1], Utilities.FindCentroid((IEnumerable<double[]>)quadrilaterals[i].Vertices)));
 					}
 					for (int i = 0; i < quadrilaterals.Length; i++)
 					{
-						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[2], quadrilaterals[i].Vertices[3], quadrilaterals[i].Vertices[0]));
+						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[1], quadrilaterals[i].Vertices[2], Utilities.FindCentroid((IEnumerable<double[]>)quadrilaterals[i].Vertices)));
+					}
+					for (int i = 0; i < quadrilaterals.Length; i++)
+					{
+						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[2], quadrilaterals[i].Vertices[3], Utilities.FindCentroid((IEnumerable<double[]>)quadrilaterals[i].Vertices)));
+					}
+					for (int i = 0; i < quadrilaterals.Length; i++)
+					{
+						allTriangles.Add(new Triangle2D(quadrilaterals[i].Vertices[3], quadrilaterals[i].Vertices[0], Utilities.FindCentroid((IEnumerable<double[]>)quadrilaterals[i].Vertices)));
 					}
 					var coordinates = new List<double[]>();
 					for (int i = 0; i < positiveNodes.Count; i++)

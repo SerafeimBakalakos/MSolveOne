@@ -5,11 +5,13 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 	using System.Linq;
 	using System.Text;
 
+	using MGroup.LinearAlgebra.Iterative.PreconditionedConjugateGradient;
 	using MGroup.LinearAlgebra.Vectors;
 	using MGroup.MSolve.Discretization;
 	using MGroup.MSolve.Discretization.Dofs;
 	using MGroup.MSolve.Discretization.Loads;
 	using MGroup.Solvers.Direct;
+	using MGroup.Solvers.Iterative;
 	using MGroup.XFEM.Entities;
 	using MGroup.XFEM.IsoXFEM.IsoXfemElements;
 	using MGroup.XFEM.IsoXFEM.MeshGeneration;
@@ -187,12 +189,18 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			/// Initialize the Model.
 			/// </summary>
 			xModel.Initialize();
-			/// <summary>
-			/// Defines Skyline Solver.
-			/// </summary>
+			///// <summary>
+			///// Defines Skyline Solver.
+			///// </summary>
 			var solverFactory = new SkylineSolver.Factory();
 			var algebraicModel = solverFactory.BuildAlgebraicModel(xModel);
 			var solver = solverFactory.BuildSolver(algebraicModel);
+			//var solverFactory = new PcgSolver.Factory();
+			//var pcgBuilder = new PcgAlgorithm.Builder();
+			//pcgBuilder.ResidualTolerance = 1E-12;
+			//solverFactory.PcgAlgorithm = pcgBuilder.Build();
+			//var algebraicModel = solverFactory.BuildAlgebraicModel(xModel);
+			//var solver = solverFactory.BuildSolver(algebraicModel);
 			/// Defines solidRatio. The Problem is 3D so SolidVolume is selected.
 			/// <summary>
 			ISolidRatio solidRatio = new SolidVolume(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.SizeOfElement));

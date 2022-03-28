@@ -150,6 +150,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests.SolidOnlyTriangulatorTests
 				Assert.Equal(subtetrahedraExpected[num].PhaseOfSubTet4, tet4.PhaseOfSubTet4);
 				num++;
 			}
+			var (intersectionPoints, positiveNodes, indexOfIntersectionNodes) = triangulator.FindIntersection(subtetrahedraComputed[0], element);
 		}
 	}
 }
