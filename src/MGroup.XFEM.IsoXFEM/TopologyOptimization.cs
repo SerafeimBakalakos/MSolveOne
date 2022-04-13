@@ -67,7 +67,7 @@ namespace MGroup.XFEM.IsoXFEM
             for (int it = 0; it < iterations; it++)
             {
 				//Console.WriteLine("iter=" + it);
-				ResultsWriter.VolumeForEachElementWriter(it, xModel.Dimension, xModel.Elements);
+				//ResultsWriter.VolumeForEachElementWriter(it, xModel.Dimension, xModel.Elements);
 				//ResultsWriter.GaussPointsWriter(it,xModel.Dimension, xModel.Elements);
 				//ResultsWriter.InteractionPoints3DWriter(it, xModel.Dimension, xModel.Elements);
 				if (it > 0)
@@ -105,9 +105,9 @@ namespace MGroup.XFEM.IsoXFEM
 				//ResultsWriter.NodalLevelSetsWriter(it, xModel.Dimension, xModel.Nodes, relativeCriteria);
 				xModel.relativeCriteria = relativeCriteria;
 				xModel.Update(null,null);
-				PlotPerformanceLevel(it, xModel.Nodes, xModel.Elements, relativeCriteria);
+				//PlotPerformanceLevel(it, xModel.Nodes, xModel.Elements, relativeCriteria);
 			}
-			ResultsWriter.ResultsWriterToTxt(results);
+			//ResultsWriter.ResultsWriterToTxt(results);
 		}
         private  void StabilizingEvolutionaryProcess(int iteration)
         {
@@ -139,7 +139,7 @@ namespace MGroup.XFEM.IsoXFEM
         }
 		public  void PlotPerformanceLevel(int iteration, Dictionary<int, XNode>  nodes, Dictionary<int, IIsoXfemElement>  elements, Vector nodalValues)
         {                    
-            string path = $"{ Paths.OutputDirectory}\\Skyline_DGPOrder2_4_MorePrecision_TriangulatorLoad0.5_40x20x1_iter{iteration}.vtk";
+            string path = $"{ Paths.OutputDirectory}\\Sera_Skyline_3DGPOrder5_15_ChangeTol_TriangulatorLoad0.5_40x20x1_iter{iteration}.vtk";
 			CellType cellType = xModel.Elements.First().Value.CellType;
             var writer = new VtkFileWriter(path, xModel.Dimension, cellType);
             writer.WriteMesh(nodes, elements);

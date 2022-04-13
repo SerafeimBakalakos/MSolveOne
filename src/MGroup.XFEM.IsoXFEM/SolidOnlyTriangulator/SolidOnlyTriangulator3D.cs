@@ -44,11 +44,6 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 				}
 			}
 			return subtetrahedra;
-		//	List<double[]> coordinatesAll = new List<double[]>();
-		//	coordinatesAll.AddRange(nodesNatural);
-		//	coordinatesAll.AddRange(centreOfFaces);
-		//	coordinatesAll.Add(centroid);			
-		//	subtetrahedra[0] = new ElementSubtetrahedron3D(new Tetrahedron3D(coordinatesAll[0], coordinatesAll[1], coordinatesAll[9], coordinatesAll[14]));
 		}
 		
 		public (List<double[]> ,List<int>,List<int[]>)  FindIntersection(IsoXfemElementSubtetrahedon3D boundaryTet4, IXFiniteElement element)

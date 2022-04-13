@@ -26,7 +26,7 @@ namespace MGroup.XFEM.IsoXFEM.SolidOnlyTriangulator
 			int[] elementNodesCircular = new int[] { 0, 1, 2, 3, 0 };
 			Vector nodalLevelSetCircular = elementNodalLevelSet.Append(nodalLevelSetOnFirstNode);
 			int numOfIntersectionPoints = 0; // no of intersection points
-											 //Nodes which have a boundary intersection in between
+			//Nodes which have a boundary intersection in between
 			List<int[]> allPointsWithIntersection = new List<int[]>();
 			for (int i = 0; i < 4; i++)
 			{

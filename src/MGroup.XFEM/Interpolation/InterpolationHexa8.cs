@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MGroup.MSolve.Discretization;
 using MGroup.MSolve.Discretization.Mesh;
@@ -61,7 +61,7 @@ namespace MGroup.XFEM.Interpolation
         public override IInverseInterpolation CreateInverseMappingFor(IReadOnlyList<INode> nodes) =>
             new InverseInterpolationHexa8(nodes);
 
-        protected sealed  override double[] EvaluateAt(double[] naturalPoint)
+        protected  override double[] EvaluateAt(double[] naturalPoint)
         {
             double xi = naturalPoint[0];
             double eta = naturalPoint[1];

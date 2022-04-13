@@ -48,20 +48,23 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 			Left,
 			Right
 		}
-		private static ConstrainedFace constrainedFace = ConstrainedFace.Left;
-		//                      
-		//     .________________________________.#1
-		//     |                                |
-		//     |                                |
-		//     |                                |
-		//     |                                |
-		//     |                                |#2
-		//     |                                |      
-		//     |                                |
-		//     |                                |
-		//     |                                |
-		//     .________________________________.#3
-		//                    
+		private static ConstrainedFace constrainedFace = ConstrainedFace.Left;                
+		//     .________________________________.
+		//     |\                               |\
+		//     | \                              | \
+		//     |  \                             |  \
+		//     |   \                            |   \#0
+		//     |    . __________________________|____.
+		//     |    |                           |\   |
+		//     |    |                           | \  |
+		//     |    |                           |  \ |
+		//     |    |                           |   \|#1
+		//     .____|___________________________.    |
+		//      \   |                            \   |
+		//       \  |                             \  |
+		//        \ |                              \ |
+		//         \|                               \|
+		//          . _______________________________.#2
 		public enum EdgeLoad
 		{
 			UpperEnd,
@@ -70,23 +73,17 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 		}
 		private static EdgeLoad endload;
 		public static void RunExample3D()
-		{
-			/// <summary>
-			/// Define material properties and geometry.
-			/// </summary>
+		{			
+			// Define material properties and geometry.			
 			var geometry = new GeometryProperties(40, 20, 1, new int[] {40, 20, 1 });
 			var material = new ElasticMaterial3D();
 			material.YoungModulus = 1;
 			material.PoissonRatio = 0.3;
-			/// <summary>
-			/// Create mesh.
-			/// </summary>
+			// Create mesh.
 			var meshGeneration = new MeshGeneration3D(material, geometry);
 			var (nodes, elements) = meshGeneration.MakeMesh();
 			var dualMesh=meshGeneration.CreateDualMesh();
-			/// <summary>
-			/// Add Constraints, Using enum Constrained Side.
-			/// </summary>
+			// Add Constraints, Using enum Constrained Side.
 			constrainedFace = ConstrainedFace.Left;
 			foreach (var node in nodes.Values)
 			{
@@ -145,15 +142,11 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 						break;
 				}
 			}
-			/// <summary>
-			/// X-Model creation.3-D Model.
-			/// </summary>
+			// X-Model creation.3-D Model.
 			int dimension = 3;
 			var xModel = new IsoXFEM.XModel<IIsoXfemElement>(dimension);
 			xModel.Mesh = dualMesh;
-			/// <summary>
-			/// Add Subdomain, Nodes and Elements to Model.
-			/// </summary>
+			// Add Subdomain, Nodes and Elements to Model.
 			xModel.Subdomains[0] = new XSubdomain<IIsoXfemElement>(0);
 			foreach (var node in nodes.Keys)
 			{
@@ -164,9 +157,7 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				xModel.Elements[element] = elements[element];
 				xModel.Subdomains[0].Elements.Add(elements[element]);
 			}
-			/// <summary>
-			/// Add Loads. Using enum EndLoad in order to choose the node we want to apply the force.
-			/// </summary>
+			// Add Loads. Using enum EndLoad in order to choose the node we want to apply the force.
 			endload = EdgeLoad.MiddleEnd;
 			//Z-Y-X
 			int nodeIDLoad = (geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1) * (geometry.NumberOfElementsZ + 1) - (int)endload * (geometry.NumberOfElementsY / 2) * (geometry.NumberOfElementsZ + 1) - 1 - geometry.NumberOfElementsZ;
@@ -185,28 +176,23 @@ namespace MGroup.XFEM.IsoXFEM.Tests
 				nodeIDLoad++;
 				//nodeIDLoad = nodeIDLoad + (geometry.NumberOfElementsX + 1) * (geometry.NumberOfElementsY + 1);
 			}
-			/// <summary>
-			/// Initialize the Model.
-			/// </summary>
+			// Initialize the Model.
 			xModel.Initialize();
-			///// <summary>
-			///// Defines Skyline Solver.
-			///// </summary>
+			// Defines Skyline Solver.
 			var solverFactory = new SkylineSolver.Factory();
 			var algebraicModel = solverFactory.BuildAlgebraicModel(xModel);
 			var solver = solverFactory.BuildSolver(algebraicModel);
+			#region Pcg Solver
 			//var solverFactory = new PcgSolver.Factory();
 			//var pcgBuilder = new PcgAlgorithm.Builder();
 			//pcgBuilder.ResidualTolerance = 1E-12;
 			//solverFactory.PcgAlgorithm = pcgBuilder.Build();
 			//var algebraicModel = solverFactory.BuildAlgebraicModel(xModel);
 			//var solver = solverFactory.BuildSolver(algebraicModel);
-			/// Defines solidRatio. The Problem is 3D so SolidVolume is selected.
-			/// <summary>
+			#endregion
+			// Defines solidRatio. The Problem is 3D so SolidVolume is selected.
 			ISolidRatio solidRatio = new SolidVolume(xModel, Vector.CreateWithValue(xModel.Elements.Count, xModel.Elements.First().Value.SizeOfElement));
-			/// <summary>
-			/// Defines the topology Optimization and Optimize the problem with IsoXfem Method.
-			/// </summary>
+			// Defines the topology Optimization and Optimize the problem with IsoXfem Method.
 			var topologyOptimization = new TopologyOptimization(xModel, solidRatio, solver, algebraicModel);
 			topologyOptimization.IsoXfem();
 		}

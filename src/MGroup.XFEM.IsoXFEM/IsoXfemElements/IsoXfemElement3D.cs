@@ -52,7 +52,7 @@ namespace MGroup.XFEM.IsoXFEM.IsoXfemElements
 			(this.Edges, this.Faces) = elementGeometry.FindEdgesFaces(nodeIDs);
 			Interpolation = InterpolationHexa8.UniqueInstance;
 			IntegrationStandard = GaussLegendre3D.GetQuadratureWithOrder(2, 2, 2);
-			IntegrationBulk = new IntegrationWithConformingSubtetrahedra3D(TetrahedronQuadrature.Order2Points4);
+			IntegrationBulk = new IntegrationWithConformingSubtetrahedra3D(TetrahedronQuadrature.Order3Points5);
 			this.numStandardDofs = Nodes.Count * dim;
 			dofTypes = new IDofType[Nodes.Count][];
 			for (int i = 0; i < Nodes.Count; ++i)

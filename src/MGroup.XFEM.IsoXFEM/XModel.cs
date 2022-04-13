@@ -165,16 +165,16 @@ namespace MGroup.XFEM.IsoXFEM
 		/// <param name="solutionFreeDofs">Total displacements of all dofs of each subdomain.</param>
 		public void Update(IAlgebraicModel algebraicModel, IGlobalVector solutionFreeDofs)
 		{
-			//if (Dimension == 3)
-			//{
-			//	levelSetDescription = new DualMeshLsmSymmetric(0, relativeCriteria.CopyToArray(), (DualCartesianSimplicialSymmetricMeshBase)Mesh);
-			//	//levelSetDescription = new SimpleLsm3D(0, relativeCriteria.CopyToArray());
-			//	foreach (var element in Elements)
-			//	{
-			//		var intersection = levelSetDescription.Intersect(element.Value);
-			//		element.Value.RegisterInteractionWithLsm3D(intersection);
-			//	}
-			//}
+			if (Dimension == 3)
+			{
+				levelSetDescription = new DualMeshLsmSymmetric(0, relativeCriteria.CopyToArray(), (DualCartesianSimplicialSymmetricMeshBase)Mesh);
+				//levelSetDescription = new SimpleLsm3D(0, relativeCriteria.CopyToArray());
+				foreach (var element in Elements)
+				{
+					var intersection = levelSetDescription.Intersect(element.Value);
+					element.Value.RegisterInteractionWithLsm3D(intersection);
+				}
+			}
 			//else
 			//{
 			//	//var geometry = new Circle2D(0, 0, 0);
@@ -240,7 +240,7 @@ namespace MGroup.XFEM.IsoXFEM
 		{
 			ISolidOnlyTriangulator triangulator;
 			if (Dimension == 2) triangulator = new SolidOnlyTriangulator2D();
-			else if (Dimension == 3) triangulator = new SolidOnlyTriangulator3D();
+			else if (Dimension == 3) triangulator = new SolidOnlyMSolveTriangulator3D();
 			else throw new NotImplementedException();
 
 			foreach (IIsoXfemElement element in Elements.Values)
@@ -265,21 +265,19 @@ namespace MGroup.XFEM.IsoXFEM
 				{
 					if (Dimension == 3)
 					{
-						//var intersections = new List<IElementDiscontinuityInteraction>();
-						//foreach (IElementDiscontinuityInteraction interaction in element.InteractingDiscontinuities.Values)
-						//{
-						//	//if (interaction.RelativePosition == RelativePositionCurveElement.Intersecting)
-						//	//{
-						//	intersections.Add(interaction);
-						//	//}
-						//}
-						//IMeshTolerance meshTolerance = new MinimumSideMeshTolerance();
-						////IMeshTolerance meshTolerance = new UserDefinedMeshTolerance(Elements.First().Value.CalcBulkSizeCartesian());
-						//triangulator.LevelSetDescription = levelSetDescription;
-						//element.ConformingSubcells = triangulator.FindConformingMesh(element, intersections, meshTolerance);
-						triangulator.NodalLevelSetModel = relativeCriteria;
-						triangulator.ElementNodalLevelSetValues = element.ElementLevelSet;
-						element.ConformingSubcells = triangulator.FindConformingMesh(element, null, null);
+						var intersections = new List<IElementDiscontinuityInteraction>();
+						foreach (IElementDiscontinuityInteraction interaction in element.InteractingDiscontinuities.Values)
+						{
+							//if (interaction.RelativePosition == RelativePositionCurveElement.Intersecting)
+							//{
+								intersections.Add(interaction);
+							//}
+						}
+						triangulator.LevelSetDescription = levelSetDescription;
+						element.ConformingSubcells = triangulator.FindConformingMesh(element, intersections, MeshTolerance);					
+						//triangulator.NodalLevelSetModel = relativeCriteria;
+						//triangulator.ElementNodalLevelSetValues = element.ElementLevelSet;
+						//element.ConformingSubcells = triangulator.FindConformingMesh(element, null, null);
 					}
 					else if (Dimension == 2)
 					{

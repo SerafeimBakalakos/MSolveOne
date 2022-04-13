@@ -49,9 +49,10 @@ namespace MGroup.XFEM.Geometry.ConformingMesh
                 "There must be at least 4 non-coincident vertices for 3D Dealuny to work.");
             try
             {
-                return Triangulation.CreateDelaunay(vertices).Cells;
-            }
-            catch (NullReferenceException)
+				var triangulation = Triangulation.CreateDelaunay(vertices).Cells;
+				return triangulation;
+			}
+			catch (NullReferenceException)
             {
                 // This probably happened because 2 or more vertices are very close to each other. 
                 //TODO: It is also possible that MIConvexHull failed at triangulating the Hexa8 cube in isoparametric without 
@@ -59,9 +60,9 @@ namespace MGroup.XFEM.Geometry.ConformingMesh
 
                 List<double[]> uniqueVertices = FilterUniqueVertices(vertices);
 
-                // Retry the triangulation
-                return Triangulation.CreateDelaunay(uniqueVertices).Cells;
-            }
+				// Retry the triangulation
+				return Triangulation.CreateDelaunay(uniqueVertices).Cells;
+			}
         }
 
         private List<double[]> FilterUniqueVertices(IList<double[]> originalVertices)
@@ -79,7 +80,7 @@ namespace MGroup.XFEM.Geometry.ConformingMesh
                     }
                 }
             }
-            double minDistance = minDistanceTolerance * maxDistance;
+            double minDistance = minDistanceTolerance * maxDistance ;
 
             // Remove coincident vertices. 
             //TODO: If one of the coincident vertices is on the face/edge/vertex of the isoparametric cube and the other is
