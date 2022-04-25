@@ -233,26 +233,26 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				exampleOptions, meshOptions, solverOptions, outputOptions, model, boundary, algebraicModel, solver, loggerDdm);
 		}
 
-		private static string CreateHeader(ExampleOptions exampleOptions, MeshOptions meshOptions, SolverOptions solverOptions)
+		public static string CreateHeader(ExampleOptions exampleOptions, MeshOptions meshOptions, SolverOptions solverOptions)
 		{
 			var msg = new StringBuilder();
 			msg.AppendLine($"New analysis, {DateTime.Now}");
-			msg.Append($"Example {exampleOptions}, num steps {exampleOptions.maxSteps}, poisson {exampleOptions.poissonRatio}, " +
-				$"heaviside tol = {exampleOptions.heavisideTol}, tip radius = {exampleOptions.tipEnrichmentRadius}");
+			msg.Append($"Example={exampleOptions}, num steps={exampleOptions.maxSteps}, poisson={exampleOptions.poissonRatio}, " +
+				$"heaviside tol={exampleOptions.heavisideTol}, tip radius={exampleOptions.tipEnrichmentRadius}");
 			if (exampleOptions.GetOtherOptions().Length >= 1)
 			{
 				msg.Append(", " + exampleOptions.GetOtherOptions());
 			}
 			msg.AppendLine();
 
-			msg.AppendLine($"NumElements {meshOptions.numElements[0]}x{meshOptions.numElements[1]}x{meshOptions.numElements[2]}, " +
-				$"numSubdomains {meshOptions.numSubdomains[0]}x{meshOptions.numSubdomains[1]}x{meshOptions.numSubdomains[2]}, " +
-				$"numClusters {meshOptions.numClusters[0]}x{meshOptions.numClusters[1]}x{meshOptions.numClusters[2]}");
+			msg.AppendLine($"Num elements={meshOptions.numElements[0]}x{meshOptions.numElements[1]}x{meshOptions.numElements[2]}, " +
+				$"num subdomains={meshOptions.numSubdomains[0]}x{meshOptions.numSubdomains[1]}x{meshOptions.numSubdomains[2]}, " +
+				$"num clusters={meshOptions.numClusters[0]}x{meshOptions.numClusters[1]}x{meshOptions.numClusters[2]}");
 
-			msg.AppendLine($"Solver {solverOptions.solverChoice}, corner dof strategy {solverOptions.cornerDofStrategy}, " +
-				$"pcg tol {solverOptions.pcgTolerance}, objective criterion {solverOptions.objectiveConvergenceCriterion}, " +
-				$"managed direct solvers {solverOptions.managedDirectSolvers}, unsafe optimizations {solverOptions.unsafeOptimizations}, " +
-				$"explicit Schur complements {solverOptions.explicitSchurComplements}");
+			msg.AppendLine($"Solver={solverOptions.solverChoice}, corner dof strategy={solverOptions.cornerDofStrategy}, " +
+				$"pcg tol={solverOptions.pcgTolerance}, objective criterion={solverOptions.objectiveConvergenceCriterion}, " +
+				$"managed direct solvers={solverOptions.managedDirectSolvers}, unsafe optimizations={solverOptions.unsafeOptimizations}, " +
+				$"explicit Schur complements={solverOptions.explicitSchurComplements}");
 
 			return msg.ToString();
 		}
@@ -277,6 +277,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			solver.Logger.ExtraInfo = header;
 			//analyzer.Results.Add(new StructuralFieldWriter(model, outputDirectory));
 
+			Console.WriteLine();
+			Console.WriteLine("***************************************************************");
+			Console.WriteLine(header);
 			Console.WriteLine("Starting analysis");
 			analyzer.Analyze();
 

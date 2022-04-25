@@ -20,7 +20,8 @@ namespace MGroup.XFEM.Tests
 			//RunExample1();
 			//RunExample2();
 
-			ExamplesMpi3D_Runs.RunTestAnalysis();
+			//ExamplesMpi3D_Runs.RunTestAnalysis();
+			ExamplesMpi3D_Runs.RunWeakScalabilityImpact();
 		}
 
 		private static void RunExample1()
