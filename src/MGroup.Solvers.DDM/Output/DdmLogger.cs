@@ -26,6 +26,8 @@ namespace MGroup.Solvers.DDM.Output
 			this.numSubdomains = numSubdomains;
 		}
 
+		public string Header { get; set; }
+
 		public void IncrementAnalysisIteration()
 		{
 			++analysisIteration;
@@ -90,9 +92,7 @@ namespace MGroup.Solvers.DDM.Output
 		public void WriteToStream(StreamWriter writer)
 		{
 			writer.WriteLine("************************************************************************************************");
-			writer.WriteLine(DateTime.Now);
-			writer.WriteLine($"Solver: {solverName}");
-			writer.WriteLine($"Num subdomains: {numSubdomains}");
+			WriteHeader(writer);
 			for (int t = 0; t < convergenceData.Count; ++t)
 			{
 				(int numIterations, double residualNorm) = convergenceData[t];
@@ -144,6 +144,20 @@ namespace MGroup.Solvers.DDM.Output
 			}
 			return (min, max, sum / count, sum);
 
+		}
+
+		private void WriteHeader(StreamWriter writer)
+		{
+			if (Header != null)
+			{
+				writer.Write(Header);
+			}
+			else
+			{
+				writer.WriteLine(DateTime.Now);
+				writer.WriteLine($"Solver: {solverName}");
+				writer.WriteLine($"Num subdomains: {numSubdomains}");
+			}
 		}
 	}
 }

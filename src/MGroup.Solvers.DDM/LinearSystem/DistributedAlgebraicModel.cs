@@ -346,6 +346,10 @@ namespace MGroup.Solvers.DDM.LinearSystem
 			LinearSystem.Matrix = null; // If this is set to null, I cannot reuse portions of the previous matrix
 			LinearSystem.RhsVector = CreateZeroVector();
 			LinearSystem.Solution = CreateZeroVector();
+
+			#region debug
+			Console.WriteLine($"Global dofs = {LinearSystem.RhsVector.Length()}");
+			#endregion
 		}
 
 		public void ReorderDofs()
