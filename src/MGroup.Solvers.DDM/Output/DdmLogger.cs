@@ -118,8 +118,30 @@ namespace MGroup.Solvers.DDM.Output
 				writer.WriteLine(msg);
 			}
 
-			(int min, int max, double avg, double sum) = CalcStatistics(convergenceData.Select(d => d.Value.numIterations));
-			writer.WriteLine($"Solver iteration statistics: min = {min}, max = {max}, average = {avg}, sum = {sum}");
+			(int iterMin, int iterMax, double iterAvg, double iterSum) 
+				= CalcStatistics(convergenceData.Select(d => d.Value.numIterations));
+			writer.WriteLine($"Solver iteration statistics: min = {iterMin}, max = {iterMax}, average = {iterAvg}, sum = {iterSum}");
+			try
+			{
+				(int globalDofsMin, int globalDofsMax, double globalDofsAvg, double globalDofsSum) 
+					= CalcStatistics(problemSizeData.Select(d => d[0]));
+				writer.WriteLine($"Global problem size statistics: min = {globalDofsMin}, max = {globalDofsMax}, " +
+					$"average = {globalDofsAvg}, sum = {globalDofsSum}");
+
+				(int interfaceDofsMin, int interfaceDofsMax, double interfaceDofsAvg, double interfaceDofsSum)
+					= CalcStatistics(problemSizeData.Select(d => d[1]));
+				writer.WriteLine($"Interface problem size statistics: min = {interfaceDofsMin}, max = {interfaceDofsMax}, " +
+					$"average = {interfaceDofsAvg}, sum = {interfaceDofsSum}");
+
+				(int coarseDofsMin, int coarseDofsMax, double coarseDofsAvg, double coarseDofsSum)
+					= CalcStatistics(problemSizeData.Select(d => d[2]));
+				writer.WriteLine($"Coarse problem size statistics: min = {coarseDofsMin}, max = {coarseDofsMax}, " +
+					$"average = {coarseDofsAvg}, sum = {coarseDofsSum}");
+			}
+			catch (Exception)
+			{
+			}
+			
 			writer.WriteLine("************************************************************************************************");
 		}
 

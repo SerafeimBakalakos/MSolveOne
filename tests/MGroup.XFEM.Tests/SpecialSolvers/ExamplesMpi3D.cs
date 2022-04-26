@@ -247,12 +247,15 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			msg.AppendLine($"Num elements={meshOptions.numElements[0]}x{meshOptions.numElements[1]}x{meshOptions.numElements[2]}, " +
 				$"num subdomains={meshOptions.numSubdomains[0]}x{meshOptions.numSubdomains[1]}x{meshOptions.numSubdomains[2]}, " +
-				$"num clusters={meshOptions.numClusters[0]}x{meshOptions.numClusters[1]}x{meshOptions.numClusters[2]}");
+				$"num clusters={meshOptions.numClusters[0]}x{meshOptions.numClusters[1]}x{meshOptions.numClusters[2]}, " +
+				$"H/h = {meshOptions.minElements / (double)(meshOptions.minSubdomains)}");
 
 			msg.AppendLine($"Solver={solverOptions.solverChoice}, corner dof strategy={solverOptions.cornerDofStrategy}, " +
 				$"pcg tol={solverOptions.pcgTolerance}, objective criterion={solverOptions.objectiveConvergenceCriterion}, " +
 				$"managed direct solvers={solverOptions.managedDirectSolvers}, unsafe optimizations={solverOptions.unsafeOptimizations}, " +
 				$"explicit Schur complements={solverOptions.explicitSchurComplements}");
+
+			msg.AppendLine($"Environment={solverOptions.environment}");
 
 			return msg.ToString();
 		}

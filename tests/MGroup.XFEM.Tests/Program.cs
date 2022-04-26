@@ -59,7 +59,7 @@ namespace MGroup.XFEM.Tests
 		private static void RunExample2()
 		{
 			FriesExample_7_2_3_Model.heavisideTol = 1E-3;
-			FriesExample_7_2_3_Solvers.maxIterations = 3;
+			FriesExample_7_2_3_Solvers.maxIterations = 16;
 
 			FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\Serafeim\Desktop\xfem 3d\paper\Example2\";
 			//FriesExample_7_2_3_Solvers.outputDirectory = @"C:\Users\cluster\Desktop\Serafeim\results\Example2\";
