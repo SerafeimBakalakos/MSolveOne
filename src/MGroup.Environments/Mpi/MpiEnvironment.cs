@@ -34,7 +34,6 @@ namespace MGroup.Environments.Mpi
 	/// </remarks>
 	public sealed class MpiEnvironment : IComputeEnvironment, IDisposable
 	{
-		private readonly IMpiGlobalOperationStrategy globalOperationStrategy;
 		private readonly MpiNet.Environment mpiEnvironment;
 
 		private bool disposed = false;
@@ -43,9 +42,16 @@ namespace MGroup.Environments.Mpi
 		private MpiCollectivesHelper collectivesHelperWorld;
 		private MpiCollectivesHelper collectivesHelperNodes;
 
-		public MpiEnvironment(IMpiGlobalOperationStrategy globalOperationStrategy)
+		public MpiEnvironment(IMpiGlobalOperationStrategy globalOperationStrategy = null)
 		{
-			this.globalOperationStrategy = globalOperationStrategy;
+			if (globalOperationStrategy != null)
+			{
+				this.GlobalOperationStrategy = globalOperationStrategy;
+			}
+			else
+			{
+				this.GlobalOperationStrategy = new MasterSlavesGlobalOperationStrategy();
+			}
 
 			//TODOMPI: See Threading param. In multithreaded programs, I must specify that to MPI.NET.
 			string[] args = Array.Empty<string>();
@@ -61,6 +67,10 @@ namespace MGroup.Environments.Mpi
 		public Intracommunicator CommWorld { get; }
 
 		public Intracommunicator CommNodes { get; private set; }
+
+		//TODO: Thread access should be controlled
+		//TODO: Make sure that all implementations are stateless, so that they can be changed irrespectively from the initializations of this object
+		public IMpiGlobalOperationStrategy GlobalOperationStrategy { get; set; }
 
 		public ComputeNodeTopology NodeTopology { get ; private set; }
 
@@ -174,14 +184,14 @@ namespace MGroup.Environments.Mpi
 		}
 
 		public Dictionary<int, T> CalcNodeDataAndTransferToGlobalMemory<T>(Func<int, T> calcNodeData)
-			=> globalOperationStrategy.CalcNodeDataAndTransferToGlobalMemory(this, calcNodeData);
+			=> GlobalOperationStrategy.CalcNodeDataAndTransferToGlobalMemory(this, calcNodeData);
 
 		public Dictionary<int, T> CalcNodeDataAndTransferToGlobalMemoryPartial<T>(Func<int, T> calcNodeData,
 			Func<int, bool> isActiveNode)
 			=> throw new NotImplementedException("Perhaps I could call the non-partial method instead of throwing exceptions");
 
 		public Dictionary<int, T> CalcNodeDataAndTransferToLocalMemory<T>(Func<int, T> subdomainOperation)
-			=> globalOperationStrategy.CalcNodeDataAndTransferToLocalMemory(this, subdomainOperation);
+			=> GlobalOperationStrategy.CalcNodeDataAndTransferToLocalMemory(this, subdomainOperation);
 
 		public void Dispose()
 		{
@@ -190,7 +200,7 @@ namespace MGroup.Environments.Mpi
 		}
 
 		public void DoGlobalOperation(Action globalOperation) 
-			=> globalOperationStrategy.DoGlobalOperation(this, globalOperation);
+			=> GlobalOperationStrategy.DoGlobalOperation(this, globalOperation);
 
 		public Dictionary<int, T> DoPerItemInGlobalMemory<T>(IEnumerable<int> items, Func<int, T> calcItemData)
 		{
@@ -229,6 +239,11 @@ namespace MGroup.Environments.Mpi
 
 		public void DoPerNodeSerially(Action<int> actionPerNode)
 		{
+			if (CommNodes == null)
+			{
+				return;
+			}
+
 			foreach (int nodeID in localNodes.Keys)
 			{
 				actionPerNode(nodeID);
@@ -269,6 +284,8 @@ namespace MGroup.Environments.Mpi
 
 		public void Initialize(ComputeNodeTopology nodeTopology)
 		{
+			//TODO: First of all, clear all existing data
+
 			nodeTopology.CheckSanity();
 
 			//TODOMPI: Perhaps this validation is useful for more than just the MpiEnvironment and should be done elsewhere.

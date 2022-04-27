@@ -116,8 +116,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers.HybridFries
 		{
 			if (numSubdomains == null)
 			{
-				numSubdomains = new int[] { 1, 1 };
-				numClusters = new int[] { 1, 1 };
+				numSubdomains = new int[] { 1, 1, 1 };
+				numClusters = new int[] { 1, 1, 1 };
 			}
 
 			var modelBuilder = new UniformDdmCrackModelBuilder3D();

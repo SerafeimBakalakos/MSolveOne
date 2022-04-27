@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using MGroup.Environments.Mpi;
 using static MGroup.XFEM.Tests.SpecialSolvers.ExamplesMpi3D;
 
 namespace MGroup.XFEM.Tests.SpecialSolvers
@@ -11,20 +12,60 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		public static int maxCrackSteps = 1;
 		//public static int maxCrackSteps = int.MaxValue;
 
+		public static void RunTestMpiAnalysis()
+		{
+			using (var mpiEnvironment = new MpiEnvironment())
+			{
+				//MpiDebugUtilities.AssistDebuggerAttachment();
+
+				var exampleOptions = new ExampleImpactOptions();
+				exampleOptions.heavisideTol = 1E-3;
+				exampleOptions.maxSteps = 3;
+
+				var meshOptions = new MeshOptions(10, 2);
+				meshOptions.numClusters = new int[] { 2, 1, 2 };
+
+				var solverOptions = new SolverOptions(SolverChoice.PFETI_DP_I);
+				solverOptions.environmentChoice = EnvironmentChoice.MPI;
+				solverOptions.environment = mpiEnvironment;
+
+				var outputOptions = new OutputOptions(false, "Test MPI");
+
+				var coarseProblemOptions = new CoarseProblemOptionsGlobal(4, 4);
+				coarseProblemOptions.ForceDemocracy();
+
+				//var coarseProblemOptions = new CoarseProblemOptionsGlobal(4, 4);
+				//coarseProblemOptions.SetMasterProcess(3);
+
+				//var coarseProblemOptions = new CoarseProblemOptionsGlobal(4, 5);
+				//coarseProblemOptions.SetMasterProcess(4);
+
+				//var coarseProblemOptions = new CoarseProblemOptionsDistributed(4, 4);
+				//coarseProblemOptions.pcgTol = 1E-7;
+				//coarseProblemOptions.pcgMaxIter = 1000;
+				//coarseProblemOptions.reorthoPCG = true;
+
+				RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
+			}
+		}
+
 		public static void RunTestAnalysis()
 		{
 			var exampleOptions = new ExampleImpactOptions();
 			exampleOptions.heavisideTol = 1E-3;
 			exampleOptions.maxSteps = 3;
 
-			var meshOptions = new MeshOptions(15, 3);
+			var meshOptions = new MeshOptions(10, 2);
+			meshOptions.numClusters = new int[] { 2, 1, 2 };
 
 			var solverOptions = new SolverOptions(SolverChoice.PFETI_DP_I);
-			solverOptions.environment = EnvironmentChoice.TPL;
+			solverOptions.environmentChoice = EnvironmentChoice.TPL;
 
 			var outputOptions = new OutputOptions(false, "Test");
 
-			RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions);
+			var coarseProblemOptions = new CoarseProblemOptionsGlobal(1, 1);
+
+			RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
 		}
 
 		public static void RunStrongScalabilityImpact()
@@ -44,12 +85,14 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 					var meshOptions = new MeshOptions(minElements, numSubdomains[r]);
 					var solverOptions = new SolverOptions(solver);
-					solverOptions.environment = EnvironmentChoice.TPL;
+					solverOptions.environmentChoice = EnvironmentChoice.TPL;
 
 					var outputOptions = new OutputOptions(false, "Strong scalability");
-					directory = outputOptions.GetOutputDirectory(exampleOptions);
+					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
 
-					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions);
+					var coarseProblemOptions = new CoarseProblemOptionsGlobal(1, 1);
+
+					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
 				}
 			}
 			File.Create(directory + "_investigation_finished.txt");
@@ -73,12 +116,14 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 					var meshOptions = new MeshOptions(minElements, numSubdomains[r]);
 					var solverOptions = new SolverOptions(solver);
-					solverOptions.environment = EnvironmentChoice.TPL;
+					solverOptions.environmentChoice = EnvironmentChoice.TPL;
 
 					var outputOptions = new OutputOptions(false, "Strong scalability");
-					directory = outputOptions.GetOutputDirectory(exampleOptions);
+					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
 
-					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions);
+					var coarseProblemOptions = new CoarseProblemOptionsGlobal(1, 1);
+
+					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
 				}
 			}
 			File.Create(directory + "_investigation_finished.txt");
@@ -101,12 +146,14 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 					var meshOptions = new MeshOptions(minElements[r], minElements[r] / subdomainToMeshSizeRatio);
 					var solverOptions = new SolverOptions(solver);
-					solverOptions.environment = EnvironmentChoice.TPL;
+					solverOptions.environmentChoice = EnvironmentChoice.TPL;
 
 					var outputOptions = new OutputOptions(false, "Weak scalability");
-					directory = outputOptions.GetOutputDirectory(exampleOptions);
+					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
 
-					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions);
+					var coarseProblemOptions = new CoarseProblemOptionsGlobal(1, 1);
+
+					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
 				}
 			}
 			File.Create(directory + "_investigation_finished.txt");
@@ -133,12 +180,14 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 					var meshOptions = new MeshOptions(minElements[r], minElements[r] / subdomainToMeshSizeRatio);
 					var solverOptions = new SolverOptions(solver);
-					solverOptions.environment = EnvironmentChoice.TPL;
+					solverOptions.environmentChoice = EnvironmentChoice.TPL;
 
 					var outputOptions = new OutputOptions(false, "Weak scalability");
-					directory = outputOptions.GetOutputDirectory(exampleOptions);
+					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
 
-					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions);
+					var coarseProblemOptions = new CoarseProblemOptionsGlobal(1, 1);
+
+					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
 				}
 			}
 			File.Create(directory + "_investigation_finished.txt");
