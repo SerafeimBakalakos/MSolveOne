@@ -239,7 +239,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			public CoarseProblemOptionsGlobal(int numClusters, int numProcesses) : base(numClusters, numProcesses)
 			{
 				// Set the last one as master
-				masterProcesses.Add(numClusters - 1);
+				masterProcesses.Add(numProcesses - 1);
 				Democratic = false;
 			}
 
@@ -270,7 +270,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				{
 					msg.Append("Global single machine, ");
 				}
-				if (Democratic)
+				else if (Democratic)
 				{
 					msg.Append("Global democratic, ");
 				}
@@ -442,6 +442,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			#region debug
 			PrintClusters(nodeTopology);
+			PrintNodeNeighbors(nodeTopology);
 			#endregion
 
 			FriesExample_7_2_1_Model.CreateGeometryModel(model, meshOptions.numElements, crackMouthCoords, crackFrontCoords);
@@ -473,6 +474,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			#region debug
 			PrintClusters(nodeTopology);
+			PrintNodeNeighbors(nodeTopology);
 			#endregion
 
 			FriesExample_7_2_3_Model.CreateGeometryModel(model, meshOptions.numElements);
@@ -746,6 +748,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		{
 			var msg = new StringBuilder();
 			msg.AppendLine();
+			msg.AppendLine("*** Subdomains of clusters ***");
 
 			foreach (ComputeNodeCluster cluster in nodeTopology.Clusters.Values)
 			{
@@ -760,8 +763,27 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			PrintMsg(msg.ToString());
 		}
 
+		private static void PrintNodeNeighbors(ComputeNodeTopology nodeTopology)
+		{
+			var msg = new StringBuilder();
+			msg.AppendLine();
+			msg.AppendLine("*** Neighbors of subdomains ***");
+			foreach (ComputeNode node in nodeTopology.Nodes.Values)
+			{
+				msg.Append($"subdomain {node.ID} - neighbors: ");
+				foreach (int neighbor in node.Neighbors)
+				{
+					msg.Append($"{neighbor} ");
+				}
+				msg.AppendLine();
+			}
+
+			PrintMsg(msg.ToString());
+		}
+
 		private static void PrintMsg(string msg, bool rootOnly = true)
 		{
+			MPI.Communicator.world.Barrier();
 			if (rootOnly)
 			{
 				if (MPI.Communicator.world.Rank == 0)
@@ -773,6 +795,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			{
 				Console.WriteLine(msg);
 			}
+			MPI.Communicator.world.Barrier();
 		}
 	}
 }

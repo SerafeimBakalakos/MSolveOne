@@ -9,7 +9,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 {
 	public class ExamplesMpi3D_Runs
 	{
-		public static int maxCrackSteps = 1;
+		public static int maxCrackSteps = 2;
 		//public static int maxCrackSteps = int.MaxValue;
 
 		public static void RunTestMpiAnalysis()
@@ -131,32 +131,48 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 		public static void RunWeakScalabilityImpact()
 		{
-			var subdomainToMeshSizeRatio = 5;
-			int[] minElements = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 };
-			SolverChoice[] solvers = GetDdmSolvers();
-
-			string directory = null;
-			for (int r = 0; r < minElements.Length; ++r)
+			using (var mpiEnvironment = new MpiEnvironment())
 			{
-				foreach (SolverChoice solver in solvers)
+				//MpiDebugUtilities.AssistDebuggerAttachment();
+
+				var subdomainToMeshSizeRatio = 5;
+				//int[] minElements = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 };
+				int[] minElements = { 10 };
+				//SolverChoice[] solvers = GetDdmSolvers();
+				SolverChoice[] solvers = { SolverChoice.FETI_DP_D };
+
+				string directory = null;
+				for (int r = 0; r < minElements.Length; ++r)
 				{
-					var exampleOptions = new ExampleImpactOptions();
-					exampleOptions.heavisideTol = minElements[r] < 15 ? 1E-4 : 1E-3;
-					exampleOptions.maxSteps = maxCrackSteps > 16 ? 16 : maxCrackSteps;
+					foreach (SolverChoice solver in solvers)
+					{
+						var exampleOptions = new ExampleImpactOptions();
+						//exampleOptions.heavisideTol = minElements[r] < 15 ? 1E-4 : 1E-3;
+						exampleOptions.heavisideTol = 1E-3;
+						exampleOptions.maxSteps = maxCrackSteps > 16 ? 16 : maxCrackSteps;
 
-					var meshOptions = new MeshOptions(minElements[r], minElements[r] / subdomainToMeshSizeRatio);
-					var solverOptions = new SolverOptions(solver);
-					solverOptions.environmentChoice = EnvironmentChoice.TPL;
+						var meshOptions = new MeshOptions(minElements[r], minElements[r] / subdomainToMeshSizeRatio);
+						meshOptions.numClusters = new int[] { 2, 1, 2 };
 
-					var outputOptions = new OutputOptions(false, "Weak scalability");
-					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
 
-					var coarseProblemOptions = new CoarseProblemOptionsGlobal(1, 1);
+						var solverOptions = new SolverOptions(solver);
+						solverOptions.environmentChoice = EnvironmentChoice.MPI;
+						solverOptions.environment = mpiEnvironment;
+						//solverOptions.environmentChoice = EnvironmentChoice.TPL;
 
-					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
+						var coarseProblemOptions = new CoarseProblemOptionsGlobal(4, 4);
+						coarseProblemOptions.SetMasterProcess(3);
+						//var coarseProblemOptions = new CoarseProblemOptionsGlobal(4, 1);
+
+
+						var outputOptions = new OutputOptions(false, "Weak scalability");
+						directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
+
+						RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
+					}
 				}
+				File.Create(directory + "_investigation_finished.txt");
 			}
-			File.Create(directory + "_investigation_finished.txt");
 		}
 
 		public static void RunWeakScalability4PBB()

@@ -354,7 +354,17 @@ namespace MGroup.Environments.Mpi
 						Action<int> allocateBuffer = length => data.recvValues[neighborID] = new T[length];
 						recvLengthRequests.Add(CommNodes.ImmediateReceive<int>(remoteProcess, tag, allocateBuffer));
 
-						int bufferLength = data.sendValues[neighborID].Length;
+						int bufferLength;
+						bool mustSend = data.sendValues.TryGetValue(neighborID, out T[] sendBuffer);
+						if (mustSend)
+						{
+							// This includes the case sendBuffer.Length == 0
+							bufferLength = sendBuffer.Length;
+						}
+						else
+						{
+							bufferLength = 0;
+						}
 						sendLengthRequests.Add(CommNodes.ImmediateSend(bufferLength, remoteProcess, tag));
 					}
 				}
@@ -382,11 +392,22 @@ namespace MGroup.Environments.Mpi
 					int remoteProcess = remoteCluster.ID;
 					int tag = p2pTransfers.GetSendRecvTag(MpiJob.TransferBufferDuringNeighborhoodAllToAll, node.ID, neighborID);
 
-					T[] recvBuffer = data.recvValues[neighborID];
-					recvRequests.Add(CommNodes.ImmediateReceive(remoteProcess, tag, recvBuffer));
 
-					T[] sendBuffer = data.sendValues[neighborID];
-					sendRequests.Add(CommNodes.ImmediateSend(sendBuffer, remoteProcess, tag));
+
+					bool mustSend = data.sendValues.TryGetValue(neighborID, out T[] sendBuffer);
+					if (mustSend && sendBuffer.Length > 0)
+					{
+						sendRequests.Add(CommNodes.ImmediateSend(sendBuffer, remoteProcess, tag));
+					}
+
+					bool mustRecv = data.recvValues.TryGetValue(neighborID, out T[] recvBuffer);
+					if (mustRecv && recvBuffer.Length > 0)
+					{
+						recvRequests.Add(CommNodes.ImmediateReceive(remoteProcess, tag, recvBuffer));
+					}
+
+					// Not sure about this
+					//Debug.Assert((mustSend == mustRecv) && (sendBuffer.Length == recvBuffer.Length));
 				}
 			}
 
@@ -400,8 +421,14 @@ namespace MGroup.Environments.Mpi
 					// Receive data from each other node, by just copying the corresponding array segments.
 					ComputeNode otherNode = NodeTopology.Nodes[neighborID];
 					AllToAllNodeData<T> otherData = dataPerNode[neighborID];
-					int bufferLength = otherData.sendValues[thisNodeID].Length;
 
+					bool haveCommonData = otherData.sendValues.TryGetValue(thisNodeID, out T[] dataToSend);
+					if (!haveCommonData)
+					{
+						continue;
+					}
+
+					int bufferLength = dataToSend.Length;
 					if (!areRecvBuffersKnown)
 					{
 						Debug.Assert(!thisData.recvValues.ContainsKey(neighborID), "This buffer must not exist previously.");
@@ -416,7 +443,7 @@ namespace MGroup.Environments.Mpi
 
 					// Copy data from other to this node. 
 					// Copying from this to other node will be done in another iteration of the outer loop.
-					Array.Copy(otherData.sendValues[thisNodeID], thisData.recvValues[neighborID], bufferLength);
+					Array.Copy(dataToSend, thisData.recvValues[neighborID], bufferLength);
 				}
 			};
 			Parallel.ForEach(localNodes.Keys, transferLocalBuffers);
