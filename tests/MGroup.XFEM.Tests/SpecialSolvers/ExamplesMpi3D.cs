@@ -752,7 +752,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			foreach (ComputeNodeCluster cluster in nodeTopology.Clusters.Values)
 			{
-				msg.Append($"Cluster {cluster.ID} - subdomains:");
+				msg.Append($"Cluster {cluster.ID} - subdomains ({cluster.Nodes.Count} in total):");
 				foreach (ComputeNode subdomain in cluster.Nodes.Values)
 				{
 					msg.Append($" {subdomain.ID}");
@@ -770,7 +770,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			msg.AppendLine("*** Neighbors of subdomains ***");
 			foreach (ComputeNode node in nodeTopology.Nodes.Values)
 			{
-				msg.Append($"subdomain {node.ID} - neighbors: ");
+				msg.Append($"subdomain {node.ID} - neighbors ({node.Neighbors.Count} in total): ");
 				foreach (int neighbor in node.Neighbors)
 				{
 					msg.Append($"{neighbor} ");

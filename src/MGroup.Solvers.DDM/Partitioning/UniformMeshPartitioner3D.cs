@@ -16,6 +16,7 @@ namespace MGroup.Solvers.DDM.Partitioning
 		private readonly int[] numClusters;
 		private readonly int[][] numElementsPerSubdomainPerAxis;
 		private readonly int[] numSubdomains;
+		private readonly int[][] numSubdomainsPerClusterPerAxis;
 		private Dictionary<int, int> clustersOfSubdomains;
 		private Dictionary<int, HashSet<int>> neighborsOfSubdomains;
 		private Dictionary<int, int> subdomainsOfElements;
@@ -41,14 +42,7 @@ namespace MGroup.Solvers.DDM.Partitioning
 			this.numClusters = numClusters;
 			this.NumSubdomainsTotal = numSubdomains[0] * numSubdomains[1] * numSubdomains[2];
 
-			for (int d = 0; d < dim; ++d)
-			{
-				if (numSubdomains[d] % numClusters[d] != 0)
-				{
-					throw new ArgumentException("The number of subdomains must be a multiple of the number of clusters per axis");
-				}
-			}
-
+			// Elements per subdomain
 			if (numElementsPerSubdomainPerAxis != null)
 			{
 				// Check input
@@ -77,7 +71,7 @@ namespace MGroup.Solvers.DDM.Partitioning
 			}
 			else
 			{
-				this.numElementsPerSubdomainPerAxis = new int[3][];
+				this.numElementsPerSubdomainPerAxis = new int[dim][];
 				for (int d = 0; d < dim; ++d)
 				{
 					this.numElementsPerSubdomainPerAxis[d] = new int[numSubdomains[d]];
@@ -95,6 +89,28 @@ namespace MGroup.Solvers.DDM.Partitioning
 					{
 						++this.numElementsPerSubdomainPerAxis[d][s];
 					}
+				}
+			}
+
+			// Subdomains per cluster
+			this.numSubdomainsPerClusterPerAxis = new int[dim][];
+			for (int d = 0; d < dim; ++d)
+			{
+				this.numSubdomainsPerClusterPerAxis[d] = new int[numClusters[d]];
+
+				// All clusters take at least numSubdomains / numClusters subdomains.
+				int div = numSubdomains[d] / numClusters[d];
+				for (int c = 0; c < numClusters[d]; ++c)
+				{
+					this.numSubdomainsPerClusterPerAxis[d][c] = div;
+				}
+
+				// Leftover subdomains are distributed among some clusters (starting from the last ones)
+				int mod = numSubdomains[d] % numClusters[d];
+				for (int cc = 0; cc < mod; ++cc)
+				{
+					int c = numClusters[d] - 1 - cc;
+					++this.numSubdomainsPerClusterPerAxis[d][c];
 				}
 			}
 		}
@@ -117,30 +133,42 @@ namespace MGroup.Solvers.DDM.Partitioning
 
 		private void ClusterSubdomains()
 		{
-			var multiple = new int[dim];
-			for (int d = 0; d < dim; ++d)
-			{
-				multiple[d] = numSubdomains[d] / numClusters[d];
-			}
-
 			clustersOfSubdomains = new Dictionary<int, int>();
 			for (int sK = 0; sK < numSubdomains[2]; ++sK)
 			{
-				int cK = sK / multiple[2];
+				int cK = FindClusterOfSubdomain(2, sK);
 				for (int sJ = 0; sJ < numSubdomains[1]; ++sJ)
 				{
-					int cJ = sJ / multiple[1];
+					int cJ = FindClusterOfSubdomain(1, sJ);
 					for (int sI = 0; sI < numSubdomains[0]; ++sI)
 					{
-						int cI = sI / multiple[0];
+						int cI = FindClusterOfSubdomain(0, sI);
 						int subdomainID = FindSubdomainID(new int[] { sI, sJ, sK });
-						Debug.Assert(subdomainID != invalidID);
 						int clusterID = FindClusterID(new int[] { cI, cJ, cK });
 						Debug.Assert(clusterID != invalidID);
 						clustersOfSubdomains[subdomainID] = clusterID;
 					}
 				}
 			}
+		}
+
+		private int FindClusterOfSubdomain(int axisIdx, int subdomainIdx)
+		{
+			int[] numSubdomainsPerCluster = numSubdomainsPerClusterPerAxis[axisIdx];
+			int offset = 0;
+			for (int c = 0; c < numSubdomainsPerCluster.Length; ++c)
+			{
+				if (subdomainIdx < offset + numSubdomainsPerCluster[c])
+				{
+					return c;
+				}
+				else
+				{
+					offset += numSubdomainsPerCluster[c];
+				}
+			}
+			throw new ArgumentException($"Along axis {axisIdx} there are {numSubdomains[axisIdx]} subdomains." +
+				$" Could not found requested subdomain with idx={subdomainIdx} along this axis");
 		}
 
 		private void FindSubdomainNeighbors()

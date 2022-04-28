@@ -152,7 +152,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 						exampleOptions.maxSteps = maxCrackSteps > 16 ? 16 : maxCrackSteps;
 
 						var meshOptions = new MeshOptions(minElements[r], minElements[r] / subdomainToMeshSizeRatio);
-						meshOptions.numClusters = new int[] { 2, 1, 2 };
+						meshOptions.numClusters = new int[] { 1, 1, 3 };
 
 
 						var solverOptions = new SolverOptions(solver);
@@ -160,8 +160,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 						solverOptions.environment = mpiEnvironment;
 						//solverOptions.environmentChoice = EnvironmentChoice.TPL;
 
-						var coarseProblemOptions = new CoarseProblemOptionsGlobal(4, 4);
-						coarseProblemOptions.SetMasterProcess(3);
+						var coarseProblemOptions = new CoarseProblemOptionsGlobal(3, 3);
+						coarseProblemOptions.SetMasterProcess(2);
 						//var coarseProblemOptions = new CoarseProblemOptionsGlobal(4, 1);
 
 
