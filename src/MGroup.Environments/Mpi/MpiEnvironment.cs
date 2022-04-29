@@ -285,8 +285,8 @@ namespace MGroup.Environments.Mpi
 		public void Initialize(ComputeNodeTopology nodeTopology)
 		{
 			//TODO: First of all, clear all existing data
-
 			nodeTopology.CheckSanity();
+			MpiUtilities.DeclarePerProcess("After checking sanity");
 
 			//TODOMPI: Perhaps this validation is useful for more than just the MpiEnvironment and should be done elsewhere.
 			// Check cluster IDs
@@ -306,6 +306,7 @@ namespace MGroup.Environments.Mpi
 
 				// Analyze local and remote communication cases between nodes
 				this.p2pTransfers = new MpiP2PTransfers(nodeTopology, localCluster);
+				MpiUtilities.DeclarePerProcess("After initializing p2p transfers");
 			}
 
 			// Create a subcommunicator only for processes that accommodate compute nodes
@@ -317,11 +318,13 @@ namespace MGroup.Environments.Mpi
 			int[] processesWithNodes = Enumerable.Range(0, nodeTopology.Clusters.Count).ToArray();
 			CommNodes =(Intracommunicator)CommWorld.Create(CommWorld.Group.IncludeOnly(processesWithNodes));
 			Debug.Assert((CommNodes != null) == (CommWorld.Rank < nodeTopology.Clusters.Count));
+			MpiUtilities.DeclarePerProcess("After initializing sub-communicator");
 
 			// Prevaluate data used in collective communications
 			int numExtraProcesses = CommWorld.Size - nodeTopology.Clusters.Count;
 			this.collectivesHelperWorld = new MpiCollectivesHelper(nodeTopology, numExtraProcesses);
 			this.collectivesHelperNodes = new MpiCollectivesHelper(nodeTopology, 0);
+			MpiUtilities.DeclarePerProcess("After initializing collectives helpers");
 		}
 
 		public void NeighborhoodAllToAll<T>(Dictionary<int, AllToAllNodeData<T>> dataPerNode, bool areRecvBuffersKnown)

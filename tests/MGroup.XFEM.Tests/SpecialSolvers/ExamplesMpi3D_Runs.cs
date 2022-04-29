@@ -74,7 +74,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			using (var mpiEnvironment = new MpiEnvironment())
 			{
 				//MpiDebugUtilities.AssistDebuggerAttachment();
-				DeclareActiveProcess();
+				MpiUtilities.DeclarePerProcess();
 
 				int minElements = 36;
 				int[] minSubdomains = { 3, 6, 9, 12, 18 };
@@ -94,7 +94,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 							}
 						}
 
-						DeclareActiveProcess("new analysis");
+						//MpiUtilities.DeclarePerProcess("new analysis");
 						var exampleOptions = new ExampleImpactOptions();
 						exampleOptions.heavisideTol = 1E-3;
 						exampleOptions.maxSteps = maxCrackSteps > 16 ? 16 : maxCrackSteps;
@@ -125,7 +125,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			using (var mpiEnvironment = new MpiEnvironment())
 			{
 				//MpiDebugUtilities.AssistDebuggerAttachment();
-				DeclareActiveProcess();
+				MpiUtilities.DeclarePerProcess();
 
 				int minElements = 24;
 				int[] minSubdomains = { 2, 4, 6, 8, 12 };
@@ -146,7 +146,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 							}
 						}
 
-						DeclareActiveProcess("new analysis");
+						//MpiUtilities.DeclarePerProcess("new analysis");
 						var exampleOptions = new ExampleBB4POptions(337);
 						exampleOptions.crackFrontY = 74;
 						exampleOptions.heavisideTol = 1E-3;
@@ -178,7 +178,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			using (var mpiEnvironment = new MpiEnvironment())
 			{
 				//MpiDebugUtilities.AssistDebuggerAttachment();
-				DeclareActiveProcess();
+				MpiUtilities.DeclarePerProcess();
 
 				var subdomainToMeshSizeRatio = 5;
 				//int[] minSubdomains = { 3, 6, 9, 12, 15, 18, 21, 24, 27 };
@@ -192,7 +192,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				{
 					foreach (SolverChoice solver in solvers)
 					{
-						DeclareActiveProcess("new analysis");
+						//MpiUtilities.DeclarePerProcess("new analysis");
 
 						var exampleOptions = new ExampleImpactOptions();
 						//exampleOptions.heavisideTol = minElements[r] < 15 ? 1E-4 : 1E-3;
@@ -228,7 +228,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			using (var mpiEnvironment = new MpiEnvironment())
 			{
 				//MpiDebugUtilities.AssistDebuggerAttachment();
-				DeclareActiveProcess();
+				MpiUtilities.DeclarePerProcess();
 
 				var subdomainToMeshSizeRatio = 5;
 				//int[] minElements = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60 };
@@ -245,7 +245,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				{
 					foreach (SolverChoice solver in solvers)
 					{
-						DeclareActiveProcess("new analysis");
+						//MpiUtilities.DeclarePerProcess("new analysis");
 
 						var exampleOptions = new ExampleBB4POptions(337/*crackX[r]*/);
 						exampleOptions.crackFrontY = 74;

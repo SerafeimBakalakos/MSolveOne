@@ -330,6 +330,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			XModel<IXCrackElement> model;
 			RectangularDomainBoundary boundary;
 			ComputeNodeTopology nodeTopology;
+			//MpiUtilities.DeclarePerProcess("Setting up problem");
 			if (exampleOptions is ExampleBB4POptions)
 			{
 				(model, boundary, nodeTopology) =
@@ -341,6 +342,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					SetupExampleImpact((ExampleImpactOptions)exampleOptions, meshOptions, solverOptions);
 			}
 
+			//MpiUtilities.DeclarePerProcess("Setting up solver");
 			(ISolver solver, IAlgebraicModel algebraicModel, DdmLogger loggerDdm)
 				= SetupSolver(meshOptions, solverOptions, coarseProblemOptions, model, nodeTopology);
 
@@ -387,6 +389,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				new CrackExitsDomainTermination(domainBoundary));
 			var analyzer = new QuasiStaticLefmAnalyzer(model, algebraicModel, solver, exampleOptions.maxSteps, termination);
 
+			//MpiUtilities.DeclarePerProcess("Creating output directory");
 			outputOptions.CreateDirectory(exampleOptions, solverOptions);
 			string outputDirectory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
 			var normLogger = new SolutionNormLogger(Path.Combine(outputDirectory, "solution_norm.txt"));
@@ -405,6 +408,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			PrintMsg(msg.ToString());
 
 
+			//MpiUtilities.DeclarePerProcess("Starting analysis");
 			analyzer.Analyze();
 
 			//int numGlobalDofs = solver.LinearSystem.RhsVector.Length();
@@ -743,7 +747,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			{
 				environment = solverOptions.environment;
 			}
+			MpiUtilities.DeclarePerProcess("Before initializing node topology");
 			environment.Initialize(nodeTopology);
+			MpiUtilities.DeclarePerProcess("After initializing node topology");
 			return environment;
 		}
 
@@ -799,16 +805,6 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				Console.WriteLine(msg);
 			}
 			MPI.Communicator.world.Barrier();
-		}
-
-		public static void DeclareActiveProcess(string extraMsg = null)
-		{
-			string msg = $"Process {MPI.Communicator.world.Rank} on machine {MPI.Environment.ProcessorName} is active";
-			if (extraMsg != null)
-			{
-				msg += ": " + extraMsg;
-			}
-			Console.WriteLine(msg);
 		}
 	}
 }
