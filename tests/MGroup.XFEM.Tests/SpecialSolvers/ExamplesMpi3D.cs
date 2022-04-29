@@ -45,8 +45,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			PCG, FETI_DP, PFETI_DP
 		}
 
-		public enum SolverChoice 
-		{ 
+		public enum SolverChoice
+		{
 			PCG_D, FETI_DP_D, FETI_DP_D_I, FETI_DP_L, FETI_DP_L_I, PFETI_DP, PFETI_DP_I
 		}
 
@@ -257,7 +257,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			{
 				Democratic = true;
 				masterProcesses.Clear();
-				for (int c = 0; c< numClusters; ++c)
+				for (int c = 0; c < numClusters; ++c)
 				{
 					masterProcesses.Add(c);
 				}
@@ -324,7 +324,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			}
 		}
 
-		public static void RunSingleAnalysis(ExampleOptions exampleOptions, MeshOptions meshOptions, SolverOptions solverOptions, 
+		public static void RunSingleAnalysis(ExampleOptions exampleOptions, MeshOptions meshOptions, SolverOptions solverOptions,
 			OutputOptions outputOptions, CoarseProblemOptions coarseProblemOptions)
 		{
 			XModel<IXCrackElement> model;
@@ -332,19 +332,19 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			ComputeNodeTopology nodeTopology;
 			if (exampleOptions is ExampleBB4POptions)
 			{
-				(model, boundary, nodeTopology) = 
+				(model, boundary, nodeTopology) =
 					SetupExampleBB4P((ExampleBB4POptions)exampleOptions, meshOptions, solverOptions);
 			}
 			else
 			{
-				(model, boundary, nodeTopology) = 
+				(model, boundary, nodeTopology) =
 					SetupExampleImpact((ExampleImpactOptions)exampleOptions, meshOptions, solverOptions);
 			}
 
-			(ISolver solver, IAlgebraicModel algebraicModel, DdmLogger loggerDdm) 
+			(ISolver solver, IAlgebraicModel algebraicModel, DdmLogger loggerDdm)
 				= SetupSolver(meshOptions, solverOptions, coarseProblemOptions, model, nodeTopology);
 
-			RunAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions, 
+			RunAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions,
 				model, boundary, algebraicModel, solver, loggerDdm);
 		}
 
@@ -372,14 +372,14 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				$"explicit Schur complements={solverOptions.explicitSchurComplements}");
 
 			msg.AppendLine($"Environment={solverOptions.environmentChoice}, num processes={coarseProblemOptions.numProcesses}");
-			msg.AppendLine("Coarse problem strategy: " +coarseProblemOptions.ToString());
+			msg.AppendLine("Coarse problem strategy: " + coarseProblemOptions.ToString());
 
 			return msg.ToString();
 		}
 
-		private static void RunAnalysis(ExampleOptions exampleOptions, MeshOptions meshOptions, SolverOptions solverOptions, 
+		private static void RunAnalysis(ExampleOptions exampleOptions, MeshOptions meshOptions, SolverOptions solverOptions,
 			OutputOptions outputOptions, CoarseProblemOptions coarseProblemOptions,
-			XModel<IXCrackElement> model, RectangularDomainBoundary domainBoundary, 
+			XModel<IXCrackElement> model, RectangularDomainBoundary domainBoundary,
 			IAlgebraicModel algebraicModel, ISolver solver, DdmLogger ddmLogger)
 		{
 			var termination = new TerminationLogic.Or(
@@ -401,7 +401,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			msg.AppendLine();
 			msg.AppendLine("***************************************************************");
 			msg.AppendLine(header);
-			msg.AppendLine("Starting analysis");
+			msg.AppendLine($"Process {MPI.Communicator.world.Rank} on machine {MPI.Environment.ProcessorName}: Starting analysis");
 			PrintMsg(msg.ToString());
 
 
@@ -514,8 +514,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		}
 
 
-		private static (ISolver, IAlgebraicModel, DdmLogger) SetupFetiDPSolver(MeshOptions meshOptions, 
-			SolverOptions solverOptions, CoarseProblemOptions coarseProblemOptions, 
+		private static (ISolver, IAlgebraicModel, DdmLogger) SetupFetiDPSolver(MeshOptions meshOptions,
+			SolverOptions solverOptions, CoarseProblemOptions coarseProblemOptions,
 			XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
 		{
 			IComputeEnvironment environment = CreateEnvironment(solverOptions, nodeTopology);
@@ -546,7 +546,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			var solverFactory = new FetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, cornerDofs, fetiDPMatrices);
-			solverFactory.CoarseProblemFactory = 
+			solverFactory.CoarseProblemFactory =
 				CreateCoarseProblem(meshOptions, solverOptions, coarseProblemOptions, coarseProblemMatrix);
 			solverFactory.EnableLogging = true;
 			solverFactory.ExplicitSubdomainMatrices = solverOptions.explicitSchurComplements;
@@ -590,8 +590,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			return (solver, algebraicModel, solver.LoggerDdm);
 		}
 
-		private static (ISolver, IAlgebraicModel, DdmLogger) SetupPFetiDPSolver(MeshOptions meshOptions, 
-			SolverOptions solverOptions, CoarseProblemOptions coarseProblemOptions, 
+		private static (ISolver, IAlgebraicModel, DdmLogger) SetupPFetiDPSolver(MeshOptions meshOptions,
+			SolverOptions solverOptions, CoarseProblemOptions coarseProblemOptions,
 			XModel<IXCrackElement> model, ComputeNodeTopology nodeTopology)
 		{
 			IComputeEnvironment environment = CreateEnvironment(solverOptions, nodeTopology);
@@ -624,7 +624,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			var solverFactory = new PFetiDPSolver<SymmetricCscMatrix>.Factory(
 				environment, psmMatrices, cornerDofs, fetiDPMatrices);
-			solverFactory.CoarseProblemFactory = 
+			solverFactory.CoarseProblemFactory =
 				CreateCoarseProblem(meshOptions, solverOptions, coarseProblemOptions, coarseProblemMatrix);
 			solverFactory.EnableLogging = true;
 			solverFactory.ExplicitSubdomainMatrices = solverOptions.explicitSchurComplements;
@@ -655,7 +655,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			return (solver, algebraicModel, solver.LoggerDdm);
 		}
 
-		private static IFetiDPCoarseProblemFactory CreateCoarseProblem(MeshOptions meshOptions, SolverOptions solverOptions, 
+		private static IFetiDPCoarseProblemFactory CreateCoarseProblem(MeshOptions meshOptions, SolverOptions solverOptions,
 			CoarseProblemOptions coarseProblemOptions, IFetiDPCoarseProblemGlobalMatrix coarseProblemMatrix)
 		{
 			if (coarseProblemOptions is CoarseProblemOptionsDistributed optionsDistributed)
@@ -666,7 +666,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				if (optionsDistributed.reorthoPCG)
 				{
 					var coarseProblemPcgBuilder = new ReorthogonalizedPcg.Builder();
-					coarseProblemPcgBuilder.DirectionVectorsRetention = 
+					coarseProblemPcgBuilder.DirectionVectorsRetention =
 						new FixedDirectionVectorsRetention(optionsDistributed.reorthoCacheSize, true);
 					coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(optionsDistributed.pcgMaxIter);
 					coarseProblemPcgBuilder.ResidualTolerance = optionsDistributed.pcgTol;
@@ -694,7 +694,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				}
 				else if (optionsGlobal.MasterProcesses.Length == 1)
 				{
-					solverOptions.environment.GlobalOperationStrategy = 
+					solverOptions.environment.GlobalOperationStrategy =
 						new MasterSlavesGlobalOperationStrategy(optionsGlobal.MasterProcesses[0]);
 					return new FetiDPCoarseProblemGlobal.Factory(coarseProblemMatrix);
 				}
