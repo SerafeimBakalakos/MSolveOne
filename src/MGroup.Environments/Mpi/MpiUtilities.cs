@@ -6,18 +6,37 @@ namespace MGroup.Environments.Mpi
 {
 	public static class MpiUtilities
 	{
-		public static void DeclarePerProcess(string extraMsg = null)
+		public static void DeclarePerProcess(string msg)
 		{
-			string msg = $"Process {MPI.Communicator.world.Rank} on machine {MPI.Environment.ProcessorName}: ";
-			if (extraMsg != null)
+			try
 			{
-				msg += extraMsg;
+				int rank = MPI.Communicator.world.Rank;
+				int size = MPI.Communicator.world.Size;
+				string fullMsg = $"Process {rank}/{size} on machine {MPI.Environment.ProcessorName}: {msg}";
+				Console.WriteLine(fullMsg);
 			}
-			else
+			catch (Exception)
 			{
-				msg += "is active";
+				Console.WriteLine(msg);
 			}
-			Console.WriteLine(msg);
+		}
+
+		public static void DeclareRootOnlyProcess(string msg, int root = 0)
+		{
+			try
+			{
+				int rank = MPI.Communicator.world.Rank;
+				int size = MPI.Communicator.world.Size;
+				string fullMsg = $"Process {rank}/{size} on machine {MPI.Environment.ProcessorName}: {msg}";
+				if (rank == root)
+				{
+					Console.WriteLine(fullMsg);
+				}
+			}
+			catch (Exception)
+			{
+				Console.WriteLine(msg);
+			}
 		}
 	}
 }

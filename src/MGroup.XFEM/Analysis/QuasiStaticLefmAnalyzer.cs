@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using MGroup.Constitutive.Structural;
+using MGroup.Environments.Mpi;
 using MGroup.LinearAlgebra.Distributed;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.LinearAlgebra.Vectors;
@@ -54,7 +55,8 @@ namespace MGroup.XFEM.Analysis
 			for (int iteration = 0; iteration < maxIterations; ++iteration)
 			{
 				Debug.WriteLine($"Crack propagation step {iteration}");
-				Console.WriteLine($"Crack propagation step {iteration}");
+				//Console.WriteLine($"Crack propagation step {iteration}");
+				MpiUtilities.DeclarePerProcess($"Crack propagation step {iteration}");
 				//Logger.IncrementAnalysisIteration();
 
 				if (iteration == 0)
@@ -123,9 +125,11 @@ namespace MGroup.XFEM.Analysis
 
 				// Solve the linear system
 				//watch.Restart();
-				Console.WriteLine("Solution phase start");
+				//Console.WriteLine("Solution phase start");
+				MpiUtilities.DeclarePerProcess("Solution phase start");
 				solver.Solve();
-				Console.WriteLine("Solution phase end");
+				//Console.WriteLine("Solution phase end");
+				MpiUtilities.DeclarePerProcess("Solution phase end");
 				#region debug
 				//Debug.WriteLine($"norm(u)={solver.LinearSystem.Solution.Norm2()}");
 				#endregion

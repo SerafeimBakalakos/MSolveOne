@@ -29,7 +29,7 @@ namespace MGroup.XFEM.Tests
 			ExamplesMpi3D_Runs.runOnCluster = true;
 			using (var mpiEnvironment = new MpiEnvironment())
 			{
-				MpiUtilities.DeclarePerProcess();
+				MpiUtilities.DeclarePerProcess("is active");
 				ExamplesMpi3D_Runs.RunWeakScalabilityImpact(mpiEnvironment);
 				ExamplesMpi3D_Runs.RunWeakScalability4PBB(mpiEnvironment);
 				ExamplesMpi3D_Runs.RunStrongScalabilityImpact(mpiEnvironment);
