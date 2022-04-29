@@ -407,6 +407,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 			analyzer.Analyze();
 
+			//int numGlobalDofs = solver.LinearSystem.RhsVector.Length();
+			//PrintMsg($"Global dofs = {numGlobalDofs}");
+
 			string performanceOutputFile = Path.Combine(outputDirectory, "performance.txt");
 			//analyzer.Logger.WriteToFile(performanceOutputFile, true);
 			solver.Logger.WriteAggregatesToFile(performanceOutputFile, true);
@@ -441,8 +444,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			}
 
 			#region debug
-			PrintClusters(nodeTopology);
-			PrintNodeNeighbors(nodeTopology);
+			//PrintClusters(nodeTopology);
+			//PrintNodeNeighbors(nodeTopology);
 			#endregion
 
 			FriesExample_7_2_1_Model.CreateGeometryModel(model, meshOptions.numElements, crackMouthCoords, crackFrontCoords);
@@ -473,8 +476,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			}
 
 			#region debug
-			PrintClusters(nodeTopology);
-			PrintNodeNeighbors(nodeTopology);
+			//PrintClusters(nodeTopology);
+			//PrintNodeNeighbors(nodeTopology);
 			#endregion
 
 			FriesExample_7_2_3_Model.CreateGeometryModel(model, meshOptions.numElements);
