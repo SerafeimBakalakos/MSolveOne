@@ -747,9 +747,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			{
 				environment = solverOptions.environment;
 			}
-			MpiUtilities.DeclarePerProcess("Before initializing node topology");
+			//MpiUtilities.DeclarePerProcess("Before initializing node topology");
 			environment.Initialize(nodeTopology);
-			MpiUtilities.DeclarePerProcess("After initializing node topology");
+			//MpiUtilities.DeclarePerProcess("After initializing node topology");
 			return environment;
 		}
 

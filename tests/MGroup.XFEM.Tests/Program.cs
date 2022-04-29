@@ -1,4 +1,5 @@
 using System;
+using MGroup.Environments.Mpi;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.XFEM.Solvers.PFetiDP;
 using MGroup.XFEM.Tests.Fracture.HybridFries;
@@ -24,9 +25,16 @@ namespace MGroup.XFEM.Tests
 
 			//ExamplesMpi3D_Runs.RunTestAnalysis();
 			//ExamplesMpi3D_Runs.RunTestMpiAnalysis();
-			ExamplesMpi3D_Runs.RunWeakScalabilityImpact();
-			//ExamplesMpi3D_Runs.RunWeakScalability4PBB();
-			//ExamplesMpi3D_Runs.RunStrongScalability4PBB();
+
+			ExamplesMpi3D_Runs.runOnCluster = true;
+			using (var mpiEnvironment = new MpiEnvironment())
+			{
+				MpiUtilities.DeclarePerProcess();
+				ExamplesMpi3D_Runs.RunWeakScalabilityImpact(mpiEnvironment);
+				ExamplesMpi3D_Runs.RunWeakScalability4PBB(mpiEnvironment);
+				ExamplesMpi3D_Runs.RunStrongScalabilityImpact(mpiEnvironment);
+				ExamplesMpi3D_Runs.RunStrongScalability4PBB(mpiEnvironment);
+			}
 		}
 
 		public static void Ring(string[] args)
