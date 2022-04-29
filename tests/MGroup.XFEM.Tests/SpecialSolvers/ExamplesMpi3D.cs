@@ -800,5 +800,15 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			}
 			MPI.Communicator.world.Barrier();
 		}
+
+		public static void DeclareActiveProcess(string extraMsg = null)
+		{
+			string msg = $"Process {MPI.Communicator.world.Rank} on machine {MPI.Environment.ProcessorName} is active";
+			if (extraMsg != null)
+			{
+				msg += ": " + extraMsg;
+			}
+			Console.WriteLine(msg);
+		}
 	}
 }
