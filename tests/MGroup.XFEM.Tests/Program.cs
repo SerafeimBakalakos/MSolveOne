@@ -12,6 +12,8 @@ namespace MGroup.XFEM.Tests
 		static void Main(string[] args)
 		{
 			Console.WriteLine("Hello world");
+			//Ring(args);
+
 
 			//FriesExample_7_1_2.RunExample();
 
@@ -25,6 +27,46 @@ namespace MGroup.XFEM.Tests
 			ExamplesMpi3D_Runs.RunWeakScalabilityImpact();
 			//ExamplesMpi3D_Runs.RunWeakScalability4PBB();
 			//ExamplesMpi3D_Runs.RunStrongScalability4PBB();
+		}
+
+		public static void Ring(string[] args)
+		{
+			MPI.Environment.Run(ref args, comm =>
+			{
+				string processName = $"(processor {MPI.Environment.ProcessorName}, rank {comm.Rank} / {comm.Size})";
+				if (comm.Size < 2)
+				{
+					// Our ring needs at least two processes
+					Console.WriteLine("The Ring example must be run with at least two processes.");
+					Console.WriteLine("Try: mpiexec -np 4 ring.exe");
+				}
+				else if (comm.Rank == 0)
+				{
+					// Rank 0 initiates communication around the ring
+					string data = "Hello world! from: " + processName;
+
+					// Send "Hello, World!" to our right neighbor
+					comm.Send(data, (comm.Rank + 1) % comm.Size, 0);
+
+					// Receive data from our left neighbor
+					comm.Receive((comm.Rank + comm.Size - 1) % comm.Size, 0, out data);
+
+					// Add our own rank and write the results
+					Console.WriteLine(data);
+				}
+				else
+				{
+					// Receive data from our left neighbor
+					String data;
+					comm.Receive((comm.Rank + comm.Size - 1) % comm.Size, 0, out data);
+
+					// Add our own rank to the data
+					data += ", " + processName;
+
+					// Pass on the intermediate to our right neighbor
+					comm.Send(data, (comm.Rank + 1) % comm.Size, 0);
+				}
+			});
 		}
 
 		private static void RunExample1()
