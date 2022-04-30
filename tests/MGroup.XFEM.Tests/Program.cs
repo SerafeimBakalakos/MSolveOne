@@ -26,7 +26,9 @@ namespace MGroup.XFEM.Tests
 			//ExamplesMpi3D_Runs.RunTestAnalysis();
 			//ExamplesMpi3D_Runs.RunTestMpiAnalysis();
 
-			ExamplesMpi3D_Runs.runOnCluster = true;
+			//ExamplesMpi3D_Runs.runOnCluster = false;
+			//ExamplesMpi3D_Runs.maxCrackSteps = 1;
+			//ExamplesMpi3D_Runs.onlyPFETI_DP_I = true;
 			using (var mpiEnvironment = new MpiEnvironment())
 			{
 				MpiUtilities.DeclarePerProcess("is active");
@@ -34,6 +36,8 @@ namespace MGroup.XFEM.Tests
 				ExamplesMpi3D_Runs.RunWeakScalability4PBB(mpiEnvironment);
 				ExamplesMpi3D_Runs.RunStrongScalabilityImpact(mpiEnvironment);
 				ExamplesMpi3D_Runs.RunStrongScalability4PBB(mpiEnvironment);
+				ExamplesMpi3D_Runs.RunParallelScalabilityImpact(mpiEnvironment);
+				ExamplesMpi3D_Runs.RunParallelScalability4PBB(mpiEnvironment);
 			}
 		}
 

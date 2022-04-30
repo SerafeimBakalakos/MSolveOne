@@ -239,7 +239,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			public CoarseProblemOptionsGlobal(int numClusters, int numProcesses) : base(numClusters, numProcesses)
 			{
 				// Set the last one as master
-				masterProcesses.Add(numProcesses - 1);
+				masterProcesses.Add(0);
 				Democratic = false;
 			}
 
