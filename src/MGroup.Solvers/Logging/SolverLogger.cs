@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using MGroup.MSolve.Solution;
 
@@ -171,22 +172,15 @@ namespace MGroup.Solvers.Logging
 				// Iterative algorithm data
 				if (iterativeAlgorithmData.Count == currentStep) // This is false for direct solvers
 				{
-					int minIterations = int.MaxValue, maxIterations = int.MinValue;
-					double avgIterations = 0.0;
-					double minResNorm = double.MaxValue, maxResNorm = double.MinValue;
-					for (int i = 0; i < currentStep; ++i)
-					{
-						(int iter, double res) = iterativeAlgorithmData[i];
-						avgIterations += iter;
-						minIterations = (iter < minIterations) ? iter : minIterations;
-						maxIterations = (iter > maxIterations) ? iter : maxIterations;
-						minResNorm = (res < minResNorm) ? res : minResNorm;
-						maxResNorm = (res > maxResNorm) ? res : maxResNorm;
-					}
-					avgIterations /= currentStep;
-					writer.WriteLine("Iterative algorithm iterations:"
-						+ $" min = {minIterations} - max = {maxIterations} - average = {avgIterations}");
-					writer.WriteLine($"Iterative algorithm residual norm ratio: min = {minResNorm} - max = {maxResNorm}");
+					(int iterMin, int iterMax, int iterSum, double iterAvg, double iterStdev) = 
+						LoggingUtilities.CalcStatistics(iterativeAlgorithmData.Select(p => p.iterations));
+					(double resNormMin, double resNormMax, _, double resNormAvg, double resNormStdev) =
+						LoggingUtilities.CalcStatistics(iterativeAlgorithmData.Select(p => p.residualNormRatio));
+
+					writer.WriteLine("Iterative algorithm iterations:" +
+						$" min = {iterMin} - max = {iterMax} - sum = {iterSum} - average = {iterAvg} - stdev = {iterStdev}");
+					writer.WriteLine($"Iterative algorithm residual norm ratio: " +
+						$"min = {resNormMin} - max = {resNormMax} - average = {resNormAvg} - stdev = {resNormStdev}");
 				}
 
 				writer.WriteLine("************************************************************************************************");

@@ -74,7 +74,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		{
 			//MpiDebugUtilities.AssistDebuggerAttachment();
 
-			int minElements = 42;
+			int minElements = 36;
 			int minSubdomains = 6;
 			int[] numClusters = { 1, 2, 3, 4, 6 };
 			SolverChoice[] solvers = GetDdmSolvers();
@@ -266,7 +266,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		{
 			//MpiDebugUtilities.AssistDebuggerAttachment();
 
-			var subdomainToMeshSizeRatio = 7;
+			var subdomainToMeshSizeRatio = 6;
 			//int[] minSubdomains = { 3, 6, 9, 12, 15, 18, 21, 24, 27 };
 			int[] minSubdomains = { 3, 6, 9, 12 };
 
@@ -311,7 +311,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		{
 			//MpiDebugUtilities.AssistDebuggerAttachment();
 
-			var subdomainToMeshSizeRatio = 7;
+			var subdomainToMeshSizeRatio = 6;
 			//int[] minElements = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60 };
 			//double[] crackX = { 337.5, 337, 337.5, 336, 335, 337, 337, 337, 337, 337, 337, 337 };
 			//double[] heavisideTol = { 1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-3, 1E-3, 1E-3, 1E-3, 1E-3, 1E-3, 1E-3 };

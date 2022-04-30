@@ -226,6 +226,32 @@ namespace MGroup.Solvers.DDM.Psm
 			return guessIsZero;
 		}
 
+		protected void LogSizes(IterativeStatistics stats)
+		{
+			if (LoggerDdm != null)
+			{
+				LoggerDdm.LogSolverConvergenceData(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
+				LoggerDdm.LogProblemSize(0, algebraicModel.FreeDofIndexer.CountUniqueEntries());
+				LoggerDdm.LogProblemSize(1, boundaryDofIndexer.CountUniqueEntries());
+
+				Dictionary<int, int> subdomainProblemSize = environment.AllGather(
+					subdomainID => algebraicModel.LinearSystem.RhsVector.LocalVectors[subdomainID].Length);
+				if (subdomainProblemSize != null)
+				{
+					foreach (var pair in subdomainProblemSize)
+					{
+						LoggerDdm.LogSubdomainProblemSize(pair.Key, pair.Value);
+					}
+				}
+
+				int totalLocalTransfers = environment.AllReduceSum(
+					subdomainID => boundaryDofIndexer.GetLocalComponent(subdomainID).CountCommonEntries().local);
+				int totalRemoteTransfers = environment.AllReduceSum(
+					subdomainID => boundaryDofIndexer.GetLocalComponent(subdomainID).CountCommonEntries().remote);
+				LoggerDdm.LogTransfers(totalLocalTransfers, totalRemoteTransfers);
+			}
+		}
+
 		protected void SolveInterfaceProblem()
 		{
 			var watch = new Stopwatch();
@@ -242,12 +268,7 @@ namespace MGroup.Solvers.DDM.Psm
 			Debug.WriteLine("Iterations for boundary problem = " + stats.NumIterationsRequired);
 			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
 			Logger.LogTaskDuration("Interface problem solution", watch.ElapsedMilliseconds);
-			if (LoggerDdm != null)
-			{
-				LoggerDdm.LogProblemSize(0, algebraicModel.FreeDofIndexer.CountUniqueEntries());
-				LoggerDdm.LogProblemSize(1, boundaryDofIndexer.CountUniqueEntries());
-				LoggerDdm.LogSolverConvergenceData(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
-			}
+			LogSizes(stats);
 
 			if (objectiveConvergenceCriterion != null)
 			{

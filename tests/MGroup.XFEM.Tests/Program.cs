@@ -27,7 +27,7 @@ namespace MGroup.XFEM.Tests
 			//ExamplesMpi3D_Runs.RunTestMpiAnalysis();
 
 			//ExamplesMpi3D_Runs.runOnCluster = false;
-			//ExamplesMpi3D_Runs.maxCrackSteps = 1;
+			//ExamplesMpi3D_Runs.maxCrackSteps = 3;
 			//ExamplesMpi3D_Runs.onlyPFETI_DP_I = true;
 			using (var mpiEnvironment = new MpiEnvironment())
 			{

@@ -128,6 +128,24 @@ namespace MGroup.Environments.Mpi
 			}
 		}
 
+		public int AllReduceSum(Func<int, int> calcNodeData)
+		{
+			if (CommNodes != null)
+			{
+				//TODOMPI: reductions for local nodes can be done more efficiently. See TplSharedEnvironment
+				int localValue = 0;
+				foreach (int nodeID in localNodes.Keys)
+				{
+					localValue += calcNodeData(nodeID);
+				}
+				return CommWorld.Allreduce(localValue, MpiNet.Operation<int>.Add);
+			}
+			else
+			{
+				return CommWorld.Allreduce(default(int), MpiNet.Operation<int>.Add);
+			}
+		}
+
 		public double AllReduceSum(Dictionary<int, double> valuePerNode)
 		{
 			if (CommNodes != null)
@@ -190,8 +208,8 @@ namespace MGroup.Environments.Mpi
 			Func<int, bool> isActiveNode)
 			=> throw new NotImplementedException("Perhaps I could call the non-partial method instead of throwing exceptions");
 
-		public Dictionary<int, T> CalcNodeDataAndTransferToLocalMemory<T>(Func<int, T> subdomainOperation)
-			=> GlobalOperationStrategy.CalcNodeDataAndTransferToLocalMemory(this, subdomainOperation);
+		public Dictionary<int, T> CalcNodeDataAndTransferToLocalMemory<T>(Func<int, T> nodeOperation)
+			=> GlobalOperationStrategy.CalcNodeDataAndTransferToLocalMemory(this, nodeOperation);
 
 		public void Dispose()
 		{

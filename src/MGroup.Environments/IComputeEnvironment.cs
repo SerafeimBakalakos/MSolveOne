@@ -17,9 +17,13 @@ namespace MGroup.Environments
 	/// </summary>
 	public interface IComputeEnvironment
 	{
+		Dictionary<int, T> AllGather<T>(Func<int, T> getDataPerNode);
+
 		bool AllReduceAnd(Dictionary<int, bool> valuePerNode);
 
 		bool AllReduceOr(IDictionary<int, bool> valuePerNode);
+
+		int AllReduceSum(Func<int, int> calcNodeData);
 
 		double AllReduceSum(Dictionary<int, double> valuePerNode);
 

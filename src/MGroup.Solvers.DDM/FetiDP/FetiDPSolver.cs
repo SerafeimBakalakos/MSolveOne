@@ -452,17 +452,38 @@ namespace MGroup.Solvers.DDM.FetiDP
 			Debug.WriteLine("Iterations for boundary problem = " + stats.NumIterationsRequired);
 			Logger.LogIterativeAlgorithm(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
 			Logger.LogTaskDuration("Interface problem solution", watch.ElapsedMilliseconds);
-			if (LoggerDdm != null)
-			{
-				LoggerDdm.LogProblemSize(0, algebraicModel.FreeDofIndexer.CountUniqueEntries());
-				LoggerDdm.LogProblemSize(1, lagrangeVectorIndexer.CountUniqueEntries());
-				LoggerDdm.LogSolverConvergenceData(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
-			}
+			LogSizes(stats);
 
 			if (objectiveConvergenceCriterion != null)
 			{
 				Logger.LogTaskDuration("Objective PCG criterion", objectiveConvergenceCriterion.EllapsedMilliseconds);
 				objectiveConvergenceCriterion.EllapsedMilliseconds = 0;
+			}
+		}
+
+		protected void LogSizes(IterativeStatistics stats)
+		{
+			if (LoggerDdm != null)
+			{
+				LoggerDdm.LogSolverConvergenceData(stats.NumIterationsRequired, stats.ResidualNormRatioEstimation);
+				LoggerDdm.LogProblemSize(0, algebraicModel.FreeDofIndexer.CountUniqueEntries());
+				LoggerDdm.LogProblemSize(1, lagrangeVectorIndexer.CountUniqueEntries());
+
+				Dictionary<int, int> subdomainProblemSize = environment.AllGather(
+					subdomainID => algebraicModel.LinearSystem.RhsVector.LocalVectors[subdomainID].Length);
+				if (subdomainProblemSize != null)
+				{
+					foreach (var pair in subdomainProblemSize)
+					{
+						LoggerDdm.LogSubdomainProblemSize(pair.Key, pair.Value);
+					}
+				}
+
+				int totalLocalTransfers = environment.AllReduceSum(
+					subdomainID => lagrangeVectorIndexer.GetLocalComponent(subdomainID).CountCommonEntries().local);
+				int totalRemoteTransfers = environment.AllReduceSum(
+					subdomainID => lagrangeVectorIndexer.GetLocalComponent(subdomainID).CountCommonEntries().remote);
+				LoggerDdm.LogTransfers(totalLocalTransfers, totalRemoteTransfers);
 			}
 		}
 

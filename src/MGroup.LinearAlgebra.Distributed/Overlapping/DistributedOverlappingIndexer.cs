@@ -135,6 +135,26 @@ namespace MGroup.LinearAlgebra.Distributed.Overlapping
 				return buffers;
 			}
 
+			public (int local, int remote) CountCommonEntries()
+			{
+				int local = 0;
+				int remote = 0;
+				foreach (var pair in commonEntriesWithNeighbors)
+				{
+					int neighborID = pair.Key;
+					int[] commonEntries = pair.Value;
+					if (this.Node.Cluster.Nodes.ContainsKey(neighborID))
+					{
+						local += commonEntries.Length;
+					}
+					else
+					{
+						remote += commonEntries.Length;
+					}
+				}
+				return (local, remote);
+			}
+
 			public void Initialize(int numTotalEntries, Dictionary<int, int[]> commonEntriesWithNeighbors)
 			{
 				this.NumEntries = numTotalEntries;
