@@ -57,7 +57,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			public double poissonRatio = 0.3;
 			public double tipEnrichmentRadius = 0.0;
 
-			public virtual string[] GetOtherOptions() => new string[0];
+			public virtual string GetOtherOptions() => null;
 		}
 
 		public class ExampleBB4POptions : ExampleOptions
@@ -71,10 +71,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				maxSteps = 13;
 			}
 
-			public override string[] GetOtherOptions()
-			{
-				return new string[] { $"crack front ({crackFrontX}, {crackFrontY})" };
-			}
+			public override string GetOtherOptions() => $"crack front ({crackFrontX}, {crackFrontY})";
 
 			public override string ToString() => "4PBB";
 		}
@@ -357,7 +354,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			msg.AppendLine($"New analysis, {DateTime.Now}");
 			msg.Append($"Example={exampleOptions}, num steps={exampleOptions.maxSteps}, poisson={exampleOptions.poissonRatio}, " +
 				$"heaviside tol={exampleOptions.heavisideTol}, tip radius={exampleOptions.tipEnrichmentRadius}");
-			if (exampleOptions.GetOtherOptions().Length >= 1)
+			if (exampleOptions.GetOtherOptions() != null)
 			{
 				msg.Append(", " + exampleOptions.GetOtherOptions());
 			}

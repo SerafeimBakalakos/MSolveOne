@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using MGroup.Environments;
+using MGroup.Environments.Mpi;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG;
 using MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalization;
@@ -92,6 +93,8 @@ namespace MGroup.Solvers.DDM.FetiDP.CoarseProblem
 				coarseProblemMatrix, coarseProblemPreconditioner.Preconditioner, distributedRhs, distributedSolution, true);
 			Debug.WriteLine($"Coarse problem solution: iterations = {stats.NumIterationsRequired}, " +
 				$"residual norm ratio = {stats.ResidualNormRatioEstimation}");
+			//MpiUtilities.DeclareRootOnlyProcess("Coarse problem solution: iterations = {stats.NumIterationsRequired}, " +
+			//	$"residual norm ratio = {stats.ResidualNormRatioEstimation}");
 		}
 
 		public class Factory : IFetiDPCoarseProblemFactory
