@@ -25,21 +25,22 @@ namespace MGroup.XFEM.Tests
 
 			//ExamplesMpi3D_Runs.RunTestAnalysis();
 			//ExamplesMpi3D_Runs.RunTestMpiAnalysis();
+			ExamplesMpi3D_Runs.TestReorthoPcgImpact();
 
 			//ExamplesMpi3D_Runs.runOnCluster = false;
 			//ExamplesMpi3D_Runs.maxCrackSteps = 3;
 			//ExamplesMpi3D_Runs.onlyPFETI_DP_I = true;
 			//ExamplesMpi3D_Runs.subdomainToMeshSizeDefault = 6;
-			using (var mpiEnvironment = new MpiEnvironment())
-			{
-				MpiUtilities.DeclarePerProcess("is active");
-				//ExamplesMpi3D_Runs.RunWeakScalabilityImpact(mpiEnvironment);
-				//ExamplesMpi3D_Runs.RunWeakScalability4PBB(mpiEnvironment);
-				//ExamplesMpi3D_Runs.RunStrongScalabilityImpact(mpiEnvironment);
-				//ExamplesMpi3D_Runs.RunStrongScalability4PBB(mpiEnvironment);
-				ExamplesMpi3D_Runs.RunParallelScalabilityImpact(mpiEnvironment);
-				ExamplesMpi3D_Runs.RunParallelScalability4PBB(mpiEnvironment);
-			}
+			//using (var mpiEnvironment = new MpiEnvironment())
+			//{
+			//	MpiUtilities.DeclarePerProcess("is active");
+			//	//ExamplesMpi3D_Runs.RunWeakScalabilityImpact(mpiEnvironment);
+			//	//ExamplesMpi3D_Runs.RunWeakScalability4PBB(mpiEnvironment);
+			//	//ExamplesMpi3D_Runs.RunStrongScalabilityImpact(mpiEnvironment);
+			//	//ExamplesMpi3D_Runs.RunStrongScalability4PBB(mpiEnvironment);
+			//	ExamplesMpi3D_Runs.RunParallelScalabilityImpact(mpiEnvironment);
+			//	ExamplesMpi3D_Runs.RunParallelScalability4PBB(mpiEnvironment);
+			//}
 		}
 
 		public static void Ring(string[] args)

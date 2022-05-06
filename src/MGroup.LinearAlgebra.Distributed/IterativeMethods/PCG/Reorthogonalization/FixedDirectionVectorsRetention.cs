@@ -20,6 +20,10 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 		public void DiscardDirectionVectors()
 		{
 			int numVectorsToDiscard = pcg.ReorthoCache.Directions.Count - numVectorsToKeep;
+			if (numVectorsToDiscard <= 0)
+			{
+				return;
+			}
 			if (keepFirstVectors)
 			{
 				pcg.ReorthoCache.RemoveNewDirectionVectorData(numVectorsToDiscard);

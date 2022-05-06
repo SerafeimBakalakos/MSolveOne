@@ -19,16 +19,16 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 	public class ReorthogonalizedPcg : PcgAlgorithmBase
 	{
 		private const string name = "Reorthogonalized PCG";
-		private readonly bool useDirectionVectorsOnlyForInitialSolution;
+		private readonly double residualTolToKeepCache;
 
 		private ReorthogonalizedPcg(double residualTolerance, IMaxIterationsProvider maxIterationsProvider,
 			IPcgResidualConvergence residualConvergence, IPcgResidualUpdater residualCorrection, bool throwIfNotConvergence,
-			IDirectionVectorsRetention directionVectorsRetention, bool useDirectionVectorsOnlyForInitialSolution) :
+			IDirectionVectorsRetention directionVectorsRetention, double residualTolToKeepCache) :
 			base(residualTolerance, maxIterationsProvider, residualConvergence, residualCorrection, throwIfNotConvergence)
 		{
 			Convergence = residualConvergence; //TODO: Now there are 2 convergence properties. One here and one in base class. Fix it.
 			DirectionVectorsRetention = directionVectorsRetention;
-			this.useDirectionVectorsOnlyForInitialSolution = useDirectionVectorsOnlyForInitialSolution;
+			this.residualTolToKeepCache = residualTolToKeepCache;
 		}
 
 		public IPcgResidualConvergence Convergence { get; set; }
@@ -106,12 +106,27 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 				if (!initialGuessIsZero) solution.Clear();
 
 				CalculateInitialSolutionFromStoredDirections(rhs, solution);
-				if (useDirectionVectorsOnlyForInitialSolution)
+				residual = ExactResidual.Calculate(matrix, rhs, solution);
+
+				double initResNorm = residual.Norm2() / Rhs.Norm2();
+				if (initResNorm > residualTolToKeepCache)
 				{
 					ReorthoCache.Clear();
 				}
 
-				residual = ExactResidual.Calculate(matrix, rhs, solution);
+				#region debug
+				Console.WriteLine($"Rhs norm = {Rhs.Norm2()}");
+				if (initResNorm > residualTolToKeepCache)
+				{
+					Console.WriteLine(
+						$"Reortho-cache is cleared. norm(r0)/norm(b) = ${initResNorm} > tol = {residualTolToKeepCache}");
+				}
+				else
+				{
+					Console.WriteLine(
+						$"Reortho-cache is retained. norm(r0)/norm(b) = ${initResNorm} <= tol = {residualTolToKeepCache}");
+				}
+				#endregion
 			}
 			else // preferably call base method
 			{
@@ -135,8 +150,14 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 			DirectionVectorsRetention.Intialize(this);
 
 			IterativeStatistics stats = SolveInternal(maxIterations, solution.CreateZero);
+			#region debug
+			Console.Write($"Reortho-cahe size. After internal solve: {ReorthoCache.Directions.Count}. ");
+			#endregion
 
 			DirectionVectorsRetention.DiscardDirectionVectors();
+			#region debug
+			Console.WriteLine($"After retention.Discard(): {ReorthoCache.Directions.Count}. ");
+			#endregion
 			return stats;
 		}
 
@@ -182,6 +203,18 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 				/// At this point we can check if CG has converged and exit, thus avoiding the uneccesary operations that follow.
 				ResidualNormRatio = Convergence.EstimateResidualNormRatio(this);
 				//Debug.WriteLine($"Reorthogonalized PCG iteration = {iteration}: residual norm ratio = {residualNormRatio}");
+
+				if (ResidualNormRatio <= ResidualTolerance)
+				{
+					return new IterativeStatistics
+					{
+						AlgorithmName = name,
+						HasConverged = true,
+						NumIterationsRequired = iteration + 1,
+						ResidualNormRatioEstimation = ResidualNormRatio
+					};
+				}
+
 				Stagnation.StoreNewError(ResidualNormRatio);
 				bool hasStagnated = Stagnation.HasStagnated();
 				if (hasStagnated)
@@ -263,12 +296,18 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 			{
 				Convergence = new PureResidualConvergence();
 				DirectionVectorsRetention = new PercentageDirectionVectorsRetention(1.1);
-				UseDirectionVectorsOnlyForInitialSolution = false;
+				ResidualTolToKeepCache = double.MaxValue;
 			}
 
 			public IDirectionVectorsRetention DirectionVectorsRetention { get; set; }
 
-			public bool UseDirectionVectorsOnlyForInitialSolution { get; set; }
+			/// <summary>
+			/// After using the direction vectors cache to estimate the initial guess x0, the residual r0=b-A*x0 is calculated 
+			/// and the ratio norm(r0)/norm(b). If norm(r0)/norm(b) &lt;= <see cref="ResidualTolToKeepCache"/>, then the cache is
+			/// retained. Otherwise it is cleared. Set this to 0 to force always clearing the cache or double.MaxValue (default) 
+			/// to force never clearing the cache.
+			/// </summary>
+			public double ResidualTolToKeepCache { get; set; }
 
 			/// <summary>
 			/// Creates a new instance of <see cref="ReorthogonalizedPcg"/>.
@@ -276,7 +315,7 @@ namespace MGroup.LinearAlgebra.Distributed.IterativeMethods.PCG.Reorthogonalizat
 			public ReorthogonalizedPcg Build()
 			{
 				return new ReorthogonalizedPcg(ResidualTolerance, MaxIterationsProvider, Convergence, ResidualUpdater,
-					ThrowExceptionIfNotConvergence, DirectionVectorsRetention, UseDirectionVectorsOnlyForInitialSolution);
+					ThrowExceptionIfNotConvergence, DirectionVectorsRetention, ResidualTolToKeepCache);
 			}
 		}
 	}

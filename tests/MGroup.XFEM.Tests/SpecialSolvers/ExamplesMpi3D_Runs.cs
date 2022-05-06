@@ -71,6 +71,30 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
 		}
 
+		public static void TestReorthoPcgImpact()
+		{
+			var exampleOptions = new ExampleImpactOptions();
+			exampleOptions.heavisideTol = 1E-3;
+			exampleOptions.maxSteps = 1;
+
+			var meshOptions = new MeshOptions(10, 2);
+			meshOptions.numClusters = new int[] { 1, 1, 1 };
+
+			var solverOptions = new SolverOptions(SolverChoice.PFETI_DP_I);
+			solverOptions.environmentChoice = EnvironmentChoice.TPL;
+
+			var outputOptions = new OutputOptions(false, "Test reortho-PCG");
+
+			var coarseProblemOptions = new CoarseProblemOptionsDistributed(1, 1);
+			coarseProblemOptions.reorthoPCG = true;
+			coarseProblemOptions.pcgTol = 1E-7;
+			coarseProblemOptions.pcgMaxIter = 400;
+			coarseProblemOptions.reorthoCacheSize = 100;
+			coarseProblemOptions.reorthoCacheRetainTol = double.MaxValue;
+
+			RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
+		}
+
 		//public static void RunPcgCoarseProblemParamImpact(MpiEnvironment mpiEnvironment)
 		//{
 		//	//MpiDebugUtilities.AssistDebuggerAttachment();
@@ -118,7 +142,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					var outputOptions = new OutputOptions(runOnCluster, "Parallel scalability");
 					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
 
-					var coarseProblemOptions = new CoarseProblemOptionsGlobal(numClusters[i], 6);
+					var coarseProblemOptions = new CoarseProblemOptionsGlobal(numClusters[i], mpiEnvironment.CommWorld.Size);
 					coarseProblemOptions.ForceDemocracy();
 					//var coarseProblemOptions = new CoarseProblemOptionsGlobal(1, 1);
 
@@ -168,7 +192,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					var outputOptions = new OutputOptions(runOnCluster, "Parallel scalability");
 					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
 
-					var coarseProblemOptions = new CoarseProblemOptionsGlobal(numClusters[i], 6);
+					var coarseProblemOptions = new CoarseProblemOptionsGlobal(numClusters[i], mpiEnvironment.CommWorld.Size);
 					coarseProblemOptions.ForceDemocracy();
 					//var coarseProblemOptions = new CoarseProblemOptionsGlobal(1, 1);
 

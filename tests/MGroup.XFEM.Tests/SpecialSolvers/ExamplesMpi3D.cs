@@ -297,6 +297,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			public int pcgMaxIter = 200;
 			public bool reorthoPCG = false;
 			public int reorthoCacheSize = 30;
+			public double reorthoCacheRetainTol = double.MaxValue;
 
 			public CoarseProblemOptionsDistributed(int numClusters, int numProcesses) : base(numClusters, numProcesses)
 			{
@@ -310,7 +311,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 				{
 					msg.Append("Distributed reortho-PCG, ");
 					msg.Append($"pcg tol={pcgTol}, pcg max iterations={pcgMaxIter}, preconditioner={precond}, ");
-					msg.Append($"reortho cache size={reorthoCacheSize}");
+					msg.Append($"reortho cache size={reorthoCacheSize}, reortho cache retained tol={reorthoCacheRetainTol}");
 				}
 				else
 				{
@@ -401,8 +402,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			msg.AppendLine();
 			msg.AppendLine("***************************************************************");
 			msg.AppendLine(header);
-			msg.AppendLine($"Process {MPI.Communicator.world.Rank} on machine {MPI.Environment.ProcessorName}: Starting analysis");
 			PrintMsg(msg.ToString());
+			MpiUtilities.DeclareRootOnlyProcess("Starting analysis");
 
 
 			//MpiUtilities.DeclarePerProcess("Starting analysis");
@@ -669,6 +670,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					var coarseProblemPcgBuilder = new ReorthogonalizedPcg.Builder();
 					coarseProblemPcgBuilder.DirectionVectorsRetention =
 						new FixedDirectionVectorsRetention(optionsDistributed.reorthoCacheSize, true);
+					coarseProblemPcgBuilder.ResidualTolToKeepCache = optionsDistributed.reorthoCacheRetainTol;
 					coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(optionsDistributed.pcgMaxIter);
 					coarseProblemPcgBuilder.ResidualTolerance = optionsDistributed.pcgTol;
 					coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
@@ -789,19 +791,26 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 
 		private static void PrintMsg(string msg, bool rootOnly = true)
 		{
-			MPI.Communicator.world.Barrier();
-			if (rootOnly)
+			try
 			{
-				if (MPI.Communicator.world.Rank == 0)
+				MPI.Communicator.world.Barrier();
+				if (rootOnly)
+				{
+					if (MPI.Communicator.world.Rank == 0)
+					{
+						Console.WriteLine(msg);
+					}
+				}
+				else
 				{
 					Console.WriteLine(msg);
 				}
+				MPI.Communicator.world.Barrier();
 			}
-			else
+			catch (Exception)
 			{
 				Console.WriteLine(msg);
 			}
-			MPI.Communicator.world.Barrier();
 		}
 	}
 }
