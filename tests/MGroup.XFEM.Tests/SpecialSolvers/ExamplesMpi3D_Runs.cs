@@ -95,13 +95,108 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
 		}
 
-		//public static void RunPcgCoarseProblemParamImpact(MpiEnvironment mpiEnvironment)
-		//{
-		//	//MpiDebugUtilities.AssistDebuggerAttachment();
+		
+		public static void InvestigateCoarsePcgTolImpact(MpiEnvironment mpiEnvironment)
+		{
+			//MpiDebugUtilities.AssistDebuggerAttachment();
 
-		//	int minElements = 24;
-		//	int minSubdomains = 4;
-		//}
+			var subdomainToMeshSizeRatio = 6;
+			int minSubdomains = 6;
+			int minElements = subdomainToMeshSizeRatio * minSubdomains;
+			int numClusters = 6;
+			SolverChoice[] solvers = { SolverChoice.PFETI_DP_I };
+			double[] coarsePcgTol = { 1E-2, 1E-4, 1E-6, 1E-8 };
+
+			string directory = null;
+			for (int i = 0; i < coarsePcgTol.Length; ++i)
+			{
+				foreach (SolverChoice solver in solvers)
+				{
+					if (minElements / minSubdomains <= 2)
+					{
+						if (solver == SolverChoice.FETI_DP_D || solver == SolverChoice.FETI_DP_D_I
+							|| solver == SolverChoice.FETI_DP_L || solver == SolverChoice.FETI_DP_L_I)
+						{
+							continue;
+						}
+					}
+
+					//MpiUtilities.DeclarePerProcess("new analysis");
+					var exampleOptions = new ExampleImpactOptions();
+					exampleOptions.heavisideTol = 1E-3;
+					exampleOptions.maxSteps = maxCrackSteps > 16 ? 16 : maxCrackSteps;
+
+					var meshOptions = new MeshOptions(minElements, minSubdomains);
+					meshOptions.numClusters = new int[] { 1, 1, numClusters };
+
+					var solverOptions = new SolverOptions(solver);
+					solverOptions.environmentChoice = EnvironmentChoice.MPI;
+					solverOptions.environment = mpiEnvironment;
+
+					var outputOptions = new OutputOptions(runOnCluster, "Distributed coarse PCG tol");
+					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
+
+					var coarseProblemOptions = new CoarseProblemOptionsDistributed(numClusters, mpiEnvironment.CommWorld.Size);
+					coarseProblemOptions.pcgMaxIter = 2000;
+					coarseProblemOptions.pcgTol = coarsePcgTol[i];
+
+					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
+				}
+			}
+			File.Create(directory + "_investigation_finished.txt");
+		}
+
+
+		public static void InvestigateCoarsePcgTol4PBB(MpiEnvironment mpiEnvironment)
+		{
+			//MpiDebugUtilities.AssistDebuggerAttachment();
+
+			var subdomainToMeshSizeRatio = 6;
+			int minSubdomains = 6;
+			int minElements = subdomainToMeshSizeRatio * minSubdomains;
+			int numClusters = 6;
+			SolverChoice[] solvers = { SolverChoice.PFETI_DP_I };
+			double[] coarsePcgTol = { 1E-2, 1E-4, 1E-6, 1E-8 };
+
+			string directory = null;
+			for (int i = 0; i < coarsePcgTol.Length; ++i)
+			{
+				foreach (SolverChoice solver in solvers)
+				{
+					if (minElements / minSubdomains <= 2)
+					{
+						if (solver == SolverChoice.FETI_DP_D || solver == SolverChoice.FETI_DP_D_I
+							|| solver == SolverChoice.FETI_DP_L || solver == SolverChoice.FETI_DP_L_I)
+						{
+							continue;
+						}
+					}
+
+					//MpiUtilities.DeclarePerProcess("new analysis");
+					var exampleOptions = new ExampleBB4POptions(337);
+					exampleOptions.crackFrontY = 74;
+					exampleOptions.heavisideTol = 1E-3;
+					exampleOptions.maxSteps = maxCrackSteps > 13 ? 13 : maxCrackSteps;
+
+					var meshOptions = new MeshOptions(minElements, minSubdomains);
+					meshOptions.numClusters = new int[] { 1, 1, numClusters };
+
+					var solverOptions = new SolverOptions(solver);
+					solverOptions.environmentChoice = EnvironmentChoice.MPI;
+					solverOptions.environment = mpiEnvironment;
+
+					var outputOptions = new OutputOptions(runOnCluster, "Distributed coarse PCG tol");
+					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
+
+					var coarseProblemOptions = new CoarseProblemOptionsDistributed(numClusters, mpiEnvironment.CommWorld.Size);
+					coarseProblemOptions.pcgMaxIter = 2000;
+					coarseProblemOptions.pcgTol = coarsePcgTol[i];
+
+					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
+				}
+			}
+			File.Create(directory + "_investigation_finished.txt");
+		}
 
 		public static void RunParallelScalabilityImpact(MpiEnvironment mpiEnvironment)
 		{
