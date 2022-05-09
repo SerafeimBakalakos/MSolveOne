@@ -71,31 +71,158 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
 		}
 
-		public static void TestReorthoPcgImpact()
+		//public static void TestReorthoPcgImpact()
+		//{
+		//	var exampleOptions = new ExampleImpactOptions();
+		//	exampleOptions.heavisideTol = 1E-3;
+		//	exampleOptions.maxSteps = 1;
+
+		//	var meshOptions = new MeshOptions(10, 2);
+		//	meshOptions.numClusters = new int[] { 1, 1, 1 };
+
+		//	var solverOptions = new SolverOptions(SolverChoice.PFETI_DP_I);
+		//	solverOptions.environmentChoice = EnvironmentChoice.TPL;
+
+		//	var outputOptions = new OutputOptions(false, "Test reortho-PCG");
+
+		//	var coarseProblemOptions = new CoarseProblemOptionsDistributed(1, 1);
+		//	coarseProblemOptions.reorthoPCG = true;
+		//	coarseProblemOptions.pcgTol = 1E-7;
+		//	coarseProblemOptions.pcgMaxIter = 400;
+		//	coarseProblemOptions.reorthoCacheSize = 100;
+		//	coarseProblemOptions.reorthoCacheRetainTol = double.MaxValue;
+
+		//	RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
+		//}
+
+
+		public static void InvestigateCoarseProblemsImpact(MpiEnvironment mpiEnvironment)
 		{
-			var exampleOptions = new ExampleImpactOptions();
-			exampleOptions.heavisideTol = 1E-3;
-			exampleOptions.maxSteps = 1;
+			//MpiDebugUtilities.AssistDebuggerAttachment();
 
-			var meshOptions = new MeshOptions(10, 2);
-			meshOptions.numClusters = new int[] { 1, 1, 1 };
+			var subdomainToMeshSizeRatio = 5;
+			int[] minSubdomains = { 3, 6, 9 };
+			SolverChoice[] solvers = { SolverChoice.PFETI_DP, SolverChoice.PFETI_DP_I };
+			double coarsePcgTol = 1E-4;
 
-			var solverOptions = new SolverOptions(SolverChoice.PFETI_DP_I);
-			solverOptions.environmentChoice = EnvironmentChoice.TPL;
+			var coarseProblems = new List<CoarseProblemOptions>();
 
-			var outputOptions = new OutputOptions(false, "Test reortho-PCG");
+			var options0 = new CoarseProblemOptionsGlobal(6, mpiEnvironment.CommWorld.Size);
+			options0.ForceDemocracy();
+			coarseProblems.Add(options0);
 
-			var coarseProblemOptions = new CoarseProblemOptionsDistributed(1, 1);
-			coarseProblemOptions.reorthoPCG = true;
-			coarseProblemOptions.pcgTol = 1E-7;
-			coarseProblemOptions.pcgMaxIter = 400;
-			coarseProblemOptions.reorthoCacheSize = 100;
-			coarseProblemOptions.reorthoCacheRetainTol = double.MaxValue;
+			var options1 = new CoarseProblemOptionsGlobal(5, mpiEnvironment.CommWorld.Size);
+			options1.SetMasterProcess(5);
+			coarseProblems.Add(options1);
 
-			RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
+			//var options2 = new CoarseProblemOptionsDistributed(6, mpiEnvironment.CommWorld.Size);
+			//options2.pcgMaxIter = 10000;
+			//options2.pcgTol = coarsePcgTol;
+			//coarseProblems.Add(options2);
+
+			string directory = null;
+			for (int i = 0; i < minSubdomains.Length; ++i)
+			{
+				int minElements = subdomainToMeshSizeRatio * minSubdomains[i];
+				foreach (var coarseProblemOptions in coarseProblems)
+				{
+					int numClusters = coarseProblemOptions.numClusters;
+					foreach (SolverChoice solver in solvers)
+					{
+						if (minElements / minSubdomains[i] <= 2)
+						{
+							if (solver == SolverChoice.FETI_DP_D || solver == SolverChoice.FETI_DP_D_I
+								|| solver == SolverChoice.FETI_DP_L || solver == SolverChoice.FETI_DP_L_I)
+							{
+								continue;
+							}
+						}
+
+						var exampleOptions = new ExampleImpactOptions();
+						exampleOptions.heavisideTol = 1E-3;
+						exampleOptions.maxSteps = maxCrackSteps > 16 ? 16 : maxCrackSteps;
+
+						var meshOptions = new MeshOptions(minElements, minSubdomains[i]);
+						meshOptions.numClusters = new int[] { 1, 1, numClusters };
+
+						var solverOptions = new SolverOptions(solver);
+						solverOptions.environmentChoice = EnvironmentChoice.MPI;
+						solverOptions.environment = mpiEnvironment;
+
+						var outputOptions = new OutputOptions(runOnCluster, "Coarse problems comparison");
+						directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
+
+						RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
+					}
+				}
+			}
+			File.Create(directory + "_investigation_finished.txt");
 		}
 
-		
+		public static void InvestigateCoarseProblems4PBB(MpiEnvironment mpiEnvironment)
+		{
+			//MpiDebugUtilities.AssistDebuggerAttachment();
+
+			var subdomainToMeshSizeRatio = 5;
+			int[] minSubdomains = { 2, 4, 6 };
+			SolverChoice[] solvers = { SolverChoice.PFETI_DP, SolverChoice.PFETI_DP_I };
+			double coarsePcgTol = 1E-4;
+
+			var coarseProblems = new List<CoarseProblemOptions>();
+
+			var options0 = new CoarseProblemOptionsGlobal(6, mpiEnvironment.CommWorld.Size);
+			options0.ForceDemocracy();
+			coarseProblems.Add(options0);
+
+			var options1 = new CoarseProblemOptionsGlobal(5, mpiEnvironment.CommWorld.Size);
+			options1.SetMasterProcess(5);
+			coarseProblems.Add(options1);
+
+			//var options2 = new CoarseProblemOptionsDistributed(6, mpiEnvironment.CommWorld.Size);
+			//options2.pcgMaxIter = 10000;
+			//options2.pcgTol = coarsePcgTol;
+			//coarseProblems.Add(options2);
+
+			string directory = null;
+			for (int i = 0; i < minSubdomains.Length; ++i)
+			{
+				int minElements = subdomainToMeshSizeRatio * minSubdomains[i];
+				foreach (var coarseProblemOptions in coarseProblems)
+				{
+					int numClusters = coarseProblemOptions.numClusters;
+					foreach (SolverChoice solver in solvers)
+					{
+						if (minElements / minSubdomains[i] <= 2)
+						{
+							if (solver == SolverChoice.FETI_DP_D || solver == SolverChoice.FETI_DP_D_I
+								|| solver == SolverChoice.FETI_DP_L || solver == SolverChoice.FETI_DP_L_I)
+							{
+								continue;
+							}
+						}
+
+						var exampleOptions = new ExampleBB4POptions(337);
+						exampleOptions.crackFrontY = 74;
+						exampleOptions.heavisideTol = 1E-3;
+						exampleOptions.maxSteps = maxCrackSteps > 13 ? 13 : maxCrackSteps;
+
+						var meshOptions = new MeshOptions(minElements, minSubdomains[i]);
+						meshOptions.numClusters = new int[] { numClusters, 1, 1 };
+
+						var solverOptions = new SolverOptions(solver);
+						solverOptions.environmentChoice = EnvironmentChoice.MPI;
+						solverOptions.environment = mpiEnvironment;
+
+						var outputOptions = new OutputOptions(runOnCluster, "Coarse problems comparison");
+						directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
+
+						RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
+					}
+				}
+			}
+			File.Create(directory + "_investigation_finished.txt");
+		}
+
 		public static void InvestigateCoarsePcgTolImpact(MpiEnvironment mpiEnvironment)
 		{
 			//MpiDebugUtilities.AssistDebuggerAttachment();
@@ -105,7 +232,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			int minElements = subdomainToMeshSizeRatio * minSubdomains;
 			int numClusters = 6;
 			SolverChoice[] solvers = { SolverChoice.PFETI_DP_I };
-			double[] coarsePcgTol = { 1E-2, 1E-4, 1E-6, 1E-8 };
+			double[] coarsePcgTol = { /*1E-2, 1E-4,*/ 1E-6, 1E-8 };
 
 			string directory = null;
 			for (int i = 0; i < coarsePcgTol.Length; ++i)
@@ -137,7 +264,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
 
 					var coarseProblemOptions = new CoarseProblemOptionsDistributed(numClusters, mpiEnvironment.CommWorld.Size);
-					coarseProblemOptions.pcgMaxIter = 2000;
+					coarseProblemOptions.pcgMaxIter = 100000;
 					coarseProblemOptions.pcgTol = coarsePcgTol[i];
 
 					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
@@ -152,7 +279,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			//MpiDebugUtilities.AssistDebuggerAttachment();
 
 			var subdomainToMeshSizeRatio = 6;
-			int minSubdomains = 6;
+			int minSubdomains = 4;
 			int minElements = subdomainToMeshSizeRatio * minSubdomains;
 			int numClusters = 6;
 			SolverChoice[] solvers = { SolverChoice.PFETI_DP_I };
@@ -179,7 +306,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					exampleOptions.maxSteps = maxCrackSteps > 13 ? 13 : maxCrackSteps;
 
 					var meshOptions = new MeshOptions(minElements, minSubdomains);
-					meshOptions.numClusters = new int[] { 1, 1, numClusters };
+					meshOptions.numClusters = new int[] { numClusters, 1, 1 };
 
 					var solverOptions = new SolverOptions(solver);
 					solverOptions.environmentChoice = EnvironmentChoice.MPI;
@@ -189,7 +316,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
 
 					var coarseProblemOptions = new CoarseProblemOptionsDistributed(numClusters, mpiEnvironment.CommWorld.Size);
-					coarseProblemOptions.pcgMaxIter = 2000;
+					coarseProblemOptions.pcgMaxIter = 10000;
 					coarseProblemOptions.pcgTol = coarsePcgTol[i];
 
 					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);

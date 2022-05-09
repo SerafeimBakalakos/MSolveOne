@@ -673,6 +673,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					coarseProblemPcgBuilder.ResidualTolToKeepCache = optionsDistributed.reorthoCacheRetainTol;
 					coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(optionsDistributed.pcgMaxIter);
 					coarseProblemPcgBuilder.ResidualTolerance = optionsDistributed.pcgTol;
+					coarseProblemPcgBuilder.ThrowExceptionIfNotConvergence = false;
 					coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
 				}
 				else
@@ -680,6 +681,7 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					var coarseProblemPcgBuilder = new PcgAlgorithm.Builder();
 					coarseProblemPcgBuilder.MaxIterationsProvider = new FixedMaxIterationsProvider(optionsDistributed.pcgMaxIter);
 					coarseProblemPcgBuilder.ResidualTolerance = optionsDistributed.pcgTol;
+					coarseProblemPcgBuilder.ThrowExceptionIfNotConvergence = false;
 					coarseProblemFactory.CoarseProblemSolver = coarseProblemPcgBuilder.Build();
 				}
 				return coarseProblemFactory;

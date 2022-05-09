@@ -35,8 +35,11 @@ namespace MGroup.XFEM.Tests
 			{
 				MpiUtilities.DeclarePerProcess("is active");
 
-				ExamplesMpi3D_Runs.InvestigateCoarsePcgTolImpact(mpiEnvironment);
-				ExamplesMpi3D_Runs.InvestigateCoarsePcgTol4PBB(mpiEnvironment);
+				ExamplesMpi3D_Runs.InvestigateCoarseProblemsImpact(mpiEnvironment);
+				ExamplesMpi3D_Runs.InvestigateCoarseProblems4PBB(mpiEnvironment);
+
+				//ExamplesMpi3D_Runs.InvestigateCoarsePcgTolImpact(mpiEnvironment);
+				//ExamplesMpi3D_Runs.InvestigateCoarsePcgTol4PBB(mpiEnvironment);
 
 				//ExamplesMpi3D_Runs.RunWeakScalabilityImpact(mpiEnvironment);
 				//ExamplesMpi3D_Runs.RunWeakScalability4PBB(mpiEnvironment);
