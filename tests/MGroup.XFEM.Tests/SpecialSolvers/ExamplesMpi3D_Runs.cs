@@ -96,29 +96,28 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 		//}
 
 
-		public static void InvestigateCoarseProblemsImpact(MpiEnvironment mpiEnvironment)
+		public static void InvestigateCoarseProblemsImpact(MpiEnvironment mpiEnvironment, int[] minSubdomains)
 		{
 			//MpiDebugUtilities.AssistDebuggerAttachment();
 
 			var subdomainToMeshSizeRatio = 5;
-			int[] minSubdomains = { 3, 6, 9 };
+			//int[] minSubdomains = { /*3, 6,*/ 9 };
 			SolverChoice[] solvers = { SolverChoice.PFETI_DP, SolverChoice.PFETI_DP_I };
-			double coarsePcgTol = 1E-4;
 
 			var coarseProblems = new List<CoarseProblemOptions>();
 
-			var options0 = new CoarseProblemOptionsGlobal(6, mpiEnvironment.CommWorld.Size);
-			options0.ForceDemocracy();
-			coarseProblems.Add(options0);
+			//var options0 = new CoarseProblemOptionsGlobal(6, mpiEnvironment.CommWorld.Size);
+			//options0.ForceDemocracy();
+			//coarseProblems.Add(options0);
 
-			var options1 = new CoarseProblemOptionsGlobal(5, mpiEnvironment.CommWorld.Size);
-			options1.SetMasterProcess(5);
-			coarseProblems.Add(options1);
+			//var options1 = new CoarseProblemOptionsGlobal(5, mpiEnvironment.CommWorld.Size);
+			//options1.SetMasterProcess(5);
+			//coarseProblems.Add(options1);
 
-			//var options2 = new CoarseProblemOptionsDistributed(6, mpiEnvironment.CommWorld.Size);
-			//options2.pcgMaxIter = 10000;
-			//options2.pcgTol = coarsePcgTol;
-			//coarseProblems.Add(options2);
+			var options2 = new CoarseProblemOptionsDistributed(6, mpiEnvironment.CommWorld.Size);
+			options2.pcgMaxIter = 10000;
+			options2.pcgTol = 1E-1;
+			coarseProblems.Add(options2);
 
 			string directory = null;
 			for (int i = 0; i < minSubdomains.Length; ++i)
@@ -159,29 +158,28 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			File.Create(directory + "_investigation_finished.txt");
 		}
 
-		public static void InvestigateCoarseProblems4PBB(MpiEnvironment mpiEnvironment)
+		public static void InvestigateCoarseProblems4PBB(MpiEnvironment mpiEnvironment, int[] minSubdomains)
 		{
 			//MpiDebugUtilities.AssistDebuggerAttachment();
 
 			var subdomainToMeshSizeRatio = 5;
-			int[] minSubdomains = { 2, 4, 6 };
+			//int[] minSubdomains = { /*2,*/ 4, 6, 8 };
 			SolverChoice[] solvers = { SolverChoice.PFETI_DP, SolverChoice.PFETI_DP_I };
-			double coarsePcgTol = 1E-4;
 
 			var coarseProblems = new List<CoarseProblemOptions>();
 
-			var options0 = new CoarseProblemOptionsGlobal(6, mpiEnvironment.CommWorld.Size);
-			options0.ForceDemocracy();
-			coarseProblems.Add(options0);
+			//var options0 = new CoarseProblemOptionsGlobal(6, mpiEnvironment.CommWorld.Size);
+			//options0.ForceDemocracy();
+			//coarseProblems.Add(options0);
 
-			var options1 = new CoarseProblemOptionsGlobal(5, mpiEnvironment.CommWorld.Size);
-			options1.SetMasterProcess(5);
-			coarseProblems.Add(options1);
+			//var options1 = new CoarseProblemOptionsGlobal(5, mpiEnvironment.CommWorld.Size);
+			//options1.SetMasterProcess(5);
+			//coarseProblems.Add(options1);
 
-			//var options2 = new CoarseProblemOptionsDistributed(6, mpiEnvironment.CommWorld.Size);
-			//options2.pcgMaxIter = 10000;
-			//options2.pcgTol = coarsePcgTol;
-			//coarseProblems.Add(options2);
+			var options2 = new CoarseProblemOptionsDistributed(6, mpiEnvironment.CommWorld.Size);
+			options2.pcgMaxIter = 10000;
+			options2.pcgTol = 1E-2;
+			coarseProblems.Add(options2);
 
 			string directory = null;
 			for (int i = 0; i < minSubdomains.Length; ++i)
@@ -201,9 +199,10 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 							}
 						}
 
-						var exampleOptions = new ExampleBB4POptions(337);
+						(double crackFrontX, double heavisideTol) = GetCrackFrontX(minElements);
+						var exampleOptions = new ExampleBB4POptions(crackFrontX /*337*/);
 						exampleOptions.crackFrontY = 74;
-						exampleOptions.heavisideTol = 1E-3;
+						exampleOptions.heavisideTol = heavisideTol /*1E-3*/;
 						exampleOptions.maxSteps = maxCrackSteps > 13 ? 13 : maxCrackSteps;
 
 						var meshOptions = new MeshOptions(minElements, minSubdomains[i]);
@@ -332,8 +331,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			var subdomainToMeshSizeRatio = 6;
 			int minSubdomains = 6;
 			int minElements = subdomainToMeshSizeRatio * minSubdomains;
-			int[] numClusters = { 1, 2, 3, 4, /*6*/ };
-			SolverChoice[] solvers = GetDdmSolvers();
+			int[] numClusters = { /*1, 2, 3, 4,*/ 6 };
+			//SolverChoice[] solvers = GetDdmSolvers();
+			SolverChoice[] solvers = { SolverChoice.PFETI_DP_I, SolverChoice.FETI_DP_L_I };
 
 			string directory = null;
 			for (int i = 0; i < numClusters.Length; ++i)
@@ -365,8 +365,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
 
 					var coarseProblemOptions = new CoarseProblemOptionsGlobal(numClusters[i], mpiEnvironment.CommWorld.Size);
-					coarseProblemOptions.ForceDemocracy();
-					//var coarseProblemOptions = new CoarseProblemOptionsGlobal(1, 1);
+					//coarseProblemOptions.ForceDemocracy();
+					coarseProblemOptions.SetMasterProcess(0);
 
 					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
 				}
@@ -381,8 +381,9 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 			var subdomainToMeshSizeRatio = 7;
 			int minSubdomains = 4;
 			int minElements = subdomainToMeshSizeRatio * minSubdomains;
-			int[] numClusters = { 1, 2, 3, 4, /*6*/ };
+			int[] numClusters = { /*1, 2, 3, 4,*/ 6 };
 			SolverChoice[] solvers = GetDdmSolvers();
+			//SolverChoice[] solvers = { SolverChoice.PFETI_DP_I, SolverChoice.FETI_DP_L_I };
 
 			string directory = null;
 			for (int i = 0; i < numClusters.Length; ++i)
@@ -415,8 +416,8 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					directory = outputOptions.GetOutputDirectory(exampleOptions, solverOptions);
 
 					var coarseProblemOptions = new CoarseProblemOptionsGlobal(numClusters[i], mpiEnvironment.CommWorld.Size);
-					coarseProblemOptions.ForceDemocracy();
-					//var coarseProblemOptions = new CoarseProblemOptionsGlobal(1, 1);
+					//coarseProblemOptions.ForceDemocracy();
+					coarseProblemOptions.SetMasterProcess(0);
 
 					RunSingleAnalysis(exampleOptions, meshOptions, solverOptions, outputOptions, coarseProblemOptions);
 				}
@@ -626,6 +627,39 @@ namespace MGroup.XFEM.Tests.SpecialSolvers
 					SolverChoice.FETI_DP_D, SolverChoice.FETI_DP_D_I,
 					SolverChoice.FETI_DP_L, SolverChoice.FETI_DP_L_I
 				};
+			}
+		}
+
+		private static (double x, double heavisideTol) GetCrackFrontX(int elementsZ)
+		{
+			if (elementsZ == 5)
+			{
+				return (337.5, 1E-4);
+			}
+			else if (elementsZ == 10)
+			{
+				return (337, 1E-4);
+			}
+			else if (elementsZ == 15)
+			{
+				return (337.5, 1E-4);
+			}
+			else if (elementsZ == 20)
+			{
+				return (336, 1E-4);
+			}
+			else if (elementsZ == 25)
+			{
+				return (335, 1E-4);
+			}
+			else if (elementsZ == 30 | elementsZ == 37 || elementsZ == 40)
+			{
+				return (337, 1E-3);
+			}
+			else
+			{
+				Console.WriteLine("Cannont decide on crack X");
+				throw new NotImplementedException();
 			}
 		}
 	}

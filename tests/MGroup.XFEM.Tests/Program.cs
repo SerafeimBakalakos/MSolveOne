@@ -1,4 +1,5 @@
 using System;
+
 using MGroup.Environments.Mpi;
 using MGroup.LinearAlgebra.Matrices;
 using MGroup.XFEM.Solvers.PFetiDP;
@@ -27,7 +28,7 @@ namespace MGroup.XFEM.Tests
 			//ExamplesMpi3D_Runs.RunTestMpiAnalysis();
 			//ExamplesMpi3D_Runs.TestReorthoPcgImpact();
 
-			//ExamplesMpi3D_Runs.runOnCluster = false;
+			ExamplesMpi3D_Runs.runOnCluster = false;
 			//ExamplesMpi3D_Runs.maxCrackSteps = 3;
 			//ExamplesMpi3D_Runs.onlyPFETI_DP_I = true;
 			//ExamplesMpi3D_Runs.subdomainToMeshSizeDefault = 6;
@@ -35,8 +36,10 @@ namespace MGroup.XFEM.Tests
 			{
 				MpiUtilities.DeclarePerProcess("is active");
 
-				ExamplesMpi3D_Runs.InvestigateCoarseProblemsImpact(mpiEnvironment);
-				ExamplesMpi3D_Runs.InvestigateCoarseProblems4PBB(mpiEnvironment);
+				//ExamplesMpi3D_Runs.InvestigateCoarseProblemsImpact(mpiEnvironment, new int[] { 3, 6 });
+				//ExamplesMpi3D_Runs.InvestigateCoarseProblems4PBB(mpiEnvironment, new int[] { 2, 4, });
+				//ExamplesMpi3D_Runs.InvestigateCoarseProblemsImpact(mpiEnvironment, new int[] { 9 });
+				//ExamplesMpi3D_Runs.InvestigateCoarseProblems4PBB(mpiEnvironment, new int[] { 6, });
 
 				//ExamplesMpi3D_Runs.InvestigateCoarsePcgTolImpact(mpiEnvironment);
 				//ExamplesMpi3D_Runs.InvestigateCoarsePcgTol4PBB(mpiEnvironment);
@@ -45,8 +48,8 @@ namespace MGroup.XFEM.Tests
 				//ExamplesMpi3D_Runs.RunWeakScalability4PBB(mpiEnvironment);
 				//ExamplesMpi3D_Runs.RunStrongScalabilityImpact(mpiEnvironment);
 				//ExamplesMpi3D_Runs.RunStrongScalability4PBB(mpiEnvironment);
-				//ExamplesMpi3D_Runs.RunParallelScalabilityImpact(mpiEnvironment);
-				//ExamplesMpi3D_Runs.RunParallelScalability4PBB(mpiEnvironment);
+				ExamplesMpi3D_Runs.RunParallelScalabilityImpact(mpiEnvironment);
+				ExamplesMpi3D_Runs.RunParallelScalability4PBB(mpiEnvironment);
 			}
 		}
 
